@@ -13,6 +13,7 @@ const PAGES = {
   'test-3': { out: 'test-3-puls-achse.html' },
   'test-4': { out: 'test-4-puls-scan.html' },
   'haus': { out: 'hausbesuch.html', fonts: 'haus' },
+  'manu': { out: 'manuthera.html' },
 };
 // Zusätzliche Ausgabe ohne <html>/<head>/<body>-Gerüst (für die private Claude-Vorschau)
 const fragmentDir = process.env.FRAGMENT_DIR || '';

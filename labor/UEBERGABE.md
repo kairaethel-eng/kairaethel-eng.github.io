@@ -14,6 +14,7 @@ Kapitel 01 Spannung (Partikel-Körper, Verspannungen lösen) · 02 Bewegung · 0
 - Handy bleibt bei Kapitel 03/04 wie es ist (Kai: „mobil sieht es schöner aus“).
 
 ## Nächster Schritt
+- **Manuthera-Highlight:** Kai vergleicht die drei Entwürfe auf `manuthera.html` (Vorschau privat: https://claude.ai/artifact/74Cab3W8CQXB2hoMBGbtiv) und wählt; dann Einbau in Puls · Scan (Details in ENTSCHEIDUNGEN.md).
 - Kai prüft die neuen Wirbelsäulen-Beschriftungen am PC und schickt neue Punkte.
 
 ## Offen / später

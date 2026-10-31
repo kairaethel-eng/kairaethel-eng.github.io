@@ -48,3 +48,11 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - Auf Kais Wunsch frei entworfen, ohne V10-Vorlage: filmischer Rundgang durch ein warmes Haus (Haustür → Empfang mit Tee → Wohnzimmer → Behandlung → Training → Garten). Licht folgt der echten Tageszeit des Besuchers (umschaltbar: Morgen/Mittag/Abend/Nacht). Lichtpunkte im Raum öffnen die Therapien. Danach klassische Infoseiten (FAQ, Kontakt).
 - Datei: `hausbesuch.html` (Quellen `src/haus`). Eigene Schriften: Fraunces + Hanken Grotesk (OFL, eingebettet).
 - Offen: Kai vergleicht mit Puls · Scan; FAQ-Texte sind Beispieltexte und müssen geprüft werden.
+
+## Manuthera als Highlight (31.10.2026, Entwürfe)
+- Kai möchte die Manuthera als kleines Highlight der Praxis hervorheben, im Partikel-Stil. Vergleichsseite `manuthera.html` (Quellen `src/manu`), noch nicht in Puls · Scan eingebaut.
+- **A Bühne:** Partikel-Liege in 3D mit liegender Figur; Brust- und Beckenteil zeigen nacheinander Traktion, Flexion, Seitneigung, Rotation (Knöpfe, Bernstein-Bewegungsbögen, Ziehen dreht).
+- **B Raum schaffen:** liegende Lendenwirbelsäule; Regler „Zug“: Beckenteil gleitet, Wirbel weichen auseinander, Bandscheibenräume leuchten, Nervenaustritte fließen. Beschriftung „Bandscheibenraum L4/L5“, „Nervenaustritt“.
+- **C Drei Ebenen:** kompakte Karte mit grüner Eck-Klammer; Partikel-Achse in drei Bernstein-Ringen (Sagittal-, Frontal-, Transversalebene) plus Zugachse.
+- Schreibweise: Hersteller heißt **Lojer** (Herstellerseite lojer.com). Auf Puls · Scan und in V10 steht noch „Loyer“ → beim Einbau korrigieren.
+- Offen: Kai wählt A/B/C (oder Kombination); welches Modell (Manuthera 241 oder 242) steht in der Praxis? Keine technischen Zahlen auf der Seite, solange das Modell nicht bestätigt ist.
