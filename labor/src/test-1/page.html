@@ -1,0 +1,217 @@
+<title>HOP Achse</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Testseite 1 (Achse): HOP – Home of Physiotherapy mit 3D-Wirbelsäule und Kamerafahrt beim Scrollen.">
+<style>/*FONTS*//*CSS*/</style>
+<!--BODY-->
+<div class="stage" aria-hidden="true">
+  <div class="stage-light"></div>
+  <canvas id="gl"></canvas>
+  <div class="labels" id="labels"></div>
+</div>
+
+<nav class="top" id="top">
+  <a class="brand" href="#start" aria-label="HOP – Home of Physiotherapy, zum Anfang">
+    <svg viewBox="0 0 560 240" aria-hidden="true"><circle cx="110" cy="120" r="66" fill="#7FAF45"/><circle cx="300" cy="120" r="66" fill="#305869"/><circle cx="490" cy="120" r="66" fill="#3F86B5"/><g font-family="Archivo Expanded,Archivo,Arial,sans-serif" font-weight="800" font-size="60" fill="#fff" text-anchor="middle"><text x="110" y="142">H</text><text x="300" y="142">O</text><text x="490" y="142">P</text></g></svg>
+    <span>Home of<br>Physiotherapy</span>
+  </a>
+  <div class="links">
+    <a href="#wirbelsaeule">Wirbelsäule</a>
+    <a href="#leistungen">Leistungen</a>
+    <a href="#rundgang">Rundgang</a>
+    <a href="#praxis">Praxis</a>
+  </div>
+  <a class="btn btn-small" href="#kontakt">Termin</a>
+</nav>
+
+<aside class="ruler" aria-hidden="true"><div class="ruler-fill" id="rulerFill"></div><ol id="rulerTicks"></ol></aside>
+
+<main>
+  <header class="hero" id="start">
+    <div class="wrap hero-inner">
+      <p class="eyebrow"><span class="dot"></span>Physiotherapie in Schorndorf</p>
+      <h1 class="hero-title" aria-label="Ein Zuhause für Ihren Körper.">
+        <span class="line"><span class="w">Ein</span></span>
+        <span class="line"><span class="w serif">Zuhause</span></span>
+        <span class="line"><span class="w">für Ihren</span></span>
+        <span class="line"><span class="w">Körper.</span></span>
+      </h1>
+      <p class="hero-sub">HOP heißt Home of Physiotherapy. Ein Haus, in dem Sie ankommen, sich wohlfühlen und das ganze Spektrum der Physiotherapie unter einem Dach finden.</p>
+      <div class="actions">
+        <a class="btn" href="#kontakt">Termin anfragen</a>
+        <a class="btn btn-line" href="#wirbelsaeule">Wirbelsäule erkunden</a>
+      </div>
+      <dl class="facts">
+        <div><dt>Leistungen</dt><dd><i>11</i> unter einem Dach</dd></div>
+        <div><dt>Behandlung</dt><dd><i>1:1</i> beim Inhaber</dd></div>
+        <div><dt>Adresse</dt><dd>Schlichtener Str. 87</dd></div>
+      </dl>
+    </div>
+    <p class="scroll-hint"><span></span>Scrollen startet die Kamerafahrt</p>
+  </header>
+
+  <section class="journey" id="wirbelsaeule" aria-labelledby="j-title">
+    <div class="journey-sticky">
+      <div class="wrap journey-inner">
+        <div class="journey-head">
+          <p class="eyebrow"><span class="dot"></span>Nervenbahnen</p>
+          <h2 id="j-title">Die Wirbelsäule verstehen.</h2>
+        </div>
+        <div class="stops" id="stops">
+          <article class="stop is-active" data-zone="c12">
+            <p class="seg">C1 – C2</p>
+            <h3>Kopfgelenke</h3>
+            <dl>
+              <dt>Nerven</dt><dd>Nn. suboccipitales und N. occipitalis major versorgen Hinterkopf und tiefe Nackenmuskulatur.</dd>
+              <dt>Typisch</dt><dd>Vom Nacken aufsteigender Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen.</dd>
+            </dl>
+            <ul class="chips"><li>Atlas-Axis-Therapie</li><li>Manuelle Therapie</li><li>Fango</li></ul>
+          </article>
+          <article class="stop" data-zone="c56">
+            <p class="seg">C5 – C6</p>
+            <h3>Halswirbelsäule</h3>
+            <dl>
+              <dt>Nerven</dt><dd>Wurzeln u. a. für Bizeps und Schulterheber, Gefühl außen am Arm bis zum Daumen.</dd>
+              <dt>Typisch</dt><dd>Ausstrahlung über die Armaußenseite bis in den Daumen, Kribbeln, Schwächegefühl beim Beugen.</dd>
+            </dl>
+            <ul class="chips"><li>Manuelle Therapie</li><li>Schlingentisch</li><li>Krankengymnastik</li></ul>
+          </article>
+          <article class="stop" data-zone="th16">
+            <p class="seg">Th1 – Th6</p>
+            <h3>Brustwirbelsäule</h3>
+            <dl>
+              <dt>Nerven</dt><dd>Interkostalnerven der oberen Rippen versorgen Brustkorbwand und Zwischenrippenmuskeln.</dd>
+              <dt>Typisch</dt><dd>Blockaden mit atemabhängigem Stechen, Schmerz zwischen den Schulterblättern, „Rippenklemme“.</dd>
+            </dl>
+            <ul class="chips"><li>Manuelle Therapie</li><li>Loyer Manuthera</li><li>Fango</li></ul>
+          </article>
+          <article class="stop" data-zone="l45">
+            <p class="seg">L4 – L5</p>
+            <h3>Lendenwirbelsäule</h3>
+            <dl>
+              <dt>Nerven</dt><dd>Wurzeln Richtung N. ischiadicus. L5 hebt den Fuß, Gefühl am Schienbein bis zur Großzehe.</dd>
+              <dt>Typisch</dt><dd>Bandscheiben-Region: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche.</dd>
+            </dl>
+            <ul class="chips"><li>Schlingentisch</li><li>Schmerztherapie</li><li>Krankengymnastik</li></ul>
+          </article>
+          <article class="stop" data-zone="s1">
+            <p class="seg">S1 · ISG</p>
+            <h3>Kreuzbein &amp; Becken</h3>
+            <dl>
+              <dt>Nerven</dt><dd>S1-Wurzel für Wade, Fußaußenrand und Achillessehnenreflex. Das Iliosakralgelenk verbindet Becken und Wirbelsäule.</dd>
+              <dt>Typisch</dt><dd>Ausstrahlung über die Beinrückseite bis zur Ferse, tiefsitzender einseitiger Kreuzschmerz.</dd>
+            </dl>
+            <ul class="chips"><li>Manuelle Therapie / ISG</li><li>Sport-Physiotherapie</li><li>Stoßwelle</li></ul>
+          </article>
+        </div>
+        <div class="segnav" role="group" aria-label="Wirbelsäulen-Abschnitt wählen">
+          <button type="button" data-i="0" class="is-active">C1–C2</button>
+          <button type="button" data-i="1">C5–C6</button>
+          <button type="button" data-i="2">Th1–Th6</button>
+          <button type="button" data-i="3">L4–L5</button>
+          <button type="button" data-i="4">S1</button>
+        </div>
+        <p class="note">Vereinfachte Orientierung. Ersetzt keine ärztliche Diagnose. Bei Taubheit oder Lähmungszeichen bitte ärztlich abklären lassen.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="services" id="leistungen" aria-labelledby="s-title">
+    <div class="services-sticky">
+      <div class="wrap services-head">
+        <div>
+          <p class="eyebrow"><span class="dot"></span>Unter einem Dach</p>
+          <h2 id="s-title">Alles unter <span class="serif">einem</span> Dach.</h2>
+        </div>
+        <p class="lead">Elf Leistungen an einer Adresse, präzise auf Ihre Ziele ausgerichtet. Alle Behandlungen beim selben vertrauten Ansprechpartner.</p>
+      </div>
+      <div class="track-viewport">
+        <ol class="track" id="track">
+          <li class="card"><p class="tag">Zertifikat</p><h3>Manuelle Therapie</h3><p class="short">Mobilisation von Gelenken und funktionelles Training.</p><p>Mit gezielten Handgriffen untersuche und behandle ich Gelenke, Muskeln und Nerven, dort, wo Bewegung blockiert ist. Nach gründlichem Befund kombiniere ich Mobilisation, Weichteiltechniken und aktives Üben.</p><p class="areas">Nacken · Schulter · Rücken · Fuß</p></li>
+          <li class="card"><p class="tag">Kasse</p><h3>Kranken&shy;gymnastik</h3><p class="short">Gezielte Übungsprogramme für Reha und Belastbarkeit.</p><p>Aktiv statt passiv: Kraft, Beweglichkeit und Sicherheit wachsen Schritt für Schritt, nach Operationen, Verletzungen oder bei chronischen Beschwerden. Dazu ein kurzes Heimprogramm.</p><p class="areas">Schulter · Knie &amp; Hüfte · Rücken</p></li>
+          <li class="card"><p class="tag">Aktiv</p><h3>Sport-Physio&shy;therapie</h3><p class="short">Return-to-Sport nach Verletzungen und Operationen.</p><p>Vom ersten schmerzfreien Schritt bis zurück auf den Platz: Belastung wird gezielt gesteigert, sportartspezifisch getestet und dokumentiert. Mit ehrlicher Einschätzung, wann Ihr Körper bereit ist.</p><p class="areas">Knie &amp; Hüfte · Fuß · Schulter</p></li>
+          <li class="card"><p class="tag">Individuell</p><h3>Schmerz&shy;therapie</h3><p class="short">Konzepte gegen akute und chronische Schmerzen.</p><p>Schmerz hat immer eine Geschichte. Wir suchen die Ursache und kombinieren manuelle Techniken, Übungen und Aufklärung zu einem Plan, der zu Ihrem Alltag passt.</p><p class="areas">Rücken · Nacken · wiederkehrende Beschwerden</p></li>
+          <li class="card"><p class="tag">Spezialisierung</p><h3>CMD-Therapie</h3><p class="short">Entlastung des Kiefergelenks, mehr Kieferbeweglichkeit.</p><p>Bei Kieferschmerz, Knirschen, Knacken oder eingeschränkter Mundöffnung behandle ich Kiefergelenk und Kaumuskulatur, oft abgestimmt mit Ihrem Zahnarzt. Die HWS wird immer mitbetrachtet.</p><p class="areas">Kiefer · Kopf · HWS</p></li>
+          <li class="card"><p class="tag">Sanft</p><h3>Atlas-Axis-Therapie</h3><p class="short">Sanfte Korrekturen der Kopfgelenke.</p><p>Die beiden obersten Halswirbel steuern feinste Kopfbewegungen. Mit sehr sanften, präzisen Impulsen löse ich Spannungen in diesem sensiblen Bereich.</p><p class="areas">Spannungskopfschmerz · Schwindelgefühl · Kopfdrehen</p></li>
+          <li class="card"><p class="tag">Modern</p><h3>Stoßwellen-Therapie</h3><p class="short">Druckwellen bei Fersensporn und Sehnenproblemen.</p><p>Radiale Druckwellen regen die Durchblutung direkt am Sehnenansatz an, ohne Spritze und ohne OP. Meist genügen wenige Sitzungen.</p><p class="areas">Ferse · Achillessehne · Ellenbogen · Schulter</p></li>
+          <li class="card"><p class="tag">Entlastung</p><h3>Traktion im Schlingen&shy;tisch</h3><p class="short">Schonende Entlastung der Wirbelsäule.</p><p>Im Schlingentisch wird Ihr Körper teilweise schwerelos. Unter sanftem Zug entspannen Bandscheiben, Gelenke und Muskulatur. Gut bei akuten Rückenschmerzen und als Vorbereitung für aktive Übungen.</p><p class="areas">Rücken · Bandscheibe · HWS</p></li>
+          <li class="card"><p class="tag">Ganzheitlich</p><h3>Osteopathische Ansätze</h3><p class="short">Ganzheitlicher Blick auf Spannungsketten.</p><p>Faszien, Gelenke und innere Strukturen beeinflussen sich gegenseitig. Mit sanften Techniken folge ich den Spannungsketten bis zur Ursache.</p><p class="areas">Ergänzung zur klassischen Physiotherapie</p></li>
+          <li class="card"><p class="tag">Ergänzend</p><h3>Fango · Reizstrom</h3><p class="short">Wärme und Elektrotherapie.</p><p>Tiefenwärme aus der Fangopackung lockert die Muskulatur und bereitet auf die Behandlung vor. Reizstrom lindert Schmerzen und aktiviert geschwächte Muskeln.</p><p class="areas">Vor oder nach der manuellen Behandlung</p></li>
+          <li class="card card-feature"><p class="tag">Ausstattung</p><h3>Loyer Manuthera</h3><p class="short">Therapieliege für dreidimensionale Mobilisation.</p><p>Die Manuthera erlaubt Mobilisation und Traktion der Wirbelsäule in Positionen, die auf einer normalen Liege nicht möglich sind. Sie liegen bequem, die Liege arbeitet mit.</p><p class="areas">Wirbelsäule · große Gelenke</p></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="tour" id="rundgang" aria-labelledby="t-title">
+    <div class="tour-sticky">
+      <div class="wrap tour-inner">
+        <div class="tour-text">
+          <p class="eyebrow"><span class="dot"></span>Offene Tür</p>
+          <h2 id="t-title">Ein Rundgang durchs Haus.</h2>
+          <p class="lead">Das Dach hebt sich, die Räume öffnen sich. Lernen Sie das Haus kennen, bevor Sie zum ersten Mal da sind.</p>
+          <div class="rooms" role="group" aria-label="Raum wählen">
+            <button type="button" data-room="0" class="is-active">Empfang</button>
+            <button type="button" data-room="1">Wartebereich</button>
+            <button type="button" data-room="2">Behandlung 1</button>
+            <button type="button" data-room="3">Behandlung 2</button>
+            <button type="button" data-room="4">Training</button>
+          </div>
+          <div class="room-panel" id="roomPanel" aria-live="polite">
+            <h3>Empfang &amp; Ankommen</h3>
+            <p>Die Tür ist offen, der Weg ist kurz: Hier werden Sie mit Namen begrüßt, nicht mit Nummer aufgerufen. Jacke ablegen, durchatmen, ankommen.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="rules" id="praxis" aria-labelledby="r-title">
+    <div class="wrap">
+      <p class="eyebrow eyebrow-dark"><span class="dot"></span>Unsere Hausordnung</p>
+      <h2 id="r-title" class="rules-title">Kompetenz trifft <span class="serif">Herz.</span></h2>
+      <ol class="paragraphs">
+        <li><b>§1</b><span>Der Mensch zuerst.</span><small>Zuhören kommt vor Behandeln.</small></li>
+        <li><b>§2</b><span>Zeit statt Taktung.</span><small>Termine, in denen Sie wirklich ankommen dürfen.</small></li>
+        <li><b>§3</b><span>Alles unter einem Dach.</span><small>Viele Therapieformen, ein vertrauter Ansprechpartner.</small></li>
+        <li><b>§4</b><span>Ehrlichkeit.</span><small>Wir sagen, was hilft und was nicht.</small></li>
+        <li><b>§5</b><span>Gast statt Fall.</span><small>Sie sollen gerne wiederkommen, nicht müssen.</small></li>
+      </ol>
+      <figure class="owner">
+        <div class="portrait" role="img" aria-label="Platz für ein Porträt von Kai Raethel"><span>Porträt<br>folgt</span></div>
+        <blockquote>
+          <p>„Meine Praxis ist ein Ort, an dem medizinisches Fachwissen auf eine herzliche Atmosphäre trifft.“</p>
+          <figcaption><b>Kai Raethel</b> · Inhaber · Manuelle Therapie · CMD</figcaption>
+        </blockquote>
+      </figure>
+    </div>
+  </section>
+
+  <section class="contact" id="kontakt" aria-labelledby="k-title">
+    <div class="wrap contact-inner">
+      <div>
+        <p class="eyebrow"><span class="dot"></span>An der Tür</p>
+        <h2 id="k-title">Der erste <span class="serif">Schritt.</span></h2>
+        <p class="lead">Schreiben Sie uns oder rufen Sie an. Wir melden uns mit einem Terminvorschlag.</p>
+        <div class="actions">
+          <a class="btn" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage">Termin anfragen</a>
+          <a class="btn btn-line" href="tel:+4971819931470">07181 9931470</a>
+        </div>
+        <p class="small">Bitte senden Sie keine ausführlichen Gesundheitsangaben per E-Mail. Die besprechen wir persönlich.</p>
+      </div>
+      <dl class="contact-list">
+        <div><dt>E-Mail</dt><dd>kontakt@hopphysio.de</dd></div>
+        <div><dt>Telefon</dt><dd>+49 7181 9931470</dd></div>
+        <div><dt>Adresse</dt><dd>Schlichtener Straße 87<br>73614 Schorndorf</dd></div>
+        <div><dt>Parken</dt><dd>Direkt vor dem Haus und in der Nähe</dd></div>
+        <div><dt>ÖPNV</dt><dd>VVS-Bus „Schlichtener Straße“ / „Grauhalde“</dd></div>
+      </dl>
+    </div>
+    <footer class="foot wrap">
+      <span>© 2026 HOP – Home of Physiotherapy · Kai Raethel</span>
+      <span><a href="https://kairaethel-eng.github.io/impressum.html">Impressum</a> · <a href="https://kairaethel-eng.github.io/datenschutz.html">Datenschutz</a></span>
+      <span class="lab">Testseite 1 · Achse</span>
+    </footer>
+  </section>
+</main>
+<!--JS-->
