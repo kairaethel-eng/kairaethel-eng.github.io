@@ -25,6 +25,10 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 | Rundgang im Haus (Kapitel 04) | Partikel-Haus wird von unten nach oben „gescannt“, Kamera geht durch die Tür durch Empfang, Wartebereich, Behandlung 1, Behandlung 2 (Manuthera), Training, dann Vogelperspektive auf den Grundriss; Räume als Punktwolke (Grundriss V10, schematisch); Raum-Beschriftungen im Raum; danach „Alle Leistungen“ | Karten untereinander, Szene oben, Fortschritt „Tür ● ○ ○ ○ ○ Training“, Haus-Emblem erst bei der Liste | Scroll-Kamerafahrt, Raum-Knöpfe, Text links abgedunkelt |
 | Leben im Stillstand (Handy) | Figur atmet, Verspannungen pochen, leichte Drift aller Partikel; im Stillstand nur jedes 2. Bild (Akku), beim Scrollen volle Rate | umgesetzt | Atmen/Pochen/Drift auch am PC; PC rendert immer voll |
 
+## Testadresse (ab 31.10.2026, Kais Go)
+- https://kairaethel-eng.github.io/labor/ (Übersicht) · Arbeitsstand: https://kairaethel-eng.github.io/labor/test-4-puls-scan.html
+- Nur Ordner `labor/` auf `main` veröffentlicht, `index.html`/Impressum/Datenschutz unverändert; alle Seiten `noindex`.
+
 ## Offen für die echte Website
 - Inhalte aus V10 übernehmen: Körperkarte „Wo tut's weh?“, Porträt Kai, Einblicke, ggf. Rundgang (Idee: Partikel-Grundriss).
 - „12 Therapieformen“ (V10) vs. 11 aufgeführte Leistungen klären.
