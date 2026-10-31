@@ -735,9 +735,17 @@ const top = $('#top');
 // Handy: im Stillstand nur jedes zweite Bild rendern (Akku), beim Scrollen volle Rate
 let lastInput = 0, frameN = 0;
 ['scroll', 'touchmove', 'pointermove'].forEach((ev) => addEventListener(ev, () => (lastInput = performance.now()), { passive: true }));
+// Taktgeber-Reserve: iOS hält requestAnimationFrame in eingebetteten Vorschau-Rahmen an, solange niemand
+// berührt. Dann übernimmt ein Zeitgeber (≈ 30 Bilder/s), damit die Seite auch im Stillstand lebt.
+let lastTick = performance.now(), viaWatchdog = false;
+setInterval(() => {
+  if (document.hidden || performance.now() - lastTick < 120) return;
+  viaWatchdog = true; gsap.ticker.tick(); viaWatchdog = false;
+}, 33);
 function tick() {
+  lastTick = performance.now();
   frameN++;
-  if (!isDesktop() && performance.now() - lastInput > 1500 && frameN % 2) return;
+  if (!viaWatchdog && !isDesktop() && performance.now() - lastInput > 1500 && frameN % 2) return;
   const dt = Math.min(clock.getDelta(), 0.05);
   uniforms.uTime.value += reduced ? 0 : dt;
   const tm = targetMorph();
