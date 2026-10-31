@@ -14,6 +14,9 @@ const PAGES = {
   'test-4': { out: 'test-4-puls-scan.html' },
   'haus': { out: 'hausbesuch.html', fonts: 'haus' },
   'manu': { out: 'manuthera.html' },
+  'recht-ds': { out: 'recht-datenschutz.html', dir: 'recht', page: 'datenschutz.html' },
+  'recht-imp': { out: 'recht-impressum.html', dir: 'recht', page: 'impressum.html' },
+  'portrait': { out: 'portrait.html' },
 };
 // Zusätzliche Ausgabe ohne <html>/<head>/<body>-Gerüst (für die private Claude-Vorschau)
 const fragmentDir = process.env.FRAGMENT_DIR || '';
@@ -34,7 +37,7 @@ const fontsCss = `
 const only = process.argv[2];
 for (const [name, cfg] of Object.entries(PAGES)) {
   if (only && only !== name) continue;
-  const dir = join(root, 'src', name);
+  const dir = join(root, 'src', cfg.dir || name);
   const res = await build({
     entryPoints: [join(dir, 'main.js')],
     bundle: true, minify: true, format: 'iife', target: 'es2020',
@@ -42,7 +45,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   });
   const js = res.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
   const css = readFileSync(join(dir, 'style.css'), 'utf8');
-  const tpl = readFileSync(join(dir, 'page.html'), 'utf8');
+  const tpl = readFileSync(join(dir, cfg.page || 'page.html'), 'utf8');
   const [headPart, bodyPart] = tpl.split('<!--BODY-->');
   const head = headPart.replace('/*FONTS*/', () => (cfg.fonts ? FONTS[cfg.fonts]() : fontsCss)).replace('/*CSS*/', () => css);
   const body = bodyPart.replace('<!--JS-->', () => `<script>${js}</script>`);
