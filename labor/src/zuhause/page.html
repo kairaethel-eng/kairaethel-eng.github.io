@@ -1,0 +1,141 @@
+<title>HOP Zuhause</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Design 2 (Labor): Das Partikel-Haus ist das Startmenü. Räume anklicken, die Kamera fliegt hinein, der Inhalt erscheint daneben.">
+<style>/*FONTS*//*CSS*/</style>
+<!--BODY-->
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<header class="top">
+  <a class="brand" href="#" aria-label="HOP – Home of Physiotherapy, zur Übersicht" data-home>
+    <svg viewBox="0 0 560 240" aria-hidden="true"><circle cx="110" cy="120" r="66" fill="#7FAF45"/><circle cx="300" cy="120" r="66" fill="#3C7189"/><circle cx="490" cy="120" r="66" fill="#3F86B5"/><g font-family="Archivo Expanded,Archivo,Arial,sans-serif" font-weight="800" font-size="60" fill="#fff" text-anchor="middle"><text x="110" y="142">H</text><text x="300" y="142">O</text><text x="490" y="142">P</text></g></svg>
+  </a>
+  <nav class="top-nav" aria-label="Seite">
+    <a class="only-wide" href="test-4-puls-scan.html">Klassische Ansicht</a>
+    <button type="button" class="motion-btn" id="motionBtn" aria-pressed="false" aria-label="Bewegung anhalten"><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg></button>
+    <a class="btn btn-small" href="#tuer" data-open="tuer">Termin</a>
+  </nav>
+</header>
+
+<main class="hub">
+  <div class="welcome wrap">
+    <p class="kicker">HOP · Home of Physiotherapy · Schorndorf</p>
+    <h1>Willkommen <em>zuhause.</em></h1>
+    <p class="lead">Treten Sie ein: Wählen Sie einen Raum im Haus. Physiotherapie mit Kompetenz und Herz.</p>
+  </div>
+  <nav class="rooms-wrap" aria-label="Räume">
+    <p class="rooms-k">Räume</p>
+    <div class="rooms" id="rooms"></div>
+  </nav>
+  <div id="tags" class="tags"></div>
+  <p class="foot-links"><a href="recht-impressum.html">Impressum</a> · <a href="recht-datenschutz.html">Datenschutz</a> · <a href="test-4-puls-scan.html">Klassische Ansicht</a></p>
+</main>
+
+<aside class="panel" id="panel" aria-hidden="true" aria-labelledby="panelTitle">
+  <div class="panel-head">
+    <p class="panel-k"><i id="panelNo">00</i><span id="panelLabel"></span></p>
+    <div class="panel-nav">
+      <button type="button" id="panelPrev" aria-label="Vorheriger Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button type="button" id="panelNext" aria-label="Nächster Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+      <button type="button" id="panelClose" aria-label="Zurück zum Haus"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+</aside>
+<template id="tpl-tuer">
+<h2 id="panelTitle" tabindex="-1">Der erste <em>Schritt.</em></h2>
+<p class="lead">Schreiben Sie uns oder rufen Sie an. Wir melden uns mit einem Terminvorschlag.</p>
+<div class="actions"><a class="btn" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage">Termin anfragen</a><a class="btn btn-ghost" href="tel:+4971819931470">07181 9931470</a></div>
+<p class="small">Bitte senden Sie keine ausführlichen Gesundheitsangaben per E-Mail. Die besprechen wir persönlich.</p>
+<dl class="facts">
+        <div><dt>E-Mail</dt><dd>kontakt@hopphysio.de</dd></div>
+        <div><dt>Telefon</dt><dd>+49 7181 9931470</dd></div>
+        <div><dt>Adresse</dt><dd>Schlichtener Straße 87, 73614 Schorndorf</dd></div>
+        <div><dt>Parken</dt><dd>Direkt vor dem Haus und in der Nähe</dd></div>
+        <div><dt>ÖPNV</dt><dd>VVS-Bus „Schlichtener Straße“ / „Grauhalde“</dd></div>
+        <div><dt>Inhaber</dt><dd>Kai Raethel · Manuelle Therapie · CMD</dd></div>
+      </dl>
+<p class="legal"><a href="recht-impressum.html">Impressum</a> · <a href="recht-datenschutz.html">Datenschutz</a> <span>(Entwürfe)</span></p>
+</template>
+<template id="tpl-empfang">
+<h2 id="panelTitle" tabindex="-1">Ein <em>Zuhause</em> für Ihren Körper.</h2>
+<p class="lead">Ein Haus, in dem Sie ankommen, sich wohlfühlen und das ganze Spektrum der Physiotherapie unter einem Dach finden.</p>
+<blockquote>„Ich betrachte nicht nur das Symptom, sondern den ganzen Menschen.“ <b>Kai Raethel</b></blockquote>
+<h3>Empfang &amp; Ankommen</h3><p class="lead">Die Tür ist offen, der Weg ist kurz: Hier werden Sie mit Namen begrüßt, nicht mit Nummer aufgerufen. Jacke ablegen, durchatmen, ankommen.</p><p class="hint-serif">Gast statt Patient.</p>
+<p class="next-hint">Weiter durchs Haus: <a href="#wohnzimmer" data-open="wohnzimmer">Wohnzimmer</a> · <a href="#behandlung" data-open="behandlung">Leistungen</a> · <a href="#tuer" data-open="tuer">Termin</a></p>
+</template>
+<template id="tpl-wohnzimmer">
+<h2 id="panelTitle" tabindex="-1">Unsere <em>Hausordnung.</em></h2>
+<h3>Wartebereich – unser Wohnzimmer</h3><p class="lead">Eher Wohnzimmer als Wartezimmer: bequeme Sitze, Wasser und Kaffee, kurze Wartezeiten. Ein Ort, an dem niemand auf die Uhr schauen muss.</p><p class="hint-serif">Gast statt Patient.</p>
+<ol class="laws">
+          <li><b>§1</b><span>Der Mensch zuerst.</span><small>Zuhören kommt vor Behandeln.</small></li>
+          <li><b>§2</b><span>Zeit statt Taktung.</span><small>Termine, in denen Sie wirklich ankommen dürfen.</small></li>
+          <li><b>§3</b><span>Alles unter einem Dach.</span><small>Viele Therapieformen, ein vertrauter Ansprechpartner.</small></li>
+          <li><b>§4</b><span>Ehrlichkeit.</span><small>Wir sagen, was hilft und was nicht.</small></li>
+          <li><b>§5</b><span>Gast statt Fall.</span><small>Sie sollen gerne wiederkommen, nicht müssen.</small></li>
+        </ol>
+</template>
+<template id="tpl-behandlung">
+<h2 id="panelTitle" tabindex="-1">Alles unter <em>einem</em> Dach.</h2>
+<h3>Behandlungsraum 1</h3><p class="lead">Ruhe und Tageslicht. Hier ist Zeit für Befund, Behandlung und alle Ihre Fragen, hinter geschlossener Tür und ohne Durchgangsverkehr.</p><ul class="chips"><li>Manuelle Therapie</li><li>CMD</li><li>Atlas-Axis</li><li>Osteopathische Ansätze</li><li>Schmerztherapie</li><li>Fango · Reizstrom</li><li>Stoßwelle</li></ul>
+<h3>Alle Leistungen</h3>
+<ol class="index">
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Manuelle Therapie</span><span class="ix-tag">Zertifikat</span></button><div class="ix-body"><p>Mit gezielten Handgriffen untersuche und behandle ich Gelenke, Muskeln und Nerven, dort, wo Bewegung blockiert ist. Nach gründlichem Befund kombiniere ich Mobilisation, Weichteiltechniken und aktives Üben.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Krankengymnastik</span><span class="ix-tag">Kasse</span></button><div class="ix-body"><p>Aktiv statt passiv: Kraft, Beweglichkeit und Sicherheit wachsen Schritt für Schritt, nach Operationen, Verletzungen oder bei chronischen Beschwerden. Dazu ein kurzes Heimprogramm.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Sport-Physiotherapie</span><span class="ix-tag">Aktiv</span></button><div class="ix-body"><p>Vom ersten schmerzfreien Schritt bis zurück auf den Platz: Belastung wird gezielt gesteigert, sportartspezifisch getestet und dokumentiert.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Schmerztherapie</span><span class="ix-tag">Individuell</span></button><div class="ix-body"><p>Schmerz hat immer eine Geschichte. Wir suchen die Ursache und kombinieren manuelle Techniken, Übungen und Aufklärung zu einem Plan, der zu Ihrem Alltag passt.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">CMD-Therapie</span><span class="ix-tag">Spezialisierung</span></button><div class="ix-body"><p>Bei Kieferschmerz, Knirschen, Knacken oder eingeschränkter Mundöffnung behandle ich Kiefergelenk und Kaumuskulatur, oft abgestimmt mit Ihrem Zahnarzt. Die HWS wird immer mitbetrachtet.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Atlas-Axis-Therapie</span><span class="ix-tag">Sanft</span></button><div class="ix-body"><p>Die beiden obersten Halswirbel steuern feinste Kopfbewegungen. Mit sehr sanften, präzisen Impulsen löse ich Spannungen in diesem sensiblen Bereich.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Stoßwellen-Therapie</span><span class="ix-tag">Modern</span></button><div class="ix-body"><p>Radiale Druckwellen regen die Durchblutung direkt am Sehnenansatz an, ohne Spritze und ohne OP. Klassische Einsatzgebiete: Ferse, Achillessehne, Ellenbogen, Schulter.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Traktion im Schlingentisch</span><span class="ix-tag">Entlastung</span></button><div class="ix-body"><p>Im Schlingentisch wird Ihr Körper teilweise schwerelos. Unter sanftem Zug entspannen Bandscheiben, Gelenke und Muskulatur.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Osteopathische Ansätze</span><span class="ix-tag">Ganzheitlich</span></button><div class="ix-body"><p>Faszien, Gelenke und innere Strukturen beeinflussen sich gegenseitig. Mit sanften Techniken folge ich den Spannungsketten bis zur Ursache.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Fango · Reizstrom</span><span class="ix-tag">Ergänzend</span></button><div class="ix-body"><p>Tiefenwärme aus der Fangopackung lockert die Muskulatur. Reizstrom lindert Schmerzen und aktiviert geschwächte Muskeln.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Lojer Manuthera</span><span class="ix-tag ix-hi"><b class="dot" aria-hidden="true"></b>Highlight</span></button><div class="ix-body"><p>Die Manuthera erlaubt dreidimensionale Mobilisation und Traktion der Wirbelsäule in Positionen, die auf einer normalen Liege nicht möglich sind.<a class="ix-link" href="#manuthera">Manuthera in Bewegung ansehen <span aria-hidden="true">↑</span></a></p></div></li>
+      </ol>
+</template>
+<template id="tpl-manuthera">
+<h2 id="panelTitle" tabindex="-1">Bewegung in <em>drei Dimensionen.</em></h2>
+<p class="lead">In Behandlungsraum 2 steht die Lojer Manuthera 242. Kopf-, Brust- und Beckenteil bewegen sich unabhängig voneinander: Sie liegen entspannt, die Liege führt die Bewegung. So kann ich Ihre Wirbelsäule und große Gelenke in Positionen mobilisieren, die auf einer normalen Liege nicht möglich sind.</p>
+<div class="manu-stage"><canvas id="glManu" role="img" aria-label="Partikel-Darstellung der Manuthera-Liege mit liegender Person; die Liegeteile zeigen Traktion, Flexion, Seitneigung und Rotation."></canvas></div>
+<div class="manu-modes" role="group" aria-label="Bewegung der Liege zeigen"><button type="button" aria-pressed="false"><span>Traktion</span><i></i></button><button type="button" aria-pressed="false"><span>Flexion</span><i></i></button><button type="button" aria-pressed="false"><span>Seitneigung</span><i></i></button><button type="button" aria-pressed="false"><span>Rotation</span><i></i></button></div>
+<p class="manu-read" aria-live="polite"></p>
+</template>
+<template id="tpl-training">
+<h2 id="panelTitle" tabindex="-1">In <em>Bewegung</em> kommen.</h2>
+<h3>Trainingsfläche</h3><p class="lead">Aktiv werden: Geräte, Übungen und Ihr persönliches Programm für zuhause. Angeleitet und begleitet, nicht allein gelassen.</p><ul class="chips"><li>Krankengymnastik</li><li>Sport-Physiotherapie</li><li>Schlingentisch</li></ul>
+<p class="next-hint">Mehr dazu: <a href="#behandlung" data-open="behandlung">Alle Leistungen</a></p>
+</template>
+<template id="tpl-wirbelsaeule">
+<h2 id="panelTitle" tabindex="-1">Jedes Segment erzählt <em>etwas.</em></h2>
+<p class="lead">Unter dem Dach trägt die Wirbelsäule das Haus. Wählen Sie einen Abschnitt.</p>
+<div class="segtabs" role="tablist" aria-label="Abschnitt der Wirbelsäule"><button type="button" role="tab" aria-selected="true" class="is-on">C1–C2</button><button type="button" role="tab" aria-selected="false" class="">C5–C6</button><button type="button" role="tab" aria-selected="false" class="">Th1–Th6</button><button type="button" role="tab" aria-selected="false" class="">L4–L5</button><button type="button" role="tab" aria-selected="false" class="">S1</button></div>
+<div class="segs"><article class="seg-card" data-seg="0">
+            <p class="seg-no">C1–C2</p>
+            <h3>Kopfgelenke</h3>
+            <dl><dt>Nerven</dt><dd>Nn. suboccipitales und N. occipitalis major versorgen Hinterkopf und tiefe Nackenmuskulatur.</dd><dt>Typisch</dt><dd>Vom Nacken aufsteigender Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen.</dd></dl>
+            <ul class="chips"><li>Atlas-Axis-Therapie</li><li>Manuelle Therapie</li><li>Fango</li></ul>
+          </article><article class="seg-card" hidden data-seg="1">
+            <p class="seg-no">C5–C6</p>
+            <h3>Halswirbelsäule</h3>
+            <dl><dt>Nerven</dt><dd>Wurzeln u. a. für Bizeps und Schulterheber, Gefühl außen am Arm bis zum Daumen.</dd><dt>Typisch</dt><dd>Ausstrahlung über die Armaußenseite bis in den Daumen, Kribbeln, Schwächegefühl beim Beugen.</dd></dl>
+            <ul class="chips"><li>Manuelle Therapie</li><li>Schlingentisch</li><li>Krankengymnastik</li></ul>
+          </article><article class="seg-card" hidden data-seg="2">
+            <p class="seg-no">Th1–Th6</p>
+            <h3>Brustwirbelsäule</h3>
+            <dl><dt>Nerven</dt><dd>Interkostalnerven der oberen Rippen versorgen Brustkorbwand und Zwischenrippenmuskeln.</dd><dt>Typisch</dt><dd>Blockaden mit atemabhängigem Stechen, Schmerz zwischen den Schulterblättern, „Rippenklemme“.</dd></dl>
+            <ul class="chips"><li>Manuelle Therapie</li><li>Lojer Manuthera</li><li>Fango</li></ul>
+          </article><article class="seg-card" hidden data-seg="3">
+            <p class="seg-no">L4–L5</p>
+            <h3>Lendenwirbelsäule</h3>
+            <dl><dt>Nerven</dt><dd>Wurzeln Richtung N. ischiadicus. L5 hebt den Fuß, Gefühl am Schienbein bis zur Großzehe.</dd><dt>Typisch</dt><dd>Bandscheiben-Region: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche.</dd></dl>
+            <ul class="chips"><li>Schlingentisch</li><li>Schmerztherapie</li><li>Krankengymnastik</li></ul>
+          </article><article class="seg-card" hidden data-seg="4">
+            <p class="seg-no">S1 · ISG</p>
+            <h3>Kreuzbein &amp; Becken</h3>
+            <dl><dt>Nerven</dt><dd>S1-Wurzel für Wade, Fußaußenrand und Achillessehnenreflex. Das Iliosakralgelenk verbindet Becken und Wirbelsäule.</dd><dt>Typisch</dt><dd>Ausstrahlung über die Beinrückseite bis zur Ferse, tiefsitzender einseitiger Kreuzschmerz.</dd></dl>
+            <ul class="chips"><li>Manuelle Therapie / ISG</li><li>Sport-Physiotherapie</li><li>Stoßwelle</li></ul>
+          </article></div>
+<p class="small">Vereinfachte Orientierung. Ersetzt keine ärztliche Diagnose. Bei Taubheit oder Lähmungszeichen bitte ärztlich abklären lassen.</p>
+<p class="next-hint">In 3D erkunden: <a href="test-4-puls-scan.html#achse">Wirbelsäulen-Scan in der klassischen Ansicht</a></p>
+</template>
+<!--JS-->

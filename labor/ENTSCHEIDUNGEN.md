@@ -54,6 +54,11 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 ## Porträt (31.10.2026, Entwürfe mit Beispiel-Büste)
 - `portrait.html` (Quellen `src/portrait`): 1 „Spannung lösen“ (Stich, Foto erscheint unter Maus/Finger, heilt langsam zu), 2 „Aus Punkten wird ein Mensch“ (Scroll: Wolke → Gesicht → Foto mit leichter Tiefe), 3 „Echter 3D-Scan“ (gestochene Punktwolke in Echtfarben, dreht). Platzhalter-Büste wird im Browser gerendert (keine echte Person). Kais Foto kommt am 1.11.; für 2 zusätzlich Tiefenbild (kostenlos erzeugbar), für 3 Scan per iPhone-App.
 
+## Design 2 „Zuhause“ – Haus als Startmenü (31.10.2026, Entwurf)
+- `zuhause.html` (Quellen `src/zuhause`): ein Bildschirm, kein Scrollen. Gestochenes Partikel-Haus mit Einrichtung (gleiche Daten wie Puls · Scan) ist die Navigation; 7 Orte als Schilder + Raum-Leiste: 00 Tür (Termin & Kontakt), 01 Empfang (Willkommen), 02 Wohnzimmer (Hausordnung), 03 Behandlung 1 (Leistungen), 04 Behandlung 2 (Manuthera, mit Liegen-Bühne), 05 Training (Bewegung), 06 Dach (Wirbelsäule, Abschnitte als Reiter).
+- Klick → Kamera fliegt hinein, Dach hebt sich, Wände vor der Kamera lösen sich auf (Puppenhaus-Blick); Inhalt als Panel rechts (PC) bzw. Blatt von unten (Handy); ‹ › / Pfeiltasten / Esc; Räume per Link direkt erreichbar (#manuthera usw.); „Klassische Ansicht“ verlinkt Puls · Scan. Texte aus Puls · Scan übernommen.
+- Offen: Kai vergleicht mit Puls · Scan; Wirbelsäule dort nur als Karten (3D-Scan in der klassischen Ansicht); Porträt später als eigener Ort möglich.
+
 ## Zweites Konzept: „Hausbesuch“ (31.10.2026, nur PC)
 - Auf Kais Wunsch frei entworfen, ohne V10-Vorlage: filmischer Rundgang durch ein warmes Haus (Haustür → Empfang mit Tee → Wohnzimmer → Behandlung → Training → Garten). Licht folgt der echten Tageszeit des Besuchers (umschaltbar: Morgen/Mittag/Abend/Nacht). Lichtpunkte im Raum öffnen die Therapien. Danach klassische Infoseiten (FAQ, Kontakt).
 - Datei: `hausbesuch.html` (Quellen `src/haus`). Eigene Schriften: Fraunces + Hanken Grotesk (OFL, eingebettet).

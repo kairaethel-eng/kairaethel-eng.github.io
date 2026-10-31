@@ -11,6 +11,8 @@ Kurzfassung für neue Chats, damit der alte Verlauf nicht geladen werden muss.
 - Neue Website-Richtung **„Puls · Scan“**: dunkel, Partikel (three.js), Bernstein-Akzente, „die Seite lebt“. Live-Website (`/index.html`, Impressum, Datenschutz) **nie ändern ohne ausdrückliches Go**.
 - Arbeitsstand: `labor/src/test-4/` → Build erzeugt `labor/test-4-puls-scan.html` (eine Datei, Schriften/JS eingebettet, keine externen Abrufe, `noindex`).
 - Weitere Seiten nur zum Vergleich: `test-1` Achse, `test-2` Puls, `test-3` Puls + Achse, `haus` Hausbesuch (warmes 3D-Haus, nur PC).
+- `zuhause` → `zuhause.html`: **Design 2**, Haus als Startmenü (ein Bildschirm, Räume anklicken, Panel/Blatt mit Inhalt). Nutzt `test-4/praxis.js`, `test-4/shapes.js` (housePoints), `manu/ideaA.js`.
+- `recht` → `recht-impressum.html`, `recht-datenschutz.html` (Entwürfe) · `portrait` → `portrait.html` (3 Ideen, Beispiel-Büste).
 - `manu` → `manuthera.html`: drei Entwürfe für das Manuthera-Highlight (A Bühne, B Raum schaffen, C Drei Ebenen), Vorschau privat https://claude.ai/artifact/74Cab3W8CQXB2hoMBGbtiv.
 - **Merkliste aller Entscheidungen (Handy/PC):** `labor/ENTSCHEIDUNGEN.md` – vor Änderungen lesen, danach pflegen.
 - Übergabe/Stand/nächste Schritte: `labor/UEBERGABE.md`.

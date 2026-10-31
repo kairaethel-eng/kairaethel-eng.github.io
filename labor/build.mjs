@@ -17,6 +17,7 @@ const PAGES = {
   'recht-ds': { out: 'recht-datenschutz.html', dir: 'recht', page: 'datenschutz.html' },
   'recht-imp': { out: 'recht-impressum.html', dir: 'recht', page: 'impressum.html' },
   'portrait': { out: 'portrait.html' },
+  'zuhause': { out: 'zuhause.html' },
 };
 // Zusätzliche Ausgabe ohne <html>/<head>/<body>-Gerüst (für die private Claude-Vorschau)
 const fragmentDir = process.env.FRAGMENT_DIR || '';
