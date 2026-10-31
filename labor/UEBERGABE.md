@@ -14,6 +14,8 @@ Kapitel 01 Spannung (Partikel-Körper, Verspannungen lösen) · 02 Bewegung · 0
 - Handy bleibt bei Kapitel 03/04 wie es ist (Kai: „mobil sieht es schöner aus“).
 
 ## Nächster Schritt
+- **Porträt:** Kai schickt am 1.11. Fotos → in `src/portrait/bust.js` `renderPhoto` durch Foto ersetzen (gleiche Datenform { w, h, rgba, depth, canvas }); Kai wählt 1/2/3.
+- **Rechtsseiten:** Entwürfe `recht-*.html` prüfen lassen; Berufshaftpflicht eintragen.
 - **Manuthera-Highlight:** A „Bühne“ ist in Puls · Scan eingebaut (Kapitel 04 nach dem Rundgang, `#manuthera`). Kai prüft am PC und iPhone (Testadresse aktuell, auch `labor/manuthera.html`). „Lojer“ auf der Live-Seite V10 korrigiert (31.10.).
 - Kai prüft die neuen Wirbelsäulen-Beschriftungen am PC und schickt neue Punkte.
 

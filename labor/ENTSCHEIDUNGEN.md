@@ -47,6 +47,12 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - Flüssigkeit auf echten Handys messen (Testumgebung ohne Grafikkarte).
 - Seiten tragen `noindex`; Veröffentlichung erst nach Freigabe. Keine externen Abrufe (Schriften und Bibliotheken eingebettet).
 
+## Rechtsseiten (Go 31.10.2026, Entwurf)
+- `recht-impressum.html`, `recht-datenschutz.html` (Quellen `src/recht`): dunkler Puls-Stil ohne 3D, HOP-Kreise als gestochene Partikel dezent im Hintergrund (Canvas 2D, atmen; „Bewegung anhalten“ wie Startseite), § 1 … in Kursivschrift, Inhaltsverzeichnis (PC mitlaufend, Handy aufklappbar), Druck hell. Texte **wörtlich** von der Live-Seite; Labor-Hinweis nennt Offenes (Berufshaftpflicht, Hosting-Abschnitt, § 3/§ 5 nur bei Nutzung, Fachperson prüfen).
+
+## Porträt (31.10.2026, Entwürfe mit Beispiel-Büste)
+- `portrait.html` (Quellen `src/portrait`): 1 „Spannung lösen“ (Stich, Foto erscheint unter Maus/Finger, heilt langsam zu), 2 „Aus Punkten wird ein Mensch“ (Scroll: Wolke → Gesicht → Foto mit leichter Tiefe), 3 „Echter 3D-Scan“ (gestochene Punktwolke in Echtfarben, dreht). Platzhalter-Büste wird im Browser gerendert (keine echte Person). Kais Foto kommt am 1.11.; für 2 zusätzlich Tiefenbild (kostenlos erzeugbar), für 3 Scan per iPhone-App.
+
 ## Zweites Konzept: „Hausbesuch“ (31.10.2026, nur PC)
 - Auf Kais Wunsch frei entworfen, ohne V10-Vorlage: filmischer Rundgang durch ein warmes Haus (Haustür → Empfang mit Tee → Wohnzimmer → Behandlung → Training → Garten). Licht folgt der echten Tageszeit des Besuchers (umschaltbar: Morgen/Mittag/Abend/Nacht). Lichtpunkte im Raum öffnen die Therapien. Danach klassische Infoseiten (FAQ, Kontakt).
 - Datei: `hausbesuch.html` (Quellen `src/haus`). Eigene Schriften: Fraunces + Hanken Grotesk (OFL, eingebettet).
