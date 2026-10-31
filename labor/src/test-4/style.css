@@ -64,6 +64,20 @@ em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--amber)
 .chap-now i{font:italic 400 15px/1 var(--serif);color:var(--amber)}
 
 main{position:relative;z-index:2}
+/* Lebende Überschriften */
+.lw{display:inline-block;white-space:nowrap}
+.lt{display:inline-block}
+#a-title .lt{transform:translateY(calc(var(--dy,0em) * var(--mis,0))) rotate(calc(var(--rot,0deg) * var(--mis,0)))}
+.roofline{display:block;width:min(560px,92%);height:clamp(22px,3vw,40px);margin:0 0 10px -2px;overflow:visible}
+.roofline path{fill:none;stroke:var(--amber);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+.laws li.is-on span{animation:breathe 5.5s ease-in-out infinite}
+@keyframes breathe{0%,100%{letter-spacing:-.04em;font-weight:800}50%{letter-spacing:-.012em;font-weight:640}}
+#t-title .lt{opacity:0}
+#t-title.walk .lt{animation:step .75s cubic-bezier(.3,1.4,.5,1) both calc(var(--i) * 70ms),gait 7s ease-in-out calc(1.6s + var(--i) * 90ms) infinite}
+@keyframes step{0%{opacity:0;transform:translateY(-.45em) rotate(-10deg)}60%{opacity:1;transform:translateY(.05em) rotate(2deg)}100%{opacity:1;transform:none}}
+@keyframes gait{0%,10%,100%{opacity:1;transform:none}4%{opacity:1;transform:translateY(-.09em) rotate(-4deg)}7%{opacity:1;transform:translateY(.02em)}}
+.ix-name.wave .lt{animation:wave .7s ease-out calc(var(--i) * 22ms)}
+@keyframes wave{0%,100%{transform:none;color:inherit}35%{transform:translateY(-.16em);color:var(--amber)}}
 /* dunkler Lichthof hinter Text: bleibt über den Partikeln lesbar */
 .hero-inner,.manifest .wrap,.axis-head,.roof-head,.index,.laws,.door-inner{text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 22px rgba(10,22,27,.9)}
 .btn{text-shadow:none}
@@ -99,6 +113,10 @@ main{position:relative;z-index:2}
 .axis-head h2{font-size:clamp(34px,3.6vw,58px);margin-bottom:14px}
 .axis-hint{font-size:15px;color:var(--dim);max-width:42ch}
 .only-mob{display:none}
+.style-switch{display:flex;align-items:center;gap:6px;margin-top:14px;font:600 10.5px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.style-switch span{margin-right:6px}
+.style-switch button{appearance:none;border:1px solid var(--line);background:transparent;color:var(--dim);font:inherit;letter-spacing:.12em;padding:7px 10px;border-radius:3px;cursor:pointer;transition:all .3s}
+.style-switch button.is-on{border-color:var(--amber);color:var(--txt);background:rgba(224,154,53,.1)}
 .segnav{grid-column:1;grid-row:2;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:26px}
 .segnav button{appearance:none;background:rgba(16,34,42,.5);border:1px solid var(--line);border-radius:3px;color:var(--dim);padding:12px 8px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;transition:border-color .3s,background .3s,color .3s}
 .segnav b{white-space:nowrap;font:italic 400 19px/1 var(--serif);color:var(--mute);transition:color .3s}
@@ -222,4 +240,6 @@ main{position:relative;z-index:2}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   .statement .word{opacity:1}
+  #t-title .lt{opacity:1}
+  .roofline path{stroke-dashoffset:0}
 }

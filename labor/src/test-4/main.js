@@ -93,12 +93,14 @@ const vert = /* glsl */`
       vec2 uv = position.xy / uBodyWH + .5;
       float relax = texture2D(uRelax, vec2(uv.x, 1.-uv.y)).r;
       float tension = aHeat * (1. - relax);
-      p = position + jitter(.012 + tension*.11, 6. + tension*10.);
+      float breath = sin(uTime*1.15);
+      p = position * vec3(1. + breath*.007, 1. + breath*.004, 1.) + jitter(.012 + tension*.11, 6. + tension*10.);
       p = rotY(p, sin(uTime*.25)*.32);
       vec3 base = mix(cPetrol, cBone, .25 + aRand.y*.35);
-      col = mix(base, cAmber, smoothstep(.08, .7, tension));
+      float throb = .7 + .3*sin(uTime*3.4 + aRand.x*.8);
+      col = mix(base, cAmber, smoothstep(.08, .7, tension) * throb);
       col = mix(col, mix(cBlue, cGreen, aRand.x), relax * aHeat * .85);
-      sz = 1. + tension*.9;
+      sz = 1. + tension*.9*throb;
     } else if(i==1){
       float lane = floor(aRand.x*11.);
       float x = mod(aRand.z*18. + uTime*(.35+aRand.y*.3), 18.) - 9.;
@@ -142,6 +144,7 @@ const vert = /* glsl */`
     vec3 pA, pB, cA, cB; float sA, sB, aA, aB;
     shape(i0, pA, cA, sA, aA); shape(i1, pB, cB, sB, aB);
     vec3 p = mix(pA, pB, t);
+    p += vec3(sin(uTime*.5 + aRand.y*6.283), cos(uTime*.42 + aRand.z*6.283), 0.) * .012 * mix(uXf[i0].w, uXf[i1].w, t);
     // Zerstäuben zwischen zwei Formen
     vec3 n = normalize(vec3(aRand.x-.5, aRand.y-.5, aRand.z-.5)+1e-4);
     // Streuung im Verhältnis zur Formgröße (auf dem Handy kleiner, damit Text frei bleibt)
@@ -282,7 +285,8 @@ const words = $$('.word', statement);
 // groben Partikel. Knochen = gleichmäßig gesetzte Punkte auf dunklem Kern (fest, ruhig).
 // Nerven = Partikel, die wirklich fließen; Signale laufen vom Kopf durchs Rückenmark in die Wurzeln.
 const V3 = THREE.Vector3;
-const det = spineStipple(isDesktop() ? 115000 : 46000);
+const det = spineStipple(0, false);
+const N_GRAIN = isDesktop() ? 165000 : 46000, N_SLICE = isDesktop() ? 330000 : 85000;
 const SC = det.SC, CY = det.CY;
 const sU = {
   uTime: uniforms.uTime, uRot: uniforms.uSpineRot, uCut: uniforms.uCut, uXf: { value: uniforms.uXf.value[2] },
@@ -318,16 +322,11 @@ const coreMat = new THREE.ShaderMaterial({
 const core = new THREE.Mesh(det.coreGeo, coreMat);
 core.frustumCulled = false;
 
-// 2) Knochenpunkte: gleichmäßig, ohne Flimmern, mit klarem Licht und Schatten
-const bGeo = new THREE.BufferGeometry();
-bGeo.setAttribute('position', new THREE.BufferAttribute(det.pos, 3));
-bGeo.setAttribute('normal', new THREE.BufferAttribute(det.nor, 3));
-bGeo.setAttribute('aZone', new THREE.BufferAttribute(det.zone, 1));
-bGeo.setAttribute('aKind', new THREE.BufferAttribute(det.kind, 1));
+// 2) Knochen in zwei Darstellungen: „Schichten“ (CT-Schnittlinien) oder „Körnung“ (gestochene Punkte)
 const boneMat = new THREE.ShaderMaterial({
   uniforms: sU,
   vertexShader: GLSL_COMMON + /* glsl */`
-    attribute float aZone, aKind;
+    attribute float aZone, aKind; uniform float uMaxSize;
     varying vec3 vCol; varying float vVis;
     void main(){
       vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
@@ -344,7 +343,7 @@ const boneMat = new THREE.ShaderMaterial({
       vCol = col; vVis = step(uCut, p.y) * uOn;
       vec4 mv = viewMatrix * vec4(p, 1.);
       gl_Position = projectionMatrix * mv;
-      gl_PointSize = clamp(uStip / -mv.z, 1., 9.) * (1. + g * .8);
+      gl_PointSize = clamp(uStip / -mv.z, 1., uMaxSize) * (1. + g * .8);
     }`,
   fragmentShader: /* glsl */`
     varying vec3 vCol; varying float vVis;
@@ -355,8 +354,30 @@ const boneMat = new THREE.ShaderMaterial({
       #include <colorspace_fragment>
     }`,
 });
-const bones = new THREE.Points(bGeo, boneMat);
-bones.frustumCulled = false;
+const STYLES = {};
+function boneStyle(name) {
+  if (STYLES[name]) return STYLES[name];
+  const d = name === 'grain' ? det.makeGrain(N_GRAIN) : det.makeSlices(N_SLICE, isDesktop() ? 0.024 : 0.032, 0.12);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(d.pos, 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(d.nor, 3));
+  g.setAttribute('aZone', new THREE.BufferAttribute(d.zone, 1));
+  g.setAttribute('aKind', new THREE.BufferAttribute(d.kind, 1));
+  g.setDrawRange(0, d.count);
+  const m = boneMat.clone();
+  m.uniforms = { ...sU, uStip: { value: 1 }, uMaxSize: { value: name === 'grain' ? 6.5 : 2.6 } };
+  const pts = new THREE.Points(g, m);
+  pts.frustumCulled = false;
+  return (STYLES[name] = { pts, spacing: d.spacing, name });
+}
+let bones = boneStyle('slices');
+// Umschalter „Darstellung“ (Labor: zum Vergleichen)
+$$('.style-switch button').forEach((b) => b.addEventListener('click', () => {
+  const st = boneStyle(b.dataset.style);
+  if (st === bones) return;
+  spineGroup.remove(bones.pts); bones = st; spineGroup.add(bones.pts);
+  $$('.style-switch button').forEach((x) => x.classList.toggle('is-on', x === b));
+}));
 
 // 3) Nerven: Kurven als Textur (Zeile 0 Rückenmark, dann Wurzeln); Versorgungsbahn eigene Textur in Weltkoordinaten
 const ROWS = det.curves.length;
@@ -419,13 +440,13 @@ const nerveMat = new THREE.ShaderMaterial({
         p = curveAt(uPeriTex, 0., 1., t) + aOff * uXf.w * 4.;
         float r1 = (S1 - uPeriStart) * 4. - 1., r2 = (S2 - uPeriStart) * 4. - 1.;
         pk = max(packet(r1 * .55 - t, 40.) * step(0., r1), packet(r2 * .55 - t, 40.) * step(0., r2)) * uPeri;
-        base = .5 * uPeri; pk *= 1.3;
+        base = .4 * uPeri;
       }
-      vec3 col = cBlue * base + cSignal * pk * 1.5;
+      vec3 col = cBlue * base + cSignal * pk * 1.15;
       float vis = step(uCut, p.y) * uOn;
       vec4 mv = viewMatrix * vec4(p, 1.);
       gl_Position = projectionMatrix * mv;
-      gl_PointSize = clamp(uPix * (1.1 + pk * 2.2) * 15. / -mv.z, 1., 10.);
+      gl_PointSize = clamp(uPix * (1.05 + pk * 1.4) * 15. / -mv.z, 1., 7.);
       vCol = col; vA = vis * clamp(base + pk, 0., 1.4);
     }`,
   fragmentShader: /* glsl */`
@@ -447,7 +468,7 @@ const nervesGhost = new THREE.Points(nGeo, ghostMat);
 nervesGhost.frustumCulled = false;
 
 const spineGroup = new THREE.Group();
-spineGroup.add(core, bones, nervesGhost, nerves);
+spineGroup.add(core, bones.pts, nervesGhost, nerves);
 spineGroup.visible = false;
 scene.add(spineGroup);
 
@@ -489,7 +510,7 @@ function updatePeri(zoneKey) {
   // Beschriftung am sichtbaren Ende der Bahn
   curve.getPointAt(desk ? 0.72 : 0.6, _pv); _pv.project(camera);
   const lx = Math.min((_pv.x * 0.5 + 0.5) * innerWidth, innerWidth - 16), ly = (-_pv.y * 0.5 + 0.5) * innerHeight;
-  periLabel.style.transform = `translate(${lx}px, ${ly}px) translate(-100%, -130%)`;
+  periLabel.style.transform = `translate(${lx}px, ${ly}px) translate(-100%, -260%)`;
   periLabel.textContent = cfg.txt;
 }
 
@@ -569,7 +590,8 @@ function updateAxis(dt) {
   spineGroup.visible = solid > 0;
   sU.uOn.value = solid > 0 ? 1 : 0;
   // Punktgröße so, dass die Knochenpunkte bei jeder Entfernung dicht an dicht liegen
-  sU.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * innerHeight * 0.5 / tanH * det.spacing * X.w * 0.85;
+  // Punktgröße: Körnung dicht an dicht, Schichten als feine Linie
+  bones.pts.material.uniforms.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * innerHeight * 0.5 / tanH * X.w * (bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);
 
   // Kamera: Übersicht ↔ Kamerafahrt
   const w = inSec ? smooth(ph.M0, ph.J0, p) * (1 - smooth(ph.J1, ph.M1, p)) : 0;
@@ -642,6 +664,58 @@ function targetMorph() {
   return m;
 }
 
+// ---------- Lebende Überschriften ----------
+function splitLetters(el) {
+  el.setAttribute('aria-label', el.textContent.replace(/\s+/g, ' ').trim());
+  let i = 0;
+  const walk = (node) => [...node.childNodes].forEach((n) => {
+    if (n.nodeType === 3) {
+      const frag = document.createDocumentFragment();
+      n.textContent.split(/(\s+)/).forEach((w) => {
+        if (!w) return;
+        if (!w.trim()) { frag.appendChild(document.createTextNode(w)); return; }
+        const word = document.createElement('span'); word.className = 'lw'; word.setAttribute('aria-hidden', 'true');
+        [...w].forEach((c) => { const sp = document.createElement('span'); sp.className = 'lt'; sp.textContent = c; sp.style.setProperty('--i', i++); word.appendChild(sp); });
+        frag.appendChild(word);
+      });
+      n.replaceWith(frag);
+    } else if (n.nodeType === 1 && n.tagName !== 'BR') walk(n);
+  });
+  walk(el);
+  return $$('.lt', el);
+}
+const rnd2 = (a) => (Math.random() * 2 - 1) * a;
+// 03 Achse: Buchstaben stehen schief wie eine Fehlstellung und richten sich beim Hereinscrollen aus
+const aTitle = $('#a-title');
+splitLetters(aTitle).forEach((l) => { l.style.setProperty('--dy', rnd2(0.32).toFixed(2) + 'em'); l.style.setProperty('--rot', rnd2(13).toFixed(1) + 'deg'); });
+// 04 Dach: Dachlinie zeichnet sich über die Überschrift, die Buchstaben kommen darunter zur Ruhe
+const dTitle = $('#d-title'), roofLetters = splitLetters(dTitle);
+dTitle.insertAdjacentHTML('beforebegin', '<svg class="roofline" viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true"><path d="M2 38 L150 3 L298 38" pathLength="1"/></svg>');
+const roofline = $('.roofline path');
+// 05 Tür: Buchstaben setzen Schritt für Schritt auf, danach in Abständen ein kleiner Gang
+const tTitle = $('#t-title');
+splitLetters(tTitle);
+new IntersectionObserver((es, ob) => es.forEach((e) => { if (e.isIntersecting) { tTitle.classList.add('walk'); ob.disconnect(); } }), { threshold: 0.4 }).observe(tTitle);
+// Leistungen: ein Impuls läuft durch den Namen (Maus darüber bzw. beim Durchscrollen auf dem Handy)
+const ixRows = $$('.index li').map((li) => {
+  const name = $('.ix-name', li); splitLetters(name);
+  const fire = () => { name.classList.remove('wave'); void name.offsetWidth; name.classList.add('wave'); };
+  $('button', li).addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') fire(); });
+  return { li, fire, last: 0 };
+});
+function livingHeadlines() {
+  if (reduced) return;
+  const vh = innerHeight;
+  aTitle.style.setProperty('--mis', smooth(vh * 0.3, vh * 0.85, aTitle.getBoundingClientRect().top).toFixed(3));
+  const dt2 = dTitle.getBoundingClientRect().top, k = 1 - smooth(vh * 0.45, vh * 0.92, dt2);
+  roofline.style.strokeDashoffset = (1 - smooth(0.05, 0.75, k)).toFixed(3);
+  roofLetters.forEach((l, i) => { const lp = clamp(k * 1.7 - i * 0.03); l.style.transform = lp >= 1 ? '' : `translateY(${(-(1 - lp) * 0.45).toFixed(3)}em)`; l.style.opacity = (0.25 + 0.75 * lp).toFixed(3); });
+  if (!isDesktop()) {
+    const now = performance.now();
+    ixRows.forEach((r) => { const b = r.li.getBoundingClientRect(); const c = b.top + b.height / 2; if (Math.abs(c - vh * 0.5) < b.height * 0.5 && now - r.last > 2500) { r.last = now; r.fire(); } });
+  }
+}
+
 // ---------- Dach (Handy): Haus wird beim Scrollen zum kleinen Emblem oben rechts ----------
 const roofHead = $('#d-title');
 function roofEmblem() {
@@ -658,7 +732,12 @@ let emblemK = 0;
 // ---------- Schleife ----------
 const clock = new THREE.Clock();
 const top = $('#top');
+// Handy: im Stillstand nur jedes zweite Bild rendern (Akku), beim Scrollen volle Rate
+let lastInput = 0, frameN = 0;
+['scroll', 'touchmove', 'pointermove'].forEach((ev) => addEventListener(ev, () => (lastInput = performance.now()), { passive: true }));
 function tick() {
+  frameN++;
+  if (!isDesktop() && performance.now() - lastInput > 1500 && frameN % 2) return;
   const dt = Math.min(clock.getDelta(), 0.05);
   uniforms.uTime.value += reduced ? 0 : dt;
   const tm = targetMorph();
@@ -669,18 +748,19 @@ function tick() {
   const vh = innerHeight;
   const doorTop = door.getBoundingClientRect().top;
   let dim = isDesktop() ? smooth(vh * 0.75, vh * 0.25, doorTop) : smooth(vh * 1.3, vh * 0.8, doorTop);
-  let dimMax = 0.82;
+  const dimMax = 1; // Kontakt: Partikel blenden ganz aus (Handy und PC)
   if (!isDesktop()) {
-    dimMax = 1; // Handy: Logo blendet vor dem Kontakt ganz aus statt abgeschnitten zu werden
     if (morphNow > 0.3 && morphNow < 1.6) dim = Math.max(dim, 0.55); // Bewegungslinien leise hinter Text
     const head = heads[Math.round(clamp(morphNow, 0, 4))];
     if (head && morphNow > 1.5) dim = Math.max(dim, smooth(vh * 0.62, vh * 0.25, head.getBoundingClientRect().top) * 0.9);
   }
+  if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
   uniforms.uSize.value = isDesktop() ? 1 : 1.1 - (morphNow > 2.5 && morphNow < 3.5 ? emblemK * 0.45 : 0);
-  uniforms.uSpread.value = isDesktop() ? 1 : 0.45;
+  uniforms.uSpread.value = isDesktop() ? 0.55 : 0.45;
   if (!isDesktop()) roofEmblem();
-  uniforms.uFadeMid.value = isDesktop() ? 0.35 : 0.7;
+  livingHeadlines();
+  uniforms.uFadeMid.value = isDesktop() ? 0.62 : 0.7;
 
   // Titel
   if (!reduced && morphNow < 0.8) chars.forEach((c, i) => {

@@ -12,13 +12,17 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 |---|---|---|---|
 | 1A Spannung lösen | Figur bleibt stehen und löst sich beim ersten Scrollen an Ort und Stelle in Bewegungslinien über den ganzen Bildschirm auf (gedimmt hinter Text) | umgesetzt | **prüfen:** PC wechselt erst, wenn Kapitel 02 hereinkommt – gleiches Timing übernehmen? |
 | 2B Dach | Partikel-Haus wird beim Scrollen zum Emblem oben rechts, Liste lässt rechts Platz | umgesetzt | vermutlich nicht nötig (Haus steht rechts neben der Liste) – prüfen |
-| 3 Logo / Kontakt | HOP-Kreise tiefer und kleiner, blenden vor letztem Paragrafen/Kontakt aus, weicher Übergang statt harter Kante | umgesetzt | **übernehmen prüfen:** weicher Übergang zum Kontakt, früheres Ausblenden |
+| 3 Logo / Kontakt | HOP-Kreise tiefer und kleiner, blenden vor letztem Paragrafen/Kontakt aus, weicher Übergang statt harter Kante | umgesetzt | umgesetzt: Partikel blenden beim Kontakt ganz aus (vorher lagen die Kreise hinter den Kontaktdaten) |
 | 4A Wirbelsäule bedienen | Karten laufen beim normalen Scrollen untereinander durch, Fortschritt „C1 ● ○ ○ ○ ○ S1“ | umgesetzt | bleibt Scroll-Kamerafahrt mit Abschnitts-Knöpfen |
 | Kapitelanzeige | Leiste zeigt aktuelles Kapitel, während der Hausordnung „§ Hausordnung“ | umgesetzt | **prüfen:** PC-Navigation kennt „Hausordnung“ nicht |
 | Wirbelsäule 1A | Knochen „gestochen“: gleichmäßige Punkte, dunkler Kern verdeckt die Rückseite, Licht/Schatten, kein Flimmern | umgesetzt | umgesetzt |
 | Nerven 2A | Partikel fließen wirklich; Signale laufen vom Kopf durchs Rückenmark in die Wurzeln; aktiver Abschnitt feuert stärker; Nerven schimmern gedämpft durch den Knochen | umgesetzt | umgesetzt |
 | Nerven 2B | Versorgungsbahn des aktiven Abschnitts bis zum Zielgebiet mit Beschriftung (z. B. „Armaußenseite · Daumen“) | umgesetzt | umgesetzt |
 | Lesbarkeit | dunkler Lichthof hinter Text, Partikel-Streuung proportional zur Formgröße, Abdunkeln im Übergang | umgesetzt | umgesetzt |
+| Übergang Spannung → Bewegung | ruhiger: weniger Streuung, stärker gedimmt (Kais Screenshot: „für einen Moment zu viel los“) | umgesetzt | umgesetzt |
+| Lebende Überschriften | 01 Buchstaben entspannen unter Maus/Welle · 02 Wort für Wort · 03 Buchstaben schief wie Fehlstellung → richten sich aus · 04 Dachlinie zeichnet sich, Buchstaben kommen darunter zur Ruhe · § Paragraf „atmet“ · 05 „Der erste Schritt.“ setzt Schritt für Schritt auf, dann kleiner Gang · Leistungen: Impulswelle durch den Namen (PC: Maus, Handy: beim Durchscrollen) | umgesetzt | umgesetzt |
+| Wirbelsäule Darstellung | Umschalter „Schichten“ (CT-Schnittlinien, Standard) / „Körnung“ (feiner gestochen) – Kai entscheidet nach Vergleich, danach Umschalter entfernen | umgesetzt | umgesetzt |
+| Leben im Stillstand (Handy) | Figur atmet, Verspannungen pochen, leichte Drift aller Partikel; im Stillstand nur jedes 2. Bild (Akku), beim Scrollen volle Rate | umgesetzt | Atmen/Pochen/Drift auch am PC; PC rendert immer voll |
 
 ## Offen für die echte Website
 - Inhalte aus V10 übernehmen: Körperkarte „Wo tut's weh?“, Porträt Kai, Einblicke, ggf. Rundgang (Idee: Partikel-Grundriss).
