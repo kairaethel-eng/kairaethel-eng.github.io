@@ -29,6 +29,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 | 3A Wirbelsäule ohne „tote“ Scrolls | kürzere Haltezonen, Abschnitt ¼ kürzer, Kamera kreist langsam mit; Nerven-Infos erscheinen im Raum entlang der Bahn (Austritt → Nerven → Gefühl → Ziel → typisch), Karte links nur Titel + Therapien | unverändert (Kai mag Handy so) | umgesetzt |
 | 3B Körper-Silhouette | zarte Partikel-Silhouette rechts, Nervenbahn fließt ins Versorgungsgebiet, das glüht | – | umgesetzt |
 | 2A Dach: Röntgenblick + Layout | Überschrift, Raum-Knöpfe und Raumkarte auf einer Bildschirmhöhe; Haus durchscheinend, Dach schwebt, Räume als anklickbare Schilder, Haus mit Maus drehbar; Rundgang ¼ kürzer, kürzere Haltezonen | unverändert | umgesetzt |
+| Nerven-Beschriftung Wirbelsäule (Go 31.10.) | Bahn endet auf der zur Wirbelsäule gewandten Körperseite; Beschriftungen suchen sich freien Platz (nie auf Wirbelsäule, Zielpunkt oder anderen Schildern), dünne Hinweislinien zum Punkt; etwas größer und kräftiger hinterlegt, „Typisch“ ruhig unter der Silhouette; erster und letzter Abschnitt zeigen alle Infos | unverändert | umgesetzt |
 | Leben im Stillstand (Handy) | Figur atmet, Verspannungen pochen, leichte Drift aller Partikel; im Stillstand nur jedes 2. Bild (Akku), beim Scrollen volle Rate | umgesetzt | Atmen/Pochen/Drift auch am PC; PC rendert immer voll |
 
 ## Testadresse (ab 31.10.2026, Kais Go)

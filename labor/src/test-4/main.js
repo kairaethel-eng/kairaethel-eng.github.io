@@ -577,11 +577,11 @@ function setActive(i) {
 }
 // ---------- Nerven-Infos im Raum (PC): erscheinen Schritt für Schritt entlang der Bahn ----------
 const NINFO = {
-  c12: { exit: 'Austritt C1–C2', nerv: 'Nn. suboccipitales · N. occipitalis major', gef: 'Tiefe Nackenmuskulatur', ziel: 'Hinterkopf', typ: 'Typisch: Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen', tgt: [100, 24] },
-  c56: { exit: 'Austritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [164, 240] },
-  th16: { exit: 'Austritt Th1–Th6', nerv: 'Interkostalnerven, obere Rippen', gef: 'Brustkorbwand · Zwischenrippen', ziel: 'Brustkorb', typ: 'Typisch: atemabhängiges Stechen, Schmerz zwischen den Schulterblättern', tgt: [118, 120] },
-  l45: { exit: 'Austritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [122, 400] },
-  s1: { exit: 'Austritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [120, 410] },
+  c12: { exit: 'Austritt C1–C2', nerv: 'Nn. suboccipitales · N. occipitalis major', gef: 'Tiefe Nackenmuskulatur', ziel: 'Hinterkopf', typ: 'Typisch: Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen', tgt: [84, 30] },
+  c56: { exit: 'Austritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [36, 240] },
+  th16: { exit: 'Austritt Th1–Th6', nerv: 'Interkostalnerven, obere Rippen', gef: 'Brustkorbwand · Zwischenrippen', ziel: 'Brustkorb', typ: 'Typisch: atemabhängiges Stechen, Schmerz zwischen den Schulterblättern', tgt: [80, 118] },
+  l45: { exit: 'Austritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [76, 404] },
+  s1: { exit: 'Austritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [72, 412] },
 };
 const NC_KEYS = ['exit', 'nerv', 'gef', 'ziel', 'typ'];
 const ncalls = NC_KEYS.map((k) => { const el = document.createElement('div'); el.className = 'ncall ncall-' + k; el.setAttribute('aria-hidden', 'true'); document.body.appendChild(el); return el; });
@@ -620,28 +620,106 @@ function silTarget(zoneKey) {
   sil.updateMatrixWorld(true);
   return sil.localToWorld(local.clone());
 }
+// Hinweislinien von der Beschriftung zum Punkt (SVG über der Szene)
+const nlines = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+nlines.setAttribute('class', 'nlines'); nlines.setAttribute('aria-hidden', 'true');
+nlines.innerHTML = '<line/><line/><line/><line/>'; document.body.appendChild(nlines);
+const nl = [...nlines.querySelectorAll('line')];
+const toPx = (v) => { const q = v.clone().project(camera); return [(q.x * 0.5 + 0.5) * innerWidth, (-q.y * 0.5 + 0.5) * innerHeight]; };
+// Hindernisse auf dem Bildschirm: jeder sichtbare Wirbel als Rechteck (inkl. Fortsätze), Silhouette, Zielpunkt
+function spineRects() {
+  const X = uniforms.uXf.value[2], rot = uniforms.uSpineRot.value, out = [];
+  const right = new V3().setFromMatrixColumn(camera.matrixWorld, 0), up = new V3().setFromMatrixColumn(camera.matrixWorld, 1);
+  det.levels.forEach((lv) => {
+    const c = new V3(lv.center.x * SC, (lv.center.y - CY) * SC, lv.center.z * SC).applyAxisAngle(new V3(0, 1, 0), rot).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z));
+    if (c.clone().project(camera).z > 1) return;
+    const [cx, cy] = toPx(c), [ex] = toPx(c.clone().addScaledVector(right, lv.R * SC * X.w * 2.3)), [, ey] = toPx(c.clone().addScaledVector(up, (lv.h * 0.5 + lv.disc + 0.04) * SC * X.w));
+    const rx = Math.abs(ex - cx), ry = Math.abs(ey - cy);
+    out.push([cx - rx, cy - ry, cx + rx, cy + ry]);
+  });
+  return out;
+}
+const overlap = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
+// Kandidaten rund um den Andockpunkt: Richtung (dx, dy) × Abstand; Kosten = Überdeckung gewichtet + Weg + Vorzugsrichtung
+const DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
+const DIST = [34, 64, 104, 150, 210];
+const PREF = [[-1, 0], [0, -1], [0, 1], [-1, 1]]; // Austritt links · Nerven oben · Gefühl unten · Ziel links unten
+const ncState = NC_KEYS.map(() => ({ x: 0, y: 0, k: -1, init: false }));
+let ncT = 0;
 function updateCallouts(zoneKey, fl, on) {
   const show = isDesktop() && on && zoneKey && periCurve;
   const info = zoneKey ? NINFO[zoneKey] : null;
   const steps = [0.08, 0.2, 0.32, 0.44, 0.56]; // Reihenfolge: Austritt → Nerven → Gefühl → Ziel → typisch
-  const pts = periCurve ? [0, 0.32, 0.64, 1, 0.06].map((t) => periCurve.getPointAt(t)) : [];
   ncalls.forEach((el, i) => {
     const vis = show && fl > steps[i] && fl < 0.97;
     el.style.opacity = vis ? 1 : 0;
-    if (!show) return;
-    el.textContent = info[NC_KEYS[i]];
-    let x, y;
-    if (i === 4) { // „Typisch“ ruhig unter der Silhouette
-      const f = sil.localToWorld(new V3(0, -BODY_H / 2 * BODY_SCALE, 0)).project(camera);
-      x = (f.x * 0.5 + 0.5) * innerWidth; y = (-f.y * 0.5 + 0.5) * innerHeight + 34;
-      el.style.transform = `translate(${Math.min(x, innerWidth - 190)}px, ${Math.min(y, innerHeight - 70)}px) translate(-50%, 0)`;
-      return;
-    }
-    const q = pts[i].clone().project(camera);
-    x = (q.x * 0.5 + 0.5) * innerWidth; y = (-q.y * 0.5 + 0.5) * innerHeight;
-    const off = [[22, 26], [0, -28], [0, 24], [-34, -34]][i];
-    el.style.transform = `translate(${Math.min(x + off[0], innerWidth - 24)}px, ${y + off[1]}px) translate(${i === 0 ? '0' : i === 3 ? '-100%' : '-50%'}, -50%)`;
+    if (i < 4) nl[i].style.opacity = vis ? 1 : 0;
   });
+  if (!show) { ncState.forEach((s) => { s.init = false; s.k = -1; }); return; }
+  const now = performance.now(), ease = 1 - Math.exp(-Math.min(0.1, (now - ncT) / 1000) * 7); ncT = now;
+  const W = innerWidth, H = innerHeight, MINX = Math.min(600, W * 0.42); // Textspalte links frei halten
+  const spine = spineRects();
+  // Silhouette-Rahmen (Arme hängen, daher schmal) und leuchtendes Ziel
+  const [sx0, sy0] = toPx(sil.localToWorld(new V3(-BODY_W * 0.36 * BODY_SCALE, BODY_H / 2 * BODY_SCALE, 0)));
+  const [sx1, sy1] = toPx(sil.localToWorld(new V3(BODY_W * 0.36 * BODY_SCALE, -BODY_H / 2 * BODY_SCALE, 0)));
+  const silR = [sx0, sy0, sx1, sy1];
+  const anchors = [0, 0.32, 0.64, 1].map((t) => toPx(periCurve.getPointAt(t)));
+  const [tx, ty] = anchors[3], tgtR = [tx - 34, ty - 34, tx + 34, ty + 34];
+  // Bahn als Kette kleiner Rechtecke
+  const pathR = []; for (let t = 0.04; t < 0.97; t += 0.06) { const [x, y] = toPx(periCurve.getPointAt(t)); pathR.push([x - 6, y - 6, x + 6, y + 6]); }
+  const placed = [], segs = [];
+  const inR = (x, y, r) => x > r[0] && x < r[2] && y > r[1] && y < r[3];
+  // „Typisch“ ruhig unter der Silhouette (fest), dient den anderen als Hindernis
+  {
+    const el = ncalls[4]; if (el.textContent !== info.typ) el.textContent = info.typ;
+    const w = el.offsetWidth, h = el.offsetHeight;
+    const x = Math.min(Math.max((sx0 + sx1) / 2 - w / 2, MINX), W - w - 20), y = Math.min(sy1 + 18, H - h - 18);
+    el.style.transform = `translate(${x}px, ${y}px)`; placed.push([x - 6, y - 6, x + w + 6, y + h + 6]);
+  }
+  for (let i = 0; i < 4; i++) {
+    const el = ncalls[i], txt = info[NC_KEYS[i]]; if (el.textContent !== txt) { el.textContent = txt; ncState[i].k = -1; }
+    const w = el.offsetWidth, h = el.offsetHeight, [ax, ay] = anchors[i], st = ncState[i];
+    let best = null, bestC = Infinity, cur = Infinity;
+    for (let d = 0; d < DIST.length; d++) for (let k = 0; k < DIRS.length; k++) {
+      const [dx, dy] = DIRS[k], dist = DIST[d];
+      const x = dx < 0 ? ax - dist - w : dx > 0 ? ax + dist : ax - w / 2;
+      const y = dy < 0 ? ay - dist * 0.7 - h : dy > 0 ? ay + dist * 0.7 : ay - h / 2;
+      if (x < MINX || x + w > W - 14 || y < 84 || y + h > H - 14) continue;
+      const r = [x - 10, y - 9, x + w + 10, y + h + 9];
+      let c = dist * 0.9 + (dx === PREF[i][0] && dy === PREF[i][1] ? 0 : 40);
+      spine.forEach((s) => { c += overlap(r, s) * 0.5; });
+      placed.forEach((s) => { c += overlap(r, s) * 4; });
+      pathR.forEach((s) => { c += overlap(r, s) * 2; });
+      c += overlap(r, tgtR) * 3 + overlap(r, silR) * 0.06;
+      // Hinweislinie darf keine andere Beschriftung kreuzen, frühere Linien nicht unter dieser liegen
+      const qx = Math.min(Math.max(ax, x), x + w), qy = Math.min(Math.max(ay, y), y + h);
+      for (let u = 0.15; u < 0.9; u += 0.15) {
+        const lx = qx + (ax - qx) * u, ly = qy + (ay - qy) * u;
+        placed.forEach((s) => { if (inR(lx, ly, s)) c += 260; });
+        segs.forEach((g) => { if (inR(g[0] + (g[2] - g[0]) * u, g[1] + (g[3] - g[1]) * u, r)) c += 260; });
+      }
+      const key = d * 8 + k;
+      if (key === st.k) cur = c;
+      if (c < bestC) { bestC = c; best = [x, y, key]; }
+    }
+    if (!best) best = [Math.max(MINX, Math.min(ax - w / 2, W - w - 14)), Math.max(84, Math.min(ay - h / 2, H - h - 14)), -1];
+    // Halten, solange die bisherige Lage nicht deutlich schlechter ist (kein Springen)
+    if (st.k >= 0 && cur < Infinity && cur < bestC * 1.35 + 60) {
+      const d = Math.floor(st.k / 8), [dx, dy] = DIRS[st.k % 8], dist = DIST[d];
+      best = [dx < 0 ? ax - dist - w : dx > 0 ? ax + dist : ax - w / 2, dy < 0 ? ay - dist * 0.7 - h : dy > 0 ? ay + dist * 0.7 : ay - h / 2, st.k];
+    }
+    st.k = best[2];
+    if (!st.init) { st.x = best[0]; st.y = best[1]; st.init = true; }
+    else if (reduced) { st.x = best[0]; st.y = best[1]; }
+    else { st.x += (best[0] - st.x) * ease; st.y += (best[1] - st.y) * ease; }
+    el.style.transform = `translate(${st.x}px, ${st.y}px)`;
+    placed.push([best[0] - 10, best[1] - 9, best[0] + w + 10, best[1] + h + 9]); // Planung mit Ziellage, Anzeige gleitet nach
+    const bx = Math.min(Math.max(ax, best[0]), best[0] + w), by = Math.min(Math.max(ay, best[1]), best[1] + h);
+    segs.push([bx, by, ax, ay]);
+    // Linie vom nächsten Randpunkt der Beschriftung zum Andockpunkt
+    const px = Math.min(Math.max(ax, st.x), st.x + w), py = Math.min(Math.max(ay, st.y), st.y + h);
+    const L = nl[i]; L.setAttribute('x1', px); L.setAttribute('y1', py); L.setAttribute('x2', ax); L.setAttribute('y2', ay);
+  }
 }
 
 const PH = () => (isDesktop() ? { M0: 0.06, J0: 0.09, J1: 0.9, M1: 0.94 } : { M0: 0.1, J0: 0.13, J1: 0.9, M1: 0.93 });
@@ -693,7 +771,7 @@ function updateAxis(dt) {
       jPose = lerpPose(stopPose(i), stopPose(i + 1), smooth(0.1, 0.9, f));
       jPose.rot += x * 0.14; // langsames Kreisen: jede Raste bewegt etwas
       zoneIdx = Math.min(STOPS.length - 1, Math.round(x));
-      localF = x - zoneIdx + 0.5;
+      localF = zoneIdx === 0 ? x * 1.8 : zoneIdx === STOPS.length - 1 ? (x - zoneIdx + 0.5) * 1.8 : x - zoneIdx + 0.5;
       setActive(zoneIdx);
     } else { mobSel = mobileCard(); setActive(mobSel); jPose = stopPose(mobSel); zoneIdx = mobSel; }
   }

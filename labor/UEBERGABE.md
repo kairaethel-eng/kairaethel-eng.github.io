@@ -10,6 +10,7 @@ Kapitel 01 Spannung (Partikel-Körper, Verspannungen lösen) · 02 Bewegung · 0
 - 2A + Layout (nur PC): Kapitel 04 – Überschrift, Raum-Knöpfe und Raumkarte in einer Bildschirmhöhe; „Röntgenblick“ ins Partikel-Haus (Innenraum durchscheinend, Räume anklickbar, Haus mit Maus drehbar).
 - 3A (nur PC): Wirbelsäule – „tote“ Scrolls weg (kürzere Haltezonen, Kamera kreist langsam), Nerven-Infos erscheinen im Raum entlang der Bahn, Schritt für Schritt mit dem Signal.
 - 3B (nur PC): zarte Partikel-Körpersilhouette neben der Wirbelsäule, Nervenbahn fließt ins Versorgungsgebiet.
+- Beschriftungen an der Wirbelsäule (nur PC): weichen Wirbelsäule und einander aus, Hinweislinien, besser lesbar.
 - Handy bleibt bei Kapitel 03/04 wie es ist (Kai: „mobil sieht es schöner aus“).
 
 ## Offen / später

@@ -200,14 +200,14 @@ main{position:relative;z-index:2}
 .roof-list{padding-top:clamp(60px,8vw,110px)}
 .roof-list .index{margin-top:10px}
 
-/* Nerven-Infos im Raum (PC) */
-.ncall{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .6s var(--ease);display:flex;align-items:center;gap:8px;max-width:300px;font:600 12px/1.35 var(--sans);letter-spacing:.06em;color:#CFE8FA;text-shadow:0 0 14px rgba(10,22,27,.95)}
-.ncall::before{content:"";flex:0 0 7px;height:7px;border-radius:50%;background:#DDF1FF;box-shadow:0 0 12px 3px rgba(90,162,214,.75)}
-.ncall-exit{color:var(--amber);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase}
-.ncall-exit::before{background:var(--amber);box-shadow:0 0 12px 3px rgba(224,154,53,.7)}
-.ncall-ziel{font:italic 400 20px/1.1 var(--serif);letter-spacing:0;color:var(--txt)}
-.ncall-typ{width:340px;max-width:340px;font:500 13.5px/1.45 var(--sans);letter-spacing:.01em;color:var(--dim);white-space:normal;text-align:center;justify-content:center}
-.ncall-typ::before{display:none}
+/* Nerven-Infos im Raum (PC): gut lesbar, aber leise */
+.ncall{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .6s var(--ease);white-space:nowrap;padding:6px 11px;border-radius:14px;background:rgba(10,22,27,.74);border:1px solid rgba(207,232,250,.2);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);box-shadow:0 4px 18px rgba(4,10,13,.45);font:600 13.5px/1.3 var(--sans);letter-spacing:.03em;color:#DCEFFB}
+.ncall-exit{color:var(--amber);border-color:rgba(224,154,53,.35);font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+.ncall-ziel{font:italic 400 19px/1.15 var(--serif);letter-spacing:0;color:var(--txt);border-color:rgba(90,162,214,.4)}
+.ncall-typ{width:340px;white-space:normal;text-align:center;font:500 13.5px/1.45 var(--sans);letter-spacing:.01em;color:#B4C4C9;background:rgba(10,22,27,.5);border:0;box-shadow:none}
+.nlines{position:fixed;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;overflow:visible}
+.nlines line{stroke:rgba(207,232,250,.5);stroke-width:1;opacity:0;transition:opacity .6s var(--ease)}
+.nlines line:first-child{stroke:rgba(224,154,53,.55)}
 @media (min-width:921px){.seg-card dl{display:none}.seg-card h3{margin-bottom:18px}}
 
 /* Hausordnung */
@@ -289,7 +289,7 @@ main{position:relative;z-index:2}
   .room-no i{font-size:26px}
   .tour-inner .note{margin-top:22px;font-size:11px}
   .room-tag{display:none}
-  .ncall{display:none}
+  .ncall,.nlines{display:none}
   .roof-head{padding-right:40px}
   .door{background:linear-gradient(rgba(10,22,27,0),var(--ink) 220px);padding-top:170px}
   .rules{height:300svh}
