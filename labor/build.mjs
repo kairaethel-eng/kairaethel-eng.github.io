@@ -11,6 +11,7 @@ const PAGES = {
   'test-1': { out: 'test-1-achse.html' },
   'test-2': { out: 'test-2-puls.html' },
   'test-3': { out: 'test-3-puls-achse.html' },
+  'test-4': { out: 'test-4-puls-scan.html' },
 };
 // Zusätzliche Ausgabe ohne <html>/<head>/<body>-Gerüst (für die private Claude-Vorschau)
 const fragmentDir = process.env.FRAGMENT_DIR || '';
