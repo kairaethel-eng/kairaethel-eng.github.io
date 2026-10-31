@@ -183,15 +183,15 @@ function layout() {
     X[4].set(hw * 0.46, 0, 0, 0.72);
   } else {
     X[0].set(0, 2.1, 0, 0.46);
-    X[0].baseY = 2.1;
-    X[1].set(0, 1.4, 0, 0.55);
-    X[2].set(0, 0.72, 0, 0.3);
-    X[3].set(0, 2.5, 0, 0.42);
-    X[4].set(0, 2.6, 0, 0.36);
+    X[1].set(0, 0, 0, 1.25);           // 1A: Bewegungslinien über den ganzen Bildschirm
+    X[2].set(0, 1.65, 0, 0.28);        // 4A: Wirbelsäule in der oberen Bildhälfte
+    X[3].set(0, 2.5, 0, 0.42);         // 2B: wird beim Scrollen zum Emblem (siehe roofEmblem)
+    X[4].set(0, 2.15, 0, 0.32);        // 3: tiefer und kleiner, frei von der Leiste
   }
   uniforms.uPix.value = renderer ? renderer.getPixelRatio() * (innerHeight / 900) * (d ? 1 : 1.25) : 1;
 }
 function resize() {
+  if (isDesktop()) $$('.seg-card').forEach((c) => (c.style.opacity = ''));
   camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
   if (renderer) renderer.setSize(innerWidth, innerHeight, false);
   layout();
@@ -374,7 +374,7 @@ function stopPose(i) {
   s.ids.forEach((id) => { const lv = det.levels.find((l) => l.id === id); c.add(new V3(lv.center.x * SC, (lv.center.y - CY) * SC, lv.center.z * SC)); });
   c.divideScalar(s.ids.length).applyAxisAngle(new V3(0, 1, 0), rot).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z));
   const d = s.d * SC * X.w * 0.86 * (desk ? 1 : 2.1);
-  return { ...frame(c, new V3(0, 0.12, 1), d, desk ? 0.7 : 0.5, desk ? 0.5 : 0.38), rot };
+  return { ...frame(c, new V3(0, 0.12, 1), d, desk ? 0.7 : 0.5, desk ? 0.5 : 0.3), rot };
 }
 const OVERVIEW = { pos: new V3(0, 0, 13), target: new V3(0, 0, 0) };
 const lerpPose = (a, b, t) => ({ pos: a.pos.clone().lerp(b.pos, t), target: a.target.clone().lerp(b.target, t), rot: b.rot !== undefined && a.rot !== undefined ? THREE.MathUtils.lerp(a.rot, b.rot, t) : (b.rot ?? a.rot) });
@@ -382,26 +382,33 @@ const cam = { pos: OVERVIEW.pos.clone(), target: OVERVIEW.target.clone() };
 
 // Bedienung: Desktop = Scrollen + Abschnitts-Knöpfe, Handy = Karten wischen
 const axis = $('#achse');
-const segBtns = $$('.segnav button'), cards = $$('.seg-card'), dots = $$('.seg-dots button'), cardsEl = $('#segCards');
+const segBtns = $$('.segnav button'), cards = $$('.seg-card'), dots = $$('.seg-dots button');
 let active = 0, mobSel = 0;
 function setActive(i) {
   if (i === active) return;
   active = i;
   [segBtns, cards, dots].forEach((list) => list.forEach((el, k) => el.classList.toggle('is-on', k === i)));
 }
-const PH = () => (isDesktop() ? { M0: 0.08, J0: 0.13, J1: 0.87, M1: 0.92 } : { M0: 0.14, J0: 0.2, J1: 0.8, M1: 0.86 });
+const PH = () => (isDesktop() ? { M0: 0.08, J0: 0.13, J1: 0.87, M1: 0.92 } : { M0: 0.1, J0: 0.13, J1: 0.9, M1: 0.93 });
 segBtns.forEach((b) => b.addEventListener('click', () => {
   const i = +b.dataset.seg, ph = PH(), r = axis.getBoundingClientRect();
   const p = ph.J0 + (i / (STOPS.length - 1)) * (ph.J1 - ph.J0);
   scrollToY(r.top + scrollY + p * (r.height - innerHeight) + 2);
 }));
-const cardStep = () => (cards.length > 1 ? cards[1].offsetLeft - cards[0].offsetLeft : 1);
-cardsEl.addEventListener('scroll', () => {
-  if (isDesktop()) return;
-  mobSel = clamp(Math.round(cardsEl.scrollLeft / cardStep()), 0, STOPS.length - 1);
-  setActive(mobSel);
-}, { passive: true });
-dots.forEach((d) => d.addEventListener('click', () => cardsEl.scrollTo({ left: +d.dataset.seg * cardStep(), behavior: reduced ? 'auto' : 'smooth' })));
+// Handy: Karten laufen untereinander durch; die Karte in der unteren Bildmitte bestimmt den Abschnitt
+function mobileCard() {
+  const vh = innerHeight;
+  let best = mobSel, bd = 1e9;
+  const rs = cards.map((c) => c.getBoundingClientRect());
+  rs.forEach((r, i) => { const d = Math.abs(r.top - vh * 0.5); if (d < bd) { bd = d; best = i; } });
+  // Karten leben in der unteren Bildhälfte und blenden nach oben aus, damit die Wirbelsäule frei bleibt
+  rs.forEach((r, i) => { cards[i].style.opacity = (smooth(vh * 0.1, vh * 0.4, r.top) * (i === best ? 1 : 0.55)).toFixed(3); });
+  return best;
+}
+dots.forEach((d) => d.addEventListener('click', () => {
+  const c = cards[+d.dataset.seg];
+  scrollToY(c.getBoundingClientRect().top + scrollY - innerHeight * 0.5);
+}));
 
 let spineRot = -0.9;
 function updateAxis(dt) {
@@ -428,7 +435,7 @@ function updateAxis(dt) {
       jPose = lerpPose(stopPose(i), stopPose(i + 1), smooth(0.25, 0.85, f));
       zoneIdx = Math.min(STOPS.length - 1, Math.round(x - 0.05));
       setActive(zoneIdx);
-    } else { jPose = stopPose(mobSel); zoneIdx = mobSel; }
+    } else { mobSel = mobileCard(); setActive(mobSel); jPose = stopPose(mobSel); zoneIdx = mobSel; }
   }
   const pose = jPose ? lerpPose({ ...OVERVIEW, rot: jPose.rot }, jPose, w) : OVERVIEW;
   const k = reduced ? 1 : 1 - Math.exp(-dt * 3.2);
@@ -462,7 +469,7 @@ $$('.index li').forEach((li) => {
 
 // ---------- Hausordnung ----------
 const rules = $('#hausordnung'), laws = $$('#laws li'), door = $('#tuer');
-const heads = [null, null, null, $('#d-title'), $('#laws')];
+const heads = [null, null, null, null, null];
 let lawOn = 0;
 
 // ---------- Kapitel → Formen ----------
@@ -478,11 +485,26 @@ function targetMorph() {
     const s = +chapters[i].dataset.stage;
     const prev = i ? +chapters[i - 1].dataset.stage : 0;
     // Übergang, während das Kapitel von unten hereinkommt
-    const t = smooth(vh * 0.8, vh * 0.15, r.top);
+    let t = smooth(vh * 0.8, vh * 0.15, r.top);
+    // Handy: die Figur löst sich schon beim ersten Scrollen an Ort und Stelle in Bewegungslinien auf
+    if (!isDesktop() && prev === 0 && s === 1) t = smooth(vh * 0.03, vh * 0.4, scrollY);
     if (t > 0) m = prev + (s - prev) * t;
   }
   return m;
 }
+
+// ---------- Dach (Handy): Haus wird beim Scrollen zum kleinen Emblem oben rechts ----------
+const roofHead = $('#d-title');
+function roofEmblem() {
+  const vh = innerHeight, a = innerWidth / vh;
+  const hh = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)), hw = hh * a;
+  const k = smooth(vh * 0.62, vh * 0.12, roofHead.getBoundingClientRect().top);
+  const navW = (78 / vh) * 2 * hh; // Leistenhöhe in Welt-Einheiten
+  const big = { x: 0, y: 2.5, s: 0.42 }, small = { x: hw - 0.48, y: hh - navW - 0.42, s: 0.085 };
+  uniforms.uXf.value[3].set(big.x + (small.x - big.x) * k, big.y + (small.y - big.y) * k, 0, big.s + (small.s - big.s) * k);
+  emblemK = k;
+}
+let emblemK = 0;
 
 // ---------- Schleife ----------
 const clock = new THREE.Clock();
@@ -496,16 +518,19 @@ function tick() {
   updateAxis(dt);
   // Partikel abdunkeln, sobald Text darüber liegt (Kontakt immer; mobil auch Achse/Dach/Hausordnung)
   const vh = innerHeight;
-  let dim = smooth(vh * 0.75, vh * 0.25, door.getBoundingClientRect().top);
+  const doorTop = door.getBoundingClientRect().top;
+  let dim = isDesktop() ? smooth(vh * 0.75, vh * 0.25, doorTop) : smooth(vh * 1.3, vh * 0.8, doorTop);
+  let dimMax = 0.82;
   if (!isDesktop()) {
+    dimMax = 1; // Handy: Logo blendet vor dem Kontakt ganz aus statt abgeschnitten zu werden
+    if (morphNow > 0.3 && morphNow < 1.6) dim = Math.max(dim, 0.55); // Bewegungslinien leise hinter Text
     const head = heads[Math.round(clamp(morphNow, 0, 4))];
     if (head && morphNow > 1.5) dim = Math.max(dim, smooth(vh * 0.62, vh * 0.25, head.getBoundingClientRect().top) * 0.9);
   }
-  uniforms.uAlpha.value += ((1 - dim * 0.82) - uniforms.uAlpha.value) * 0.1;
-  uniforms.uSize.value = isDesktop() ? 1 : 1.1;
+  uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
+  uniforms.uSize.value = isDesktop() ? 1 : 1.1 - (morphNow > 2.5 && morphNow < 3.5 ? emblemK * 0.45 : 0);
   uniforms.uSpread.value = isDesktop() ? 1 : 0.45;
-  // Handy: Figur scrollt mit dem Hero-Text nach oben, statt hinter ihm stehen zu bleiben
-  if (!isDesktop()) uniforms.uXf.value[0].y = uniforms.uXf.value[0].baseY + Math.min(scrollY, innerHeight * 1.3) * 8.2 / innerHeight;
+  if (!isDesktop()) roofEmblem();
   uniforms.uFadeMid.value = isDesktop() ? 0.35 : 0.7;
 
   // Titel
@@ -534,7 +559,9 @@ function tick() {
   top.classList.toggle('scrolled', scrollY > 30);
   const ci = Math.round(clamp(morphNow, 0, 4));
   navLinks.forEach((a, k) => a.classList.toggle('on', k === Math.min(ci, 4)));
-  if (ci !== chapShown) { chapShown = ci; chapNow.innerHTML = navLinks[Math.min(ci, 4)].innerHTML; }
+  const rr2 = rules.getBoundingClientRect();
+  const chapKey = rr2.top < innerHeight * 0.5 && rr2.bottom > innerHeight * 0.5 ? 9 : ci;
+  if (chapKey !== chapShown) { chapShown = chapKey; chapNow.innerHTML = chapKey === 9 ? '<i>§</i>Hausordnung' : navLinks[Math.min(ci, 4)].innerHTML; }
 
   camera.position.copy(cam.pos); camera.lookAt(cam.target);
   if (renderer && !document.hidden) renderer.render(scene, camera);
