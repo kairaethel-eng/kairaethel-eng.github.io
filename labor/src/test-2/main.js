@@ -67,13 +67,14 @@ const uniforms = {
   uRelax: { value: relaxTex }, uBodyWH: { value: new THREE.Vector2(BODY_W * BODY_SCALE, BODY_H * BODY_SCALE) },
   uXf: { value: [0, 1, 2, 3, 4].map(() => new THREE.Vector4(0, 0, 0, 1)) },
   uSeg: { value: new THREE.Vector2(spine.segs[0][0], spine.segs[0][1]) }, uSegOn: { value: 0 },
-  uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 },
+  uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 },
   cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') },
   cBlue: { value: C('#5AA2D6') }, cGreen: { value: C('#8BC34A') }, cLogoP: { value: C('#2C6478') }, cGrey: { value: C('#8C979B') },
 };
 
 const vert = /* glsl */`
   attribute float aHeat; attribute vec3 pos2; attribute vec3 pos3; attribute float kind3; attribute vec3 pos4; attribute float kind4; attribute vec4 aRand;
+  uniform float uSpread, uFadeMid;
   uniform float uTime, uMorph, uPix, uSize, uSegOn, uHouse, uIntro;
   uniform sampler2D uRelax; uniform vec2 uBodyWH; uniform vec4 uXf[5]; uniform vec2 uSeg;
   uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey;
@@ -139,15 +140,17 @@ const vert = /* glsl */`
     vec3 p = mix(pA, pB, t);
     // Zerstäuben zwischen zwei Formen
     vec3 n = normalize(vec3(aRand.x-.5, aRand.y-.5, aRand.z-.5)+1e-4);
-    p += n * sin(t*3.14159) * (1.2 + aRand.w*1.6);
+    // Streuung im Verhältnis zur Formgröße (auf dem Handy kleiner, damit Text frei bleibt)
+    float ws = mix(uXf[i0].w, uXf[i1].w, t);
+    p += n * sin(t*3.14159) * (1.2 + aRand.w*1.6) * ws * uSpread;
     // Intro: aus der Tiefe einfliegen
-    p += n * (1.-uIntro) * (6. + aRand.x*8.);
+    p += n * (1.-uIntro) * (6. + aRand.x*8.) * ws * uSpread;
     vec4 mv = modelViewMatrix * vec4(p, 1.);
     gl_Position = projectionMatrix * mv;
     float s = mix(sA, sB, t);
     gl_PointSize = uSize * uPix * s * (.5 + aRand.y*.9) * 24. / -mv.z;
     vCol = mix(cA, cB, t);
-    vA = (.5 + aRand.x*.5) * uIntro;
+    vA = (.5 + aRand.x*.5) * (1. - uFadeMid*sin(t*3.14159)) * uIntro;
   }`;
 const frag = /* glsl */`
   uniform float uAlpha;
@@ -176,6 +179,7 @@ function layout() {
     X[4].set(hw * 0.46, 0, 0, 0.72);
   } else {
     X[0].set(0, 2.1, 0, 0.46);
+    X[0].baseY = 2.1;
     X[1].set(0, 1.4, 0, 0.55);
     X[2].set(0, 2.15, 0, 0.42);
     X[3].set(0, 2.5, 0, 0.42);
@@ -318,7 +322,7 @@ function targetMorph() {
     const s = +chapters[i].dataset.stage;
     const prev = i ? +chapters[i - 1].dataset.stage : 0;
     // Übergang, während das Kapitel von unten hereinkommt
-    const t = smooth(vh * 0.95, vh * 0.25, r.top);
+    const t = smooth(vh * 0.8, vh * 0.15, r.top);
     if (t > 0) m = prev + (s - prev) * t;
   }
   return m;
@@ -343,6 +347,10 @@ function tick() {
   }
   uniforms.uAlpha.value += ((1 - dim * 0.82) - uniforms.uAlpha.value) * 0.1;
   uniforms.uSize.value = isDesktop() ? 1 : 1.1;
+  uniforms.uSpread.value = isDesktop() ? 1 : 0.45;
+  // Handy: Figur scrollt mit dem Hero-Text nach oben, statt hinter ihm stehen zu bleiben
+  if (!isDesktop()) uniforms.uXf.value[0].y = uniforms.uXf.value[0].baseY + Math.min(scrollY, innerHeight * 1.3) * 8.2 / innerHeight;
+  uniforms.uFadeMid.value = isDesktop() ? 0.35 : 0.7;
 
   // Titel
   if (!reduced && morphNow < 0.8) chars.forEach((c, i) => {
@@ -377,6 +385,6 @@ gsap.ticker.add(tick);
 
 // Intro
 if (!reduced) {
-  gsap.to(uniforms.uIntro, { value: 1, duration: 2.6, ease: 'expo.out', delay: 0.15 });
-  gsap.from(['.hero .kicker', '.kinetic', '.hero-sub', '.hero .actions', '.meter', '.top'], { opacity: 0, y: 24, duration: 1.4, stagger: 0.09, ease: 'expo.out', delay: 0.5 });
+  gsap.to(uniforms.uIntro, { value: 1, duration: 2.2, ease: 'expo.out', delay: 0.1 });
+  gsap.from(['.hero .kicker', '.kinetic', '.hero-sub', '.hero .actions', '.meter', '.top'], { opacity: 0, y: 20, duration: 1.1, stagger: 0.06, ease: 'expo.out', delay: 0.2 });
 }
