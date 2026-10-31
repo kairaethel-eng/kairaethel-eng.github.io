@@ -1,4 +1,4 @@
-# Übergabe – Stand 31.10.2026 (Abend)
+# Übergabe – Stand 31.10.2026 (Abend, Chat-Wechsel)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md` und `labor/ENTSCHEIDUNGEN.md` im Branch `claude/3d-cinematic-website-effects-htd2aa`. Wir verfeinern die Testseite „Puls · Scan“. Hier meine Punkte (Screenshots + Liste): …
@@ -12,6 +12,9 @@ Kapitel 01 Spannung (Partikel-Körper, Verspannungen lösen) · 02 Bewegung · 0
 - 3B (nur PC): zarte Partikel-Körpersilhouette neben der Wirbelsäule, Nervenbahn fließt ins Versorgungsgebiet.
 - Beschriftungen an der Wirbelsäule (nur PC): weichen Wirbelsäule und einander aus, Hinweislinien, besser lesbar.
 - Handy bleibt bei Kapitel 03/04 wie es ist (Kai: „mobil sieht es schöner aus“).
+
+## Nächster Schritt
+- Kai prüft die neuen Wirbelsäulen-Beschriftungen am PC und schickt neue Punkte.
 
 ## Offen / später
 - V10-Inhalte übernehmen: Körperkarte „Wo tut's weh?“, Porträt, Einblicke.

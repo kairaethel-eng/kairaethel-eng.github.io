@@ -26,10 +26,20 @@ Kurzfassung für neue Chats, damit der alte Verlauf nicht geladen werden muss.
 cd labor && npm install && node build.mjs test-4      # baut labor/test-4-puls-scan.html
 FRAGMENT_DIR=<scratchpad>/artifact node build.mjs test-4   # zusätzlich Fragment für die private Claude-Vorschau
 ```
-- Screenshots im Container: Playwright/Chromium mit `--use-angle=swiftshader` (langsam, ~5–9 fps → Kamerafahrten hängen nach; länger warten).
+- Screenshots im Container: `node tools/shot.cjs <seite.html> <präfix> <d|m> '<selektor>|<offset>' …` (Anleitung im Kopf der Datei; `WAIT=7000` bei Kamerafahrten, `REDUCED=1` für „Bewegung reduzieren“). SwiftShader ist langsam (~5–9 fps) → Kamera hängt nach. Kai will **keine** Screenshots geschickt bekommen; nur intern prüfen.
+- Scroll-Offsets Kapitel 03 (PC, in Bildschirmhöhen ab `#achse`): C1–C2 0.75 · C5–C6 1.38 · Th 2.27 · L4–L5 3.16 · S1 3.8.
 - Vorschau (privat): Artifact https://claude.ai/artifact/1YU9DYm46ZHqoMJu78dfoM (Fragment-Datei neu veröffentlichen).
 - **Testadresse (öffentlich, noindex):** https://kairaethel-eng.github.io/labor/ – Kai hat Go gegeben, **nur den Ordner `labor/`** auf `main` zu veröffentlichen:
   `git diff --stat origin/main..HEAD -- . ':(exclude)labor'` muss leer sein, dann `git push origin HEAD:main`. Arbeitszweig: `claude/3d-cinematic-website-effects-htd2aa`.
+
+## Technische Merkpunkte
+- Build ersetzt Platzhalter mit Funktions-Replacern (`$'` im Bundle!). GLSL `#include` immer auf eigener Zeile.
+- Wirbelsäulen-Infos PC: `NINFO` (Texte + Zielpunkt `tgt` auf der Silhouette in Körper-Koordinaten 200×430), `updateCallouts` platziert per Kostenfunktion (Hindernisse: Wirbel-Rechtecke, Zielpunkt, Bahn, andere Schilder, Linien). Handy: Karten (`.seg-card`), Infos dort.
+- Kamera: `tourWant` > `axisWant` > Übersicht. Ruhemodus `reduced` (CALM 0.45), Pause-Knopf `#motionBtn`, iOS-Watchdog für rAF.
+- Persönliche Skills (`kai-arbeitsweise`, `hop-praxis`) gehören **nicht** ins öffentliche Repo; Änderungen als `.skill`-Datei an Kai liefern.
+
+## Antwortstil
+- Knapp, nur das Wesentliche; maximale Sorgfalt und Fehlerfreiheit bei der Umsetzung.
 
 ## Modellwahl (Empfehlung an Kai)
 - Große Umbauten / neue 3D-Effekte: **Opus**. Kleine Text-/Farb-/Abstandsänderungen: **Sonnet** reicht.
