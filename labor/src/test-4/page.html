@@ -100,11 +100,63 @@
   </section>
 
   <section class="chapter roof" id="dach" data-stage="3" aria-labelledby="d-title">
-    <div class="wrap">
+    <div class="wrap roof-intro">
       <div class="roof-head">
         <p class="kicker"><i>04</i> Dach</p>
         <h2 id="d-title">Alles unter<br><em>einem</em> Dach.</h2>
+        <p class="lead">Treten Sie ein. Ein Rundgang durch die Praxis, bevor Sie zum ersten Mal da sind.</p>
       </div>
+    </div>
+    <div class="tour" id="tour" aria-label="Rundgang durch die Praxis">
+      <div class="tour-sticky">
+        <div class="wrap tour-inner">
+          <p class="tour-kicker"><span class="only-desk">Scrollen Sie weiter, die Kamera geht durch die Räume.</span><span class="only-mob">Scrollen Sie weiter: Jede Karte führt in einen Raum.</span></p>
+          <div class="roomnav" role="group" aria-label="Raum wählen">
+          <button type="button" data-room="0" class="is-on"><b>01</b><span>Empfang</span></button>
+          <button type="button" data-room="1"><b>02</b><span>Wartebereich</span></button>
+          <button type="button" data-room="2"><b>03</b><span>Behandlung 1</span></button>
+          <button type="button" data-room="3"><b>04</b><span>Behandlung 2</span></button>
+          <button type="button" data-room="4"><b>05</b><span>Training</span></button>
+          </div>
+          <div class="room-dots" role="group" aria-label="Raum wählen"><span>Tür</span><button type="button" data-room="0" aria-label="Empfang" class="is-on"></button><button type="button" data-room="1" aria-label="Wartebereich"></button><button type="button" data-room="2" aria-label="Behandlung 1"></button><button type="button" data-room="3" aria-label="Behandlung 2"></button><button type="button" data-room="4" aria-label="Training"></button><span>Training</span></div>
+          <div class="room-cards" id="roomCards" aria-live="polite">
+          <article class="room-card is-on" data-room="0">
+            <p class="room-no"><i>01</i> Empfang</p>
+            <h3>Empfang &amp; Ankommen</h3>
+            <p>Die Tür ist offen, der Weg ist kurz: Hier werden Sie mit Namen begrüßt, nicht mit Nummer aufgerufen. Jacke ablegen, durchatmen, ankommen.</p>
+            <p class="room-hint">Gast statt Patient.</p>
+          </article>
+          <article class="room-card" data-room="1">
+            <p class="room-no"><i>02</i> Wartebereich</p>
+            <h3>Wartebereich – unser Wohnzimmer</h3>
+            <p>Eher Wohnzimmer als Wartezimmer: bequeme Sitze, Wasser und Kaffee, kurze Wartezeiten. Ein Ort, an dem niemand auf die Uhr schauen muss.</p>
+            <p class="room-hint">Gast statt Patient.</p>
+          </article>
+          <article class="room-card" data-room="2">
+            <p class="room-no"><i>03</i> Behandlung 1</p>
+            <h3>Behandlungsraum 1</h3>
+            <p>Ruhe und Tageslicht. Hier ist Zeit für Befund, Behandlung und alle Ihre Fragen, hinter geschlossener Tür und ohne Durchgangsverkehr.</p>
+            <ul class="chips"><li>Manuelle Therapie</li><li>CMD</li><li>Atlas-Axis</li><li>Osteopathische Ansätze</li><li>Schmerztherapie</li><li>Fango · Reizstrom</li><li>Stoßwelle</li></ul>
+          </article>
+          <article class="room-card" data-room="3">
+            <p class="room-no"><i>04</i> Behandlung 2</p>
+            <h3>Behandlungsraum 2 · Manuthera</h3>
+            <p>Hier steht die Loyer Manuthera, eine der modernsten Therapieliegen für mobilisierende Behandlungen der Wirbelsäule und großer Gelenke.</p>
+            <ul class="chips"><li>Loyer Manuthera</li><li>Manuelle Therapie</li></ul>
+          </article>
+          <article class="room-card" data-room="4">
+            <p class="room-no"><i>05</i> Training</p>
+            <h3>Trainingsfläche</h3>
+            <p>Aktiv werden: Geräte, Übungen und Ihr persönliches Programm für zuhause. Angeleitet und begleitet, nicht allein gelassen.</p>
+            <ul class="chips"><li>Krankengymnastik</li><li>Sport-Physiotherapie</li><li>Schlingentisch</li></ul>
+          </article>
+          </div>
+          <p class="note">Schematischer Grundriss. Später ersetzbar durch einen echten 3D-Scan der Praxis.</p>
+        </div>
+      </div>
+    </div>
+    <div class="wrap roof-list">
+      <p class="kicker" id="allTitle"><i>04</i> Alle Leistungen</p>
       <ol class="index" id="index">
         <li><button type="button" aria-expanded="false"><span class="ix-name">Manuelle Therapie</span><span class="ix-tag">Zertifikat</span></button><div class="ix-body"><p>Mit gezielten Handgriffen untersuche und behandle ich Gelenke, Muskeln und Nerven, dort, wo Bewegung blockiert ist. Nach gründlichem Befund kombiniere ich Mobilisation, Weichteiltechniken und aktives Üben.</p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">Krankengymnastik</span><span class="ix-tag">Kasse</span></button><div class="ix-body"><p>Aktiv statt passiv: Kraft, Beweglichkeit und Sicherheit wachsen Schritt für Schritt, nach Operationen, Verletzungen oder bei chronischen Beschwerden. Dazu ein kurzes Heimprogramm.</p></div></li>
