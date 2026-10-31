@@ -115,7 +115,7 @@ main{position:relative;z-index:2}
 .sign b{display:block;margin-top:10px;font:600 12px/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;font-style:normal;color:var(--txt)}
 
 /* Achse: Partikel-Wirbelsäule materialisiert sich zur 3D-Wirbelsäule, Kamerafahrt */
-.axis{height:680vh}
+.axis{height:540vh}
 .axis-sticky{position:sticky;top:0;height:100svh;overflow:hidden}
 .axis-inner{height:100%;display:grid;grid-template-columns:minmax(0,500px) 1fr;grid-template-rows:auto auto 1fr auto;column-gap:40px;padding-top:104px;padding-bottom:28px}
 .axis-head{grid-column:1}
@@ -164,11 +164,16 @@ main{position:relative;z-index:2}
 /* Rundgang durch die Praxis (Kapitel 04) */
 .roof-intro{margin-bottom:0}
 .roof-intro .lead{margin-top:22px}
-.tour{height:640vh;position:relative}
+.tour{height:560vh;position:relative}
 .tour-sticky{position:sticky;top:0;height:100svh;overflow:hidden;background:linear-gradient(90deg,rgba(10,22,27,.82) 0%,rgba(10,22,27,.5) 32%,rgba(10,22,27,0) 52%)}
-.tour-inner{height:100%;display:grid;grid-template-columns:minmax(0,460px) 1fr;grid-template-rows:auto auto 1fr auto;column-gap:40px;padding-top:104px;padding-bottom:28px}
-.tour-kicker{grid-column:1;font-size:15px;color:var(--dim)}
-.roomnav{grid-column:1;grid-row:2;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:22px}
+.tour-inner{height:100%;display:grid;grid-template-columns:minmax(0,470px) 1fr;grid-template-rows:auto auto auto 1fr auto;column-gap:40px;padding-top:96px;padding-bottom:24px}
+.tour-inner .roof-intro{grid-column:1;grid-row:1;margin-bottom:18px}
+.tour-inner .roof-head h2{font-size:clamp(34px,3.4vw,54px)}
+.tour-inner .roof-head .lead{margin-top:12px;font-size:16px}
+.tour-inner .roof-head .kicker{margin-bottom:14px}
+.roofline{margin-bottom:6px}
+.tour-kicker{grid-column:1;grid-row:2;font-size:14px;color:var(--dim)}
+.roomnav{grid-column:1;grid-row:3;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:22px}
 .roomnav button{appearance:none;background:rgba(16,34,42,.5);border:1px solid var(--line);border-radius:3px;color:var(--dim);padding:11px 8px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;transition:border-color .3s,background .3s,color .3s}
 .roomnav b{font:italic 400 19px/1 var(--serif);color:var(--mute)}
 .roomnav span{font:600 10px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase}
@@ -176,7 +181,7 @@ main{position:relative;z-index:2}
 .roomnav button.is-on{border-color:var(--amber);background:rgba(224,154,53,.1);color:var(--txt)}
 .roomnav button.is-on b{color:var(--amber)}
 .room-dots{display:none}
-.room-cards{grid-column:1;grid-row:3;position:relative;align-self:center;min-height:280px}
+.room-cards{grid-column:1;grid-row:4;position:relative;align-self:start;margin-top:26px;min-height:240px}
 .room-card{position:absolute;inset:0 0 auto 0;opacity:0;visibility:hidden;transform:translateY(22px);transition:opacity .5s var(--ease),transform .7s var(--ease),visibility 0s .55s}
 .room-card.is-on{opacity:1;visibility:visible;transform:none;transition:opacity .6s var(--ease) .08s,transform .8s var(--ease) .08s,visibility 0s}
 .room-no{display:flex;align-items:baseline;gap:10px;font:600 12px/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
@@ -184,13 +189,26 @@ main{position:relative;z-index:2}
 .room-card h3{font-family:var(--disp);font-weight:800;font-size:clamp(24px,2.2vw,32px);letter-spacing:-.02em;line-height:1.05;margin-bottom:14px}
 .room-card > p{color:var(--dim);font-size:16px;line-height:1.55;max-width:44ch;margin-bottom:16px}
 .room-hint{font:italic 400 18px/1.3 var(--serif)!important;color:var(--amber)!important}
-.tour-inner .note{grid-row:4}
-.room-tag{position:fixed;left:0;top:0;z-index:3;pointer-events:none;display:flex;align-items:center;gap:8px;font:600 10.5px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);white-space:nowrap;opacity:0;transition:opacity .5s,color .4s;text-shadow:0 0 12px rgba(10,22,27,.95)}
+.tour-inner .note{grid-row:5}
+.room-tag{position:fixed;left:0;top:0;z-index:3;pointer-events:none;cursor:pointer;display:flex;align-items:center;gap:8px;font:600 10.5px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);white-space:nowrap;opacity:0;transition:opacity .5s,color .4s;text-shadow:0 0 12px rgba(10,22,27,.95)}
 .room-tag i{font:italic 400 15px/1 var(--serif);letter-spacing:0;color:var(--mute);transition:color .4s}
 .room-tag.on{color:var(--txt)}
+.room-tag.click{pointer-events:auto;padding:6px 10px;border-radius:14px;background:rgba(10,22,27,.55);border:1px solid var(--line)}
+.room-tag.click:hover{color:var(--txt);border-color:var(--amber)}
+.roof-head{margin-bottom:0}
 .room-tag.on i{color:var(--amber)}
 .roof-list{padding-top:clamp(60px,8vw,110px)}
 .roof-list .index{margin-top:10px}
+
+/* Nerven-Infos im Raum (PC) */
+.ncall{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .6s var(--ease);display:flex;align-items:center;gap:8px;max-width:300px;font:600 12px/1.35 var(--sans);letter-spacing:.06em;color:#CFE8FA;text-shadow:0 0 14px rgba(10,22,27,.95)}
+.ncall::before{content:"";flex:0 0 7px;height:7px;border-radius:50%;background:#DDF1FF;box-shadow:0 0 12px 3px rgba(90,162,214,.75)}
+.ncall-exit{color:var(--amber);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase}
+.ncall-exit::before{background:var(--amber);box-shadow:0 0 12px 3px rgba(224,154,53,.7)}
+.ncall-ziel{font:italic 400 20px/1.1 var(--serif);letter-spacing:0;color:var(--txt)}
+.ncall-typ{width:340px;max-width:340px;font:500 13.5px/1.45 var(--sans);letter-spacing:.01em;color:var(--dim);white-space:normal;text-align:center;justify-content:center}
+.ncall-typ::before{display:none}
+@media (min-width:921px){.seg-card dl{display:none}.seg-card h3{margin-bottom:18px}}
 
 /* Hausordnung */
 .rules{height:420vh}
@@ -271,6 +289,7 @@ main{position:relative;z-index:2}
   .room-no i{font-size:26px}
   .tour-inner .note{margin-top:22px;font-size:11px}
   .room-tag{display:none}
+  .ncall{display:none}
   .roof-head{padding-right:40px}
   .door{background:linear-gradient(rgba(10,22,27,0),var(--ink) 220px);padding-top:170px}
   .rules{height:300svh}

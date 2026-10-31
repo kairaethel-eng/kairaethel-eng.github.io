@@ -6,7 +6,7 @@
 ## Was fertig ist (Puls · Scan)
 Kapitel 01 Spannung (Partikel-Körper, Verspannungen lösen) · 02 Bewegung · 03 Achse (Scan, Kamerafahrt, fließende Nerven, Versorgungsbahn, Stil-Umschalter Schichten/Körnung) · 04 Dach (Rundgang durch die Praxis als Punktwolke) · § Hausordnung · 05 Tür. Lebende Überschriften, ruhiges Scrollen, sanfter Ruhemodus bei „Bewegung reduzieren“, Knopf „Bewegung anhalten“, Handy eigene Bedienmuster.
 
-## Zuletzt freigegeben (Go 31.10.) – Status siehe ENTSCHEIDUNGEN.md
+## Zuletzt umgesetzt (Go 31.10.) – alles erledigt, Details in ENTSCHEIDUNGEN.md
 - 2A + Layout (nur PC): Kapitel 04 – Überschrift, Raum-Knöpfe und Raumkarte in einer Bildschirmhöhe; „Röntgenblick“ ins Partikel-Haus (Innenraum durchscheinend, Räume anklickbar, Haus mit Maus drehbar).
 - 3A (nur PC): Wirbelsäule – „tote“ Scrolls weg (kürzere Haltezonen, Kamera kreist langsam), Nerven-Infos erscheinen im Raum entlang der Bahn, Schritt für Schritt mit dem Signal.
 - 3B (nur PC): zarte Partikel-Körpersilhouette neben der Wirbelsäule, Nervenbahn fließt ins Versorgungsgebiet.

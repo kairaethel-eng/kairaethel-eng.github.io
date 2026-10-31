@@ -84,7 +84,7 @@ const uniforms = {
   uTime: { value: 0 }, uMorph: { value: 0 }, uPix: { value: 1 }, uSize: { value: 1 }, uAlpha: { value: 1 },
   uRelax: { value: relaxTex }, uBodyWH: { value: new THREE.Vector2(BODY_W * BODY_SCALE, BODY_H * BODY_SCALE) },
   uXf: { value: [0, 1, 2, 3, 4].map(() => new THREE.Vector4(0, 0, 0, 1)) },
-  uSpineRot: { value: -0.9 }, uCut: { value: 100 }, uHouseRot: { value: -0.55 },
+  uSpineRot: { value: -0.9 }, uCut: { value: 100 }, uHouseRot: { value: -0.55 }, uRoofLift: { value: 0 },
   uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 },
   cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') },
   cBlue: { value: C('#5AA2D6') }, cGreen: { value: C('#8BC34A') }, cLogoP: { value: C('#2C6478') }, cGrey: { value: C('#8C979B') },
@@ -93,7 +93,7 @@ const uniforms = {
 const vert = /* glsl */`
   attribute float aHeat; attribute vec3 pos2; attribute vec3 pos3; attribute float kind3; attribute vec3 pos4; attribute float kind4; attribute vec4 aRand;
   uniform float uSpread, uFadeMid;
-  uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uHouseRot;
+  uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uHouseRot, uRoofLift;
   uniform sampler2D uRelax; uniform vec2 uBodyWH; uniform vec4 uXf[5];
   uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey;
   varying vec3 vCol; varying float vA;
@@ -133,7 +133,8 @@ const vert = /* glsl */`
       float band = exp(-pow((pos2.y - (3.6 - mod(uTime*1.6, 9.)))*2.2, 2.));
       col = mix(cBone, cBlue, band*.8);
     } else if(i==3){
-      p = rotY(pos3, uHouseRot);
+      p = pos3; if (kind3 > .5 && kind3 < 1.5) p.y += uRoofLift;
+      p = rotY(p, uHouseRot);
       col = kind3 < .5 ? cBone : kind3 < 1.5 ? mix(cAmber, cBone, .2) : kind3 < 2.5 ? cGreen : cPetrol*.9;
       col *= 1. + uHouse*.6;
       sz = kind3 > 2.5 ? .7 : 1.;
@@ -199,7 +200,7 @@ function layout() {
     X[0].set(hw * 0.56, -0.15, 0, 0.98);
     X[1].set(0, -0.2, 0, Math.max(1, a * 0.75));
     X[2].set(hw * 0.47, -0.3, 0, 0.84);
-    X[3].set(hw * 0.6, 0.3, 0, 0.82);
+    X[3].set(hw * 0.5, 0.1, 0, 0.74);
     X[4].set(hw * 0.46, 0, 0, 0.72);
   } else {
     X[0].set(0, 2.1, 0, 0.46);
@@ -518,11 +519,13 @@ function updatePeri(zoneKey) {
   if (!tip) return;
   const tipNdc = tip.clone().project(camera);
   const desk = isDesktop();
-  const end = new V3(desk ? cfg.d[0] : 1.1, desk ? cfg.d[1] : cfg.m[1], tipNdc.z).unproject(camera);
-  const mid = new V3(THREE.MathUtils.lerp(tipNdc.x, desk ? cfg.d[0] : 1.1, 0.45), THREE.MathUtils.lerp(tipNdc.y, desk ? cfg.d[1] : cfg.m[1], 0.25) + 0.05, tipNdc.z).unproject(camera);
+  const end = desk ? silTarget(zoneKey) : new V3(1.1, cfg.m[1], tipNdc.z).unproject(camera);
+  const endNdc = end.clone().project(camera);
+  const mid = new V3(THREE.MathUtils.lerp(tipNdc.x, endNdc.x, 0.45), THREE.MathUtils.lerp(tipNdc.y, endNdc.y, 0.25) + 0.05, THREE.MathUtils.lerp(tipNdc.z, endNdc.z, 0.5)).unproject(camera);
   const curve = new THREE.CatmullRomCurve3([tip, tip.clone().lerp(mid, 0.4).add(new V3(0, 0.02, 0)), mid, end]);
   for (let i = 0; i < CURVE_W; i++) { curve.getPointAt(i / (CURVE_W - 1), _pv); periData.set([_pv.x, _pv.y, _pv.z, 1], i * 4); }
   periTex.needsUpdate = true;
+  periCurve = curve;
   sU.uPeriStart.value = start;
   // Beschriftung am sichtbaren Ende der Bahn
   curve.getPointAt(desk ? 0.72 : 0.6, _pv); _pv.project(camera);
@@ -556,7 +559,7 @@ function stopPose(i) {
   s.ids.forEach((id) => { const lv = det.levels.find((l) => l.id === id); c.add(new V3(lv.center.x * SC, (lv.center.y - CY) * SC, lv.center.z * SC)); });
   c.divideScalar(s.ids.length).applyAxisAngle(new V3(0, 1, 0), rot).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z));
   const d = s.d * SC * X.w * 0.86 * (desk ? 1 : 2.1);
-  return { ...frame(c, new V3(0, 0.12, 1), d, desk ? 0.7 : 0.5, desk ? 0.5 : 0.3), rot };
+  return { ...frame(c, new V3(0, 0.12, 1), d, desk ? 0.56 : 0.5, desk ? 0.5 : 0.3), rot };
 }
 const OVERVIEW = { pos: new V3(0, 0, 13), target: new V3(0, 0, 0) };
 const lerpPose = (a, b, t) => ({ pos: a.pos.clone().lerp(b.pos, t), target: a.target.clone().lerp(b.target, t), rot: b.rot !== undefined && a.rot !== undefined ? THREE.MathUtils.lerp(a.rot, b.rot, t) : (b.rot ?? a.rot) });
@@ -572,7 +575,76 @@ function setActive(i) {
   active = i;
   [segBtns, cards, dots].forEach((list) => list.forEach((el, k) => el.classList.toggle('is-on', k === i)));
 }
-const PH = () => (isDesktop() ? { M0: 0.08, J0: 0.13, J1: 0.87, M1: 0.92 } : { M0: 0.1, J0: 0.13, J1: 0.9, M1: 0.93 });
+// ---------- Nerven-Infos im Raum (PC): erscheinen Schritt für Schritt entlang der Bahn ----------
+const NINFO = {
+  c12: { exit: 'Austritt C1–C2', nerv: 'Nn. suboccipitales · N. occipitalis major', gef: 'Tiefe Nackenmuskulatur', ziel: 'Hinterkopf', typ: 'Typisch: Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen', tgt: [100, 24] },
+  c56: { exit: 'Austritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [164, 240] },
+  th16: { exit: 'Austritt Th1–Th6', nerv: 'Interkostalnerven, obere Rippen', gef: 'Brustkorbwand · Zwischenrippen', ziel: 'Brustkorb', typ: 'Typisch: atemabhängiges Stechen, Schmerz zwischen den Schulterblättern', tgt: [118, 120] },
+  l45: { exit: 'Austritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [122, 400] },
+  s1: { exit: 'Austritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [120, 410] },
+};
+const NC_KEYS = ['exit', 'nerv', 'gef', 'ziel', 'typ'];
+const ncalls = NC_KEYS.map((k) => { const el = document.createElement('div'); el.className = 'ncall ncall-' + k; el.setAttribute('aria-hidden', 'true'); document.body.appendChild(el); return el; });
+let periCurve = null;
+
+// Körper-Silhouette (zarte Partikel), an die Kamera gehängt, rechts im Bild; das Versorgungsgebiet glüht
+const silIdx = []; for (let i = 0; i < N; i += isDesktop() ? 6 : 9) silIdx.push(i);
+const silPos = new Float32Array(silIdx.length * 3);
+silIdx.forEach((j, k) => silPos.set([body.pos[j * 3], body.pos[j * 3 + 1], body.pos[j * 3 + 2] * 0.4], k * 3));
+const silGeo = new THREE.BufferGeometry(); silGeo.setAttribute('position', new THREE.BufferAttribute(silPos, 3));
+const silU = { uOn: { value: 0 }, uTgt: { value: new V3() }, uTime: uniforms.uTime, uPix: uniforms.uPix, cBone: uniforms.cBone, cBlue: uniforms.cBlue, cPetrol: uniforms.cPetrol };
+const sil = new THREE.Points(silGeo, new THREE.ShaderMaterial({
+  uniforms: silU, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+  vertexShader: /* glsl */`
+    uniform float uOn, uTime, uPix; uniform vec3 uTgt; uniform vec3 cBone, cBlue, cPetrol; varying vec3 vCol; varying float vA;
+    void main(){ float d = distance(position.xy, uTgt.xy);
+      float glow = exp(-d * d * 1.6) * (.75 + .25 * sin(uTime * 3. - d * 4.));
+      vCol = mix(cPetrol * 1.3, cBlue * 1.6, glow) + vec3(.9) * glow * .35;
+      vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
+      gl_PointSize = uPix * (1.2 + glow * 1.6) * 2.2; vA = uOn * (.16 + glow * .85); }`,
+  fragmentShader: /* glsl */`varying vec3 vCol; varying float vA; void main(){ float d = length(gl_PointCoord - .5); gl_FragColor = vec4(vCol, smoothstep(.5, .1, d) * vA);
+    #include <colorspace_fragment>
+  }`,
+}));
+sil.frustumCulled = false; sil.visible = false; sil.renderOrder = 5;
+scene.add(camera); camera.add(sil);
+function placeSilhouette() {
+  const D = 6, hh = D * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), hw = hh * camera.aspect;
+  const s = (hh * 2 * 0.62) / 8.2;
+  sil.position.set(hw * 0.74, -hh * 0.06, -D); sil.scale.setScalar(s);
+}
+function silTarget(zoneKey) {
+  const [bx, by] = NINFO[zoneKey].tgt;
+  const local = new V3((bx - BODY_W / 2) * BODY_SCALE, (BODY_H / 2 - by) * BODY_SCALE, 0);
+  silU.uTgt.value.copy(local);
+  sil.updateMatrixWorld(true);
+  return sil.localToWorld(local.clone());
+}
+function updateCallouts(zoneKey, fl, on) {
+  const show = isDesktop() && on && zoneKey && periCurve;
+  const info = zoneKey ? NINFO[zoneKey] : null;
+  const steps = [0.08, 0.2, 0.32, 0.44, 0.56]; // Reihenfolge: Austritt → Nerven → Gefühl → Ziel → typisch
+  const pts = periCurve ? [0, 0.32, 0.64, 1, 0.06].map((t) => periCurve.getPointAt(t)) : [];
+  ncalls.forEach((el, i) => {
+    const vis = show && fl > steps[i] && fl < 0.97;
+    el.style.opacity = vis ? 1 : 0;
+    if (!show) return;
+    el.textContent = info[NC_KEYS[i]];
+    let x, y;
+    if (i === 4) { // „Typisch“ ruhig unter der Silhouette
+      const f = sil.localToWorld(new V3(0, -BODY_H / 2 * BODY_SCALE, 0)).project(camera);
+      x = (f.x * 0.5 + 0.5) * innerWidth; y = (-f.y * 0.5 + 0.5) * innerHeight + 34;
+      el.style.transform = `translate(${Math.min(x, innerWidth - 190)}px, ${Math.min(y, innerHeight - 70)}px) translate(-50%, 0)`;
+      return;
+    }
+    const q = pts[i].clone().project(camera);
+    x = (q.x * 0.5 + 0.5) * innerWidth; y = (-q.y * 0.5 + 0.5) * innerHeight;
+    const off = [[22, 26], [0, -28], [0, 24], [-34, -34]][i];
+    el.style.transform = `translate(${Math.min(x + off[0], innerWidth - 24)}px, ${y + off[1]}px) translate(${i === 0 ? '0' : i === 3 ? '-100%' : '-50%'}, -50%)`;
+  });
+}
+
+const PH = () => (isDesktop() ? { M0: 0.06, J0: 0.09, J1: 0.9, M1: 0.94 } : { M0: 0.1, J0: 0.13, J1: 0.9, M1: 0.93 });
 segBtns.forEach((b) => b.addEventListener('click', () => {
   const i = +b.dataset.seg, ph = PH(), r = axis.getBoundingClientRect();
   const p = ph.J0 + (i / (STOPS.length - 1)) * (ph.J1 - ph.J0);
@@ -613,13 +685,15 @@ function updateAxis(dt) {
 
   // Kamera: Übersicht ↔ Kamerafahrt
   const w = inSec ? smooth(ph.M0, ph.J0, p) * (1 - smooth(ph.J1, ph.M1, p)) : 0;
-  let jPose = null, zoneIdx = active;
+  let jPose = null, zoneIdx = active, localF = 0;
   if (w > 0) {
     if (desk) {
       const x = clamp((p - ph.J0) / (ph.J1 - ph.J0)) * (STOPS.length - 1);
       const i = Math.min(Math.floor(x), STOPS.length - 2), f = x - i;
-      jPose = lerpPose(stopPose(i), stopPose(i + 1), smooth(0.25, 0.85, f));
-      zoneIdx = Math.min(STOPS.length - 1, Math.round(x - 0.05));
+      jPose = lerpPose(stopPose(i), stopPose(i + 1), smooth(0.1, 0.9, f));
+      jPose.rot += x * 0.14; // langsames Kreisen: jede Raste bewegt etwas
+      zoneIdx = Math.min(STOPS.length - 1, Math.round(x));
+      localF = x - zoneIdx + 0.5;
       setActive(zoneIdx);
     } else { mobSel = mobileCard(); setActive(mobSel); jPose = stopPose(mobSel); zoneIdx = mobSel; }
   }
@@ -639,9 +713,15 @@ function updateAxis(dt) {
   const periOn = zone >= 0 && w > 0.9 ? 1 : 0;
   sU.uPeri.value += (periOn - sU.uPeri.value) * 0.05;
   if (zone >= 0) updatePeri(STOPS[zoneIdx].zone);
-  periLabel.style.opacity = (sU.uPeri.value > 0.6 && spineGroup.visible ? 1 : 0);
+  periLabel.style.opacity = (!desk && sU.uPeri.value > 0.6 && spineGroup.visible ? 1 : 0);
+  // PC: Silhouette + Infos im Raum
+  const silOn = desk && zone >= 0 ? sU.uPeri.value : 0;
+  silU.uOn.value = silOn; sil.visible = silOn > 0.01;
+  if (desk) placeSilhouette();
+  updateCallouts(zone >= 0 ? STOPS[zoneIdx].zone : null, localF, silOn > 0.5);
 }
 
+// (Nerven-Infos siehe oben)
 // ---------- Dach: Index ----------
 $$('.index li').forEach((li) => {
   const b = $('button', li);
@@ -690,14 +770,14 @@ tGeo.setAttribute('aKind', new THREE.BufferAttribute(prx.kind, 1));
 tGeo.setAttribute('aRoom', new THREE.BufferAttribute(prx.room, 1));
 const tU = {
   uTime: uniforms.uTime, uPix: uniforms.uPix, uRot: uniforms.uHouseRot, uXf: { value: uniforms.uXf.value[3] },
-  uCut: { value: -10 }, uOn: { value: 0 }, uRoom: { value: -1 },
+  uCut: { value: -10 }, uOn: { value: 0 }, uRoom: { value: -1 }, uFade: { value: 1 },
   cBone: uniforms.cBone, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue, cGreen: uniforms.cGreen, cPetrol: uniforms.cPetrol,
 };
 const tourPts = new THREE.Points(tGeo, new THREE.ShaderMaterial({
   uniforms: tU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   vertexShader: /* glsl */`
     attribute float aKind, aRoom;
-    uniform float uTime, uPix, uRot, uCut, uOn, uRoom; uniform vec4 uXf;
+    uniform float uTime, uPix, uRot, uCut, uOn, uRoom, uFade; uniform vec4 uXf;
     uniform vec3 cBone, cAmber, cBlue, cGreen, cPetrol;
     varying vec3 vCol; varying float vA;
     vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
@@ -724,7 +804,7 @@ const tourPts = new THREE.Points(tGeo, new THREE.ShaderMaterial({
       float dn = d / uXf.w;
       // nahe Wände und Kanten ausblenden (Schnittbild), sonst stehen sie als helle Streifen im Bild
       float nearFade = (aKind > .5 && aKind < 1.5) || aKind > 5.5 ? smoothstep(.7, 1.9, dn) : smoothstep(.2, .85, dn);
-      vA = step(position.y, uCut) * uOn * (aKind < .5 ? .55 : aKind < 1.5 ? .5 : .9) * nearFade;
+      vA = step(position.y, uCut) * uOn * uFade * (aKind < .5 ? .55 : aKind < 1.5 ? .5 : .9) * nearFade;
       vCol = col;
     }`,
   fragmentShader: /* glsl */`
@@ -740,6 +820,8 @@ scene.add(tourPts);
 const roomTags = ROOMS.map((r, i) => {
   const el = document.createElement('div'); el.className = 'room-tag'; el.setAttribute('aria-hidden', 'true');
   el.innerHTML = `<i>${String(i + 1).padStart(2, '0')}</i>${r.short}`; document.body.appendChild(el);
+  el.addEventListener('pointerenter', () => (hoverRoom = i)); el.addEventListener('pointerleave', () => (hoverRoom = -1));
+  el.addEventListener('click', () => { const rr = tourEl.getBoundingClientRect(); const q = TPH.J0 + (i / (ROOMS.length - 1)) * (TPH.J1 - TPH.J0); scrollToY(rr.top + scrollY + q * (rr.height - innerHeight) + 2); });
   const [x, y, w, h] = r.r; const [cx, cz] = P(x + w / 2, y + h / 2);
   return { el, p: new V3(cx, EYE + 0.55, cz) };
 });
@@ -778,7 +860,11 @@ roomBtns.forEach((b) => b.addEventListener('click', () => {
   scrollToY(r.top + scrollY + p * (r.height - innerHeight) + 2);
 }));
 roomDots.forEach((d) => d.addEventListener('click', () => { const c = roomCards[+d.dataset.room]; scrollToY(c.getBoundingClientRect().top + scrollY - innerHeight * 0.5); }));
-let tourWant = null, tourHide = 0;
+let tourWant = null, tourHide = 0, xray = 0, dragRot = 0, hoverRoom = -1;
+// Haus mit gedrückter Maus drehen (PC, Röntgenblick)
+{ let down = null; addEventListener('pointerdown', (e) => { if (xray > 0.4 && e.pointerType === 'mouse' && e.clientX > innerWidth * 0.45 && !e.target.closest('a,button,.room-tag')) down = e.clientX; });
+  addEventListener('pointermove', (e) => { if (down !== null) { dragRot += (e.clientX - down) * 0.006; down = e.clientX; } });
+  addEventListener('pointerup', () => (down = null)); }
 function updateTour(dt) {
   const r = tourEl.getBoundingClientRect(), vh = innerHeight, desk = isDesktop();
   const p = clamp(-r.top / Math.max(1, r.height - vh));
@@ -787,16 +873,27 @@ function updateTour(dt) {
   let inside;
   if (desk) inside = !near ? 0 : p < TPH.M1 ? smooth(0.0, TPH.M0, p) : 1 - smooth(TPH.M1, 0.995, p);
   else { const f = roomCards[0].getBoundingClientRect(), l = roomCards[roomCards.length - 1].getBoundingClientRect(); inside = !near ? 0 : smooth(vh * 1.2, vh * 0.75, f.top) * (1 - smooth(vh * 0.2, -vh * 0.25, l.bottom)); }
-  tU.uCut.value = -3.05 + inside * 1.9;
-  tU.uOn.value = inside > 0 ? 1 : 0; tourPts.visible = inside > 0;
+  // Röntgenblick (PC): schon bevor man eintritt, leuchtet das Innere durch das Haus, das Dach schwebt angehoben
+  const pv = desk && morphNow > 2.55 && morphNow < 3.45 ? smooth(2.55, 2.95, morphNow) * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) : 0;
+  xray = pv;
+  tU.uCut.value = inside > 0 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
+  tU.uOn.value = inside > 0 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0 || pv > 0;
+  tU.uFade.value = inside > 0 ? 1 : pv * 0.55;
+  uniforms.uRoofLift.value += ((desk ? Math.max(pv, inside) * 1.1 : 0) - uniforms.uRoofLift.value) * 0.08;
   tourHide = desk ? (near ? smooth(0.0, TPH.M0 * 0.8, p) * (1 - smooth(TPH.M1, 0.99, p)) : 0) : Math.min(1, inside * 1.4);
   // Hausdrehung festhalten, solange wir drinnen sind
-  const free = Math.sin(uniforms.uTime.value * 0.2) * 0.45 - 0.55;
+  const free = Math.sin(uniforms.uTime.value * 0.2) * 0.45 - 0.55 + dragRot;
   uniforms.uHouseRot.value = THREE.MathUtils.lerp(free, TOUR_ROT, near ? smooth(0, TPH.M0, p) * (1 - smooth(TPH.M1, 1, p)) : 0);
+  if (pv > 0.3 && (p <= 0 || !near || inside < 0.05)) { // Röntgenblick: Räume als anklickbare Schilder
+    tourWant = null; tU.uRoom.value = hoverRoom;
+    roomTags.forEach((t, i) => { const w = toWorld(t.p.clone().setY(EYE + 0.2)); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * innerWidth}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(-50%, -50%)`; });
+    return;
+  }
+  roomTags.forEach((t) => t.el.classList.remove('click'));
   if (!near || p <= 0 || p >= 1) { tourWant = null; tU.uRoom.value = -1; roomTags.forEach((t) => (t.el.style.opacity = 0)); return; }
   // Kamera-Station bestimmen
   let st, room = -1;
-  const ri = (x) => { const n = ROOMS.length - 1, xx = clamp(x) * n, i = Math.min(Math.floor(xx), n - 1); return { i, f: smooth(0.3, 0.9, xx - i), x: xx }; };
+  const ri = (x) => { const n = ROOMS.length - 1, xx = clamp(x) * n, i = Math.min(Math.floor(xx), n - 1); return { i, f: smooth(0.12, 0.88, xx - i), x: xx }; };
   if (desk) {
     if (p < TPH.E) st = lerpPose(OVERVIEW, tourPose(TOUR.entry), smooth(0, TPH.E, p));
     else if (p < TPH.J0) st = lerpPose(tourPose(TOUR.entry), tourPose(TOUR.rooms[0]), smooth(TPH.E, TPH.J0, p));
@@ -929,7 +1026,7 @@ function tick() {
     if (head && morphNow > 1.5) dim = Math.max(dim, smooth(vh * 0.62, vh * 0.25, head.getBoundingClientRect().top) * 0.9);
   }
   if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
-  dim = Math.max(dim, tourHide); // im Rundgang tritt das äußere Partikel-Haus zurück
+  dim = Math.max(dim, tourHide, xray * 0.4); // im Rundgang/Röntgenblick tritt das äußere Partikel-Haus zurück
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
   uniforms.uSize.value = isDesktop() ? 1 : 1.1 - (morphNow > 2.5 && morphNow < 3.5 ? emblemK * 0.45 : 0);
   uniforms.uSpread.value = reduced ? 0 : isDesktop() ? 0.32 : 0.28;

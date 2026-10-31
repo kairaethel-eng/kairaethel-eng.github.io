@@ -26,6 +26,9 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 | Mehr Ruhe | Partikel streuen beim Formwechsel nur noch ca. ⅓ so weit, Formwechsel über längere Scrollstrecke und gemächlicher, Kamera fährt weicher, Mausrad langsamer mit sanftem Nachgleiten (Scrollbalken unverändert direkt), Intro langsamer | umgesetzt | umgesetzt |
 | „Bewegung reduzieren“ (B) | Sanfter Ruhemodus: Eigenbewegung in halbem Tempo (Atmen, Treiben, Signale, langsame Drehung), ohne Kamerafahrten, Streuung, Nachgleiten und Buchstaben-Animationen | umgesetzt | umgesetzt |
 | Bewegung anhalten | Knopf in der Leiste (WCAG 2.2.2): friert alle Eigenbewegung ein, Scrollen bleibt; Wahl wird im Browser gemerkt | umgesetzt (nur Symbol) | umgesetzt (Symbol + „Bewegung“) |
+| 3A Wirbelsäule ohne „tote“ Scrolls | kürzere Haltezonen, Abschnitt ¼ kürzer, Kamera kreist langsam mit; Nerven-Infos erscheinen im Raum entlang der Bahn (Austritt → Nerven → Gefühl → Ziel → typisch), Karte links nur Titel + Therapien | unverändert (Kai mag Handy so) | umgesetzt |
+| 3B Körper-Silhouette | zarte Partikel-Silhouette rechts, Nervenbahn fließt ins Versorgungsgebiet, das glüht | – | umgesetzt |
+| 2A Dach: Röntgenblick + Layout | Überschrift, Raum-Knöpfe und Raumkarte auf einer Bildschirmhöhe; Haus durchscheinend, Dach schwebt, Räume als anklickbare Schilder, Haus mit Maus drehbar; Rundgang ¼ kürzer, kürzere Haltezonen | unverändert | umgesetzt |
 | Leben im Stillstand (Handy) | Figur atmet, Verspannungen pochen, leichte Drift aller Partikel; im Stillstand nur jedes 2. Bild (Akku), beim Scrollen volle Rate | umgesetzt | Atmen/Pochen/Drift auch am PC; PC rendert immer voll |
 
 ## Testadresse (ab 31.10.2026, Kais Go)
