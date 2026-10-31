@@ -23,6 +23,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 | Lebende Überschriften | 01 Buchstaben entspannen unter Maus/Welle · 02 Wort für Wort · 03 Buchstaben schief wie Fehlstellung → richten sich aus · 04 Dachlinie zeichnet sich, Buchstaben kommen darunter zur Ruhe · § Paragraf „atmet“ · 05 „Der erste Schritt.“ setzt Schritt für Schritt auf, dann kleiner Gang · Leistungen: Impulswelle durch den Namen (PC: Maus, Handy: beim Durchscrollen) | umgesetzt | umgesetzt |
 | Wirbelsäule Darstellung | Umschalter „Schichten“ (CT-Schnittlinien, Standard) / „Körnung“ (feiner gestochen) – Kai entscheidet nach Vergleich, danach Umschalter entfernen | umgesetzt | umgesetzt |
 | Rundgang im Haus (Kapitel 04) | Partikel-Haus wird von unten nach oben „gescannt“, Kamera geht durch die Tür durch Empfang, Wartebereich, Behandlung 1, Behandlung 2 (Manuthera), Training, dann Vogelperspektive auf den Grundriss; Räume als Punktwolke (Grundriss V10, schematisch); Raum-Beschriftungen im Raum; danach „Alle Leistungen“ | Karten untereinander, Szene oben, Fortschritt „Tür ● ○ ○ ○ ○ Training“, Haus-Emblem erst bei der Liste | Scroll-Kamerafahrt, Raum-Knöpfe, Text links abgedunkelt |
+| Mehr Ruhe | Partikel streuen beim Formwechsel nur noch ca. ⅓ so weit, Formwechsel über längere Scrollstrecke und gemächlicher, Kamera fährt weicher, Mausrad langsamer mit sanftem Nachgleiten (Scrollbalken unverändert direkt), Intro langsamer | umgesetzt | umgesetzt |
 | Leben im Stillstand (Handy) | Figur atmet, Verspannungen pochen, leichte Drift aller Partikel; im Stillstand nur jedes 2. Bild (Akku), beim Scrollen volle Rate | umgesetzt | Atmen/Pochen/Drift auch am PC; PC rendert immer voll |
 
 ## Testadresse (ab 31.10.2026, Kais Go)
@@ -30,6 +31,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - Nur Ordner `labor/` auf `main` veröffentlicht, `index.html`/Impressum/Datenschutz unverändert; alle Seiten `noindex`.
 
 ## Offen für die echte Website
+- „Bewegung reduzieren“ (iPhone-Einstellung): aktuell steht dann alles still. Vorschlag B „sanfter Ruhemodus“ wartet auf Kais Entscheidung.
 - Inhalte aus V10 übernehmen: Körperkarte „Wo tut's weh?“, Porträt Kai, Einblicke, ggf. Rundgang (Idee: Partikel-Grundriss).
 - „12 Therapieformen“ (V10) vs. 11 aufgeführte Leistungen klären.
 - Grundriss aus V10 ist schematisch – echte Raumaufteilung? Später echter 3D-Scan der Praxis (Handy-App, Export als PLY) → als Punktwolke im gleichen Stil einsetzbar (`src/test-4/praxis.js` liefert dieselbe Datenform).

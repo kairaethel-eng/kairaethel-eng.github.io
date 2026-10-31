@@ -18,7 +18,8 @@ const isDesktop = () => innerWidth > 920;
 // ---------- Scrollen ----------
 let lenis = null;
 if (!reduced) {
-  lenis = new Lenis({ lerp: 0.08, smoothWheel: true });
+  // ruhiges Scrollen: Mausrad langsamer, weiches Nachgleiten (Scrollbalken bleibt direkt)
+  lenis = new Lenis({ lerp: 0.055, smoothWheel: true, wheelMultiplier: 0.6 });
   gsap.ticker.add((t) => lenis.raf(t * 1000));
   gsap.ticker.lagSmoothing(0);
 }
@@ -656,7 +657,7 @@ function targetMorph() {
     const s = +chapters[i].dataset.stage;
     const prev = i ? +chapters[i - 1].dataset.stage : 0;
     // Übergang, während das Kapitel von unten hereinkommt
-    let t = smooth(vh * 0.8, vh * 0.15, r.top);
+    let t = smooth(vh * 0.95, vh * 0.05, r.top); // Formwechsel über eine längere Strecke
     // Handy: die Figur löst sich schon beim ersten Scrollen an Ort und Stelle in Bewegungslinien auf
     if (!isDesktop() && prev === 0 && s === 1) t = smooth(vh * 0.03, vh * 0.4, scrollY);
     if (t > 0) m = prev + (s - prev) * t;
@@ -894,12 +895,12 @@ function tick() {
   const dt = Math.min(clock.getDelta(), 0.05);
   uniforms.uTime.value += reduced ? 0 : dt;
   const tm = targetMorph();
-  morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 4));
+  morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uMorph.value = morphNow;
   updateAxis(dt);
   updateTour(dt);
   { // Kamera: Rundgang > Wirbelsäule > Übersicht
-    const want = tourWant || axisWant || OVERVIEW, k = reduced ? 1 : 1 - Math.exp(-dt * 3.2);
+    const want = tourWant || axisWant || OVERVIEW, k = reduced ? 1 : 1 - Math.exp(-dt * 2.2);
     cam.pos.lerp(want.pos, k); cam.target.lerp(want.target, k);
   }
   // Partikel abdunkeln, sobald Text darüber liegt (Kontakt immer; mobil auch Achse/Dach/Hausordnung)
@@ -916,7 +917,7 @@ function tick() {
   dim = Math.max(dim, tourHide); // im Rundgang tritt das äußere Partikel-Haus zurück
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
   uniforms.uSize.value = isDesktop() ? 1 : 1.1 - (morphNow > 2.5 && morphNow < 3.5 ? emblemK * 0.45 : 0);
-  uniforms.uSpread.value = isDesktop() ? 0.55 : 0.45;
+  uniforms.uSpread.value = isDesktop() ? 0.32 : 0.28;
   if (!isDesktop()) roofEmblem();
   livingHeadlines();
   uniforms.uFadeMid.value = isDesktop() ? 0.62 : 0.7;
@@ -958,6 +959,6 @@ gsap.ticker.add(tick);
 
 // Intro
 if (!reduced) {
-  gsap.to(uniforms.uIntro, { value: 1, duration: 2.2, ease: 'expo.out', delay: 0.1 });
+  gsap.to(uniforms.uIntro, { value: 1, duration: 3.2, ease: 'expo.out', delay: 0.1 });
   gsap.from(['.hero .kicker', '.kinetic', '.hero-sub', '.hero .actions', '.meter', '.top'], { opacity: 0, y: 20, duration: 1.1, stagger: 0.06, ease: 'expo.out', delay: 0.2 });
 }
