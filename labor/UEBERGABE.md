@@ -14,7 +14,7 @@ Kapitel 01 Spannung (Partikel-Körper, Verspannungen lösen) · 02 Bewegung · 0
 - Handy bleibt bei Kapitel 03/04 wie es ist (Kai: „mobil sieht es schöner aus“).
 
 ## Nächster Schritt
-- **Manuthera-Highlight:** A „Bühne“ ist in Puls · Scan eingebaut (Kapitel 04 nach dem Rundgang, `#manuthera`). Kai prüft am PC und iPhone. Offen: V10-Live-Seite schreibt noch „Loyer“ (nur mit Go).
+- **Manuthera-Highlight:** A „Bühne“ ist in Puls · Scan eingebaut (Kapitel 04 nach dem Rundgang, `#manuthera`). Kai prüft am PC und iPhone (Testadresse aktuell, auch `labor/manuthera.html`). „Lojer“ auf der Live-Seite V10 korrigiert (31.10.).
 - Kai prüft die neuen Wirbelsäulen-Beschriftungen am PC und schickt neue Punkte.
 
 ## Offen / später
