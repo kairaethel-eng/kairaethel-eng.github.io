@@ -262,8 +262,25 @@ main{position:relative;z-index:2}
 .manu-stage:active{cursor:grabbing}
 .manu-stage canvas{display:block;width:100%;height:100%;touch-action:pan-y}
 .manu-hint{position:absolute;right:0;bottom:6px;font:500 12px/1 var(--sans);letter-spacing:.06em;color:var(--mute)}
-.room-more{display:inline-block;margin-top:14px;font:600 12px/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;text-decoration:none;color:var(--amber);border-bottom:1px solid rgba(224,154,53,.5);padding:6px 0}
-.room-more:hover{color:var(--txt)}
+.room-more{display:inline-flex;align-items:center;gap:10px;margin-top:16px;min-height:44px;padding:0 18px;border-radius:3px;background:var(--amber);color:#14110A;font:700 12px/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;text-decoration:none;animation:glow 2.6s ease-out infinite;transition:transform .3s var(--ease)}
+.room-more:hover{transform:translateY(-2px)}
+.room-more .dot{background:#14110A;animation:none}
+@keyframes glow{0%{box-shadow:0 0 0 0 rgba(224,154,53,.55)}70%{box-shadow:0 0 0 12px rgba(224,154,53,0)}100%{box-shadow:0 0 0 0 rgba(224,154,53,0)}}
+.paused .room-more{animation:none}
+@media (prefers-reduced-motion: reduce){.room-more{animation:none}}
+/* Raum 04 als Highlight markiert */
+.roomnav button.hi{position:relative;border-color:rgba(224,154,53,.45)}
+.roomnav button.hi::after{content:"";position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px rgba(224,154,53,.8)}
+.room-dots button.hi{box-shadow:0 0 0 2px rgba(224,154,53,.55)}
+/* Schild „Manuthera“ im 3D-Raum */
+.manu-tag{position:fixed;left:0;top:0;z-index:4;display:flex;align-items:center;gap:9px;padding:9px 14px;border-radius:18px;background:rgba(10,22,27,.78);border:1px solid var(--amber);color:var(--amber);font:700 11px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .4s,background .3s,color .3s;box-shadow:0 0 24px rgba(224,154,53,.35)}
+.manu-tag.on{pointer-events:auto}
+.manu-tag:hover{background:var(--amber);color:#14110A}
+.manu-tag::after{content:"";position:absolute;left:50%;top:100%;width:1px;height:26px;background:linear-gradient(var(--amber),rgba(224,154,53,0))}
+/* Leistungen: Manuthera-Eintrag */
+.ix-hi{display:inline-flex;align-items:center;gap:8px;color:var(--amber)!important}
+.ix-link{display:block;margin-top:14px;width:max-content;font:700 12px/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;text-decoration:none;color:var(--amber);border-bottom:1px solid rgba(224,154,53,.5);padding:6px 0}
+.ix-link:hover{color:var(--txt)}
 @media (max-width:920px){
   .manu-inner{grid-template-columns:1fr;gap:10px}
   .manu-stage{order:-1;height:auto}

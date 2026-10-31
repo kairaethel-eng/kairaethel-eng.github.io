@@ -141,27 +141,23 @@ export function housePoints(N) {
   ];
   const lens = e.map(([a, b]) => a.distanceTo(b)), L = lens.reduce((s, x) => s + x, 0);
   const pos = new Float32Array(N * 3), kind = new Float32Array(N);
-  const v = new THREE.Vector3();
-  for (let i = 0; i < N; i++) {
-    const r = rand();
-    if (r < 0.62) {
-      let t = rand() * L, k = 0;
-      while (t > lens[k]) { t -= lens[k]; k++; }
-      v.copy(e[k][0]).lerp(e[k][1], t / lens[k]);
-      v.x += (rand() - 0.5) * 0.06; v.y += (rand() - 0.5) * 0.06; v.z += (rand() - 0.5) * 0.06;
-      kind[i] = k >= 8 && k <= 14 ? 1 : k >= 15 ? 2 : 0;
-    } else if (r < 0.86) {
-      // Dachflächen (dünn)
-      const side = rand() < 0.5 ? -1 : 1, s = rand(), x = (rand() * 2 - 1) * (W + ov);
-      v.set(x, Hw - 0.25 + (R + 0.25) * (1 - s) + base, side * (D + ov) * s);
-      kind[i] = 1;
-    } else {
-      // Boden-Schimmer
-      v.set((rand() * 2 - 1) * (W + 1.6), base - 0.02, (rand() * 2 - 1) * (D + 1.4));
-      kind[i] = 3;
-    }
-    pos.set([v.x, v.y, v.z], i * 3);
+  // „Gestochen“: Kanten gleichmäßig gepunktet (ohne Wackeln), Dachflächen als Linienraster, Boden als Punktgitter
+  const nEdge = Math.round(N * 0.6), nRoof = Math.round(N * 0.26), nFloor = N - nEdge - nRoof;
+  let i = 0;
+  const put = (x, y, z, k) => { pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z; kind[i] = k; i++; };
+  e.forEach(([a, b], k) => {
+    const cnt = k === e.length - 1 ? nEdge - i : Math.round((lens[k] / L) * nEdge);
+    for (let j = 0; j < cnt; j++) { const t = (j + 0.5) / cnt; put(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, k >= 8 && k <= 14 ? 1 : k >= 15 ? 2 : 0); }
+  });
+  // Dach: je Seite parallele Linien zum First
+  const ROWS = 11, perRow = Math.floor(nRoof / (2 * ROWS));
+  for (const side of [-1, 1]) for (let r = 1; r <= ROWS; r++) {
+    const s2 = r / (ROWS + 1);
+    for (let j = 0; j < perRow; j++) { const x = -(W + ov) + ((j + 0.5) / perRow) * 2 * (W + ov); put(x, Hw - 0.25 + (R + 0.25) * (1 - s2) + base, side * (D + ov) * s2, 1); }
   }
+  // Boden: regelmäßiges Punktgitter (Rest)
+  const fx = W + 1.6, fz = D + 1.4, rest = N - i, cols = Math.max(2, Math.round(Math.sqrt(rest * fx / fz))), rows = Math.max(2, Math.ceil(rest / cols));
+  for (let j = 0; i < N; j++) { const cx = j % cols, cz = Math.floor(j / cols); put(-fx + (cx + 0.5) / cols * 2 * fx, base - 0.02, -fz + (cz + 0.5) / rows * 2 * fz, 3); }
   return { pos, kind };
 }
 

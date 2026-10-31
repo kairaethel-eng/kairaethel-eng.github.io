@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 import Lenis from 'lenis';
 import { bodyPoints, spinePoints, housePoints, logoPoints, spineStipple, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
-import { praxisPoints, ROOMS, EYE, P } from './praxis.js';
+import { praxisScan, ROOMS, EYE, P } from './praxis.js';
 import { initA as initManu, MODES as MANU_MODES } from '../manu/ideaA.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
@@ -163,7 +163,9 @@ const vert = /* glsl */`
     vec3 pA, pB, cA, cB; float sA, sB, aA, aB;
     shape(i0, pA, cA, sA, aA); shape(i1, pB, cB, sB, aB);
     vec3 p = mix(pA, pB, t);
-    p += vec3(sin(uTime*.5 + aRand.y*6.283), cos(uTime*.42 + aRand.z*6.283), 0.) * .012 * mix(uXf[i0].w, uXf[i1].w, t);
+    // Haus „gestochen“: ruhiger, gleich große Punkte
+    float wH = (i0 == 3 ? 1. - t : 0.) + (i1 == 3 ? t : 0.);
+    p += vec3(sin(uTime*.5 + aRand.y*6.283), cos(uTime*.42 + aRand.z*6.283), 0.) * .012 * mix(uXf[i0].w, uXf[i1].w, t) * (1. - wH * .9);
     // Zerstäuben zwischen zwei Formen
     vec3 n = normalize(vec3(aRand.x-.5, aRand.y-.5, aRand.z-.5)+1e-4);
     // Streuung im Verhältnis zur Formgröße (auf dem Handy kleiner, damit Text frei bleibt)
@@ -174,9 +176,9 @@ const vert = /* glsl */`
     vec4 mv = modelViewMatrix * vec4(p, 1.);
     gl_Position = projectionMatrix * mv;
     float s = mix(sA, sB, t);
-    gl_PointSize = uSize * uPix * s * (.5 + aRand.y*.9) * 24. / -mv.z;
+    gl_PointSize = uSize * uPix * s * mix(.5 + aRand.y*.9, .82, wH) * 24. / -mv.z;
     vCol = mix(cA, cB, t);
-    vA = (.5 + aRand.x*.5) * (1. - uFadeMid*sin(t*3.14159)) * uIntro * mix(aA, aB, t);
+    vA = mix(.5 + aRand.x*.5, .9, wH) * (1. - uFadeMid*sin(t*3.14159)) * uIntro * mix(aA, aB, t);
   }`;
 const frag = /* glsl */`
   uniform float uAlpha;
@@ -841,58 +843,98 @@ function targetMorph() {
 
 // ---------- Kapitel 04: Rundgang durch die Praxis (Punktwolke im Partikel-Haus) ----------
 const tourEl = $('#tour'), roomCards = $$('.room-card'), roomBtns = $$('.roomnav button'), roomDots = $$('.room-dots button');
-const prx = praxisPoints(isDesktop() ? 150000 : 60000);
-const tGeo = new THREE.BufferGeometry();
-tGeo.setAttribute('position', new THREE.BufferAttribute(prx.pos, 3));
-tGeo.setAttribute('normal', new THREE.BufferAttribute(prx.nor, 3));
-tGeo.setAttribute('aKind', new THREE.BufferAttribute(prx.kind, 1));
-tGeo.setAttribute('aRoom', new THREE.BufferAttribute(prx.room, 1));
+// Einrichtung „gestochen“: Scan-Linien (Wände, Boden, Kanten) leuchten, Möbel sind Körper mit Kern
+const prx = praxisScan(isDesktop() ? 85000 : 32000, isDesktop() ? 1 : 0.62);
 const tU = {
   uTime: uniforms.uTime, uPix: uniforms.uPix, uRot: uniforms.uHouseRot, uXf: { value: uniforms.uXf.value[3] },
-  uCut: { value: -10 }, uOn: { value: 0 }, uRoom: { value: -1 }, uFade: { value: 1 },
-  cBone: uniforms.cBone, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue, cGreen: uniforms.cGreen, cPetrol: uniforms.cPetrol,
+  uCut: { value: -10 }, uOn: { value: 0 }, uRoom: { value: -1 }, uFade: { value: 1 }, uStip: { value: 1 },
+  cBone: uniforms.cBone, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue, cGreen: uniforms.cGreen, cPetrol: uniforms.cPetrol, cCore: { value: C('#0E1C22') },
 };
-const tourPts = new THREE.Points(tGeo, new THREE.ShaderMaterial({
+const T_COMMON = /* glsl */`
+  attribute float aKind, aRoom;
+  uniform float uTime, uPix, uRot, uCut, uOn, uRoom, uFade, uStip; uniform vec4 uXf;
+  uniform vec3 cBone, cAmber, cBlue, cGreen, cPetrol, cCore;
+  vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
+  float roomGain(){ float act = 1. - step(.5, abs(aRoom - uRoom)); return uRoom < -.5 ? 1. : mix(.42, 1.2, act); }`;
+// 1) Scan-Linien: leuchtend, gleichmäßig (Wände, Boden, Kanten)
+const tourLines = new THREE.Points(prx.lines, new THREE.ShaderMaterial({
   uniforms: tU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-  vertexShader: /* glsl */`
-    attribute float aKind, aRoom;
-    uniform float uTime, uPix, uRot, uCut, uOn, uRoom, uFade; uniform vec4 uXf;
-    uniform vec3 cBone, cAmber, cBlue, cGreen, cPetrol;
+  vertexShader: T_COMMON + /* glsl */`
     varying vec3 vCol; varying float vA;
-    vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
     void main(){
       vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
-      vec3 n = normalize(rotY(normal, uRot));
-      float lam = .35 + .65 * max(dot(n, normalize(vec3(.4, .8, .5))), 0.);
-      vec3 col;
-      if (aKind < .5) col = cPetrol * .85;
-      else if (aKind < 1.5) col = cBone * .5;
-      else if (aKind < 2.5) col = cBone * lam;
-      else if (aKind < 3.5) col = cGreen * lam;
-      else if (aKind < 4.5) col = cAmber * (.6 + .6 * lam);
-      else if (aKind < 5.5) col = mix(cPetrol * 1.7, cBlue, .3) * lam;
-      else col = cBone * .8;
-      float act = 1. - step(.5, abs(aRoom - uRoom));
-      col *= uRoom < -.5 ? 1. : mix(.42, 1.2, act);
+      vec3 col = aKind < .5 ? cPetrol * .85 : aKind < 1.5 ? cBone * .42 : cBone * .85;
+      col *= roomGain();
       float g = exp(-pow((position.y - uCut) * 14., 2.));
       col = mix(col, cAmber * 1.4, g);
       vec4 mv = viewMatrix * vec4(p, 1.);
       gl_Position = projectionMatrix * mv;
-      float d = -mv.z;
-      gl_PointSize = clamp(uPix * (aKind > 5.5 ? 1.45 : 1.25) * 9. / d, 1., 4.5) * (1. + g);
-      float dn = d / uXf.w;
+      float d = -mv.z, dn = d / uXf.w;
+      gl_PointSize = clamp(uPix * (aKind > 5.5 ? 1.35 : 1.1) * 9. / d, 1., 3.5) * (1. + g);
       // nahe Wände und Kanten ausblenden (Schnittbild), sonst stehen sie als helle Streifen im Bild
-      float nearFade = (aKind > .5 && aKind < 1.5) || aKind > 5.5 ? smoothstep(.7, 1.9, dn) : smoothstep(.2, .85, dn);
-      vA = step(position.y, uCut) * uOn * uFade * (aKind < .5 ? .55 : aKind < 1.5 ? .5 : .9) * nearFade;
+      float nearFade = aKind > .5 ? smoothstep(.7, 1.9, dn) : smoothstep(.2, .85, dn);
+      vA = step(position.y, uCut) * uOn * uFade * (aKind < .5 ? .5 : aKind < 1.5 ? .55 : .95) * nearFade;
       vCol = col;
     }`,
   fragmentShader: /* glsl */`
     varying vec3 vCol; varying float vA;
-    void main(){ float d = length(gl_PointCoord - .5); gl_FragColor = vec4(vCol, smoothstep(.5, .08, d) * vA);
+    void main(){ float d = length(gl_PointCoord - .5); gl_FragColor = vec4(vCol, smoothstep(.5, .12, d) * vA);
       #include <colorspace_fragment>
     }`,
 }));
-tourPts.frustumCulled = false; tourPts.visible = false;
+// 2) Möbel: gestochene Punkte (deckend, beleuchtet) …
+const tourFurn = new THREE.Points(prx.furn, new THREE.ShaderMaterial({
+  uniforms: tU,
+  vertexShader: T_COMMON + /* glsl */`
+    varying vec3 vCol; varying float vVis;
+    void main(){
+      vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
+      vec3 n = normalize(rotY(normal, uRot));
+      vec3 V = normalize(cameraPosition - p);
+      float lam = max(dot(n, normalize(vec3(.4, .8, .5))), 0.), rim = pow(1. - abs(dot(n, V)), 3.);
+      vec3 base = aKind < 2.5 ? cBone : aKind < 3.5 ? cGreen : aKind < 4.5 ? cAmber : aKind < 5.5 ? mix(cPetrol * 1.7, cBlue, .3) : cBone;
+      vec3 col = base * (.24 + .76 * lam) + cBlue * rim * .12;
+      col *= roomGain() * (.25 + .75 * uFade);
+      float g = exp(-pow((position.y - uCut) * 14., 2.));
+      col = mix(col, cAmber * 1.4, g);
+      vec4 mv = viewMatrix * vec4(p, 1.);
+      gl_Position = projectionMatrix * mv;
+      float d = -mv.z, dn = d / uXf.w;
+      gl_PointSize = clamp(uStip / d, 1., 3.6) * (1. + g * .6);
+      // nah an der Kamera: Punkte lösen sich auf (zufällig, statt hart abzuschneiden)
+      float h = fract(sin(dot(position.xz, vec2(12.9898, 78.233)) + position.y * 37.7) * 43758.5453);
+      vVis = step(position.y, uCut) * uOn * step(h, smoothstep(.25, .8, dn));
+      vCol = col;
+    }`,
+  fragmentShader: /* glsl */`
+    varying vec3 vCol; varying float vVis;
+    void main(){ float d = length(gl_PointCoord - .5); if (vVis < .5 || d > .5) discard;
+      gl_FragColor = vec4(vCol * (1. - smoothstep(.2, .5, d) * .45), 1.);
+      #include <colorspace_fragment>
+    }`,
+}));
+// … 3) auf dunklem Kern (verdeckt Rückseiten, macht die Möbel zu Körpern)
+const tourCore = new THREE.Mesh(prx.core, new THREE.ShaderMaterial({
+  uniforms: tU,
+  vertexShader: T_COMMON + /* glsl */`
+    varying float vY, vD, vL;
+    void main(){
+      vec3 p = rotY(position - normal * .006, uRot) * uXf.w + uXf.xyz;
+      vL = max(dot(normalize(rotY(normal, uRot)), normalize(vec3(.4, .8, .5))), 0.);
+      vY = position.y;
+      vec4 mv = viewMatrix * vec4(p, 1.); vD = -mv.z / uXf.w;
+      gl_Position = projectionMatrix * mv;
+    }`,
+  fragmentShader: /* glsl */`
+    uniform float uCut, uOn; uniform vec3 cCore, cBone; varying float vY, vD, vL;
+    void main(){ if (vY > uCut || uOn < .5 || vD < .45) discard;
+      gl_FragColor = vec4(cCore + cBone * vL * .04, 1.);
+      #include <colorspace_fragment>
+    }`,
+}));
+const tourPts = new THREE.Group();
+[tourLines, tourFurn, tourCore].forEach((o) => { o.frustumCulled = false; tourPts.add(o); });
+tourPts.visible = false;
 scene.add(tourPts);
 
 // Raum-Beschriftungen im Raum
@@ -940,11 +982,27 @@ roomBtns.forEach((b) => b.addEventListener('click', () => {
 }));
 roomDots.forEach((d) => d.addEventListener('click', () => { const c = roomCards[+d.dataset.room]; scrollToY(c.getBoundingClientRect().top + scrollY - innerHeight * 0.5); }));
 let tourWant = null, tourHide = 0, xray = 0, dragRot = 0, hoverRoom = -1;
+// Schild „Manuthera“ an der Liege in Raum 04 (Röntgenblick und Rundgang, PC und Handy)
+const manuTag = document.createElement('a');
+manuTag.className = 'manu-tag'; manuTag.href = '#manuthera'; manuTag.setAttribute('aria-label', 'Manuthera ansehen');
+manuTag.innerHTML = '<b class="dot" aria-hidden="true"></b>Manuthera <span aria-hidden="true">↓</span>';
+document.body.appendChild(manuTag);
+manuTag.addEventListener('click', (e) => { e.preventDefault(); const t = $('#manuthera'); if (t) scrollToY(t.getBoundingClientRect().top + scrollY); });
+const manuTagP = (() => { const [x, z] = P(320, 136); return new V3(x, EYE - 0.22, z); })();
+let manuTagVis = 0;
+function placeManuTag() {
+  const w = toWorld(manuTagP); w.project(camera);
+  const vis = manuTagVis * (w.z < 1 && Math.abs(w.x) < 0.92 && Math.abs(w.y) < 0.85 ? 1 : 0) * (1 - manuK);
+  manuTag.style.opacity = vis.toFixed(2);
+  manuTag.classList.toggle('on', vis > 0.3);
+  if (vis > 0) manuTag.style.transform = `translate(${((w.x * 0.5 + 0.5) * innerWidth).toFixed(1)}px, ${((-w.y * 0.5 + 0.5) * innerHeight - 30).toFixed(1)}px) translate(-50%, -100%)`;
+}
 // Haus mit gedrückter Maus drehen (PC, Röntgenblick)
 { let down = null; addEventListener('pointerdown', (e) => { if (xray > 0.4 && e.pointerType === 'mouse' && e.clientX > innerWidth * 0.45 && !e.target.closest('a,button,.room-tag')) down = e.clientX; });
   addEventListener('pointermove', (e) => { if (down !== null) { dragRot += (e.clientX - down) * 0.006; down = e.clientX; } });
   addEventListener('pointerup', () => (down = null)); }
 function updateTour(dt) {
+  manuTagVis = 0;
   const r = tourEl.getBoundingClientRect(), vh = innerHeight, desk = isDesktop();
   const p = clamp(-r.top / Math.max(1, r.height - vh));
   const near = r.top < vh && r.bottom > 0 && morphNow > 2.6 && morphNow < 3.4;
@@ -958,13 +1016,14 @@ function updateTour(dt) {
   tU.uCut.value = inside > 0 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
   tU.uOn.value = inside > 0 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0 || pv > 0;
   tU.uFade.value = inside > 0 ? 1 : pv * 0.55;
+  tU.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * innerHeight * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * prx.spacing * uniforms.uXf.value[3].w * 0.62;
   uniforms.uRoofLift.value += ((desk ? Math.max(pv, inside) * 1.1 : 0) - uniforms.uRoofLift.value) * 0.08;
   tourHide = desk ? (near ? smooth(0.0, TPH.M0 * 0.8, p) * (1 - smooth(TPH.M1, 0.99, p)) : 0) : Math.min(1, inside * 1.4);
   // Hausdrehung festhalten, solange wir drinnen sind
   const free = Math.sin(uniforms.uTime.value * 0.2) * 0.45 - 0.55 + dragRot;
   uniforms.uHouseRot.value = THREE.MathUtils.lerp(free, TOUR_ROT, near ? smooth(0, TPH.M0, p) * (1 - smooth(TPH.M1, 1, p)) : 0);
   if (pv > 0.3 && (p <= 0 || !near || inside < 0.05)) { // Röntgenblick: Räume als anklickbare Schilder
-    tourWant = null; tU.uRoom.value = hoverRoom;
+    tourWant = null; tU.uRoom.value = hoverRoom; manuTagVis = pv;
     roomTags.forEach((t, i) => { const w = toWorld(t.p.clone().setY(EYE + 0.2)); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * innerWidth}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(-50%, -50%)`; });
     return;
   }
@@ -990,6 +1049,7 @@ function updateTour(dt) {
   }
   if (room >= 0) setRoom(room);
   tU.uRoom.value = room;
+  manuTagVis = room === 3 ? (desk ? smooth(0.9, 1, inside) : smooth(0.4, 0.9, inside)) : 0;
   tourWant = st;
   // Beschriftungen
   roomTags.forEach((t, i) => {
@@ -1113,6 +1173,7 @@ function tick() {
   manuK = manuVisible();
   updateAxis(dt);
   updateTour(dt);
+  placeManuTag();
   { // Kamera: Rundgang > Wirbelsäule > Übersicht
     const want = tourWant || axisWant || OVERVIEW, k = reduced ? 1 : 1 - Math.exp(-dt * 2.2);
     cam.pos.lerp(want.pos, k); cam.target.lerp(want.target, k);

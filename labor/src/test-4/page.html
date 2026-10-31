@@ -116,10 +116,10 @@
           <button type="button" data-room="0" class="is-on"><b>01</b><span>Empfang</span></button>
           <button type="button" data-room="1"><b>02</b><span>Wartebereich</span></button>
           <button type="button" data-room="2"><b>03</b><span>Behandlung 1</span></button>
-          <button type="button" data-room="3"><b>04</b><span>Behandlung 2</span></button>
+          <button type="button" data-room="3" class="hi" title="Highlight: Manuthera"><b>04</b><span>Behandlung 2</span></button>
           <button type="button" data-room="4"><b>05</b><span>Training</span></button>
           </div>
-          <div class="room-dots" role="group" aria-label="Raum wählen"><span>Tür</span><button type="button" data-room="0" aria-label="Empfang" class="is-on"></button><button type="button" data-room="1" aria-label="Wartebereich"></button><button type="button" data-room="2" aria-label="Behandlung 1"></button><button type="button" data-room="3" aria-label="Behandlung 2"></button><button type="button" data-room="4" aria-label="Training"></button><span>Training</span></div>
+          <div class="room-dots" role="group" aria-label="Raum wählen"><span>Tür</span><button type="button" data-room="0" aria-label="Empfang" class="is-on"></button><button type="button" data-room="1" aria-label="Wartebereich"></button><button type="button" data-room="2" aria-label="Behandlung 1"></button><button type="button" data-room="3" aria-label="Behandlung 2 mit Manuthera" class="hi"></button><button type="button" data-room="4" aria-label="Training"></button><span>Training</span></div>
           <div class="room-cards" id="roomCards" aria-live="polite">
           <article class="room-card is-on" data-room="0">
             <p class="room-no"><i>01</i> Empfang</p>
@@ -144,7 +144,7 @@
             <h3>Behandlungsraum 2 · Manuthera</h3>
             <p>Hier steht die Lojer Manuthera 242, eine der modernsten Therapieliegen für mobilisierende Behandlungen der Wirbelsäule und großer Gelenke.</p>
             <ul class="chips"><li>Lojer Manuthera</li><li>Manuelle Therapie</li></ul>
-            <a class="room-more" href="#manuthera">Manuthera ansehen <span aria-hidden="true">↓</span></a>
+            <a class="room-more" href="#manuthera"><b class="dot" aria-hidden="true"></b>Manuthera ansehen <span aria-hidden="true">↓</span></a>
           </article>
           <article class="room-card" data-room="4">
             <p class="room-no"><i>05</i> Training</p>
@@ -190,7 +190,7 @@
         <li><button type="button" aria-expanded="false"><span class="ix-name">Traktion im Schlingentisch</span><span class="ix-tag">Entlastung</span></button><div class="ix-body"><p>Im Schlingentisch wird Ihr Körper teilweise schwerelos. Unter sanftem Zug entspannen Bandscheiben, Gelenke und Muskulatur.</p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">Osteopathische Ansätze</span><span class="ix-tag">Ganzheitlich</span></button><div class="ix-body"><p>Faszien, Gelenke und innere Strukturen beeinflussen sich gegenseitig. Mit sanften Techniken folge ich den Spannungsketten bis zur Ursache.</p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">Fango · Reizstrom</span><span class="ix-tag">Ergänzend</span></button><div class="ix-body"><p>Tiefenwärme aus der Fangopackung lockert die Muskulatur. Reizstrom lindert Schmerzen und aktiviert geschwächte Muskeln.</p></div></li>
-        <li><button type="button" aria-expanded="false"><span class="ix-name">Lojer Manuthera</span><span class="ix-tag">Ausstattung</span></button><div class="ix-body"><p>Die Manuthera erlaubt dreidimensionale Mobilisation und Traktion der Wirbelsäule in Positionen, die auf einer normalen Liege nicht möglich sind.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Lojer Manuthera</span><span class="ix-tag ix-hi"><b class="dot" aria-hidden="true"></b>Highlight</span></button><div class="ix-body"><p>Die Manuthera erlaubt dreidimensionale Mobilisation und Traktion der Wirbelsäule in Positionen, die auf einer normalen Liege nicht möglich sind.<a class="ix-link" href="#manuthera">Manuthera in Bewegung ansehen <span aria-hidden="true">↑</span></a></p></div></li>
       </ol>
     </div>
   </section>
