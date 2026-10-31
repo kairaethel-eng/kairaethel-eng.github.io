@@ -189,11 +189,11 @@ function stopPose(i) {
 }
 function housePose(q) {
   const desk = isDesktop();
-  const overview = frame(HOUSE_POS.clone().add(new THREE.Vector3(0, 0.9, 0)), new THREE.Vector3(0.62, 0.62, 1), desk ? 25 : 34, desk ? 0.66 : 0.5, desk ? 0.5 : 0.32);
+  const overview = frame(HOUSE_POS.clone().add(new THREE.Vector3(0, 0.9, 0)), new THREE.Vector3(0.62, 0.62, 1), desk ? 25 : 34, desk ? 0.66 : 0.5, desk ? 0.5 : 0.2);
   const ri = roomIndex(q);
   if (q < 0.18) return overview;
   const c = house.center(ROOMS[ri].r).applyAxisAngle(new THREE.Vector3(0, 1, 0), house.group.rotation.y).add(HOUSE_POS);
-  return frame(c, new THREE.Vector3(0.5, 1.15, 0.95), desk ? 8 : 15, desk ? 0.66 : 0.5, desk ? 0.5 : 0.2);
+  return frame(c, new THREE.Vector3(0.5, 1.15, 0.95), desk ? 8 : 14, desk ? 0.66 : 0.5, desk ? 0.5 : 0.12);
 }
 const roomIndex = (q) => clamp(Math.floor(((q - 0.18) / 0.82) * ROOMS.length), 0, ROOMS.length - 1);
 function lerpPose(a, b, t) {

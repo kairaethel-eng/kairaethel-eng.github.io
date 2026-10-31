@@ -244,6 +244,14 @@ main{position:relative;z-index:2}
   .owner{grid-template-columns:1fr}
   .portrait{max-width:200px}
   .contact-list div{grid-template-columns:1fr;gap:4px}
+  .tour-text{padding:18px}
+  .tour-text h2{font-size:26px;margin-bottom:0}
+  .tour-text .eyebrow{margin-bottom:12px}
+  .rooms{margin:16px 0 12px}
+  .rooms button{padding:9px 10px;font-size:12px}
+  .room-panel{min-height:0}
+  .room-panel h3{font-size:18px}
+  .room-panel p{font-size:14.5px}
 }
 @media (max-width:400px){
   .hero-title{font-size:46px}
