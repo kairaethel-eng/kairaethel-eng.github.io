@@ -60,6 +60,15 @@ em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--amber)
 .chapters i{font:italic 400 14px/1 var(--serif);color:var(--mute);transition:color .3s}
 .chapters a:hover,.chapters a.on{color:var(--txt)}
 .chapters a.on i{color:var(--amber)}
+/* Bewegung anhalten (WCAG 2.2.2) */
+.motion-btn{appearance:none;display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 13px;border-radius:20px;border:1px solid var(--line);background:rgba(16,34,42,.55);color:var(--dim);font:600 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:color .3s,border-color .3s;margin-left:6px}
+.motion-btn:hover{color:var(--txt);border-color:rgba(237,232,220,.3)}
+.motion-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.motion-btn .i-play{display:none}
+.motion-btn[aria-pressed="true"]{color:var(--amber);border-color:rgba(224,154,53,.5)}
+.motion-btn[aria-pressed="true"] .i-play{display:block;fill:currentColor}
+.motion-btn[aria-pressed="true"] .i-pause{display:none}
+html.paused *,html.paused *::before,html.paused *::after{animation-play-state:paused!important}
 .chap-now{display:none;align-items:baseline;gap:7px;font:500 13px/1 var(--sans);color:var(--txt);margin-left:auto}
 .chap-now i{font:italic 400 15px/1 var(--serif);color:var(--amber)}
 
@@ -210,7 +219,9 @@ main{position:relative;z-index:2}
 @media (max-width:1000px){
   .chapters{display:none}
   .chap-now{display:flex}
-  .top .btn-small{margin-left:18px}
+  .top .btn-small{margin-left:10px}
+  .motion-btn{padding:0 11px}
+  .motion-btn span{display:none}
 }
 @media (max-width:920px){
   .index{max-width:none}

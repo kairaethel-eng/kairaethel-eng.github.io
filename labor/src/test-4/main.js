@@ -11,6 +11,18 @@ import { praxisPoints, ROOMS, EYE, P } from './praxis.js';
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const CALM = reduced ? 0.45 : 1; // Tempo der Eigenbewegung
+// Knopf „Bewegung anhalten“: friert alle Eigenbewegung ein (Scrollen bleibt möglich); Wahl wird im Browser gemerkt
+let paused = false;
+try { paused = localStorage.getItem('hop-motion') === 'paused'; } catch (e) { /* ohne Speicher */ }
+function setPaused(v) {
+  paused = v;
+  document.documentElement.classList.toggle('paused', v);
+  const b = document.getElementById('motionBtn');
+  if (b) { b.setAttribute('aria-pressed', String(v)); const l = v ? 'Bewegung fortsetzen' : 'Bewegung anhalten'; b.setAttribute('aria-label', l); b.title = l; }
+  try { localStorage.setItem('hop-motion', v ? 'paused' : 'on'); } catch (e) { /* ohne Speicher */ }
+}
+document.getElementById('motionBtn')?.addEventListener('click', () => setPaused(!paused));
+setPaused(paused);
 const finePointer = matchMedia('(pointer: fine)').matches;
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -617,7 +629,7 @@ function updateAxis(dt) {
   if (jPose && w > 0.02) {
     const tgt = jPose.rot + Math.PI * 2 * Math.round((spineRot - jPose.rot) / (Math.PI * 2));
     spineRot += (tgt - spineRot) * (reduced ? 1 : 1 - Math.exp(-dt * 2.6));
-  } else spineRot += dt * (reduced ? 0.07 : 0.22);
+  } else if (!paused) spineRot += dt * (reduced ? 0.07 : 0.22);
   uniforms.uSpineRot.value = spineRot;
 
   // Hervorhebung des Abschnitts (Bernstein), stärkere Signale und Versorgungsbahn
@@ -896,7 +908,7 @@ function tick() {
   frameN++;
   if (!viaWatchdog && !isDesktop() && performance.now() - lastInput > 1500 && frameN % 2) return;
   const dt = Math.min(clock.getDelta(), 0.05);
-  uniforms.uTime.value += dt * CALM;
+  uniforms.uTime.value += paused ? 0 : dt * CALM;
   const tm = targetMorph();
   morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uMorph.value = morphNow;
