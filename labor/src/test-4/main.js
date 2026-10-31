@@ -7,7 +7,10 @@ import Lenis from 'lenis';
 import { bodyPoints, spinePoints, housePoints, logoPoints, spineStipple, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
 import { praxisPoints, ROOMS, EYE, P } from './praxis.js';
 
+// „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
+// aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CALM = reduced ? 0.45 : 1; // Tempo der Eigenbewegung
 const finePointer = matchMedia('(pointer: fine)').matches;
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -614,7 +617,7 @@ function updateAxis(dt) {
   if (jPose && w > 0.02) {
     const tgt = jPose.rot + Math.PI * 2 * Math.round((spineRot - jPose.rot) / (Math.PI * 2));
     spineRot += (tgt - spineRot) * (reduced ? 1 : 1 - Math.exp(-dt * 2.6));
-  } else if (!reduced) spineRot += dt * 0.22;
+  } else spineRot += dt * (reduced ? 0.07 : 0.22);
   uniforms.uSpineRot.value = spineRot;
 
   // Hervorhebung des Abschnitts (Bernstein), stärkere Signale und Versorgungsbahn
@@ -893,7 +896,7 @@ function tick() {
   frameN++;
   if (!viaWatchdog && !isDesktop() && performance.now() - lastInput > 1500 && frameN % 2) return;
   const dt = Math.min(clock.getDelta(), 0.05);
-  uniforms.uTime.value += reduced ? 0 : dt;
+  uniforms.uTime.value += dt * CALM;
   const tm = targetMorph();
   morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uMorph.value = morphNow;
@@ -917,7 +920,7 @@ function tick() {
   dim = Math.max(dim, tourHide); // im Rundgang tritt das äußere Partikel-Haus zurück
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
   uniforms.uSize.value = isDesktop() ? 1 : 1.1 - (morphNow > 2.5 && morphNow < 3.5 ? emblemK * 0.45 : 0);
-  uniforms.uSpread.value = isDesktop() ? 0.32 : 0.28;
+  uniforms.uSpread.value = reduced ? 0 : isDesktop() ? 0.32 : 0.28;
   if (!isDesktop()) roofEmblem();
   livingHeadlines();
   uniforms.uFadeMid.value = isDesktop() ? 0.62 : 0.7;
