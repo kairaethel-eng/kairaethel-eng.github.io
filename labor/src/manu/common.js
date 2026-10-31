@@ -22,11 +22,11 @@ export const FRAG = /* glsl */`
     #include <colorspace_fragment>
   }`;
 
-export function stage(canvas, { fov = 30, onResize } = {}) {
+export function stage(canvas, { fov = 30, onResize, transparent = false } = {}) {
   let renderer;
-  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' }); }
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: transparent, powerPreference: 'high-performance' }); }
   catch (e) { canvas.classList.add('no-gl'); return null; }
-  renderer.setClearColor(COL.ink, 1);
+  renderer.setClearColor(COL.ink, transparent ? 0 : 1);
   const st = { renderer, canvas, scene: new THREE.Scene(), camera: new THREE.PerspectiveCamera(fov, 1, 0.1, 100), pix: 1, w: 0, h: 0, visible: false, aspect: 1 };
   const resize = () => {
     const r = canvas.getBoundingClientRect();

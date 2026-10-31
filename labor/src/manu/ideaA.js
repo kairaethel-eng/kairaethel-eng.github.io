@@ -17,7 +17,7 @@ const PIV_U = -0.855, PIV_L = 0.0; // Gelenke zwischen den Liegeteilen (x)
 const FOV = 30, NSEG = 3;
 
 export function initA(canvas, ui) {
-  const st = stage(canvas, { fov: FOV });
+  const st = stage(canvas, { fov: FOV, transparent: !!(ui && ui.transparent) });
   if (!st) return null;
   const desk = isDesktop();
 
@@ -188,7 +188,12 @@ export function initA(canvas, ui) {
     out.copy(T1).multiply(tmp).multiply(T2);
   };
 
-  function update(time, dt) {
+  let clockT = 0;
+  function update(_time, dt) {
+    // „Bewegung anhalten“ (Puls · Scan): alles steht, die Liege ist sofort vollständig sichtbar
+    if (ui && ui.isPaused && ui.isPaused()) { dt = 0; if (scanT < 1) { scanT = 1; U.uCut.value = 99; } }
+    clockT += dt;
+    const time = clockT;
     U.uTime.value = time * SPEED;
     U.uPix.value = st.pix;
     U.uStip.value = stipSize(st, FOV, pts.spacing);

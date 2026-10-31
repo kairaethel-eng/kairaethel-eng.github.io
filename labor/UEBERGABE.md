@@ -14,7 +14,7 @@ Kapitel 01 Spannung (Partikel-Körper, Verspannungen lösen) · 02 Bewegung · 0
 - Handy bleibt bei Kapitel 03/04 wie es ist (Kai: „mobil sieht es schöner aus“).
 
 ## Nächster Schritt
-- **Manuthera-Highlight:** Kai hat **A „Bühne“** gewählt (Vorschau privat: https://claude.ai/artifact/74Cab3W8CQXB2hoMBGbtiv). Nächster Schritt: Einbau in Puls · Scan nach Kais Go (Plan im Chat 31.10.: eigener Halt nach dem Rundgang, eigene Bühne, „Loyer“ → „Lojer“).
+- **Manuthera-Highlight:** A „Bühne“ ist in Puls · Scan eingebaut (Kapitel 04 nach dem Rundgang, `#manuthera`). Kai prüft am PC und iPhone. Offen: V10-Live-Seite schreibt noch „Loyer“ (nur mit Go).
 - Kai prüft die neuen Wirbelsäulen-Beschriftungen am PC und schickt neue Punkte.
 
 ## Offen / später

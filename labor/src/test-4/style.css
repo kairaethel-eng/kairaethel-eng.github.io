@@ -241,6 +241,39 @@ main{position:relative;z-index:2}
   .motion-btn{padding:0 11px}
   .motion-btn span{display:none}
 }
+/* Manuthera-Highlight (Kapitel 04, nach dem Rundgang): eigene Bühne, Partikel-Hintergrund tritt zurück */
+.manu{position:relative;padding:clamp(70px,11vh,130px) 0 clamp(30px,5vh,70px)}
+.manu-inner{display:grid;grid-template-columns:minmax(320px,.8fr) 1.2fr;gap:4vw;align-items:center}
+.kicker.hi{color:var(--amber);align-items:center}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);flex:none;animation:dot 2.4s ease-out infinite}
+@keyframes dot{0%{box-shadow:0 0 0 0 rgba(224,154,53,.55)}70%{box-shadow:0 0 0 10px rgba(224,154,53,0)}100%{box-shadow:0 0 0 0 rgba(224,154,53,0)}}
+.paused .dot{animation:none}
+@media (prefers-reduced-motion: reduce){.dot{animation:none}}
+.manu-h{font-size:clamp(36px,4.6vw,72px)}
+.manu .lead{margin-top:24px}
+.manu-modes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:32px;max-width:520px}
+.manu-modes button{position:relative;overflow:hidden;min-height:46px;padding:0 8px;background:transparent;border:1px solid rgba(237,232,220,.22);border-radius:3px;color:var(--dim);font:600 12px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:color .3s,border-color .3s}
+.manu-modes button:hover{color:var(--txt);border-color:var(--txt)}
+.manu-modes button i{position:absolute;left:0;bottom:0;height:2px;width:0;background:var(--amber)}
+.manu-modes button.is-on{color:#14110A;background:var(--amber);border-color:var(--amber)}
+.manu-modes button.is-on i{background:#14110A;opacity:.35}
+.manu-read{margin-top:18px;min-height:3.2em;color:var(--txt);font-size:15.5px;max-width:46ch}
+.manu-stage{position:relative;height:min(74vh,720px);cursor:grab}
+.manu-stage:active{cursor:grabbing}
+.manu-stage canvas{display:block;width:100%;height:100%;touch-action:pan-y}
+.manu-hint{position:absolute;right:0;bottom:6px;font:500 12px/1 var(--sans);letter-spacing:.06em;color:var(--mute)}
+.room-more{display:inline-block;margin-top:14px;font:600 12px/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;text-decoration:none;color:var(--amber);border-bottom:1px solid rgba(224,154,53,.5);padding:6px 0}
+.room-more:hover{color:var(--txt)}
+@media (max-width:920px){
+  .manu-inner{grid-template-columns:1fr;gap:10px}
+  .manu-stage{order:-1;height:auto}
+  .manu-stage canvas{height:min(56vh,480px)}
+  .manu-hint{position:static;margin-top:6px;text-align:right}
+}
+@media (max-width:600px){
+  .manu-modes{grid-template-columns:repeat(2,1fr)}
+}
+
 @media (max-width:920px){
   .index{max-width:none}
   .grain{animation:none}

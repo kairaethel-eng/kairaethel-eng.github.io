@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import Lenis from 'lenis';
 import { bodyPoints, spinePoints, housePoints, logoPoints, spineStipple, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
 import { praxisPoints, ROOMS, EYE, P } from './praxis.js';
+import { initA as initManu, MODES as MANU_MODES } from '../manu/ideaA.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -952,7 +953,7 @@ function updateTour(dt) {
   if (desk) inside = !near ? 0 : p < TPH.M1 ? smooth(0.0, TPH.M0, p) : 1 - smooth(TPH.M1, 0.995, p);
   else { const f = roomCards[0].getBoundingClientRect(), l = roomCards[roomCards.length - 1].getBoundingClientRect(); inside = !near ? 0 : smooth(vh * 1.2, vh * 0.75, f.top) * (1 - smooth(vh * 0.2, -vh * 0.25, l.bottom)); }
   // Röntgenblick (PC): schon bevor man eintritt, leuchtet das Innere durch das Haus, das Dach schwebt angehoben
-  const pv = desk && morphNow > 2.55 && morphNow < 3.45 ? smooth(2.55, 2.95, morphNow) * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) : 0;
+  const pv = desk && morphNow > 2.55 && morphNow < 3.45 ? smooth(2.55, 2.95, morphNow) * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) : 0;
   xray = pv;
   tU.uCut.value = inside > 0 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
   tU.uOn.value = inside > 0 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0 || pv > 0;
@@ -1065,6 +1066,28 @@ function roofEmblem() {
 }
 let emblemK = 0;
 
+// ---------- Manuthera (Kapitel 04, nach dem Rundgang): eigene Bühne, rendert nur, wenn sichtbar ----------
+const manuSec = $('#manuthera');
+const manuBtns = [...document.querySelectorAll('#manuModes button')], manuRead = $('#manuRead');
+const manu = manuSec ? initManu($('#glManu'), {
+  transparent: true,
+  isPaused: () => paused,
+  onMode(i) {
+    manuBtns.forEach((b, j) => { b.classList.toggle('is-on', j === i); b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); b.querySelector('i').style.width = '0'; });
+    manuRead.textContent = MANU_MODES[i].txt;
+  },
+  onAmount(a) { const b = manuBtns.find((x) => x.classList.contains('is-on')); if (b) b.querySelector('i').style.width = (a * 100).toFixed(1) + '%'; },
+}) : null;
+if (manu) manuBtns.forEach((b, i) => b.addEventListener('click', () => manu.select(i, true)));
+else if (manuRead) manuRead.textContent = MANU_MODES[0].txt;
+// Wie viel der Bühne im Bild ist (0..1) → Hintergrund-Partikel und Röntgenblick treten zurück
+let manuK = 0;
+function manuVisible() {
+  if (!manuSec) return 0;
+  const r = manuSec.getBoundingClientRect(), vh = innerHeight;
+  return smooth(0.15, 0.55, clamp((Math.min(r.bottom, vh) - Math.max(r.top, 0)) / vh));
+}
+
 // ---------- Schleife ----------
 const clock = new THREE.Clock();
 const top = $('#top');
@@ -1087,6 +1110,7 @@ function tick() {
   const tm = targetMorph();
   morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uMorph.value = morphNow;
+  manuK = manuVisible();
   updateAxis(dt);
   updateTour(dt);
   { // Kamera: Rundgang > Wirbelsäule > Übersicht
@@ -1105,6 +1129,7 @@ function tick() {
   }
   if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
   dim = Math.max(dim, tourHide, xray * 0.4); // im Rundgang/Röntgenblick tritt das äußere Partikel-Haus zurück
+  dim = Math.max(dim, manuK); // Manuthera-Bühne: Partikel-Hintergrund blendet ganz aus
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
   uniforms.uSize.value = isDesktop() ? 1 : 1.1 - (morphNow > 2.5 && morphNow < 3.5 ? emblemK * 0.45 : 0);
   uniforms.uSpread.value = reduced ? 0 : isDesktop() ? 0.32 : 0.28;
@@ -1144,6 +1169,7 @@ function tick() {
 
   camera.position.copy(cam.pos); camera.lookAt(cam.target);
   if (renderer && !document.hidden) renderer.render(scene, camera);
+  if (manu && manu.st.visible && !document.hidden) { manu.update(0, dt); manu.st.renderer.render(manu.st.scene, manu.st.camera); }
 }
 gsap.ticker.add(tick);
 

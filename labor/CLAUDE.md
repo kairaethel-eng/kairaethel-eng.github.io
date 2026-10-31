@@ -19,6 +19,7 @@ Kurzfassung für neue Chats, damit der alte Verlauf nicht geladen werden muss.
 - `main.js` – Szene, Partikel-Shader (Formen 0 Körper · 1 Bewegung · 2 Wirbelsäule · 3 Haus · 4 HOP-Kreise), Kapitel-Logik, Wirbelsäulen-Scan (`updateAxis`), Rundgang (`updateTour`), lebende Überschriften, Ruhemodus/Pause.
 - `shapes.js` – Punktwolken (Körper, Wirbelsäule, Haus, Logo) + `spineStipple` (Knochen „Schichten“/„Körnung“, Nervenkurven).
 - `praxis.js` – Praxis-Innenraum als Punktwolke aus V10-Grundriss (später durch echten 3D-Scan ersetzbar, gleiche Datenform).
+- Manuthera-Bühne (Kapitel 04, `#manuthera`): kommt aus `../manu/ideaA.js` (+ `common.js`, `stipple.js`), eigene WebGL-Bühne; in `main.js` `manu`, `manuVisible()` blendet Hintergrund und Röntgenblick aus.
 - `../shared/spine.js` – prozedurale Wirbelsäule (C1–Co), Zonen, Nervenwurzeln.
 - `page.html`, `style.css` – Inhalt/Gestaltung. Desktop-Grenze 920 px.
 
