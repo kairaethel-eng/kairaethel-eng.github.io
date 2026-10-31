@@ -189,10 +189,12 @@ export function logoPoints(N) {
   return { pos, kind };
 }
 
-// ---------- Wirbelsäule als dichte, beleuchtbare Punktwolke (für die Kamerafahrt) ----------
-// Liefert Punkte mit Normalen, Zonen-Index und Art (0 Knochen, 1 Bandscheibe, 2 Rückenmark, 3 Nervenwurzel)
+// ---------- Wirbelsäule für die Kamerafahrt ----------
+// Knochen: gleichmäßig verteilte Punkte (wie ein Kupferstich) + Kern-Geometrie, die die Rückseite verdeckt.
+// Nerven: Kurven (Rückenmark + Wurzeln) als Stützpunkte, auf denen Partikel fließen.
 export const ZONES = ['c12', 'c34', 'c56', 'c7t1', 'th16', 'th712', 'l13', 'l45', 's1'];
-export function spineDetail(nSurface, nRootPer, nCord) {
+export const CURVE_W = 128;
+export function spineStipple(nTarget) {
   const sp = buildSpine();
   sp.group.updateMatrixWorld(true);
   const SC = 8.2 / sp.Ltot, CY = sp.Ltot / 2;
@@ -215,35 +217,44 @@ export function spineDetail(nSurface, nRootPer, nCord) {
   merged.setAttribute('position', new THREE.BufferAttribute(P, 3));
   merged.setAttribute('normal', new THREE.BufferAttribute(Nn, 3));
   merged.setAttribute('color', new THREE.BufferAttribute(Cc, 3));
+  // Oberfläche → gleichmäßiger Mindestabstand (Poisson-artig, Raster-Hash)
+  let area = 0; const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  for (let i = 0; i < P.length; i += 9) { a.fromArray(P, i); b.fromArray(P, i + 3); c.fromArray(P, i + 6); area += b.sub(a).cross(c.sub(a)).length() / 2; }
+  const r = Math.sqrt(area / nTarget) * 0.78, r2 = r * r, inv = 1 / r;
+  const grid = new Map();
   const sampler = new MeshSurfaceSampler(new THREE.Mesh(merged)).build();
-
-  const roots = rootCurves(sp);
-  const cord = new THREE.CatmullRomCurve3(sp.canal, false, 'centripetal');
-  const total2 = nSurface + roots.length * nRootPer + nCord;
-  const pos = new Float32Array(total2 * 3), nor = new Float32Array(total2 * 3), zone = new Float32Array(total2), kind = new Float32Array(total2), u = new Float32Array(total2);
-  const v = new THREE.Vector3(), nv = new THREE.Vector3(), c = new THREE.Color();
-  const put = (i, p, n) => {
-    pos[i * 3] = p.x * SC; pos[i * 3 + 1] = (p.y - CY) * SC; pos[i * 3 + 2] = p.z * SC;
-    nor[i * 3] = n.x; nor[i * 3 + 1] = n.y; nor[i * 3 + 2] = n.z;
-  };
-  let i = 0;
-  for (; i < nSurface; i++) {
-    sampler.sample(v, nv, c);
-    put(i, v, nv); zone[i] = c.r; kind[i] = c.g; u[i] = Math.random();
-  }
-  roots.forEach((r) => {
-    for (let k = 0; k < nRootPer; k++, i++) {
-      const t = k / (nRootPer - 1);
-      r.curve.getPoint(t, v);
-      v.x += (Math.random() - 0.5) * 0.03; v.y += (Math.random() - 0.5) * 0.03; v.z += (Math.random() - 0.5) * 0.03;
-      put(i, v, nv.set(0, 0, 1)); zone[i] = ZONES.indexOf(r.zone); kind[i] = 3; u[i] = t;
+  const pos = [], nor = [], zone = [], kind = [];
+  const v = new THREE.Vector3(), nv = new THREE.Vector3(), col = new THREE.Color();
+  let tries = 0;
+  while (pos.length / 3 < nTarget && tries++ < nTarget * 5) {
+    sampler.sample(v, nv, col);
+    const gx = Math.floor(v.x * inv), gy = Math.floor(v.y * inv), gz = Math.floor(v.z * inv);
+    let ok = true;
+    for (let dx = -1; dx <= 1 && ok; dx++) for (let dy = -1; dy <= 1 && ok; dy++) for (let dz = -1; dz <= 1 && ok; dz++) {
+      const cell = grid.get((gx + dx) + ',' + (gy + dy) + ',' + (gz + dz));
+      if (cell) for (const j of cell) { const ex = pos[j] / SC - v.x, ey = pos[j + 1] / SC + CY - v.y, ez = pos[j + 2] / SC - v.z; if (ex * ex + ey * ey + ez * ez < r2) { ok = false; break; } }
     }
-  });
-  for (let k = 0; k < nCord; k++, i++) {
-    const t = Math.random();
-    cord.getPointAt(t, v);
-    v.x += (Math.random() - 0.5) * 0.08; v.z += (Math.random() - 0.5) * 0.08;
-    put(i, v, nv.set(0, 0, 1)); zone[i] = -1; kind[i] = 2; u[i] = t;
+    if (!ok) continue;
+    const k = gx + ',' + gy + ',' + gz;
+    (grid.get(k) || grid.set(k, []).get(k)).push(pos.length);
+    pos.push(v.x * SC, (v.y - CY) * SC, v.z * SC); nor.push(nv.x, nv.y, nv.z); zone.push(col.r); kind.push(col.g);
   }
-  return { pos, nor, zone, kind, u, count: total2, levels: sp.levels, SC, CY };
+  // Kern (leicht nach innen versetzt), Formkoordinaten
+  const core = new Float32Array(P.length);
+  for (let i = 0; i < P.length; i += 3) { core[i] = P[i] * SC; core[i + 1] = (P[i + 1] - CY) * SC; core[i + 2] = P[i + 2] * SC; }
+  const coreGeo = new THREE.BufferGeometry();
+  coreGeo.setAttribute('position', new THREE.BufferAttribute(core, 3));
+  coreGeo.setAttribute('normal', new THREE.BufferAttribute(Nn, 3));
+  // Nervenkurven: Zeile 0 = Rückenmark, danach die Wurzeln
+  const toShape = (p) => [p.x * SC, (p.y - CY) * SC, p.z * SC];
+  const cordC = new THREE.CatmullRomCurve3(sp.canal, false, 'centripetal');
+  const cordPts = []; for (let i = 0; i < CURVE_W; i++) cordPts.push(cordC.getPointAt(i / (CURVE_W - 1)));
+  const curves = [{ pts: cordPts.map(toShape), zone: -1, start: 0, kind: 1 }];
+  rootCurves(sp).forEach((rc) => {
+    const p0 = rc.curve.getPoint(0);
+    let best = 0, bd = 1e9; cordPts.forEach((q, i) => { const d = q.distanceToSquared(p0); if (d < bd) { bd = d; best = i; } });
+    const pts = []; for (let i = 0; i < CURVE_W; i++) pts.push(toShape(rc.curve.getPoint(i / (CURVE_W - 1))));
+    curves.push({ pts, zone: ZONES.indexOf(rc.zone), start: best / (CURVE_W - 1), kind: 2, side: rc.side, id: rc.id });
+  });
+  return { pos: new Float32Array(pos), nor: new Float32Array(nor), zone: new Float32Array(zone), kind: new Float32Array(kind), count: pos.length / 3, spacing: r * SC, coreGeo, curves, levels: sp.levels, SC, CY };
 }

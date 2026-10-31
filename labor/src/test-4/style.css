@@ -39,6 +39,9 @@ em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--amber)
 .hand{position:fixed;left:0;top:0;transform:translate(-200px,-200px);z-index:30;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;border:1px solid rgba(224,154,53,.7);display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .4s,width .4s var(--ease),height .4s var(--ease),margin .4s var(--ease);background:radial-gradient(circle,rgba(224,154,53,.12),rgba(224,154,53,0) 70%)}
 .hand span{font:600 10px/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
 .hand.on{opacity:1}
+/* Beschriftung der Versorgungsbahn (Nerv → Zielgebiet) */
+.peri-label{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .6s;display:flex;align-items:center;gap:8px;font:600 11px/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:#CFE8FA;white-space:nowrap;text-shadow:0 0 14px rgba(10,22,27,.95)}
+.peri-label::before{content:"";width:7px;height:7px;border-radius:50%;background:#DDF1FF;box-shadow:0 0 12px 3px rgba(90,162,214,.8)}
 
 /* Buttons */
 .actions{display:flex;flex-wrap:wrap;gap:12px}

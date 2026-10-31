@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import gsap from 'gsap';
 import Lenis from 'lenis';
-import { bodyPoints, spinePoints, housePoints, logoPoints, spineDetail, ZONES, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
+import { bodyPoints, spinePoints, housePoints, logoPoints, spineStipple, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const finePointer = matchMedia('(pointer: fine)').matches;
@@ -277,77 +277,221 @@ const statement = $('.statement');
 })(statement);
 const words = $$('.word', statement);
 
-// ---------- Achse: Wirbelsäule als dichte Punktwolke („Scan“) ----------
-// Beim Hereinscrollen läuft eine Abtastlinie von oben nach unten: darüber erscheint die detaillierte,
-// beleuchtete Punktwolke, darunter sind noch die groben Partikel. Danach fährt die Kamera die Abschnitte ab.
+// ---------- Achse: gestochener Knochen + lebendes Nervensystem ----------
+// Abtastlinie von oben nach unten: darüber erscheint die Wirbelsäule im Detail, darunter sind noch die
+// groben Partikel. Knochen = gleichmäßig gesetzte Punkte auf dunklem Kern (fest, ruhig).
+// Nerven = Partikel, die wirklich fließen; Signale laufen vom Kopf durchs Rückenmark in die Wurzeln.
 const V3 = THREE.Vector3;
-const det = spineDetail(isDesktop() ? 170000 : 60000, isDesktop() ? 70 : 44, isDesktop() ? 1600 : 900);
+const det = spineStipple(isDesktop() ? 115000 : 46000);
 const SC = det.SC, CY = det.CY;
-const dGeo = new THREE.BufferGeometry();
-dGeo.setAttribute('position', new THREE.BufferAttribute(det.pos, 3));
-dGeo.setAttribute('normal', new THREE.BufferAttribute(det.nor, 3));
-dGeo.setAttribute('aZone', new THREE.BufferAttribute(det.zone, 1));
-dGeo.setAttribute('aKind', new THREE.BufferAttribute(det.kind, 1));
-dGeo.setAttribute('aU', new THREE.BufferAttribute(det.u, 1));
-const dR = new Float32Array(det.count);
-for (let i = 0; i < det.count; i++) dR[i] = Math.random();
-dGeo.setAttribute('aR', new THREE.BufferAttribute(dR, 1));
-const dU = {
-  uTime: uniforms.uTime, uPix: uniforms.uPix, uRot: uniforms.uSpineRot, uCut: uniforms.uCut,
-  uXf: { value: uniforms.uXf.value[2] }, uZone: { value: -10 }, uZoneAmt: { value: 0 }, uReveal: { value: 0 }, uOn: { value: 0 },
-  cBone: { value: C('#E9E4D8') }, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue, cDisc: { value: C('#7FB2D6') },
+const sU = {
+  uTime: uniforms.uTime, uRot: uniforms.uSpineRot, uCut: uniforms.uCut, uXf: { value: uniforms.uXf.value[2] },
+  uZone: { value: -10 }, uZoneAmt: { value: 0 }, uOn: { value: 0 }, uStip: { value: 1 }, uPix: uniforms.uPix,
+  uPeri: { value: 0 }, uPeriStart: { value: 0 },
+  cBone: { value: C('#F3EADA') }, cDisc: { value: C('#86AFC9') }, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue,
+  cSignal: { value: C('#DDF1FF') }, cCore: { value: C('#0E1C22') },
 };
-const dVert = /* glsl */`
-  attribute float aZone, aKind, aU, aR;
-  uniform float uTime, uPix, uRot, uCut, uZone, uZoneAmt, uReveal, uOn; uniform vec4 uXf;
-  uniform vec3 cBone, cAmber, cBlue, cDisc;
-  varying vec3 vCol; varying float vA;
+const GLSL_COMMON = /* glsl */`
+  uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart; uniform vec4 uXf;
+  uniform vec3 cBone, cDisc, cAmber, cBlue, cSignal, cCore;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
-  void main(){
-    vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
-    vec3 n = normalize(rotY(normal, uRot));
-    vec3 V = normalize(cameraPosition - p);
-    float lam = max(dot(n, normalize(vec3(.5, .75, .6))), 0.);
-    float rim = pow(1. - abs(dot(n, V)), 2.);
-    float front = smoothstep(-.15, .25, dot(n, V));
-    float on = 1. - step(.5, abs(aZone - uZone));
-    vec3 col; float a = 1.; float sz = 1.;
-    if (aKind < .5) {
-      col = cBone * (.07 + .93*lam) + cBlue * rim * .3;
-      col = mix(col, cAmber * (.5 + .9*lam), on * uZoneAmt);
-      a = mix(.1, 1., front); sz = 1. + on*uZoneAmt*.35;
-    } else if (aKind < 1.5) {
-      col = cDisc * (.3 + .7*lam) + cBlue * rim * .3;
-      a = mix(.15, .85, front);
-    } else if (aKind < 2.5) {
-      float q = fract(aU*3. - uTime*.22);
-      float pulse = smoothstep(0., .05, q) * (1. - smoothstep(.05, .28, q));
-      col = cBlue * (.55 + pulse*1.6); a = .75; sz = 1.15 + pulse*.6;
-    } else {
-      float q = fract(aU*1.3 - uTime*.9);
-      float pulse = smoothstep(0., .06, q) * (1. - smoothstep(.06, .3, q));
-      col = mix(cBlue, vec3(1.), pulse*.55) * 1.2;
-      a = on * step(aU, uReveal); sz = 1.3 + pulse*1.2;
+  const vec3 LDIR = vec3(.48, .72, .5);`;
+
+// 1) Kern: dunkle Füllung, verdeckt die Rückseite der Punkte
+const coreMat = new THREE.ShaderMaterial({
+  uniforms: sU,
+  vertexShader: GLSL_COMMON + /* glsl */`
+    varying float vY; varying float vL;
+    void main(){
+      vec3 p = rotY(position - normal * .012, uRot) * uXf.w + uXf.xyz;
+      vY = p.y; vL = max(dot(normalize(rotY(normal, uRot)), normalize(LDIR)), 0.);
+      gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.);
+    }`,
+  fragmentShader: GLSL_COMMON + /* glsl */`
+    varying float vY; varying float vL;
+    void main(){
+      if (vY < uCut) discard;
+      gl_FragColor = vec4(cCore + cBone * vL * .05, 1.);
+      #include <colorspace_fragment>
+    }`,
+});
+const core = new THREE.Mesh(det.coreGeo, coreMat);
+core.frustumCulled = false;
+
+// 2) Knochenpunkte: gleichmäßig, ohne Flimmern, mit klarem Licht und Schatten
+const bGeo = new THREE.BufferGeometry();
+bGeo.setAttribute('position', new THREE.BufferAttribute(det.pos, 3));
+bGeo.setAttribute('normal', new THREE.BufferAttribute(det.nor, 3));
+bGeo.setAttribute('aZone', new THREE.BufferAttribute(det.zone, 1));
+bGeo.setAttribute('aKind', new THREE.BufferAttribute(det.kind, 1));
+const boneMat = new THREE.ShaderMaterial({
+  uniforms: sU,
+  vertexShader: GLSL_COMMON + /* glsl */`
+    attribute float aZone, aKind;
+    varying vec3 vCol; varying float vVis;
+    void main(){
+      vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
+      vec3 n = normalize(rotY(normal, uRot));
+      vec3 V = normalize(cameraPosition - p);
+      float lam = max(dot(n, normalize(LDIR)), 0.);
+      float rim = pow(1. - max(dot(n, V), 0.), 3.);
+      float on = (1. - step(.5, abs(aZone - uZone))) * uZoneAmt;
+      vec3 base = aKind < .5 ? cBone : cDisc;
+      vec3 col = base * (.22 + .78 * lam) + cBlue * rim * .16;
+      col = mix(col, cAmber * (.35 + .95 * lam), on * (aKind < .5 ? 1. : .4));
+      float g = exp(-pow((p.y - uCut) * 9., 2.));
+      col = mix(col, cAmber * 1.3, g);
+      vCol = col; vVis = step(uCut, p.y) * uOn;
+      vec4 mv = viewMatrix * vec4(p, 1.);
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = clamp(uStip / -mv.z, 1., 9.) * (1. + g * .8);
+    }`,
+  fragmentShader: /* glsl */`
+    varying vec3 vCol; varying float vVis;
+    void main(){
+      float d = length(gl_PointCoord - .5);
+      if (vVis < .5 || d > .5) discard;
+      gl_FragColor = vec4(vCol * (1. - smoothstep(.18, .5, d) * .5), 1.);
+      #include <colorspace_fragment>
+    }`,
+});
+const bones = new THREE.Points(bGeo, boneMat);
+bones.frustumCulled = false;
+
+// 3) Nerven: Kurven als Textur (Zeile 0 Rückenmark, dann Wurzeln); Versorgungsbahn eigene Textur in Weltkoordinaten
+const ROWS = det.curves.length;
+const cData = new Float32Array(CURVE_W * ROWS * 4);
+det.curves.forEach((c, r) => c.pts.forEach((q, i) => cData.set([q[0], q[1], q[2], 1], (r * CURVE_W + i) * 4)));
+const curveTex = new THREE.DataTexture(cData, CURVE_W, ROWS, THREE.RGBAFormat, THREE.FloatType);
+curveTex.minFilter = curveTex.magFilter = THREE.NearestFilter; curveTex.needsUpdate = true;
+const periData = new Float32Array(CURVE_W * 4);
+const periTex = new THREE.DataTexture(periData, CURVE_W, 1, THREE.RGBAFormat, THREE.FloatType);
+periTex.minFilter = periTex.magFilter = THREE.NearestFilter; periTex.needsUpdate = true;
+sU.uCurves = { value: curveTex }; sU.uPeriTex = { value: periTex }; sU.uRows = { value: ROWS };
+
+const desk = isDesktop();
+const nCord = desk ? 2600 : 1300, nRoot = desk ? 34 : 20, nPeri = desk ? 900 : 500;
+const nAll = nCord + (ROWS - 1) * nRoot + nPeri;
+const aRow = new Float32Array(nAll), aPhase = new Float32Array(nAll), aSpeed = new Float32Array(nAll), aKindN = new Float32Array(nAll), aZoneN = new Float32Array(nAll), aStart = new Float32Array(nAll), aOff = new Float32Array(nAll * 3);
+let q = 0;
+const push = (row, kind, zone, start, speed, off) => {
+  aRow[q] = row; aKindN[q] = kind; aZoneN[q] = zone; aStart[q] = start; aPhase[q] = Math.random(); aSpeed[q] = speed * (0.75 + Math.random() * 0.5);
+  const u = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.random()) * off;
+  aOff.set([Math.cos(u) * rr, (Math.random() - 0.5) * off * 0.6, Math.sin(u) * rr], q * 3); q++;
+};
+for (let i = 0; i < nCord; i++) push(0, 1, -1, 0, 0.055, 0.045);
+for (let r = 1; r < ROWS; r++) for (let i = 0; i < nRoot; i++) push(r, 2, det.curves[r].zone, det.curves[r].start, 0.22, 0.018);
+for (let i = 0; i < nPeri; i++) push(0, 3, -1, 0, 0.16, 0.05);
+const nGeo = new THREE.BufferGeometry();
+nGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(nAll * 3), 3));
+[['aRow', aRow], ['aPhase', aPhase], ['aSpeed', aSpeed], ['aKind', aKindN], ['aZone', aZoneN], ['aStart', aStart]].forEach(([k, v]) => nGeo.setAttribute(k, new THREE.BufferAttribute(v, 1)));
+nGeo.setAttribute('aOff', new THREE.BufferAttribute(aOff, 3));
+const nerveMat = new THREE.ShaderMaterial({
+  uniforms: sU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  vertexShader: GLSL_COMMON + /* glsl */`
+    uniform sampler2D uCurves, uPeriTex; uniform float uRows;
+    attribute float aRow, aPhase, aSpeed, aKind, aZone, aStart; attribute vec3 aOff;
+    varying vec3 vCol; varying float vA;
+    vec3 curveAt(sampler2D tex, float row, float rows, float t){
+      float x = t * ${CURVE_W - 1}.; float i0 = floor(x);
+      vec3 a = texture2D(tex, vec2((i0 + .5) / ${CURVE_W}., (row + .5) / rows)).xyz;
+      vec3 b = texture2D(tex, vec2((min(i0 + 1., ${CURVE_W - 1}.) + .5) / ${CURVE_W}., (row + .5) / rows)).xyz;
+      return mix(a, b, x - i0);
     }
-    // Abtastlinie
-    float g = exp(-pow((p.y - uCut) * 7., 2.));
-    a *= smoothstep(uCut - .06, uCut + .06, p.y);
-    if (aKind < 1.5) { col = mix(col, cAmber * 1.5, g); a = max(a, g * .9); sz *= 1. + g; }
-    vec4 mv = modelViewMatrix * vec4(p, 1.);
-    gl_Position = projectionMatrix * mv;
-    gl_PointSize = min(uPix * sz * (.55 + aR*.8) * 12. / -mv.z, 5.5);
-    vCol = col; vA = a * uOn * (.38 + aR*.32);
-  }`;
-const dFrag = /* glsl */`
-  varying vec3 vCol; varying float vA;
-  void main(){
-    float d = length(gl_PointCoord - .5);
-    gl_FragColor = vec4(vCol, smoothstep(.5, .1, d) * vA);
-    #include <colorspace_fragment>
-  }`;
-const detail = new THREE.Points(dGeo, new THREE.ShaderMaterial({ vertexShader: dVert, fragmentShader: dFrag, uniforms: dU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
-detail.frustumCulled = false; detail.visible = false;
-scene.add(detail);
+    // zwei Signale je Takt, die vom Kopf nach unten laufen
+    float packet(float d, float sharp){ return exp(-d * d * sharp) + step(0., d) * exp(-d * 7.) * .35; }
+    void main(){
+      float t = fract(aPhase + uTime * aSpeed);
+      float S1 = fract(uTime * .3), S2 = fract(uTime * .3 + .5);
+      vec3 p; float base, pk;
+      if (aKind < 1.5) {                         // Rückenmark
+        p = rotY(curveAt(uCurves, aRow, uRows, t) + aOff, uRot) * uXf.w + uXf.xyz;
+        pk = max(packet(S1 - t, 700.), packet(S2 - t, 700.));
+        base = .46;
+      } else if (aKind < 2.5) {                  // Nervenwurzel
+        p = rotY(curveAt(uCurves, aRow, uRows, t) + aOff, uRot) * uXf.w + uXf.xyz;
+        float on = (1. - step(.5, abs(aZone - uZone))) * uZoneAmt;
+        float r1 = (S1 - aStart) * 4., r2 = (S2 - aStart) * 4.;
+        pk = max(packet(r1 - t, 60.) * step(0., r1) * step(r1, 1.4), packet(r2 - t, 60.) * step(0., r2) * step(r2, 1.4));
+        pk *= mix(.28, 1.5, on);
+        base = .16 + on * .5;
+      } else {                                   // Versorgungsbahn (Weltkoordinaten)
+        p = curveAt(uPeriTex, 0., 1., t) + aOff * uXf.w * 4.;
+        float r1 = (S1 - uPeriStart) * 4. - 1., r2 = (S2 - uPeriStart) * 4. - 1.;
+        pk = max(packet(r1 * .55 - t, 40.) * step(0., r1), packet(r2 * .55 - t, 40.) * step(0., r2)) * uPeri;
+        base = .5 * uPeri; pk *= 1.3;
+      }
+      vec3 col = cBlue * base + cSignal * pk * 1.5;
+      float vis = step(uCut, p.y) * uOn;
+      vec4 mv = viewMatrix * vec4(p, 1.);
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = clamp(uPix * (1.1 + pk * 2.2) * 15. / -mv.z, 1., 10.);
+      vCol = col; vA = vis * clamp(base + pk, 0., 1.4);
+    }`,
+  fragmentShader: /* glsl */`
+    uniform float uGhost;
+    varying vec3 vCol; varying float vA;
+    void main(){
+      float d = length(gl_PointCoord - .5);
+      gl_FragColor = vec4(vCol, smoothstep(.5, .05, d) * vA * uGhost);
+      #include <colorspace_fragment>
+    }`,
+});
+nerveMat.uniforms = { ...sU, uGhost: { value: 1 } };
+const nerves = new THREE.Points(nGeo, nerveMat);
+nerves.frustumCulled = false;
+// zweiter Durchgang: Nerven schimmern gedämpft durch den Knochen (sonst verschwände das Rückenmark im Wirbelkanal)
+const ghostMat = nerveMat.clone();
+ghostMat.uniforms = { ...sU, uGhost: { value: 0.42 } }; ghostMat.depthTest = false;
+const nervesGhost = new THREE.Points(nGeo, ghostMat);
+nervesGhost.frustumCulled = false;
+
+const spineGroup = new THREE.Group();
+spineGroup.add(core, bones, nervesGhost, nerves);
+spineGroup.visible = false;
+scene.add(spineGroup);
+
+// Versorgungsbahn: vom Wurzel-Ende des aktiven Abschnitts bis zum Zielgebiet, mit Beschriftung
+const PERI = {
+  c12: { txt: 'Hinterkopf · Nacken', d: [0.62, 0.7], m: [0.85, 0.8] },
+  c56: { txt: 'Armaußenseite · Daumen', d: [1.15, 0.05], m: [0.7, 0.42] },
+  th16: { txt: 'Brustkorb · Zwischenrippen', d: [1.15, 0.12], m: [0.68, 0.36] },
+  l45: { txt: 'Schienbein · Großzehe', d: [1.1, -0.72], m: [0.6, 0.12] },
+  s1: { txt: 'Wade · Ferse · Fußaußenrand', d: [1.1, -0.82], m: [0.55, 0.08] },
+};
+const periLabel = document.createElement('div');
+periLabel.className = 'peri-label'; periLabel.setAttribute('aria-hidden', 'true');
+document.body.appendChild(periLabel);
+const _pv = new V3(), _ndc = new V3();
+function updatePeri(zoneKey) {
+  const cfg = PERI[zoneKey];
+  if (!cfg) return;
+  // rechte Wurzel des Abschnitts finden, deren Ende auf dem Bildschirm am weitesten rechts liegt
+  const X = uniforms.uXf.value[2];
+  const rot = uniforms.uSpineRot.value;
+  let tip = null, tipX = -1e9, start = 0;
+  det.curves.forEach((c) => {
+    if (c.kind !== 2 || ZONES[c.zone] !== zoneKey) return;
+    const e = c.pts[CURVE_W - 1];
+    _pv.set(e[0], e[1], e[2]).applyAxisAngle(new V3(0, 1, 0), rot).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z));
+    _ndc.copy(_pv).project(camera);
+    if (_ndc.x > tipX) { tipX = _ndc.x; tip = _pv.clone(); start = c.start; }
+  });
+  if (!tip) return;
+  const tipNdc = tip.clone().project(camera);
+  const desk = isDesktop();
+  const end = new V3(desk ? cfg.d[0] : 1.1, desk ? cfg.d[1] : cfg.m[1], tipNdc.z).unproject(camera);
+  const mid = new V3(THREE.MathUtils.lerp(tipNdc.x, desk ? cfg.d[0] : 1.1, 0.45), THREE.MathUtils.lerp(tipNdc.y, desk ? cfg.d[1] : cfg.m[1], 0.25) + 0.05, tipNdc.z).unproject(camera);
+  const curve = new THREE.CatmullRomCurve3([tip, tip.clone().lerp(mid, 0.4).add(new V3(0, 0.02, 0)), mid, end]);
+  for (let i = 0; i < CURVE_W; i++) { curve.getPointAt(i / (CURVE_W - 1), _pv); periData.set([_pv.x, _pv.y, _pv.z, 1], i * 4); }
+  periTex.needsUpdate = true;
+  sU.uPeriStart.value = start;
+  // Beschriftung am sichtbaren Ende der Bahn
+  curve.getPointAt(desk ? 0.72 : 0.6, _pv); _pv.project(camera);
+  const lx = Math.min((_pv.x * 0.5 + 0.5) * innerWidth, innerWidth - 16), ly = (-_pv.y * 0.5 + 0.5) * innerHeight;
+  periLabel.style.transform = `translate(${lx}px, ${ly}px) translate(-100%, -130%)`;
+  periLabel.textContent = cfg.txt;
+}
 
 // Abschnitte (Zonen wie V10) und Kamera-Rahmen
 const STOPS = [
@@ -422,8 +566,10 @@ function updateAxis(dt) {
   const topY = X.y + 4.35 * X.w, botY = X.y - 4.35 * X.w;
   const cut = solid <= 0 ? 100 : THREE.MathUtils.lerp(topY + 0.05, botY - 0.05, solid);
   uniforms.uCut.value = cut;
-  detail.visible = solid > 0;
-  dU.uOn.value = solid > 0 ? 1 : 0;
+  spineGroup.visible = solid > 0;
+  sU.uOn.value = solid > 0 ? 1 : 0;
+  // Punktgröße so, dass die Knochenpunkte bei jeder Entfernung dicht an dicht liegen
+  sU.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * innerHeight * 0.5 / tanH * det.spacing * X.w * 0.85;
 
   // Kamera: Übersicht ↔ Kamerafahrt
   const w = inSec ? smooth(ph.M0, ph.J0, p) * (1 - smooth(ph.J1, ph.M1, p)) : 0;
@@ -448,11 +594,14 @@ function updateAxis(dt) {
   } else if (!reduced) spineRot += dt * 0.22;
   uniforms.uSpineRot.value = spineRot;
 
-  // Hervorhebung des Abschnitts (Bernstein) und wachsende Nervenbahnen
+  // Hervorhebung des Abschnitts (Bernstein), stärkere Signale und Versorgungsbahn
   const zone = w > 0.5 ? ZONES.indexOf(STOPS[zoneIdx].zone) : -10;
-  if (zone !== dU.uZone.value) { dU.uZone.value = zone; dU.uZoneAmt.value = 0; dU.uReveal.value = 0; }
-  dU.uZoneAmt.value += ((zone >= 0 ? 1 : 0) - dU.uZoneAmt.value) * 0.07;
-  dU.uReveal.value += ((zone >= 0 ? 1.02 : 0) - dU.uReveal.value) * 0.03;
+  if (zone !== sU.uZone.value) { sU.uZone.value = zone; sU.uZoneAmt.value = 0; sU.uPeri.value = 0; }
+  sU.uZoneAmt.value += ((zone >= 0 ? 1 : 0) - sU.uZoneAmt.value) * 0.07;
+  const periOn = zone >= 0 && w > 0.9 ? 1 : 0;
+  sU.uPeri.value += (periOn - sU.uPeri.value) * 0.05;
+  if (zone >= 0) updatePeri(STOPS[zoneIdx].zone);
+  periLabel.style.opacity = (sU.uPeri.value > 0.6 && spineGroup.visible ? 1 : 0);
 }
 
 // ---------- Dach: Index ----------
