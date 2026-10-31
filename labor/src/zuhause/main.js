@@ -159,14 +159,14 @@ PLACES.forEach((pl, i) => {
 let hover = -1;
 
 // ---------- Kamera ----------
-const OVER = { focus: new V3(0, -1.5, 0.2), dir: new V3(0.55, 0.42, 1), dist: 17.5 };
+const OVER = { focus: new V3(0, -1.45, 0.2), dir: new V3(0.55, 0.42, 1), dist: 14.2 };
 const cam = { pos: new V3(0, 6, 40), target: new V3(0, -1.6, 0) };
 let current = -1, orbit = 0;
 function poseFor(i) {
   const pl = i < 0 ? OVER : PLACES[i];
   const f = house.localToWorld(pl.focus.clone());
   const dir = pl.dir.clone().normalize().applyAxisAngle(new V3(0, 1, 0), house.rotation.y + (i < 0 ? orbit : 0));
-  const mob = !isDesktop(), dist = pl.dist * (mob ? (i < 0 ? 1.55 : 1.25) : 1);
+  const mob = !isDesktop(), dist = pl.dist * (mob ? (i < 0 ? 1.95 : 1.25) : 1);
   return { pos: f.clone().add(dir.multiplyScalar(dist)), target: f };
 }
 
@@ -250,9 +250,9 @@ addEventListener('resize', resize); resize();
 function applyOffset() {
   // PC: Haus rückt nach links neben das Panel; Handy: nach oben über das Blatt
   const desk = isDesktop();
-  const pw = desk ? Math.min(560, W * 0.44) : 0, ph = desk ? 0 : H * 0.5;
+  const pw = desk ? panel.offsetWidth : 0, ph = desk ? 0 : H * 0.5;
   // Übersicht: PC rechts neben dem Willkommenstext, Handy unter ihm
-  const ox = (pw / 2) * offK - (desk ? W * 0.19 : 0) * (1 - offK), oy = (ph / 2) * offK - (desk ? 0 : H * 0.11) * (1 - offK);
+  const ox = (pw / 2) * offK - (desk ? W * 0.17 : 0) * (1 - offK), oy = (ph / 2) * offK - (desk ? 0 : H * 0.13) * (1 - offK);
   if (ox || oy) camera.setViewOffset(W, H, ox, oy, W, H); else camera.clearViewOffset();
 }
 

@@ -37,6 +37,7 @@ FRAGMENT_DIR=<scratchpad>/artifact node build.mjs test-4   # zusätzlich Fragmen
   `git diff --stat origin/main..HEAD -- . ':(exclude)labor'` muss leer sein, dann `git push origin HEAD:main`. Arbeitszweig: `claude/3d-cinematic-website-effects-htd2aa`.
 
 ## Technische Merkpunkte
+- Größen: CSS in **rem**, Grundschrift wächst ab 1600 px (`html{font-size:clamp(...)}` oben in jeder style.css); neue Werte in rem schreiben, Haarlinien in px. Zum Prüfen großer Monitore auch 2560×1440 ansehen (Kai).
 - Build ersetzt Platzhalter mit Funktions-Replacern (`$'` im Bundle!). GLSL `#include` immer auf eigener Zeile.
 - Wirbelsäulen-Infos PC: `NINFO` (Texte + Zielpunkt `tgt` auf der Silhouette in Körper-Koordinaten 200×430), `updateCallouts` platziert per Kostenfunktion (Hindernisse: Wirbel-Rechtecke, Zielpunkt, Bahn, andere Schilder, Linien). Handy: Karten (`.seg-card`), Infos dort.
 - Kamera: `tourWant` > `axisWant` > Übersicht. Ruhemodus `reduced` (CALM 0.45), Pause-Knopf `#motionBtn`, iOS-Watchdog für rAF.
