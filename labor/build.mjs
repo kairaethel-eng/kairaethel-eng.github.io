@@ -12,11 +12,18 @@ const PAGES = {
   'test-2': { out: 'test-2-puls.html' },
   'test-3': { out: 'test-3-puls-achse.html' },
   'test-4': { out: 'test-4-puls-scan.html' },
+  'haus': { out: 'hausbesuch.html', fonts: 'haus' },
 };
 // Zusätzliche Ausgabe ohne <html>/<head>/<body>-Gerüst (für die private Claude-Vorschau)
 const fragmentDir = process.env.FRAGMENT_DIR || '';
 
 const font = (file) => readFileSync(join(root, 'assets/fonts', file)).toString('base64');
+const FONTS = {};
+FONTS.haus = () => `
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,${font('fraunces-soft.woff2')}) format("woff2")}
+@font-face{font-family:"Fraunces";font-style:italic;font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,${font('fraunces-soft-italic.woff2')}) format("woff2")}
+@font-face{font-family:"Hanken Grotesk";font-style:normal;font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,${font('hanken-grotesk.woff2')}) format("woff2")}
+`;
 const fontsCss = `
 @font-face{font-family:"Archivo";font-style:normal;font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,${font('archivo-var.woff2')}) format("woff2")}
 @font-face{font-family:"Archivo Expanded";font-style:normal;font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,${font('archivo-expanded-var.woff2')}) format("woff2")}
@@ -36,7 +43,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   const css = readFileSync(join(dir, 'style.css'), 'utf8');
   const tpl = readFileSync(join(dir, 'page.html'), 'utf8');
   const [headPart, bodyPart] = tpl.split('<!--BODY-->');
-  const head = headPart.replace('/*FONTS*/', () => fontsCss).replace('/*CSS*/', () => css);
+  const head = headPart.replace('/*FONTS*/', () => (cfg.fonts ? FONTS[cfg.fonts]() : fontsCss)).replace('/*CSS*/', () => css);
   const body = bodyPart.replace('<!--JS-->', () => `<script>${js}</script>`);
   const full = `<!doctype html>\n<html lang="de">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n${head}\n</head>\n<body>\n${body}\n</body>\n</html>\n`;
   writeFileSync(join(root, cfg.out), full);

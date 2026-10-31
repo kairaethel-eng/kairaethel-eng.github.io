@@ -1,0 +1,125 @@
+<title>HOP Hausbesuch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Entwurf „Hausbesuch“: Physiotherapie-Website als filmischer Rundgang durch ein warmes Haus – Licht nach echter Tageszeit.">
+<style>/*FONTS*//*CSS*/</style>
+<!--BODY-->
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="letterbox" aria-hidden="true"></div>
+
+<header class="top" id="top">
+  <a class="mark" href="#film" aria-label="HOP – Home of Physiotherapy, zum Anfang"><b>HOP</b><span>Home of Physiotherapy</span></a>
+  <p class="chap-label" id="chapLabel" aria-live="polite"></p>
+  <div class="tod" role="group" aria-label="Tageszeit im Haus">
+    <button type="button" data-tod="morgen" title="Morgen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17h18M7 17a5 5 0 0 1 10 0M12 6v2M5.6 9.6l1.4 1.4M18.4 9.6 17 11"/></svg><span>Morgen</span></button>
+    <button type="button" data-tod="mittag" title="Mittag"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg><span>Mittag</span></button>
+    <button type="button" data-tod="abend" title="Abend"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18M8 18a4 4 0 0 1 8 0M4 21h16"/></svg><span>Abend</span></button>
+    <button type="button" data-tod="nacht" title="Nacht"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg><span>Nacht</span></button>
+  </div>
+  <a class="btn btn-sm" href="#kontakt">Termin anfragen</a>
+</header>
+
+<div class="overlay" id="overlay">
+  <section class="chap is-on" data-label="Ankommen">
+    <p class="kicker">Physiotherapie in Schorndorf</p>
+    <h1>Kommen Sie <em>rein.</em></h1>
+    <p class="lede">Bei uns sind Sie Gast, nicht Patient. Scrollen Sie, die Tür ist offen.</p>
+    <div class="actions"><a class="btn" href="#kontakt">Termin anfragen</a><a class="btn btn-ghost" href="tel:+4971819931470">07181 9931470</a></div>
+  </section>
+  <section class="chap" data-label="Willkommen">
+    <p class="kicker">Ankommen</p>
+    <h2 id="greet">Guten Tag.</h2>
+    <p class="lede">Schön, dass Sie da sind. Jacke ablegen, durchatmen, ankommen.</p>
+  </section>
+  <section class="chap" data-label="Empfang">
+    <p class="kicker">Empfang</p>
+    <h2>Gast statt <em>Patient.</em></h2>
+    <ul class="promises">
+      <li>Wir begrüßen Sie mit Namen, nicht mit einer Nummer.</li>
+      <li>Tee oder Wasser, und ein Platz am Fenster.</li>
+      <li>Termine mit Zeit statt im Minutentakt.</li>
+    </ul>
+  </section>
+  <section class="chap" data-label="Wohnzimmer">
+    <p class="kicker">Wohnzimmer</p>
+    <h2>Erst zuhören. <em>Dann</em> behandeln.</h2>
+    <p class="lede">Im ersten Termin nehmen wir uns Zeit für Ihre Geschichte: Beschwerden, Alltag, Ziele. Erst danach entsteht Ihr Plan, 1:1 beim selben vertrauten Ansprechpartner.</p>
+  </section>
+  <section class="chap" data-label="Behandlung">
+    <p class="kicker">Behandlungsraum</p>
+    <h2>Hände, die <em>verstehen.</em></h2>
+    <p class="lede">Tippen Sie auf die Lichtpunkte im Raum, um mehr über jede Behandlung zu erfahren.</p>
+    <p class="tags">Manuelle Therapie · CMD · Atlas-Axis · Osteopathische Ansätze · Schmerztherapie · Manuthera · Fango · Stoßwelle</p>
+  </section>
+  <section class="chap" data-label="Training">
+    <p class="kicker">Trainingsraum</p>
+    <h2>Bewegung ist das beste <em>Zuhause.</em></h2>
+    <p class="lede">Aktiv werden, angeleitet und begleitet. Mit wenigen, wirksamen Übungen für zuhause.</p>
+    <p class="tags">Krankengymnastik · Sport-Physiotherapie · Schlingentisch</p>
+  </section>
+  <section class="chap" data-label="Garten">
+    <p class="kicker">Garten</p>
+    <h2>Bis <em>bald.</em></h2>
+    <p class="lede">Wir freuen uns auf Sie. Der erste Schritt ist eine kurze Nachricht.</p>
+    <div class="actions"><a class="btn" href="#kontakt">Termin anfragen</a></div>
+  </section>
+</div>
+
+<nav class="dock" aria-label="Stationen des Rundgangs">
+  <ol class="progress">
+    <li class="is-on"><button type="button">Ankommen</button></li>
+    <li><button type="button">Willkommen</button></li>
+    <li><button type="button">Empfang</button></li>
+    <li><button type="button">Wohnzimmer</button></li>
+    <li><button type="button">Behandlung</button></li>
+    <li><button type="button">Training</button></li>
+    <li><button type="button">Garten</button></li>
+  </ol>
+</nav>
+<div class="hotspots" id="hotspots"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <button type="button" class="drawer-close" id="drawerClose" aria-label="Schließen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div id="drawerBody"></div>
+</aside>
+
+<main>
+  <section id="film" class="film" aria-label="Rundgang durch das Haus"></section>
+
+  <section class="practical" id="praktisch" aria-labelledby="p-title">
+    <div class="wrap two">
+      <div>
+        <p class="kicker">Gut zu wissen</p>
+        <h2 id="p-title">Damit Sie entspannt <em>ankommen.</em></h2>
+      </div>
+      <div class="faq">
+        <details open><summary>Brauche ich ein Rezept?</summary><p>Mit ärztlicher Verordnung rechnen wir direkt mit Ihrer Krankenkasse ab. Privat Versicherte und Selbstzahler sind ebenso willkommen.</p></details>
+        <details><summary>Was bringe ich zum ersten Termin mit?</summary><p>Ihre Verordnung, die Versichertenkarte, vorhandene Befunde und bequeme Kleidung.</p></details>
+        <details><summary>Wo kann ich parken?</summary><p>Direkt vor dem Haus und in der Nähe. Mit dem Bus: VVS-Haltestelle „Schlichtener Straße“ oder „Grauhalde“.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact" id="kontakt" aria-labelledby="k-title">
+    <div class="wrap two">
+      <div>
+        <p class="kicker">Kontakt</p>
+        <h2 id="k-title">Wir freuen uns <em>auf Sie.</em></h2>
+        <p class="lede dark">Schreiben Sie uns oder rufen Sie an. Wir melden uns mit einem Terminvorschlag.</p>
+        <div class="actions"><a class="btn" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage">Termin anfragen</a><a class="btn btn-line" href="tel:+4971819931470">07181 9931470</a></div>
+        <p class="note">Bitte senden Sie keine ausführlichen Gesundheitsangaben per E-Mail. Die besprechen wir persönlich.</p>
+      </div>
+      <dl class="facts">
+        <div><dt>Adresse</dt><dd>Schlichtener Straße 87<br>73614 Schorndorf</dd></div>
+        <div><dt>Telefon</dt><dd>+49 7181 9931470</dd></div>
+        <div><dt>E-Mail</dt><dd>kontakt@hopphysio.de</dd></div>
+        <div><dt>Behandlung</dt><dd>1:1 beim Inhaber Kai Raethel</dd></div>
+      </dl>
+    </div>
+    <footer class="foot wrap">
+      <span>© 2026 HOP – Home of Physiotherapy</span>
+      <span><a href="https://kairaethel-eng.github.io/impressum.html">Impressum</a> · <a href="https://kairaethel-eng.github.io/datenschutz.html">Datenschutz</a></span>
+      <span class="lab">Entwurf · Hausbesuch</span>
+    </footer>
+  </section>
+</main>
+<!--JS-->

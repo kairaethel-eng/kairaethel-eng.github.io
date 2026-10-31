@@ -30,3 +30,8 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - Grundriss aus V10 ist schematisch – echte Raumaufteilung?
 - Flüssigkeit auf echten Handys messen (Testumgebung ohne Grafikkarte).
 - Seiten tragen `noindex`; Veröffentlichung erst nach Freigabe. Keine externen Abrufe (Schriften und Bibliotheken eingebettet).
+
+## Zweites Konzept: „Hausbesuch“ (31.10.2026, nur PC)
+- Auf Kais Wunsch frei entworfen, ohne V10-Vorlage: filmischer Rundgang durch ein warmes Haus (Haustür → Empfang mit Tee → Wohnzimmer → Behandlung → Training → Garten). Licht folgt der echten Tageszeit des Besuchers (umschaltbar: Morgen/Mittag/Abend/Nacht). Lichtpunkte im Raum öffnen die Therapien. Danach klassische Infoseiten (FAQ, Kontakt).
+- Datei: `hausbesuch.html` (Quellen `src/haus`). Eigene Schriften: Fraunces + Hanken Grotesk (OFL, eingebettet).
+- Offen: Kai vergleicht mit Puls · Scan; FAQ-Texte sind Beispieltexte und müssen geprüft werden.
