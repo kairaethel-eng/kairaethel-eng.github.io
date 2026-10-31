@@ -942,7 +942,7 @@ const roomTags = ROOMS.map((r, i) => {
   const el = document.createElement('div'); el.className = 'room-tag'; el.setAttribute('aria-hidden', 'true');
   el.innerHTML = `<i>${String(i + 1).padStart(2, '0')}</i>${r.short}`; document.body.appendChild(el);
   el.addEventListener('pointerenter', () => (hoverRoom = i)); el.addEventListener('pointerleave', () => (hoverRoom = -1));
-  el.addEventListener('click', () => { const rr = tourEl.getBoundingClientRect(); const q = TPH.J0 + (i / (ROOMS.length - 1)) * (TPH.J1 - TPH.J0); scrollToY(rr.top + scrollY + q * (rr.height - innerHeight) + 2); });
+  el.addEventListener('click', () => goRoom(i));
   const [x, y, w, h] = r.r; const [cx, cz] = P(x + w / 2, y + h / 2);
   return { el, p: new V3(cx, EYE + 0.55, cz) };
 });
@@ -974,13 +974,43 @@ function setRoom(i) {
   if (i === roomOn) return; roomOn = i;
   [roomCards, roomBtns, roomDots].forEach((list) => list.forEach((el, k) => el.classList.toggle('is-on', k === i)));
 }
-const TPH = { M0: 0.07, E: 0.13, J0: 0.16, J1: 0.82, B: 0.9, M1: 0.93 };
-roomBtns.forEach((b) => b.addEventListener('click', () => {
-  const i = +b.dataset.room, r = tourEl.getBoundingClientRect();
-  const p = TPH.J0 + (i / (ROOMS.length - 1)) * (TPH.J1 - TPH.J0);
-  scrollToY(r.top + scrollY + p * (r.height - innerHeight) + 2);
-}));
-roomDots.forEach((d) => d.addEventListener('click', () => { const c = roomCards[+d.dataset.room]; scrollToY(c.getBoundingClientRect().top + scrollY - innerHeight * 0.5); }));
+// Rundgang ohne Scrollen: Räume per Klick, Pfeil, Wischen oder Pfeiltaste; „Rundgang starten“ fährt selbst
+// tourIdx: -1 draußen (Übersicht/Röntgenblick), 0–4 Räume, 5 Grundriss von oben
+let tourIdx = -1, insideK = 0, viaEntry = 0, autoTour = false, autoT = 0;
+const tourPlay = $('#tourPlay'), tourProg = $('#tourProg');
+const TOUR_STEP = reduced ? 6.5 : 5, TOUR_BIRD = 3.5;
+function tourInView() { const r = tourEl.getBoundingClientRect(); return r.top < innerHeight * 0.5 && r.bottom > innerHeight * 0.5; }
+function bringTourIntoView() { const r = tourEl.getBoundingClientRect(); if (Math.abs(r.top) > 4 && !(r.top <= 0 && r.bottom >= innerHeight)) scrollToY(r.top + scrollY + 2); }
+function setAuto(on) {
+  autoTour = on; autoT = 0;
+  tourEl.classList.toggle('auto', on);
+  if (tourPlay) { tourPlay.setAttribute('aria-pressed', on ? 'true' : 'false'); tourPlay.querySelector('span').textContent = on ? 'Rundgang anhalten' : 'Rundgang starten'; }
+}
+function goRoom(i, fromAuto) {
+  i = Math.max(-1, Math.min(5, i));
+  if (tourIdx < 0 && i >= 0) viaEntry = reduced ? 0 : 0.9; // erst durch die Tür
+  tourIdx = i;
+  tourEl.classList.toggle('in', i >= 0);
+  if (!fromAuto) setAuto(false);
+  if (i >= 0) bringTourIntoView();
+}
+function tourStep(d) { goRoom(tourIdx < 0 ? (d > 0 ? 0 : 4) : tourIdx + d > 5 ? -1 : tourIdx + d); }
+roomBtns.forEach((b) => b.addEventListener('click', () => goRoom(+b.dataset.room)));
+roomDots.forEach((d) => d.addEventListener('click', () => goRoom(+d.dataset.room)));
+$('#tourPrev')?.addEventListener('click', () => tourStep(-1));
+$('#tourNext')?.addEventListener('click', () => tourStep(1));
+$('#tourExit')?.addEventListener('click', () => goRoom(-1));
+tourPlay?.addEventListener('click', () => { if (autoTour) setAuto(false); else { goRoom(0, true); setAuto(true); } });
+addEventListener('keydown', (e) => {
+  if (!tourInView() || e.altKey || e.ctrlKey || e.metaKey || /input|textarea|select/i.test(document.activeElement?.tagName || '')) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); tourStep(1); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); tourStep(-1); }
+  else if (e.key === 'Escape' && tourIdx >= 0) goRoom(-1);
+});
+// Wischen über das Haus (Handy): waagerecht = Raum wechseln, senkrecht bleibt Scrollen
+{ let x0 = null, y0 = 0; const st = $('.tour-sticky');
+  st?.addEventListener('touchstart', (e) => { if (e.target.closest('a,button')) return; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  st?.addEventListener('touchend', (e) => { if (x0 === null) return; const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) tourStep(dx < 0 ? 1 : -1); }, { passive: true }); }
 let tourWant = null, tourHide = 0, xray = 0, dragRot = 0, hoverRoom = -1;
 // Schild „Manuthera“ an der Liege in Raum 04 (Röntgenblick und Rundgang, PC und Handy)
 const manuTag = document.createElement('a');
@@ -1004,52 +1034,47 @@ function placeManuTag() {
 function updateTour(dt) {
   manuTagVis = 0;
   const r = tourEl.getBoundingClientRect(), vh = innerHeight, desk = isDesktop();
-  const p = clamp(-r.top / Math.max(1, r.height - vh));
   const near = r.top < vh && r.bottom > 0 && morphNow > 2.6 && morphNow < 3.4;
-  // Scan hinein/hinaus (Boden → Decke); Handy: an den Raum-Karten ausgerichtet
-  let inside;
-  if (desk) inside = !near ? 0 : p < TPH.M1 ? smooth(0.0, TPH.M0, p) : 1 - smooth(TPH.M1, 0.995, p);
-  else { const f = roomCards[0].getBoundingClientRect(), l = roomCards[roomCards.length - 1].getBoundingClientRect(); inside = !near ? 0 : smooth(vh * 1.2, vh * 0.75, f.top) * (1 - smooth(vh * 0.2, -vh * 0.25, l.bottom)); }
-  // Röntgenblick (PC): schon bevor man eintritt, leuchtet das Innere durch das Haus, das Dach schwebt angehoben
+  if (tourIdx >= 0 && !tourInView()) goRoom(-1); // weggescrollt → wieder draußen
+  // Rundgang-Film
+  if (autoTour && tourIdx >= 0 && !paused) {
+    autoT += dt;
+    const dur = tourIdx === 5 ? TOUR_BIRD : TOUR_STEP;
+    if (tourProg) tourProg.style.width = (((tourIdx + Math.min(1, autoT / dur)) / 6) * 100).toFixed(1) + '%';
+    if (autoT > dur) { autoT = 0; if (tourIdx < 5) goRoom(tourIdx + 1, true); else { setAuto(false); goRoom(-1); } }
+  } else if (tourProg && !autoTour) tourProg.style.width = '0%';
+  // Scan hinein/hinaus (Boden → Decke)
+  const want = near && tourIdx >= 0 ? 1 : 0;
+  insideK = reduced ? want : insideK + (want - insideK) * (1 - Math.exp(-dt * (want ? 1.5 : 2.6)));
+  const inside = near ? insideK : 0;
+  // Röntgenblick (PC): von außen leuchtet das Innere durch das Haus, das Dach schwebt angehoben
   const pv = desk && morphNow > 2.55 && morphNow < 3.45 ? smooth(2.55, 2.95, morphNow) * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) : 0;
   xray = pv;
-  tU.uCut.value = inside > 0 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
-  tU.uOn.value = inside > 0 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0 || pv > 0;
-  tU.uFade.value = inside > 0 ? 1 : pv * 0.55;
+  tU.uCut.value = inside > 0.001 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
+  tU.uOn.value = inside > 0.001 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0.001 || pv > 0;
+  tU.uFade.value = inside > 0.001 ? Math.max(inside, pv * 0.55) : pv * 0.55;
   tU.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * innerHeight * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * prx.spacing * uniforms.uXf.value[3].w * 0.62;
   uniforms.uRoofLift.value += ((desk ? Math.max(pv, inside) * 1.1 : 0) - uniforms.uRoofLift.value) * 0.08;
-  tourHide = desk ? (near ? smooth(0.0, TPH.M0 * 0.8, p) * (1 - smooth(TPH.M1, 0.99, p)) : 0) : Math.min(1, inside * 1.4);
+  tourHide = Math.min(1, inside * 1.4);
   // Hausdrehung festhalten, solange wir drinnen sind
   const free = Math.sin(uniforms.uTime.value * 0.2) * 0.45 - 0.55 + dragRot;
-  uniforms.uHouseRot.value = THREE.MathUtils.lerp(free, TOUR_ROT, near ? smooth(0, TPH.M0, p) * (1 - smooth(TPH.M1, 1, p)) : 0);
-  if (pv > 0.3 && (p <= 0 || !near || inside < 0.05)) { // Röntgenblick: Räume als anklickbare Schilder
-    tourWant = null; tU.uRoom.value = hoverRoom; manuTagVis = pv;
-    roomTags.forEach((t, i) => { const w = toWorld(t.p.clone().setY(EYE + 0.2)); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * innerWidth}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(-50%, -50%)`; });
+  uniforms.uHouseRot.value = THREE.MathUtils.lerp(free, TOUR_ROT, smooth(0, 0.6, inside));
+  if (tourIdx < 0) {
+    tourWant = null;
+    if (pv > 0.3) { // Röntgenblick: Räume als anklickbare Schilder
+      tU.uRoom.value = hoverRoom; manuTagVis = pv;
+      roomTags.forEach((t, i) => { const w = toWorld(t.p.clone().setY(EYE + 0.2)); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * innerWidth}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(-50%, -50%)`; });
+    } else { tU.uRoom.value = -1; roomTags.forEach((t) => { t.el.classList.remove('click'); t.el.style.opacity = 0; }); }
     return;
   }
   roomTags.forEach((t) => t.el.classList.remove('click'));
-  if (!near || p <= 0 || p >= 1) { tourWant = null; tU.uRoom.value = -1; roomTags.forEach((t) => (t.el.style.opacity = 0)); return; }
-  // Kamera-Station bestimmen
-  let st, room = -1;
-  const ri = (x) => { const n = ROOMS.length - 1, xx = clamp(x) * n, i = Math.min(Math.floor(xx), n - 1); return { i, f: smooth(0.12, 0.88, xx - i), x: xx }; };
-  if (desk) {
-    if (p < TPH.E) st = lerpPose(OVERVIEW, tourPose(TOUR.entry), smooth(0, TPH.E, p));
-    else if (p < TPH.J0) st = lerpPose(tourPose(TOUR.entry), tourPose(TOUR.rooms[0]), smooth(TPH.E, TPH.J0, p));
-    else if (p < TPH.J1) { const q = ri((p - TPH.J0) / (TPH.J1 - TPH.J0)); st = lerpPose(tourPose(TOUR.rooms[q.i]), tourPose(TOUR.rooms[q.i + 1]), q.f); room = Math.min(ROOMS.length - 1, Math.round(q.x - 0.05)); }
-    else if (p < TPH.B) { st = lerpPose(tourPose(TOUR.rooms[ROOMS.length - 1]), tourPose(TOUR.bird), smooth(TPH.J1, TPH.B, p)); room = ROOMS.length - 1; }
-    else st = lerpPose(tourPose(TOUR.bird), OVERVIEW, smooth(TPH.M1, 1, p));
-  } else {
-    const rs = roomCards.map((c) => c.getBoundingClientRect());
-    let best = 0, bd = 1e9; rs.forEach((b, i) => { const d = Math.abs(b.top - vh * 0.5); if (d < bd) { bd = d; best = i; } });
-    rs.forEach((b, i) => { roomCards[i].style.opacity = (smooth(vh * 0.1, vh * 0.4, b.top) * (i === best ? 1 : 0.55)).toFixed(3); });
-    const first = rs[0], last = rs[rs.length - 1];
-    if (first.top > vh * 0.7) st = lerpPose(OVERVIEW, tourPose(TOUR.entry), smooth(0, TPH.M0 * 2, p));
-    else if (last.bottom < vh * 0.15) st = lerpPose(tourPose(TOUR.bird), OVERVIEW, smooth(TPH.M1, 1, p));
-    else { st = tourPose(TOUR.rooms[best]); room = best; }
-  }
-  if (room >= 0) setRoom(room);
+  // Kamera: erst durch die Tür, dann zum Raum (die Kamera gleitet weich hinüber)
+  if (viaEntry > 0) viaEntry -= dt;
+  const room = tourIdx <= 4 ? tourIdx : -1;
+  const st = viaEntry > 0 ? tourPose(TOUR.entry) : tourPose(tourIdx === 5 ? TOUR.bird : TOUR.rooms[tourIdx]);
+  setRoom(room >= 0 ? room : ROOMS.length - 1);
   tU.uRoom.value = room;
-  manuTagVis = room === 3 ? (desk ? smooth(0.9, 1, inside) : smooth(0.4, 0.9, inside)) : 0;
+  manuTagVis = room === 3 ? smooth(0.85, 1, inside) : 0;
   tourWant = st;
   // Beschriftungen
   roomTags.forEach((t, i) => {

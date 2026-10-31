@@ -164,9 +164,9 @@ main{position:relative;z-index:2}
 /* Rundgang durch die Praxis (Kapitel 04) */
 .roof-intro{margin-bottom:0}
 .roof-intro .lead{margin-top:22px}
-.tour{height:560vh;position:relative}
-.tour-sticky{position:sticky;top:0;height:100svh;overflow:hidden;background:linear-gradient(90deg,rgba(10,22,27,.82) 0%,rgba(10,22,27,.5) 32%,rgba(10,22,27,0) 52%)}
-.tour-inner{height:100%;display:grid;grid-template-columns:minmax(0,470px) 1fr;grid-template-rows:auto auto auto 1fr auto;column-gap:40px;padding-top:96px;padding-bottom:24px}
+.tour{height:160vh;position:relative}
+.tour-sticky{position:sticky;top:0;height:100svh;overflow:hidden;touch-action:pan-y;background:linear-gradient(90deg,rgba(10,22,27,.82) 0%,rgba(10,22,27,.5) 32%,rgba(10,22,27,0) 52%)}
+.tour-inner{height:100%;display:grid;grid-template-columns:minmax(0,470px) 1fr;grid-template-rows:auto auto auto auto 1fr auto;column-gap:40px;padding-top:96px;padding-bottom:24px}
 .tour-inner .roof-intro{grid-column:1;grid-row:1;margin-bottom:18px}
 .tour-inner .roof-head h2{font-size:clamp(34px,3.4vw,54px)}
 .tour-inner .roof-head .lead{margin-top:12px;font-size:16px}
@@ -181,7 +181,7 @@ main{position:relative;z-index:2}
 .roomnav button.is-on{border-color:var(--amber);background:rgba(224,154,53,.1);color:var(--txt)}
 .roomnav button.is-on b{color:var(--amber)}
 .room-dots{display:none}
-.room-cards{grid-column:1;grid-row:4;position:relative;align-self:start;margin-top:26px;min-height:240px}
+.room-cards{grid-column:1;grid-row:5;position:relative;align-self:start;margin-top:26px;min-height:240px}
 .room-card{position:absolute;inset:0 0 auto 0;opacity:0;visibility:hidden;transform:translateY(22px);transition:opacity .5s var(--ease),transform .7s var(--ease),visibility 0s .55s}
 .room-card.is-on{opacity:1;visibility:visible;transform:none;transition:opacity .6s var(--ease) .08s,transform .8s var(--ease) .08s,visibility 0s}
 .room-no{display:flex;align-items:baseline;gap:10px;font:600 12px/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
@@ -189,7 +189,25 @@ main{position:relative;z-index:2}
 .room-card h3{font-family:var(--disp);font-weight:800;font-size:clamp(24px,2.2vw,32px);letter-spacing:-.02em;line-height:1.05;margin-bottom:14px}
 .room-card > p{color:var(--dim);font-size:16px;line-height:1.55;max-width:44ch;margin-bottom:16px}
 .room-hint{font:italic 400 18px/1.3 var(--serif)!important;color:var(--amber)!important}
-.tour-inner .note{grid-row:5}
+.tour-inner .note{grid-row:6}
+/* Rundgang-Steuerung (ohne Scrollen) */
+.tour-ctrl{grid-column:1;grid-row:4;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px}
+.t-btn{width:44px;height:44px;border-radius:50%;border:1px solid rgba(237,232,220,.25);background:rgba(16,34,42,.6);color:var(--txt);display:grid;place-items:center;cursor:pointer;transition:border-color .3s,background .3s}
+.t-btn:hover{border-color:var(--amber);background:rgba(224,154,53,.12)}
+.t-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.t-play{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 18px;border-radius:22px;border:0;background:var(--amber);color:#14110A;font:700 12px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:transform .3s var(--ease)}
+.t-play:hover{transform:translateY(-1px)}
+.t-play svg{width:14px;height:14px}
+.t-play .i-play{fill:currentColor}
+.t-play .i-pause{display:none;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.tour.auto .t-play .i-pause{display:block}
+.tour.auto .t-play .i-play{display:none}
+.t-exit{height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--line);background:transparent;color:var(--dim);font:600 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s,color .3s}
+.t-exit:hover{color:var(--txt)}
+.tour.in .t-exit{opacity:1;pointer-events:auto}
+.tour-prog{flex-basis:100%;height:2px;margin-top:4px;background:rgba(237,232,220,.12);opacity:0;transition:opacity .3s}
+.tour.auto .tour-prog{opacity:1}
+.tour-prog i{display:block;height:100%;width:0;background:var(--amber);transition:width .2s linear}
 .room-tag{position:fixed;left:0;top:0;z-index:3;pointer-events:none;cursor:pointer;display:flex;align-items:center;gap:8px;font:600 10.5px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);white-space:nowrap;opacity:0;transition:opacity .5s,color .4s;text-shadow:0 0 12px rgba(10,22,27,.95)}
 .room-tag i{font:italic 400 15px/1 var(--serif);letter-spacing:0;color:var(--mute);transition:color .4s}
 .room-tag.on{color:var(--txt)}
@@ -322,20 +340,37 @@ main{position:relative;z-index:2}
   /* Handy: Text liegt auf einer eigenen dunklen Fläche, die Partikel-Szene bleibt darüber frei */
   .index li{padding-right:72px}
   /* Rundgang (Handy): Szene oben, Raum-Karten laufen untereinander durch */
-  .tour{height:auto}
-  .tour-sticky{position:static;height:auto;overflow:visible;background:none}
-  .tour-inner{display:block;height:auto;padding-top:10px;padding-bottom:40svh}
+  .tour{height:150svh}
+  .tour-sticky{position:sticky;top:0;height:100svh;overflow:hidden;background:linear-gradient(0deg,rgba(10,22,27,.96) 0%,rgba(10,22,27,.8) 36%,rgba(10,22,27,0) 60%)}
+  .tour-inner{display:flex;flex-direction:column;height:100%;padding-top:calc(env(safe-area-inset-top,0px) + 70px);padding-bottom:14px}
+  .tour-inner .roof-head h2{font-size:clamp(28px,8vw,38px)}
+  .tour-inner .roof-head .lead{font-size:14.5px;margin-top:8px}
+  .tour.in .roof-head .lead,.tour.in .tour-kicker{display:none}
+  .tour.in .roof-head h2{display:none}
+  .tour-inner .roof-intro{order:1}
+  .tour:not(.in) .roof-intro{margin-top:auto}
+  .tour-kicker{order:2}
+  .room-dots{order:3}
+  .tour-ctrl{order:4}
+  .room-cards{order:5}
+  .tour-kicker{font-size:13px;margin-top:8px}
   .roomnav{display:none}
-  .room-dots{position:sticky;top:calc(env(safe-area-inset-top,0px) + 74px);z-index:4;display:flex;align-items:center;justify-content:center;gap:8px;margin:18px auto 0;width:max-content;padding:8px 14px;border-radius:20px;background:rgba(10,22,27,.72);border:1px solid var(--line)}
+  .room-dots{position:static;display:flex;align-items:center;justify-content:center;gap:8px;margin:14px auto 0;width:max-content;padding:8px 14px;border-radius:20px;background:rgba(10,22,27,.72);border:1px solid var(--line)}
   .room-dots span{font:italic 400 13px/1 var(--serif);color:var(--mute)}
-  .room-dots button{appearance:none;border:0;padding:0;width:8px;height:8px;border-radius:4px;background:var(--mute);transition:width .4s var(--ease),background .3s;cursor:pointer}
+  .room-dots button{appearance:none;border:0;padding:0;width:8px;height:8px;border-radius:4px;background:var(--mute);transition:width .4s var(--ease),background .3s;cursor:pointer;position:relative}
+  .room-dots button::before{content:"";position:absolute;inset:-12px -6px}
   .room-dots button.is-on{width:26px;background:var(--amber)}
-  .room-cards{display:block;min-height:0;margin-top:52svh}
-  .room-card{position:relative;inset:auto;visibility:visible;transform:none;margin-bottom:52svh;padding:16px 16px 18px;background:rgba(14,30,37,.97);border:1px solid var(--line);border-radius:6px;transition:border-color .4s}
-  .room-card:last-child{margin-bottom:0}
-  .room-card.is-on{border-color:rgba(224,154,53,.55);transform:none}
-  .room-card h3{font-size:20px}
-  .room-card > p{font-size:14.5px}
+  .tour:not(.in) .room-dots button.is-on{width:8px;background:var(--mute)}
+  .tour-ctrl{justify-content:center;margin-top:12px}
+  .tour.in .room-dots{margin-top:auto}
+  .room-cards{display:block;min-height:0;margin-top:12px}
+  .tour:not(.in) .room-cards{display:none}
+  .room-card{display:none;position:relative;inset:auto;visibility:visible;opacity:1;transform:none;margin:0;padding:14px 16px 16px;background:rgba(14,30,37,.97);border:1px solid rgba(224,154,53,.55);border-radius:6px}
+  .room-card.is-on{display:block;animation:cardIn .5s var(--ease)}
+  @keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .room-card h3{font-size:19px;margin-bottom:8px}
+  .room-card > p{font-size:14px;margin-bottom:10px}
+  .tour-inner .note{display:none}
   .room-no i{font-size:26px}
   .tour-inner .note{margin-top:22px;font-size:11px}
   .room-tag{display:none}
