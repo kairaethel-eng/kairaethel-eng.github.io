@@ -470,7 +470,8 @@ html.paused .btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}
 .sheen::before{content:"";position:absolute;top:0;bottom:0;left:0;width:45%;pointer-events:none;background:linear-gradient(90deg,rgba(224,154,53,0),rgba(224,154,53,.32),rgba(224,154,53,0));transform:translateX(-130%)}
 .scan-run .sheen::before{animation:sheen 1.2s var(--ease) calc(var(--si,0) * 80ms + .15s) 1 both}
 @keyframes sheen{to{transform:translateX(330%)}}
-.ix-name{margin-right:auto}
+.ix-name{margin-right:auto;min-width:0;overflow-wrap:break-word;hyphens:auto}
+@media (max-width:400px){.index button{gap:.75rem}}
 .ix-plus{position:relative;flex:none;align-self:center;width:.875rem;height:.875rem;margin-left:.25rem;transition:transform .45s var(--ease)}
 .ix-plus::before,.ix-plus::after{content:"";position:absolute;left:0;right:0;top:50%;height:1.5px;margin-top:-.75px;background:var(--amber);border-radius:1px}
 .ix-plus::after{transform:rotate(90deg)}
