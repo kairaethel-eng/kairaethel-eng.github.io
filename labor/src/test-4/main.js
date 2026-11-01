@@ -7,6 +7,7 @@ import Lenis from 'lenis';
 import { bodyPoints, spinePoints, housePoints, logoPoints, spineStipple, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
 import { praxisScan, ROOMS, EYE, P } from './praxis.js';
 import { initA as initManu, MODES as MANU_MODES } from '../manu/ideaA.js';
+import { initServices } from './services.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -1077,7 +1078,7 @@ function updateTour(dt) {
   insideK = reduced ? want : insideK + (want - insideK) * (1 - Math.exp(-dt * (want ? 1.5 : 2.6)));
   const inside = near ? insideK : 0;
   // Röntgenblick (PC): von außen leuchtet das Innere durch das Haus, das Dach schwebt angehoben
-  const pv = morphNow > 2.55 && morphNow < 3.45 ? smooth(2.55, 2.95, morphNow) * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) : 0;
+  const pv = morphNow > 2.55 && morphNow < 3.45 ? smooth(2.55, 2.95, morphNow) * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) * (1 - listK) : 0;
   xray = pv;
   tU.uCut.value = inside > 0.001 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
   tU.uOn.value = inside > 0.001 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0.001 || pv > 0;
@@ -1198,6 +1199,32 @@ const manu = manuSec ? initManu($('#glManu'), {
 }) : null;
 if (manu) manuBtns.forEach((b, i) => b.addEventListener('click', () => manu.select(i, true)));
 else if (manuRead) manuRead.textContent = MANU_MODES[0].txt;
+// ---------- Leistungen: Partikel-Bühne mit Motiv je Leistung (Haus tritt hier zurück) ----------
+const servList = $('.roof-list'), servName = $('#servName');
+const serv = initServices($('#glServ'), { isPaused: () => paused, onShow: (i, name) => { if (servName) servName.textContent = name; } });
+let servLock = -1e9, servAutoT = 0;
+const servItems = $$('#index li');
+servItems.forEach((li, i) => {
+  const b = li.querySelector('button');
+  b.addEventListener('pointerenter', () => { if (serv && isDesktop()) { serv.show(i); servLock = performance.now(); } });
+  b.addEventListener('focus', () => { if (serv) { serv.show(i); servLock = performance.now(); } });
+  b.addEventListener('click', () => { if (serv) { serv.show(i); servLock = performance.now(); } });
+});
+let listK = 0;
+function updateServices(dt) {
+  if (!servList) return;
+  const r = servList.getBoundingClientRect(), vh = innerHeight;
+  listK = smooth(0.1, 0.45, clamp((Math.min(r.bottom, vh) - Math.max(r.top, 0)) / vh));
+  if (!serv || !serv.st.visible) return;
+  if (!isDesktop()) { // Handy: Eintrag in Bildschirmmitte bestimmt das Motiv
+    let best = -1, bd = 1e9; servItems.forEach((li, i) => { const b = li.getBoundingClientRect(), d = Math.abs(b.top + b.height / 2 - vh * 0.62); if (d < bd) { bd = d; best = i; } });
+    if (best >= 0 && performance.now() - servLock > 2500) serv.show(best);
+  } else if (performance.now() - servLock > 7000 && !paused) { // PC ohne Maus: Motive wechseln ruhig durch
+    servAutoT += dt; if (servAutoT > 4.5) { servAutoT = 0; serv.show((serv.current + 1) % servItems.length); }
+  }
+  serv.update(0, dt);
+  serv.st.renderer.render(serv.st.scene, serv.st.camera);
+}
 // Wie viel der Bühne im Bild ist (0..1) → Hintergrund-Partikel und Röntgenblick treten zurück
 let manuK = 0;
 function manuVisible() {
@@ -1248,7 +1275,7 @@ function tick() {
   }
   if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
   dim = Math.max(dim, tourHide, xray * 0.4); // im Rundgang/Röntgenblick tritt das äußere Partikel-Haus zurück
-  dim = Math.max(dim, manuK); // Manuthera-Bühne: Partikel-Hintergrund blendet ganz aus
+  dim = Math.max(dim, manuK, listK); // Manuthera-Bühne und Leistungen: Partikel-Hintergrund blendet ganz aus
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
   uniforms.uSize.value = isDesktop() ? 1 : 1.1 - (morphNow > 2.5 && morphNow < 3.5 ? emblemK * 0.45 : 0);
   uniforms.uSpread.value = reduced ? 0 : isDesktop() ? 0.32 : 0.28;
@@ -1289,6 +1316,7 @@ function tick() {
   camera.position.copy(cam.pos); camera.lookAt(cam.target);
   if (renderer && !document.hidden) renderer.render(scene, camera);
   if (manu && manu.st.visible && !document.hidden) { manu.update(0, dt); manu.st.renderer.render(manu.st.scene, manu.st.camera); }
+  if (!document.hidden) updateServices(dt);
 }
 gsap.ticker.add(tick);
 
