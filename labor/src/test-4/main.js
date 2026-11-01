@@ -16,15 +16,15 @@ const CALM = reduced ? 0.45 : 1; // Tempo der Eigenbewegung
 // Knopf „Bewegung anhalten“: friert alle Eigenbewegung ein (Scrollen bleibt möglich); Wahl wird im Browser gemerkt
 let paused = false;
 try { paused = localStorage.getItem('hop-motion') === 'paused'; } catch (e) { /* ohne Speicher */ }
-function setPaused(v) {
+function setPaused(v, save = true) {
   paused = v;
   document.documentElement.classList.toggle('paused', v);
   const b = document.getElementById('motionBtn');
   if (b) { b.setAttribute('aria-pressed', String(v)); const l = v ? 'Bewegung fortsetzen' : 'Bewegung anhalten'; b.setAttribute('aria-label', l); b.title = l; }
-  try { localStorage.setItem('hop-motion', v ? 'paused' : 'on'); } catch (e) { /* ohne Speicher */ }
+  if (save) try { localStorage.setItem('hop-motion', v ? 'paused' : 'on'); } catch (e) { /* ohne Speicher */ }
 }
 document.getElementById('motionBtn')?.addEventListener('click', () => setPaused(!paused));
-setPaused(paused);
+setPaused(paused, false); // beim Laden nichts speichern – gespeichert wird nur nach einem Klick
 
 // Hinweis, wenn die Bewegung von einem früheren Besuch her angehalten ist (Wahl gilt seitenübergreifend)
 if (paused) {
@@ -211,7 +211,7 @@ function layout() {
   const hw = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)) * a; // halbe sichtbare Breite bei z=0
   const X = uniforms.uXf.value;
   if (d) {
-    X[0].set(hw * 0.56, -0.15, 0, 0.98);
+    X[0].set(hw * 0.56, -0.29, 0, 0.94);
     X[1].set(0, -0.2, 0, Math.max(1, a * 0.75));
     X[2].set(hw * 0.47, -0.3, 0, 0.84);
     X[3].set(hw * 0.5, 0.1, 0, 0.74);
@@ -828,12 +828,23 @@ $$('.index li').forEach((li) => {
 
 // ---------- Hausordnung ----------
 const rules = $('#hausordnung'), laws = $$('#laws li'), door = $('#tuer');
-const heads = [null, null, null, null, null];
 let lawOn = 0;
 
 // ---------- Kapitel → Formen ----------
 const chapters = $$('.chapter');
 const navLinks = $$('#chapters a'), chapNow = $('#chapNow');
+// Handy/Tablet: Kapitelanzeige aufklappen → Kapitel wählen
+const topNav = $('#top');
+function setMenu(open) {
+  topNav.classList.toggle('menu-open', open);
+  chapNow.setAttribute('aria-expanded', String(open));
+  chapNow.setAttribute('aria-label', open ? 'Kapitel schließen' : 'Kapitel wählen');
+}
+chapNow.addEventListener('click', (e) => { e.stopPropagation(); setMenu(!topNav.classList.contains('menu-open')); });
+navLinks.forEach((a) => a.addEventListener('click', () => setMenu(false)));
+document.addEventListener('click', (e) => { if (!e.target.closest('#chapters')) setMenu(false); });
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && topNav.classList.contains('menu-open')) { setMenu(false); chapNow.focus(); } });
+addEventListener('resize', () => { if (innerWidth > 1000) setMenu(false); });
 let chapShown = -1;
 let morphNow = 0;
 function targetMorph() {
@@ -1046,9 +1057,16 @@ document.body.appendChild(manuTag);
 manuTag.addEventListener('click', (e) => { e.preventDefault(); const t = $('#manuthera'); if (t) scrollToY(t.getBoundingClientRect().top + scrollY); });
 const manuTagP = (() => { const [x, z] = P(320, 136); return new V3(x, EYE - 0.22, z); })();
 let manuTagVis = 0;
+// rechte Kante der linken Textspalte im Rundgang (PC); Schilder im Raum bleiben rechts davon
+function textColRight() {
+  if (!isDesktop()) return -1e9;
+  const r = $('.roomnav')?.getBoundingClientRect();
+  return r && r.width ? r.right + 16 : -1e9;
+}
 function placeManuTag() {
   const w = toWorld(manuTagP); w.project(camera);
-  const vis = manuTagVis * (w.z < 1 && Math.abs(w.x) < 0.92 && Math.abs(w.y) < 0.85 ? 1 : 0) * (1 - manuK);
+  const sx = (w.x * 0.5 + 0.5) * innerWidth;
+  const vis = manuTagVis * (w.z < 1 && Math.abs(w.x) < 0.92 && Math.abs(w.y) < 0.85 && sx - manuTag.offsetWidth / 2 > textColRight() ? 1 : 0) * (1 - manuK);
   manuTag.style.opacity = vis.toFixed(2);
   manuTag.classList.toggle('on', vis > 0.3);
   if (vis > 0) manuTag.style.transform = `translate(${((w.x * 0.5 + 0.5) * innerWidth).toFixed(1)}px, ${((-w.y * 0.5 + 0.5) * innerHeight - 30).toFixed(1)}px) translate(-50%, -100%)`;
@@ -1106,14 +1124,16 @@ function updateTour(dt) {
   if (viaEntry > 0) viaEntry -= dt;
   const room = tourIdx <= 4 ? tourIdx : -1;
   const st = viaEntry > 0 ? tourPose(TOUR.entry) : tourPose(tourIdx === 5 ? TOUR.bird : TOUR.rooms[tourIdx]);
-  setRoom(room >= 0 ? room : ROOMS.length - 1);
+  setRoom(room); // Grundriss von oben: keine Raumkarte
   tU.uRoom.value = room;
   manuTagVis = room === 3 ? smooth(0.85, 1, inside) : 0;
   tourWant = st;
-  // Beschriftungen
+  // Beschriftungen (nie über der linken Textspalte mit Raum-Knöpfen und Karte)
+  const colR = textColRight();
   roomTags.forEach((t, i) => {
     const w = toWorld(t.p); w.project(camera);
-    const vis = desk && inside > 0.9 && w.z < 1 && Math.abs(w.x) < 0.95 && Math.abs(w.y) < 0.9;
+    const sx = (w.x * 0.5 + 0.5) * innerWidth;
+    const vis = desk && inside > 0.9 && w.z < 1 && Math.abs(w.x) < 0.95 && Math.abs(w.y) < 0.9 && sx - t.el.offsetWidth / 2 > colR;
     t.el.style.opacity = vis ? (i === room ? 1 : 0.55) : 0;
     t.el.classList.toggle('on', i === room);
     if (vis) t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * innerWidth}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(-50%, -50%)`;
@@ -1122,7 +1142,8 @@ function updateTour(dt) {
 
 // ---------- Lebende Überschriften ----------
 function splitLetters(el) {
-  el.setAttribute('aria-label', el.textContent.replace(/\s+/g, ' ').trim());
+  const lbl = el.cloneNode(true); lbl.querySelectorAll('br').forEach((br) => br.replaceWith(' '));
+  el.setAttribute('aria-label', lbl.textContent.replace(/\s+/g, ' ').trim());
   let i = 0;
   const walk = (node) => [...node.childNodes].forEach((n) => {
     if (n.nodeType === 3) {
@@ -1263,15 +1284,13 @@ function tick() {
     const want = tourWant || axisWant || OVERVIEW, k = reduced ? 1 : 1 - Math.exp(-dt * 2.2);
     cam.pos.lerp(want.pos, k); cam.target.lerp(want.target, k);
   }
-  // Partikel abdunkeln, sobald Text darüber liegt (Kontakt immer; mobil auch Achse/Dach/Hausordnung)
+  // Partikel abdunkeln, sobald Text darüber liegt (Kontakt immer; mobil auch hinter den Bewegungslinien)
   const vh = innerHeight;
   const doorTop = door.getBoundingClientRect().top;
   let dim = isDesktop() ? smooth(vh * 0.75, vh * 0.25, doorTop) : smooth(vh * 1.3, vh * 0.8, doorTop);
   const dimMax = 1; // Kontakt: Partikel blenden ganz aus (Handy und PC)
   if (!isDesktop()) {
     if (morphNow > 0.3 && morphNow < 1.6) dim = Math.max(dim, 0.55); // Bewegungslinien leise hinter Text
-    const head = heads[Math.round(clamp(morphNow, 0, 4))];
-    if (head && morphNow > 1.5) dim = Math.max(dim, smooth(vh * 0.62, vh * 0.25, head.getBoundingClientRect().top) * 0.9);
   }
   if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
   dim = Math.max(dim, tourHide, xray * 0.4); // im Rundgang/Röntgenblick tritt das äußere Partikel-Haus zurück

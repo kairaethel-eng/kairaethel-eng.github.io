@@ -1,5 +1,5 @@
 html{font-size:clamp(16px,calc(8px + .5vw),22px)}
-/* Testseite 2 · „Puls“ – Layout: dunkle Bühne, ein Partikelfeld verwandelt sich Kapitel für Kapitel
+/* Testseite 4 · „Puls · Scan“ – Layout: dunkle Bühne, ein Partikelfeld verwandelt sich Kapitel für Kapitel
    (Körper → Bewegung → Wirbelsäule → Dach → HOP-Kreise). Bewusst einheitlich dunkel. */
 :root{
   --ink:#0A161B; --ink2:#10222A; --ink3:#173039;
@@ -70,7 +70,9 @@ em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--amber)
 .motion-btn[aria-pressed="true"] .i-play{display:block;fill:currentColor}
 .motion-btn[aria-pressed="true"] .i-pause{display:none}
 html.paused *,html.paused *::before,html.paused *::after{animation-play-state:paused!important}
-.chap-now{display:none;align-items:baseline;gap:.4375rem;font:500 .8125rem/1 var(--sans);color:var(--txt);margin-left:auto}
+.chap-now{display:none;align-items:center;gap:.4375rem;font:500 .8125rem/1 var(--sans);color:var(--txt);margin-left:auto;appearance:none;background:none;border:0;padding:0 .25rem;min-height:2.75rem;cursor:pointer}
+.chap-now::after{content:"";width:.375rem;height:.375rem;margin:0 0 .1875rem .25rem;border-right:1.5px solid var(--dim);border-bottom:1.5px solid var(--dim);transform:rotate(45deg);transition:transform .3s var(--ease)}
+.top.menu-open .chap-now::after{transform:translateY(.25rem) rotate(-135deg)}
 .chap-now i{font:italic 400 .9375rem/1 var(--serif);color:var(--amber)}
 
 main{position:relative;z-index:2}
@@ -193,6 +195,10 @@ main{position:relative;z-index:2}
 .room-card > p{color:var(--dim);font-size:1rem;line-height:1.55;max-width:44ch;margin-bottom:1rem}
 .room-hint{font:italic 400 1.125rem/1.3 var(--serif)!important;color:var(--amber)!important}
 .tour-inner .note{grid-row:6}
+@media (min-width:921px){
+  .tour.in .roof-intro,.tour.in .tour-kicker,.tour.in .tour-inner .note{display:none}
+  .tour:not(.in) .room-cards{opacity:0;visibility:hidden;transition:opacity .3s,visibility 0s .3s}
+}
 /* Rundgang-Steuerung (ohne Scrollen) */
 .tour-ctrl{grid-column:1;grid-row:4;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-top:.875rem}
 .t-btn{width:2.75rem;height:2.75rem;border-radius:50%;border:1px solid rgba(237,232,220,.25);background:rgba(16,34,42,.6);color:var(--txt);display:grid;place-items:center;cursor:pointer;transition:border-color .3s,background .3s}
@@ -245,7 +251,7 @@ main{position:relative;z-index:2}
 .nlines{position:fixed;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;overflow:visible}
 .nlines line{stroke:rgba(207,232,250,.5);stroke-width:1;opacity:0;transition:opacity .6s var(--ease)}
 .nlines line:first-child{stroke:rgba(224,154,53,.55)}
-@media (min-width:921px){.seg-card dl{display:none}.seg-card h3{margin-bottom:1.125rem}}
+@media (min-width:921px){.seg-card dl{position:absolute;width:1px;height:1px;margin:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.seg-card h3{margin-bottom:1.125rem}}
 
 /* Hausordnung */
 .rules{height:420vh}
@@ -272,8 +278,15 @@ main{position:relative;z-index:2}
 .foot .lab{color:var(--amber);font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:.75rem}
 
 @media (max-width:1000px){
+  .top{gap:1rem}
   .chapters{display:none}
   .chap-now{display:flex}
+  .top.menu-open{background:rgba(10,22,27,.92);backdrop-filter:blur(.75rem);-webkit-backdrop-filter:blur(.75rem)}
+  .top.menu-open .chapters{display:flex;flex-direction:column;gap:0;position:absolute;top:100%;left:max(var(--gut),3vw);right:max(var(--gut-r),3vw);margin:.25rem 0 0;padding:.25rem 0;background:rgba(10,22,27,.97);border:1px solid var(--line);border-radius:.375rem;box-shadow:0 1rem 2.5rem rgba(0,0,0,.45)}
+  .top.menu-open .chapters li+li{border-top:1px solid var(--line)}
+  .top.menu-open .chapters a{align-items:center;gap:.75rem;min-height:3rem;padding:0 1.125rem;font-size:1rem;color:var(--dim)}
+  .top.menu-open .chapters i{font-size:1.125rem}
+  .top.menu-open .chapters a.on{color:var(--txt)}
   .top .btn-small{margin-left:.625rem}
   .motion-btn{padding:0 .6875rem}
   .motion-btn span{display:none}
@@ -316,7 +329,7 @@ main{position:relative;z-index:2}
 .manu-tag::after{content:"";position:absolute;left:50%;top:100%;width:1px;height:1.625rem;background:linear-gradient(var(--amber),rgba(224,154,53,0))}
 /* Leistungen: Manuthera-Eintrag */
 .ix-hi{display:inline-flex;align-items:center;gap:.5rem;color:var(--amber)!important}
-.ix-link{display:block;margin-top:.875rem;width:max-content;font:700 .75rem/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;text-decoration:none;color:var(--amber);border-bottom:1px solid rgba(224,154,53,.5);padding:.375rem 0}
+.ix-link{display:block;margin-top:.875rem;width:max-content;max-width:100%;font:700 .75rem/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;text-decoration:none;color:var(--amber);border-bottom:1px solid rgba(224,154,53,.5);padding:.375rem 0}
 .ix-link:hover{color:var(--txt)}
 @media (max-width:920px){
   .manu-inner{grid-template-columns:1fr;gap:.625rem}
@@ -342,6 +355,8 @@ main{position:relative;z-index:2}
   .seg-dots{position:sticky;top:calc(env(safe-area-inset-top,0px) + 4.625rem);z-index:4;display:flex;align-items:center;justify-content:center;gap:.5rem;margin:1.125rem auto 0;width:max-content;padding:.5rem .875rem;border-radius:1.25rem;background:rgba(10,22,27,.72);border:1px solid var(--line)}
   .seg-dots span{font:italic 400 .875rem/1 var(--serif);color:var(--mute)}
   .seg-dots button{appearance:none;border:0;padding:0;width:.5rem;height:.5rem;border-radius:.25rem;background:var(--mute);transition:width .4s var(--ease),background .3s;cursor:pointer}
+  .seg-dots button{position:relative}
+  .seg-dots button::before{content:"";position:absolute;inset:-12px -8px}
   .seg-dots button.is-on{width:1.625rem;background:var(--amber)}
   .seg-cards{display:block;min-height:0;margin-top:52svh}
   .seg-card{position:relative;inset:auto;visibility:visible;transform:none;margin-bottom:52svh;padding:1rem 1rem 1.125rem;background:rgba(14,30,37,.97);border:1px solid var(--line);border-radius:.375rem;transition:border-color .4s}
@@ -381,7 +396,7 @@ main{position:relative;z-index:2}
   .room-dots{position:static;display:flex;align-items:center;justify-content:center;gap:.5rem;margin:.875rem auto 0;width:max-content;padding:.5rem .875rem;border-radius:1.25rem;background:rgba(10,22,27,.72);border:1px solid var(--line)}
   .room-dots span{font:italic 400 .8125rem/1 var(--serif);color:var(--mute)}
   .room-dots button{appearance:none;border:0;padding:0;width:.5rem;height:.5rem;border-radius:.25rem;background:var(--mute);transition:width .4s var(--ease),background .3s;cursor:pointer;position:relative}
-  .room-dots button::before{content:"";position:absolute;inset:-12px -6px}
+  .room-dots button::before{content:"";position:absolute;inset:-12px -8px}
   .room-dots button.is-on{width:1.625rem;background:var(--amber)}
   .tour:not(.in) .room-dots button.is-on{width:.5rem;background:var(--mute)}
   .tour-ctrl{justify-content:center;margin-top:.75rem}
@@ -418,11 +433,24 @@ main{position:relative;z-index:2}
   .hero-sub{font-size:1rem;margin-bottom:1.5rem}
   .meter{margin-top:1.625rem}
   .brand svg{width:4.125rem}
+  .top{gap:.5rem}
+  .chap-now{margin-right:auto}
   .facts{grid-template-columns:1fr}
   .ix-tag{display:none}
 }
 @media (max-width:400px){
   .actions .btn{flex:1 1 100%}
+  /* schmale Handys: Leiste kompakter, damit „Termin“ im Bild bleibt */
+  .brand svg{width:3.5rem}
+  .chap-now{gap:.3125rem;padding:0}
+  .chap-now::after{margin-left:.125rem}
+  .top .btn-small{margin-left:0;padding:0 .75rem;letter-spacing:.1em}
+}
+@media (max-width:350px){
+  .top{gap:.375rem}
+  .brand svg{width:3rem}
+  .chap-now{font-size:.75rem}
+  .top .btn-small{padding:0 .625rem}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
