@@ -2,7 +2,8 @@
 // die Kamera fliegt hinein, daneben (PC) bzw. darunter (Handy) erscheint der Inhalt. Kein langes Scrollen.
 import * as THREE from 'three';
 import { housePoints } from '../test-4/shapes.js';
-import { praxisScan, ROOMS, P, EYE } from '../test-4/praxis.js';
+import { praxisScan, ROOMS, P, EYE, SPINE_AT } from '../test-4/praxis.js';
+import { initSpineViewer } from './spine-viewer.js';
 import { initA as initManu, MODES as MANU_MODES } from '../manu/ideaA.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -136,12 +137,15 @@ const PLACES = [
   { id: 'empfang', label: 'Empfang', sub: 'Willkommen', room: 0 },
   { id: 'wohnzimmer', label: 'Wohnzimmer', sub: 'Hausordnung', room: 1 },
   { id: 'behandlung', label: 'Behandlung 1', sub: 'Leistungen', room: 2 },
+  { id: 'wirbelsaeule', label: 'Wirbelsäule', sub: 'Modell in Behandlung 1', room: 2, model: true },
   { id: 'manuthera', label: 'Behandlung 2', sub: 'Manuthera', room: 3, hi: true },
   { id: 'training', label: 'Training', sub: 'Bewegung', room: 4 },
-  { id: 'wirbelsaeule', label: 'Dach', sub: 'Wirbelsäule', room: -1, at: new V3(0, 1.95, 0), focus: new V3(0, -0.6, 0), dir: new V3(0.35, 0.55, 1), dist: 11.5 },
 ];
 PLACES.forEach((pl) => {
-  if (pl.room >= 0) { const c = roomCenter(pl.room); pl.at = c.clone().setY(EYE + 0.35); pl.focus = c; pl.dir = new V3(0.15, 1.0, 0.95); pl.dist = 4.4; }
+  if (pl.model) { // Wirbelsäulen-Modell auf dem Ständer in Behandlung 1
+    const [x, z] = P(SPINE_AT[0], SPINE_AT[1]);
+    pl.at = new V3(x, -3 + 1.05, z); pl.focus = new V3(x, -3 + 0.6, z); pl.dir = new V3(0.35, 0.55, 1); pl.dist = 2.6;
+  } else if (pl.room >= 0) { const c = roomCenter(pl.room); pl.at = c.clone().setY(EYE + 0.35); pl.focus = c; pl.dir = new V3(0.15, 1.0, 0.95); pl.dist = 4.4; }
 });
 
 // Schilder im Haus
@@ -173,8 +177,11 @@ function poseFor(i) {
 // ---------- Inhalt ----------
 const panel = $('#panel'), panelBody = $('#panelBody');
 const tpl = (id) => $(`#tpl-${id}`);
-let manu = null;
-function dropManu() { if (manu) { try { manu.st.renderer.dispose(); manu.st.renderer.forceContextLoss(); } catch (e) { /* schon weg */ } manu = null; } }
+let manu = null, spine = null;
+function dropManu() {
+  if (manu) { try { manu.st.renderer.dispose(); manu.st.renderer.forceContextLoss(); } catch (e) { /* schon weg */ } manu = null; }
+  if (spine) { spine.dispose(); spine = null; }
+}
 function openPlace(i, fromHash) {
   dropManu();
   current = i;
@@ -222,9 +229,14 @@ function wireContent(id) {
   $$('[data-open]', panelBody).forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); openPlace(PLACES.findIndex((p) => p.id === a.dataset.open)); }));
   // Leistungen: aufklappen
   $$('.index button', panelBody).forEach((b) => b.addEventListener('click', () => { const li = b.parentElement, o = !li.classList.contains('open'); li.classList.toggle('open', o); b.setAttribute('aria-expanded', o ? 'true' : 'false'); }));
-  // Wirbelsäule: Abschnitte als Reiter
-  const segBtns = $$('.segtabs button', panelBody), segCards = $$('.seg-card', panelBody);
-  segBtns.forEach((b, i) => b.addEventListener('click', () => { segBtns.forEach((x, k) => { x.classList.toggle('is-on', k === i); x.setAttribute('aria-selected', k === i ? 'true' : 'false'); }); segCards.forEach((c, k) => { c.hidden = k !== i; }); }));
+  // Wirbelsäule: Modell drehbar, Abschnitt wählen → leuchtet am Modell, Text darunter
+  const segBtns = $$('.segbtns button', panelBody), segCards = $$('.seg-card', panelBody);
+  if (id === 'wirbelsaeule') spine = initSpineViewer($('#glSpine', panelBody), { isPaused: () => paused });
+  segBtns.forEach((b, i) => b.addEventListener('click', () => {
+    segBtns.forEach((x, k) => { x.classList.toggle('is-on', k === i); x.setAttribute('aria-pressed', k === i ? 'true' : 'false'); });
+    segCards.forEach((c, k) => { c.hidden = k !== i; });
+    if (spine) spine.select(i);
+  }));
   // Manuthera: Bühne im Panel
   if (id === 'manuthera') {
     const btns = $$('.manu-modes button', panelBody), read = $('.manu-read', panelBody);
@@ -295,6 +307,7 @@ function frame(now) {
   });
   if (renderer && !document.hidden) renderer.render(scene, camera);
   if (manu && manu.st.visible && current >= 0) { manu.update(0, dt); manu.st.renderer.render(manu.st.scene, manu.st.camera); }
+  if (spine && spine.st.visible && current >= 0) { spine.update(0, dt); spine.st.renderer.render(spine.st.scene, spine.st.camera); }
   requestAnimationFrame(frame);
 }
 fromHash();

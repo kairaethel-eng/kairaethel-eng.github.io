@@ -131,9 +131,14 @@ blockquote b{display:block;margin-top:.5rem;font:600 .75rem/1 var(--sans);font-s
 .ix-link{display:block;margin-top:.625rem;width:max-content;color:var(--amber);text-decoration:none;font:700 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase}
 .dot{display:inline-block;width:.4375rem;height:.4375rem;border-radius:50%;background:var(--amber)}
 /* Wirbelsäule */
-.segtabs{display:flex;flex-wrap:wrap;gap:.375rem;margin:1.125rem 0 1rem}
-.segtabs button{padding:.5625rem .75rem;border-radius:3px;border:1px solid var(--line);background:rgba(16,34,42,.6);color:var(--dim);font:600 .7812rem/1 var(--sans);cursor:pointer}
-.segtabs button.is-on{border-color:var(--amber);color:var(--txt);background:rgba(224,154,53,.12)}
+.spine-stage{position:relative;height:clamp(17.5rem,44vh,30rem);margin:.25rem -.5rem 0;cursor:grab}
+.spine-stage canvas{display:block;width:100%;height:100%;touch-action:pan-y}
+.segbtns{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.375rem;margin:.75rem 0 1rem}
+.segbtns button{display:flex;flex-direction:column;align-items:flex-start;gap:.3rem;padding:.6rem .55rem;border-radius:.1875rem;border:1px solid var(--line);background:rgba(16,34,42,.6);color:var(--dim);cursor:pointer;text-align:left}
+.segbtns b{font:italic 400 1rem/1 var(--serif);color:var(--txt)}
+.segbtns span{font:600 .75rem/1 var(--sans);letter-spacing:.08em;text-transform:uppercase}
+.segbtns button.is-on{border-color:var(--amber);background:rgba(224,154,53,.12);color:var(--txt)}
+.segbtns button.is-on b{color:var(--amber)}
 .seg-card{padding:1rem 1.125rem;border:1px solid var(--line);border-radius:.25rem;background:rgba(16,34,42,.6)}
 .seg-no{font:italic 400 1.25rem/1 var(--serif);color:var(--amber);margin-bottom:.375rem}
 .seg-card h3{margin:0 0 .625rem;text-transform:none;letter-spacing:-.02em;font:800 1.25rem/1.1 var(--disp)}

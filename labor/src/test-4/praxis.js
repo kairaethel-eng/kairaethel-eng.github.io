@@ -19,6 +19,7 @@ export const ROOMS = [
   { key: 'b2', n: 'Behandlungsraum 2 · Manuthera', short: 'Behandlung 2', r: [232, 96, 176, 80], d: 'Hier steht die Lojer Manuthera 242, eine der modernsten Therapieliegen für mobilisierende Behandlungen der Wirbelsäule und großer Gelenke.', ther: ['Lojer Manuthera', 'Manuelle Therapie'] },
   { key: 'training', n: 'Trainingsfläche', short: 'Training', r: [232, 180, 176, 88], d: 'Aktiv werden: Geräte, Übungen und Ihr persönliches Programm für zuhause. Angeleitet und begleitet, nicht allein gelassen.', ther: ['Krankengymnastik', 'Sport-Physiotherapie', 'Traktion im Schlingentisch'] },
 ];
+export const SPINE_AT = [250, 80]; // Wirbelsäulen-Modell in Behandlung 1 (Grundriss-Pixel)
 export function roomOf(px, py) {
   for (let i = 0; i < ROOMS.length; i++) { const [x, y, w, h] = ROOMS[i].r; if (px >= x && px <= x + w && py >= y && py <= y + h) return i; }
   return 5; // Flur
@@ -96,6 +97,18 @@ export function praxisScan(nFurn, fine = 1) {
     parts.push({ geo: g, kind, dens: 0.6, map: id, core: false });
   }
 
+  const SPINE_MODEL = [];
+  {
+    const [mx, mz] = [250, 80];
+    SPINE_MODEL.push(() => cyl(mx, mz, 0.2, 0.03, 6));               // Fuß
+    SPINE_MODEL.push(() => cyl(mx, mz, 0.014, 0.95, 6, 0.03, 3));    // Stange
+    SPINE_MODEL.push(() => sphere(mx, mz, 0.16, 2, 0.98, 1.6, 0.55)); // Becken
+    for (let i = 0; i < 22; i++) {                                     // Wirbel mit S-Kurve (Lordose/Kyphose)
+      const f = i / 21, y = 1.08 + f * 0.62, r = 0.05 - f * 0.022, off = Math.sin(f * Math.PI * 2) * 0.03;
+      SPINE_MODEL.push(() => sphere(mx, mz + off / (K / M), r, 2, y, 2.2, 0.55));
+    }
+    SPINE_MODEL.push(() => sphere(mx, mz, 0.085, 2, 1.8, 2, 1.1));     // Hinterhaupt
+  }
   // Empfang: Tresen (L-Form), Tasse, Pendelleuchte, Pflanzen, runder Teppich
   box(70, 52, 2.0, 1.05, 0.6, 2); box(112, 72, 0.6, 1.05, 1.3, 2);
   box(70, 52, 2.04, 0.05, 0.64, 6, 1.05, 2); // Tresenplatte (helle Kante)
@@ -113,6 +126,8 @@ export function praxisScan(nFurn, fine = 1) {
   cyl(272, 70, 0.2, 0.55, 5); box(372, 20, 1.2, 0.9, 0.4, 2); plant(398, 80, 0.8, 0.8);
   box(262, 24, 0.6, 0.85, 0.45, 2, 0, 0.6); box(262, 24, 0.36, 0.06, 0.26, 4, 0.85, 4);
   pendant(320, 48, 2.3);
+  // Wirbelsäulen-Modell auf Ständer (Anschauungsmodell, wie in vielen Praxen)
+  SPINE_MODEL.forEach((q) => q());
   // Behandlung 2: Manuthera (segmentiert, Polster bernstein = Highlight), Säule, Schrank
   cyl(320, 136, 0.22, 0.5, 2);
   [-0.62, 0, 0.6].forEach((dx, i) => box(320 + (dx * M) / K, 136, 0.58, 0.12, 0.62, i === 1 ? 4 : 5, 0.55 + Math.abs(dx) * 0.1, 1.6));

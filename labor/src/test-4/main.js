@@ -938,13 +938,25 @@ tourPts.visible = false;
 scene.add(tourPts);
 
 // Raum-Beschriftungen im Raum
+// Schilder im Haus (Stil wie Design „Zuhause“): Nummer, Raum, darunter was dort wartet
+const ROOM_SUB = ['Ankommen', 'Wohnzimmer', 'Manuelle Therapie & mehr', 'Manuthera', 'Bewegung'];
+const tagHTML = (no, label, sub) => `<i>${no}</i><span><b>${label}</b><small>${sub}</small></span>`;
 const roomTags = ROOMS.map((r, i) => {
-  const el = document.createElement('div'); el.className = 'room-tag'; el.setAttribute('aria-hidden', 'true');
-  el.innerHTML = `<i>${String(i + 1).padStart(2, '0')}</i>${r.short}`; document.body.appendChild(el);
+  const el = document.createElement('div'); el.className = 'room-tag' + (i === 3 ? ' hi' : ''); el.setAttribute('aria-hidden', 'true');
+  el.innerHTML = tagHTML(String(i + 1).padStart(2, '0'), r.short, ROOM_SUB[i]); document.body.appendChild(el);
   el.addEventListener('pointerenter', () => (hoverRoom = i)); el.addEventListener('pointerleave', () => (hoverRoom = -1));
   el.addEventListener('click', () => goRoom(i));
   const [x, y, w, h] = r.r; const [cx, cz] = P(x + w / 2, y + h / 2);
   return { el, p: new V3(cx, EYE + 0.55, cz) };
+});
+// Zusatz-Schild im Röntgenblick: Tür → Kontakt (Wirbelsäule hat ihr eigenes Kapitel 03, das Modell steht nur im Raum)
+const extraTags = [
+  { no: '00', label: 'Tür', sub: 'Termin & Kontakt', at: (() => { const [x, z] = P(199, 272); return new V3(x, -3 + 0.5, z + 0.12); })(), to: '#tuer' },
+].map((t) => {
+  const el = document.createElement('div'); el.className = 'room-tag extra'; el.setAttribute('aria-hidden', 'true');
+  el.innerHTML = tagHTML(t.no, t.label, t.sub); document.body.appendChild(el);
+  el.addEventListener('click', () => { const tg = $(t.to); if (tg) scrollToY(tg.getBoundingClientRect().top + scrollY); });
+  return { el, p: t.at };
 });
 // Kamera-Stationen in Form-Koordinaten [Grundriss x, Grundriss y, Höhe]
 const TS = (px, py, y) => { const [x, z] = P(px, py); return new V3(x, y, z); };
@@ -1031,6 +1043,10 @@ function placeManuTag() {
 { let down = null; addEventListener('pointerdown', (e) => { if (xray > 0.4 && e.pointerType === 'mouse' && e.clientX > innerWidth * 0.45 && !e.target.closest('a,button,.room-tag')) down = e.clientX; });
   addEventListener('pointermove', (e) => { if (down !== null) { dragRot += (e.clientX - down) * 0.006; down = e.clientX; } });
   addEventListener('pointerup', () => (down = null)); }
+function xrayPose() {
+  const X = uniforms.uXf.value[3], desk = isDesktop();
+  return frame(toWorld(new V3(0, -1.75, 0.1)), new V3(0.18, 0.62, 1), (desk ? 14.5 : 17) * X.w, desk ? 0.67 : 0.5, desk ? 0.5 : 0.3);
+}
 function updateTour(dt) {
   manuTagVis = 0;
   const r = tourEl.getBoundingClientRect(), vh = innerHeight, desk = isDesktop();
@@ -1048,26 +1064,30 @@ function updateTour(dt) {
   insideK = reduced ? want : insideK + (want - insideK) * (1 - Math.exp(-dt * (want ? 1.5 : 2.6)));
   const inside = near ? insideK : 0;
   // Röntgenblick (PC): von außen leuchtet das Innere durch das Haus, das Dach schwebt angehoben
-  const pv = desk && morphNow > 2.55 && morphNow < 3.45 ? smooth(2.55, 2.95, morphNow) * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) : 0;
+  const pv = morphNow > 2.55 && morphNow < 3.45 ? smooth(2.55, 2.95, morphNow) * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) : 0;
   xray = pv;
   tU.uCut.value = inside > 0.001 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
   tU.uOn.value = inside > 0.001 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0.001 || pv > 0;
   tU.uFade.value = inside > 0.001 ? Math.max(inside, pv * 0.55) : pv * 0.55;
   tU.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * innerHeight * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * prx.spacing * uniforms.uXf.value[3].w * 0.62;
-  uniforms.uRoofLift.value += ((desk ? Math.max(pv, inside) * 1.1 : 0) - uniforms.uRoofLift.value) * 0.08;
+  uniforms.uRoofLift.value += (Math.max(pv * 1.3, inside * 1.1) - uniforms.uRoofLift.value) * 0.08;
   tourHide = Math.min(1, inside * 1.4);
   // Hausdrehung festhalten, solange wir drinnen sind
   const free = Math.sin(uniforms.uTime.value * 0.2) * 0.45 - 0.55 + dragRot;
   uniforms.uHouseRot.value = THREE.MathUtils.lerp(free, TOUR_ROT, smooth(0, 0.6, inside));
   if (tourIdx < 0) {
-    tourWant = null;
-    if (pv > 0.3) { // Röntgenblick: Räume als anklickbare Schilder
-      tU.uRoom.value = hoverRoom; manuTagVis = pv;
-      roomTags.forEach((t, i) => { const w = toWorld(t.p.clone().setY(EYE + 0.2)); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * innerWidth}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(-50%, -50%)`; });
-    } else { tU.uRoom.value = -1; roomTags.forEach((t) => { t.el.classList.remove('click'); t.el.style.opacity = 0; }); }
+    // Röntgenblick: Kamera leicht von oben (wie im Design „Zuhause“), damit sich die Schilder nicht überlagern
+    tourWant = pv > 0.3 ? xrayPose() : null;
+    if (pv > 0.3) { // Räume, Tür und Modell als anklickbare Schilder
+      tU.uRoom.value = hoverRoom;
+      const place = (t, i, p) => { const w = toWorld(p); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * innerWidth}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(-50%, -50%)`; };
+      roomTags.forEach((t, i) => place(t, i, t.p.clone().setY(EYE + 0.2)));
+      extraTags.forEach((t) => place(t, -9, t.p));
+    } else { tU.uRoom.value = -1; [...roomTags, ...extraTags].forEach((t) => { t.el.classList.remove('click'); t.el.style.opacity = 0; }); }
     return;
   }
   roomTags.forEach((t) => t.el.classList.remove('click'));
+  extraTags.forEach((t) => { t.el.classList.remove('click'); t.el.style.opacity = 0; });
   // Kamera: erst durch die Tür, dann zum Raum (die Kamera gleitet weich hinüber)
   if (viaEntry > 0) viaEntry -= dt;
   const room = tourIdx <= 4 ? tourIdx : -1;

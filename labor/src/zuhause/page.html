@@ -109,8 +109,9 @@
 </template>
 <template id="tpl-wirbelsaeule">
 <h2 id="panelTitle" tabindex="-1">Jedes Segment erzählt <em>etwas.</em></h2>
-<p class="lead">Unter dem Dach trägt die Wirbelsäule das Haus. Wählen Sie einen Abschnitt.</p>
-<div class="segtabs" role="tablist" aria-label="Abschnitt der Wirbelsäule"><button type="button" role="tab" aria-selected="true" class="is-on">C1–C2</button><button type="button" role="tab" aria-selected="false" class="">C5–C6</button><button type="button" role="tab" aria-selected="false" class="">Th1–Th6</button><button type="button" role="tab" aria-selected="false" class="">L4–L5</button><button type="button" role="tab" aria-selected="false" class="">S1</button></div>
+<p class="lead">Unser Wirbelsäulen-Modell aus Behandlungsraum 1. Wählen Sie einen Abschnitt, er leuchtet am Modell auf. Ziehen dreht das Modell.</p>
+<div class="spine-stage"><canvas id="glSpine" role="img" aria-label="Drehbares Wirbelsäulen-Modell aus Partikeln; der gewählte Abschnitt leuchtet bernsteinfarben."></canvas></div>
+<div class="segbtns" role="group" aria-label="Abschnitt der Wirbelsäule"><button type="button" aria-pressed="true" class="is-on"><b>C1–C2</b><span>Kopf</span></button><button type="button" aria-pressed="false" class=""><b>C5–C6</b><span>HWS</span></button><button type="button" aria-pressed="false" class=""><b>Th1–Th6</b><span>BWS</span></button><button type="button" aria-pressed="false" class=""><b>L4–L5</b><span>LWS</span></button><button type="button" aria-pressed="false" class=""><b>S1</b><span>Becken</span></button></div>
 <div class="segs"><article class="seg-card" data-seg="0">
             <p class="seg-no">C1–C2</p>
             <h3>Kopfgelenke</h3>
@@ -138,6 +139,6 @@
             <ul class="chips"><li>Manuelle Therapie / ISG</li><li>Sport-Physiotherapie</li><li>Stoßwelle</li></ul>
           </article></div>
 <p class="small">Vereinfachte Orientierung. Ersetzt keine ärztliche Diagnose. Bei Taubheit oder Lähmungszeichen bitte ärztlich abklären lassen.</p>
-<p class="next-hint">In 3D erkunden: <a href="test-4-puls-scan.html#achse">Wirbelsäulen-Scan in der klassischen Ansicht</a></p>
+<p class="next-hint">Mit Nervenbahnen erkunden: <a href="test-4-puls-scan.html#achse">Wirbelsäulen-Scan in der klassischen Ansicht</a></p>
 </template>
 <!--JS-->
