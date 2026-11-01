@@ -18,7 +18,13 @@ const PAGES = {
   'recht-imp': { out: 'recht-impressum.html', dir: 'recht', page: 'impressum.html' },
   'portrait': { out: 'portrait.html' },
   'zuhause': { out: 'zuhause.html' },
+  // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
+  'start': { out: '../index.html' },
+  'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true },
+  'start-imp': { out: '../impressum.html', dir: 'recht', page: 'impressum.html', root: true },
 };
+// Rechtsseiten in der Wurzel: Labor-Hinweis weg, Links zeigen auf die Startadresse statt ins Labor
+const ROOT_LINKS = [[/<div class="labnote"[\s\S]*?<\/div>\n?/g, ''], [/href="test-4-puls-scan\.html"/g, 'href="index.html"'], [/href="recht-impressum\.html"/g, 'href="impressum.html"'], [/href="recht-datenschutz\.html"/g, 'href="datenschutz.html"'], [/>Zur Startseite</g, '>Zur Startseite<']];
 // Zusätzliche Ausgabe ohne <html>/<head>/<body>-Gerüst (für die private Claude-Vorschau)
 const fragmentDir = process.env.FRAGMENT_DIR || '';
 
@@ -46,7 +52,8 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   });
   const js = res.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
   const css = readFileSync(join(dir, 'style.css'), 'utf8');
-  const tpl = readFileSync(join(dir, cfg.page || 'page.html'), 'utf8');
+  let tpl = readFileSync(join(dir, cfg.page || 'page.html'), 'utf8');
+  if (cfg.root) ROOT_LINKS.forEach(([re, to]) => { tpl = tpl.replace(re, to); });
   const [headPart, bodyPart] = tpl.split('<!--BODY-->');
   const head = headPart.replace('/*FONTS*/', () => (cfg.fonts ? FONTS[cfg.fonts]() : fontsCss)).replace('/*CSS*/', () => css);
   const body = bodyPart.replace('<!--JS-->', () => `<script>${js}</script>`);

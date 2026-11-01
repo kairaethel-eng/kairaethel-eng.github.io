@@ -8,7 +8,7 @@ Kurzfassung für neue Chats, damit der alte Verlauf nicht geladen werden muss.
 - Kai prüft visuell auf PC (Chrome) und iPhone. Kosten: alles kostenlos halten.
 
 ## Projekt
-- Neue Website-Richtung **„Puls · Scan“**: dunkel, Partikel (three.js), Bernstein-Akzente, „die Seite lebt“. Live-Website (`/index.html`, Impressum, Datenschutz) **nie ändern ohne ausdrückliches Go**.
+- Neue Website-Richtung **„Puls · Scan“**: dunkel, Partikel (three.js), Bernstein-Akzente, „die Seite lebt“. Startadresse (`/index.html`, `/impressum.html`, `/datenschutz.html`) **nie ändern ohne ausdrückliches Go**. Seit 1.11.2026 ist V10 entfernt (Kais Auftrag; Sicherung = Git-Verlauf bis Commit dd917c6 + ZIP bei Kai). Die Wurzel ist jetzt eine Übergangsseite; alle drei Dateien werden aus `labor/src` gebaut: `node build.mjs start` (Quelle `src/start`), `start-ds`/`start-imp` (Quelle `src/recht`, ohne Labor-Hinweis, Links auf die Wurzel).
 - Arbeitsstand: `labor/src/test-4/` → Build erzeugt `labor/test-4-puls-scan.html` (eine Datei, Schriften/JS eingebettet, keine externen Abrufe, `noindex`).
 - Weitere Seiten nur zum Vergleich: `test-1` Achse, `test-2` Puls, `test-3` Puls + Achse, `haus` Hausbesuch (warmes 3D-Haus, nur PC).
 - `zuhause` → `zuhause.html`: **Design 2**, Haus als Startmenü (ein Bildschirm, Räume anklicken, Panel/Blatt mit Inhalt). Nutzt `test-4/praxis.js`, `test-4/shapes.js` (housePoints), `manu/ideaA.js`.
@@ -36,7 +36,7 @@ FRAGMENT_DIR=<scratchpad>/artifact node build.mjs test-4   # zusätzlich Fragmen
 - „Bewegung anhalten“ wird als `hop-motion` im Browser gemerkt und gilt für **alle** Labor-Seiten; beim Laden im angehaltenen Zustand erscheint ein Hinweis mit „Fortsetzen“. Ziehen/Drehen funktioniert auch angehalten.
 - Vorschau (privat): Artifact https://claude.ai/artifact/1YU9DYm46ZHqoMJu78dfoM (älter; maßgeblich ist die Testadresse).
 - **Testadresse (öffentlich, noindex):** https://kairaethel-eng.github.io/labor/ – Kai hat Go gegeben, **nur den Ordner `labor/`** auf `main` zu veröffentlichen:
-  `git diff --stat origin/main..HEAD -- . ':(exclude)labor'` muss leer sein, dann `git push origin HEAD:main`. Arbeitszweig: `claude/3d-cinematic-website-effects-htd2aa`.
+  `git diff --stat origin/main..HEAD -- . ':(exclude)labor'` muss leer sein (Ausnahme: die drei gebauten Wurzel-Dateien nach Kais Go), dann `git push origin HEAD:main`. Arbeitszweig: `claude/3d-cinematic-website-effects-htd2aa`.
 
 ## Technische Merkpunkte
 - Größen: CSS in **rem**, Grundschrift wächst ab 1600 px (`html{font-size:clamp(...)}` oben in jeder style.css); neue Werte in rem schreiben, Haarlinien in px. Zum Prüfen großer Monitore auch 2560×1440 ansehen (Kai).
