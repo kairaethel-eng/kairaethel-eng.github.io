@@ -5,6 +5,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
 ## Richtung
 - Favorit: Konzept **Puls** (dunkel, Partikel, Bernstein-Akzente). Seiten 1–3 bleiben nur zum Vergleich.
+- **Kai, 1.11.2026 (spät):** Die Live-Wix-Seite hopphysio.de wird vorerst **nicht** angefasst (Banner, Tippfehler, Alt-Texte bleiben). **Puls · Scan wird fertiggestellt und geht dann als neue Website live.** Wie (Hosting/Domain) ist noch zu entscheiden; siehe „Offen für die echte Website“.
 
 ## Umgesetzte Entscheidungen
 
