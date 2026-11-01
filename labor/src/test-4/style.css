@@ -125,10 +125,6 @@ main{position:relative;z-index:2}
 .axis-head h2{font-size:clamp(2.125rem,3.6vw,3.625rem);margin-bottom:.875rem}
 .axis-hint{font-size:.9375rem;color:var(--dim);max-width:42ch}
 .only-mob{display:none}
-.style-switch{display:flex;align-items:center;gap:.375rem;margin-top:.875rem;font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
-.style-switch span{margin-right:.375rem}
-.style-switch button{appearance:none;border:1px solid var(--line);background:transparent;color:var(--dim);font:inherit;letter-spacing:.12em;padding:.4375rem .625rem;border-radius:3px;cursor:pointer;transition:all .3s}
-.style-switch button.is-on{border-color:var(--amber);color:var(--txt);background:rgba(224,154,53,.1)}
 .segnav{grid-column:1;grid-row:2;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.375rem;margin-top:1.625rem}
 .segnav button{appearance:none;background:rgba(16,34,42,.5);border:1px solid var(--line);border-radius:3px;color:var(--dim);padding:.75rem .5rem .625rem;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:.375rem;text-align:left;transition:border-color .3s,background .3s,color .3s}
 .segnav b{white-space:nowrap;font:italic 400 1.1875rem/1 var(--serif);color:var(--mute);transition:color .3s}
@@ -273,6 +269,9 @@ main{position:relative;z-index:2}
 .facts div{padding:1.125rem 0;border-bottom:1px solid var(--line);min-width:0}
 .facts dt{font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:.5rem}
 .facts dd{margin:0;font-size:1rem;overflow-wrap:anywhere}
+.facts dd a{color:var(--txt);text-decoration:underline;text-decoration-color:rgba(224,154,53,.55);text-underline-offset:.2em;text-decoration-thickness:1px;transition:color .3s}
+.facts dd a:hover{color:var(--amber)}
+.dd-note{display:block;margin-top:.375rem;font-size:.875rem;color:var(--mute)}
 .foot{display:flex;flex-wrap:wrap;gap:.625rem 1.875rem;justify-content:space-between;margin-top:6.875rem;padding-top:1.875rem;padding-bottom:2.5rem;border-top:1px solid var(--line);font-size:.8125rem;color:var(--mute)}
 .foot a{color:var(--dim)}
 .foot .lab{color:var(--amber);font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:.75rem}

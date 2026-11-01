@@ -41,16 +41,14 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 | Kapitel 04 Feinschliff (Go 1.11.) | Raum-Knöpfe zweispaltig mit Untertitel (kein Überlappen); im Röntgenblick ist Raum 04 ein gefüllter Bernstein-Knopf „Manuthera ▶ in Bewegung ansehen“ (springt zur Bühne), am rechten Hausrand; Haus im Röntgenblick/Rundgang kleiner und weiter rechts | Raum 04 in Punkten/Karten wie bisher | umgesetzt |
 | Leistungen mit Partikel-Motiven (Go 1.11.) | Haus blendet im Leistungs-Abschnitt aus; eine Bühne (`services.js`, ~7.000 Punkte, alles gerechnet): Hände (MT), Hantel (KG), Ball (Sport), Schmerzwelle wird ruhig, Kiefer öffnet (CMD), Atlas dreht auf dem Axis, Stoßwellen-Handstück mit Wellen, Schlingentisch pendelt, Faszien-Netz wogt mit Hand, Fango-Wärme + Reizstrom-Funke, Manuthera-Liege kippt | Bühne klebt oben über der Liste, Motiv nach Eintrag in Bildschirmmitte | Bühne rechts neben der Liste, Motiv beim Überfahren/Öffnen, sonst ruhiger Wechsel |
 | Prüfung & Korrekturen (Go 1.11.) | Kapitel 04 PC: im Raum weichen Überschrift/Hinweis, Raumkarte erscheint erst im Rundgang (vorher ragte sie bis Full-HD aus dem Bild, „Manuthera ansehen“ unerreichbar); 3D-Schilder nie über der linken Textspalte. Vorlesetext der Überschriften mit Leerzeichen (vorher „Segmenterzählt“). PC: Nerven/Typisch für Vorleseprogramme lesbar. Raum 02 Merksatz „Zeit statt Taktung.“ (vorher doppelt „Gast statt Patient.“). „Bewegung anhalten“ wird nur nach Klick gespeichert. Grundriss von oben ohne Raumkarte. | Kapitelanzeige oben antippen → Kapitel klappen auf (auch 921–1000 px); größere Tippfläche der Abschnitts-Punkte; Leiste auf schmalen Handys kompakter („Termin“ ragte bei 320–375 px aus dem Bild) | Figur 4 % kleiner und etwas tiefer (Kopf frei von der Leiste, Füße im Bild; Kais Wahl: halb A, halb B) |
+| Kais Antworten (1.11.) | Zeiten: Mo–Fr 8:30–19:30 Uhr, Sa nach Absprache, So/feiertags geschlossen, Termine nach Vereinbarung. Abrechnung: Kassen-, Privatpatienten, Selbstzahler (+ Verordnung mitbringen). Kontaktblock antippbar (E-Mail, Telefon, Adresse → Google Maps, nur Link). Durchgehend „ich“ (Hausordnung „Die Hausordnung“, „Ich sage, was hilft“). Telefon-Schreibweise 07181 9931470. Wirbelsäule „Schichten“, Umschalter entfernt. Leistung KG: Etikett „Reha“ statt „Kasse“. Räume ↔ Therapien: später mit echtem Scan | gleich | gleich |
 | Leben im Stillstand (Handy) | Figur atmet, Verspannungen pochen, leichte Drift aller Partikel; im Stillstand nur jedes 2. Bild (Akku), beim Scrollen volle Rate | umgesetzt | Atmen/Pochen/Drift auch am PC; PC rendert immer voll |
 
 ## Offen aus der Prüfung (1.11.2026)
-- Öffnungszeiten fehlen (auch V10) – Kai liefert.
-- Kasse/Privat/Selbstzahler/Rezept: Hinweis gewünscht? (Tag „Kasse“ steht nur bei Krankengymnastik.)
-- Kontaktblock: E-Mail/Telefon/Adresse als Links (Karte ohne Einbettung, nur Link).
+- Telefon: Kai möchte weg vom Telefon (E-Mail, später WhatsApp). Entscheidung offen: Nummer ganz raus oder mit Hinweis „nur Anrufbeantworter, ich rufe zurück“.
 - Für die echte Seite: Favicon, Link-Vorschau (Open Graph), Praxis-Angaben für Google (strukturierte Daten), Seitentitel/Beschreibung final.
-- Vor Livegang entfernen: Umschalter „Schichten/Körnung“, Hinweis „Schematischer Grundriss …“, „· schematisch“, „Testseite 4“ in der Fußzeile.
+- Vor Livegang entfernen: Hinweis „Schematischer Grundriss …“, „· schematisch“, „Testseite 4“ in der Fußzeile.
 - Rechtlich (Fachperson): Fußzeile verweist auf Live-Impressum („[Bitte ergänzen]“ Berufshaftpflicht) und Live-Datenschutz (Wix statt GitHub); gespeicherte Einstellung „Bewegung anhalten“ im Datenschutz nennen; Formulierungen „eine der modernsten Therapieliegen“, „ohne Spritze und ohne OP“, „Osteopathische Ansätze“ prüfen.
-- Uneinheitlich: „ich“/„wir“, Telefon 07181 … / +49 7181 ….
 
 ## Testadresse (ab 31.10.2026, Kais Go)
 - https://kairaethel-eng.github.io/labor/ (Übersicht) · Arbeitsstand: https://kairaethel-eng.github.io/labor/test-4-puls-scan.html

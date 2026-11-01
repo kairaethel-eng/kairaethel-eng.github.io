@@ -403,13 +403,7 @@ function boneStyle(name) {
   return (STYLES[name] = { pts, spacing: d.spacing, name });
 }
 let bones = boneStyle('slices');
-// Umschalter „Darstellung“ (Labor: zum Vergleichen)
-$$('.style-switch button').forEach((b) => b.addEventListener('click', () => {
-  const st = boneStyle(b.dataset.style);
-  if (st === bones) return;
-  spineGroup.remove(bones.pts); bones = st; spineGroup.add(bones.pts);
-  $$('.style-switch button').forEach((x) => x.classList.toggle('is-on', x === b));
-}));
+// Darstellung „Schichten“ (Entscheidung 1.11.2026; „Körnung“ bleibt nur als Code-Option)
 
 // 3) Nerven: Kurven als Textur (Zeile 0 Rückenmark, dann Wurzeln); Versorgungsbahn eigene Textur in Weltkoordinaten
 const ROWS = det.curves.length;
