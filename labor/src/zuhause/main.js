@@ -18,13 +18,13 @@ const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t *
 // ---------- Bewegung anhalten (gleiche Wahl wie auf den anderen Seiten) ----------
 let paused = false;
 try { paused = localStorage.getItem('hop-motion') === 'paused'; } catch (e) { /* ohne Speicher */ }
-function setPaused(v) {
+function setPaused(v, save = true) {
   paused = v; document.documentElement.classList.toggle('paused', v);
   const b = $('#motionBtn'); if (b) { b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.setAttribute('aria-label', v ? 'Bewegung fortsetzen' : 'Bewegung anhalten'); }
-  try { localStorage.setItem('hop-motion', v ? 'paused' : 'on'); } catch (e) { /* ohne Speicher */ }
+  if (save) try { localStorage.setItem('hop-motion', v ? 'paused' : 'on'); } catch (e) { /* ohne Speicher */ }
 }
 $('#motionBtn')?.addEventListener('click', () => setPaused(!paused));
-setPaused(paused);
+setPaused(paused, false); // beim Laden nichts speichern – nur nach Klick
 
 // Hinweis, wenn die Bewegung von einem früheren Besuch her angehalten ist (Wahl gilt seitenübergreifend)
 if (paused) {

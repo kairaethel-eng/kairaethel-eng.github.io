@@ -6,14 +6,14 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let paused = false;
 try { paused = localStorage.getItem('hop-motion') === 'paused'; } catch (e) { /* ohne Speicher */ }
 const motionBtn = document.getElementById('motionBtn');
-function setPaused(v) {
+function setPaused(v, save = true) {
   paused = v;
   document.documentElement.classList.toggle('paused', v);
   if (motionBtn) { motionBtn.setAttribute('aria-pressed', v ? 'true' : 'false'); motionBtn.setAttribute('aria-label', v ? 'Bewegung fortsetzen' : 'Bewegung anhalten'); motionBtn.title = v ? 'Bewegung fortsetzen' : 'Bewegung anhalten'; }
-  try { localStorage.setItem('hop-motion', v ? 'paused' : 'on'); } catch (e) { /* ohne Speicher */ }
+  if (save) try { localStorage.setItem('hop-motion', v ? 'paused' : 'on'); } catch (e) { /* ohne Speicher */ }
 }
 motionBtn?.addEventListener('click', () => setPaused(!paused));
-setPaused(paused);
+setPaused(paused, false); // beim Laden nichts speichern – nur nach Klick
 
 // ---------- HOP-Kreise aus Partikeln ----------
 const cv = document.getElementById('logoBg');
