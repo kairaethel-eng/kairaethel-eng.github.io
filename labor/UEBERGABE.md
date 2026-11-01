@@ -1,7 +1,12 @@
 # Übergabe – Stand 1.11.2026 abends (Chat-Ende)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
-> Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md` und `labor/ENTSCHEIDUNGEN.md` im Branch `claude/3d-cinematic-website-effects-htd2aa`. Wir verfeinern „Puls · Scan“. Hier meine Punkte: …
+> Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md` und `labor/ENTSCHEIDUNGEN.md` (Branch `main`; der Arbeitszweig `claude/3d-cinematic-website-effects-htd2aa` steht auf demselben Stand). Wir verfeinern „Puls · Scan“. Hier meine Punkte: …
+
+## Prüfung 1.11. abends (lokal auf Kais PC, portables Node im Scratchpad)
+- Vollprüfung Puls · Scan (PC, Handy 375/320 px), Wurzelseiten, Live-Wix, Doku → Bericht `Desktop\Claude\claude hop v10\PRUEFBERICHT-Puls-Scan-2026-11-01.md`.
+- Umgesetzt (Go): Motiv-Name Leistungen, Figur Hero Handy, Manuthera-Schild Tastatur, THREE.Timer; ENTSCHEIDUNGEN bereinigt (veraltete V10-/Wix-Zeilen, Manuthera-Widerspruch).
+- Kais PC hat kein Node.js und keinen Klon; Bauen lokal nur mit portablem Node (Scratchpad) oder in der Cloud.
 
 ## Was gilt jetzt
 - **V10 ist entfernt** (1.11., Kais Auftrag). Sicherung: ZIP bei Kai + Git-Verlauf bis Commit dd917c6.

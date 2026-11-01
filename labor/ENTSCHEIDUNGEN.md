@@ -47,6 +47,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 | Klickbares kenntlich machen (Go A, 1.11.) | Stufe 1: Termin-Knöpfe „Herzschlag“ (Bernstein-Ring, doppelt) nur in Ruhe (3 s ohne Scrollen), immer nur ein sichtbarer Knopf, Abstand 10 s → max. 30 s; Rechtsseiten: „Zur Startseite“. Stufe 2: Knopf-Gruppen (Abschnitte, Räume, Manuthera-Bewegungen, Leistungen) einmal „gescannt“ beim Hereinkommen; Leistungen mit „+“ → „×“; Knöpfe geben beim Antippen nach. Stufe 3: Wisch-Hinweis (Punkt schwingt + Text) nach 3 s ohne Berührung: Körper („Maus über den Körper“/„Streichen“, neben der Figur), Haus (PC „Ziehen zum Drehen“ im Röntgenblick, Handy „Wischen oder Raum antippen“), Manuthera-Liege; verschwindet nach erster Berührung. Bei „Bewegung anhalten“/„reduzieren“ kein Pulsieren, Termin-Knopf mit festem Ring | gleich | gleich |
 | V10 entfernt (Kai, 1.11.) | V10 gesichert (Git-Verlauf bis dd917c6, ZIP an Kai) und gelöscht inkl. Wix-Altdatei (Wix nutzt sie nicht). Startadresse = Übergangsseite „Die neue Website zieht gerade ein.“ mit Kontakt, Zeiten, Abrechnung (noindex, ohne Animation); Impressum/Datenschutz unter den alten Adressen mit den neuen Texten (ohne Labor-Hinweis). Labor bleibt unverlinkt | gleich | gleich |
 | Leben im Stillstand (Handy) | Figur atmet, Verspannungen pochen, leichte Drift aller Partikel; im Stillstand nur jedes 2. Bild (Akku), beim Scrollen volle Rate | umgesetzt | Atmen/Pochen/Drift auch am PC; PC rendert immer voll |
+| Prüfung 1.11. abends (Go, lokal gebaut) | Leistungen: Motiv-Name sitzt im deckenden Teil der klebenden Bühne (lag vorher über den Leistungsnamen). Figur im Hero kleiner und höher (Füße über dem Kicker; ⚠ auf Kais iPhone prüfen). Schild „Manuthera ↓“ im 3D-Raum ist unsichtbar auch per Tastatur nicht erreichbar. `THREE.Timer` statt veraltetem `THREE.Clock` (Konsolen-Warnung weg). Prüfbericht bei Kai: `Desktop\Claude\claude hop v10\PRUEFBERICHT-Puls-Scan-2026-11-01.md` | umgesetzt | umgesetzt (Figur unverändert) |
 
 ## Offen aus der Prüfung (1.11.2026)
 - Anrufbeantworter einrichten (Ansage passend zur Website); Weg für Nachrichten per E-Mail (Telekom-SprachBox oder UniFi Talk) ⚠ prüfen. Später WhatsApp.
@@ -54,11 +55,14 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - Porträt-Fotos: kommen später.
 - Für die echte Seite: Favicon, Link-Vorschau (Open Graph), Praxis-Angaben für Google (strukturierte Daten), Seitentitel/Beschreibung final.
 - Vor Livegang entfernen: Hinweis „Schematischer Grundriss …“, „· schematisch“, „Testseite 4“ in der Fußzeile.
-- Rechtlich (Fachperson): Fußzeile verweist auf Live-Impressum („[Bitte ergänzen]“ Berufshaftpflicht) und Live-Datenschutz (Wix statt GitHub); gespeicherte Einstellung „Bewegung anhalten“ im Datenschutz nennen; „Osteopathische Ansätze“ bleibt (Kai, 1.11.) – Fachperson prüft mit.
+- Rechtlich (Fachperson): Fußzeile verlinkt die neuen Rechtsseiten (`recht-*.html`); dort und im Wurzel-Impressum stehen noch „[Bitte ergänzen]“ (Behörde laut Urkunde, Berufshaftpflicht) – **öffentlich sichtbar**, Angaben von Kai nötig. „Osteopathische Ansätze“ bleibt (Kai, 1.11.) – Fachperson prüft mit.
+- Kapitelleiste PC: während der Hausordnung ist „05 Tür“ markiert (Handy zeigt „§ Hausordnung“) – Kai entscheidet, ob eigener Eintrag.
+- Übergangsseite (Wurzel) bei 320 px: Knopftext „Termin per E-Mail anfragen“ bricht zweizeilig um – Kosmetik, Wurzel nur nach Go.
+- Live-Wix-Seite hopphysio.de (1.11. geprüft): Banner „Telefon funktioniert noch nicht“, Tippfehler „Atomsphäre“, 15/19 Bilder ohne Alt-Text, Telefon dort ohne „nur Anrufbeantworter“ → Aussagen widersprechen der neuen Seite.
 
 ## Testadresse (ab 31.10.2026, Kais Go)
 - https://kairaethel-eng.github.io/labor/ (Übersicht) · Arbeitsstand: https://kairaethel-eng.github.io/labor/test-4-puls-scan.html
-- Nur Ordner `labor/` auf `main` veröffentlicht, `index.html`/Impressum/Datenschutz unverändert; alle Seiten `noindex`.
+- Nur Ordner `labor/` darf ohne neues Go auf `main`; die Wurzel (`index.html`, Impressum, Datenschutz = Übergangsseite seit 1.11.) nur nach ausdrücklichem Go. Alle Seiten `noindex`.
 
 ## Offen für die echte Website
 - Inhalte aus V10 übernehmen: Körperkarte „Wo tut's weh?“, Porträt Kai, Einblicke, ggf. Rundgang (Idee: Partikel-Grundriss).
@@ -70,7 +74,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
 ## Rechtsseiten (Go 31.10.2026, Entwurf)
 - **1.11.2026 überarbeitet (Kais Auftrag):** Datenschutz neu für Puls · Scan geschrieben: GitHub Pages (GitHub ist nach dem EU-US Data Privacy Framework zertifiziert, laut GitHub-Datenschutzerklärung geprüft), keine Cookies/Analyse/fremden Inhalte, „Bewegung anhalten“ im lokalen Speicher nur nach Klick (§ 25 Abs. 2 Nr. 2 TDDDG), Kontakt per E-Mail und Anrufbeantworter (Art. 6/9 DSGVO, Hinweis keine Gesundheitsangaben), Google-Maps-Link, Rechte, Aufsicht LfDI BW mit **neuer Adresse Heilbronner Straße 35, 70191 Stuttgart (seit 22.12.2025)**. Newsletter und Wix-Statistik entfernt (bei Einführung ergänzen). Impressum: „ich“-Form, Anrufbeantworter, Berufsbezeichnung präzisiert, „Regierungspräsidium Baden-Württemberg“ (gibt es so nicht) ersetzt durch Platzhalter „Behörde laut Erlaubnisurkunde“, PhysTh-APrV ergänzt, Haftung für Links. Lange Wörter in Überschriften mit Trennstellen (Handy zoomte vorher heraus). Puls · Scan verlinkt jetzt diese Entwürfe.
-- Offen: Berufshaftpflicht, Behörde laut Urkunde, E-Mail-Anbieter und Anrufbeantworter-Dienst (Auftragsverarbeitung), Fachperson. Live-Datenschutz (V10) hat noch die alte LfDI-Adresse.
+- Offen: Berufshaftpflicht, Behörde laut Urkunde, E-Mail-Anbieter und Anrufbeantworter-Dienst (Auftragsverarbeitung), Fachperson. LfDI-Adresse Heilbronner Straße 35 am 1.11. auf der LfDI-Seite bestätigt; Wurzel-Datenschutz hat sie.
 - `recht-impressum.html`, `recht-datenschutz.html` (Quellen `src/recht`): dunkler Puls-Stil ohne 3D, HOP-Kreise als gestochene Partikel dezent im Hintergrund (Canvas 2D, atmen; „Bewegung anhalten“ wie Startseite), § 1 … in Kursivschrift, Inhaltsverzeichnis (PC mitlaufend, Handy aufklappbar), Druck hell. Texte **wörtlich** von der Live-Seite; Labor-Hinweis nennt Offenes (Berufshaftpflicht, Hosting-Abschnitt, § 3/§ 5 nur bei Nutzung, Fachperson prüfen).
 
 ## Porträt (31.10.2026, Entwürfe mit Beispiel-Büste)
@@ -88,7 +92,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - Offen: Kai vergleicht mit Puls · Scan; FAQ-Texte sind Beispieltexte und müssen geprüft werden.
 
 ## Manuthera als Highlight (31.10.2026, Entwürfe)
-- Kai möchte die Manuthera als kleines Highlight der Praxis hervorheben, im Partikel-Stil. Vergleichsseite `manuthera.html` (Quellen `src/manu`), noch nicht in Puls · Scan eingebaut.
+- Kai möchte die Manuthera als kleines Highlight der Praxis hervorheben, im Partikel-Stil. Vergleichsseite `manuthera.html` (Quellen `src/manu`); Entwurf A ist seit 31.10. in Puls · Scan eingebaut (siehe unten).
 - **A Bühne:** Partikel-Liege in 3D mit liegender Figur; Brust- und Beckenteil zeigen nacheinander Traktion, Flexion, Seitneigung, Rotation (Knöpfe, Bernstein-Bewegungsbögen, Ziehen dreht).
 - **B Raum schaffen:** liegende Lendenwirbelsäule; Regler „Zug“: Beckenteil gleitet, Wirbel weichen auseinander, Bandscheibenräume leuchten, Nervenaustritte fließen. Beschriftung „Bandscheibenraum L4/L5“, „Nervenaustritt“.
 - **C Drei Ebenen:** kompakte Karte mit grüner Eck-Klammer; Partikel-Achse in drei Bernstein-Ringen (Sagittal-, Frontal-, Transversalebene) plus Zugachse.

@@ -217,7 +217,7 @@ function layout() {
     X[3].set(hw * 0.5, 0.1, 0, 0.74);
     X[4].set(hw * 0.46, 0, 0, 0.72);
   } else {
-    X[0].set(0, 2.1, 0, 0.46);
+    X[0].set(0, 2.35, 0, 0.40);        // Handy: etwas kleiner und höher, Füße über dem Kicker (Prüfung 1.11.)
     X[1].set(0, 0, 0, 1.25);           // 1A: Bewegungslinien über den ganzen Bildschirm
     X[2].set(0, 1.65, 0, 0.28);        // 4A: Wirbelsäule in der oberen Bildhälfte
     X[3].set(0, 2.5, 0, 0.42);         // 2B: wird beim Scrollen zum Emblem (siehe roofEmblem)
@@ -1064,6 +1064,7 @@ function placeManuTag() {
   const vis = manuTagVis * (w.z < 1 && Math.abs(w.x) < 0.92 && Math.abs(w.y) < 0.85 && sx - manuTag.offsetWidth / 2 > textColRight() ? 1 : 0) * (1 - manuK);
   manuTag.style.opacity = vis.toFixed(2);
   manuTag.classList.toggle('on', vis > 0.3);
+  manuTag.tabIndex = vis > 0.3 ? 0 : -1; // unsichtbar auch nicht per Tastatur erreichbar
   if (vis > 0) manuTag.style.transform = `translate(${((w.x * 0.5 + 0.5) * innerWidth).toFixed(1)}px, ${((-w.y * 0.5 + 0.5) * innerHeight - 30).toFixed(1)}px) translate(-50%, -100%)`;
 }
 // Haus mit gedrückter Maus drehen (PC, Röntgenblick)
@@ -1250,7 +1251,7 @@ function manuVisible() {
 }
 
 // ---------- Schleife ----------
-const clock = new THREE.Clock();
+const timer = new THREE.Timer(); // (THREE.Clock ist veraltet)
 const top = $('#top');
 // Handy: im Stillstand nur jedes zweite Bild rendern (Akku), beim Scrollen volle Rate
 let lastInput = 0, frameN = 0;
@@ -1266,7 +1267,8 @@ function tick() {
   lastTick = performance.now();
   frameN++;
   if (!viaWatchdog && !isDesktop() && performance.now() - lastInput > 1500 && frameN % 2) return;
-  const dt = Math.min(clock.getDelta(), 0.05);
+  timer.update();
+  const dt = Math.min(timer.getDelta(), 0.05);
   uniforms.uTime.value += paused ? 0 : dt * CALM;
   const tm = targetMorph();
   morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));

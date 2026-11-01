@@ -375,7 +375,7 @@ main{position:relative;z-index:2}
   .roof-list .kicker{order:1}
   .roof-list .index{order:3}
   .serv-stage{order:2;position:sticky;top:calc(env(safe-area-inset-top,0px) + 4.25rem);z-index:3;height:30svh;margin:0 calc(-1 * max(var(--gut),5vw)) .5rem;background:linear-gradient(var(--ink) 90%,rgba(10,22,27,0))}
-  .serv-name{bottom:.5rem;font-size:1.0625rem}
+  .serv-name{bottom:12%;font-size:1.0625rem} /* im deckenden Teil des Verlaufs, sonst liegt der Name über den Leistungsnamen */
   /* Rundgang (Handy): Szene oben, Raum-Karten laufen untereinander durch */
   .tour{height:150svh}
   .tour-sticky{position:sticky;top:0;height:100svh;overflow:hidden;background:linear-gradient(0deg,rgba(10,22,27,.96) 0%,rgba(10,22,27,.8) 36%,rgba(10,22,27,0) 60%)}
