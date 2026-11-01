@@ -10,7 +10,7 @@ export const ROOMS = [
   { key: 'empfang', n: 'Empfang & Ankommen', d: 'Die Tür ist offen, der Weg ist kurz: Hier werden Sie mit Namen begrüßt, nicht mit Nummer aufgerufen. Jacke ablegen, durchatmen, ankommen.', r: [12, 12, 154, 126], floor: '#F2E8D6' },
   { key: 'warte', n: 'Wartebereich – unser Wohnzimmer', d: 'Eher Wohnzimmer als Wartezimmer: bequeme Sitze, Wasser und Kaffee, kurze Wartezeiten. Ein Ort, an dem niemand auf die Uhr schauen muss.', r: [12, 142, 154, 126], floor: '#EFE2CC' },
   { key: 'b1', n: 'Behandlungsraum 1', d: 'Ruhe und Tageslicht. Hier ist Zeit für Befund, Behandlung und alle Ihre Fragen, hinter geschlossener Tür und ohne Durchgangsverkehr.', r: [232, 12, 176, 80], floor: '#E7ECE4' },
-  { key: 'b2', n: 'Behandlungsraum 2 · Manuthera', d: 'Hier steht die Loyer Manuthera, eine der modernsten Therapieliegen für mobilisierende Behandlungen der Wirbelsäule und großer Gelenke.', r: [232, 96, 176, 80], floor: '#E3EAEE' },
+  { key: 'b2', n: 'Behandlungsraum 2 · Manuthera', d: 'Hier steht die Loyer Manuthera, eine moderne Therapieliege für mobilisierende Behandlungen der Wirbelsäule und großer Gelenke.', r: [232, 96, 176, 80], floor: '#E3EAEE' },
   { key: 'training', n: 'Trainingsfläche', d: 'Aktiv werden: Geräte, Übungen und Ihr persönliches Programm für zuhause. Angeleitet und begleitet, nicht allein gelassen.', r: [232, 180, 176, 88], floor: '#ECE8DC' },
 ];
 
