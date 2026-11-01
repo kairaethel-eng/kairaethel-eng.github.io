@@ -26,6 +26,16 @@ function setPaused(v) {
 $('#motionBtn')?.addEventListener('click', () => setPaused(!paused));
 setPaused(paused);
 
+// Hinweis, wenn die Bewegung von einem früheren Besuch her angehalten ist (Wahl gilt seitenübergreifend)
+if (paused) {
+  const n = document.createElement('div'); n.className = 'paused-note'; n.setAttribute('role', 'status');
+  n.innerHTML = '<span>Bewegung ist angehalten.</span><button type="button">Fortsetzen</button>';
+  document.body.appendChild(n);
+  const hide = () => n.classList.add('gone');
+  n.querySelector('button').addEventListener('click', () => { setPaused(false); hide(); });
+  setTimeout(hide, 9000);
+}
+
 // ---------- Bühne ----------
 const canvas = $('#gl');
 let renderer = null;

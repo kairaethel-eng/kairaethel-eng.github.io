@@ -24,6 +24,16 @@ function setPaused(v) {
 }
 document.getElementById('motionBtn')?.addEventListener('click', () => setPaused(!paused));
 setPaused(paused);
+
+// Hinweis, wenn die Bewegung von einem früheren Besuch her angehalten ist (Wahl gilt seitenübergreifend)
+if (paused) {
+  const n = document.createElement('div'); n.className = 'paused-note'; n.setAttribute('role', 'status');
+  n.innerHTML = '<span>Bewegung ist angehalten.</span><button type="button">Fortsetzen</button>';
+  document.body.appendChild(n);
+  const hide = () => n.classList.add('gone');
+  n.querySelector('button').addEventListener('click', () => { setPaused(false); hide(); });
+  setTimeout(hide, 9000);
+}
 const finePointer = matchMedia('(pointer: fine)').matches;
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -652,7 +662,7 @@ let ncT = 0;
 function updateCallouts(zoneKey, fl, on) {
   const show = isDesktop() && on && zoneKey && periCurve;
   const info = zoneKey ? NINFO[zoneKey] : null;
-  const steps = [0.08, 0.2, 0.32, 0.44, 0.56]; // Reihenfolge: Austritt → Nerven → Gefühl → Ziel → typisch
+  const steps = [0.05, 0.05, 0.05, 0.05, 0.2]; // zwei Schritte: Austritt, Nerven, Gefühl, Ziel zusammen → dann „Typisch“
   ncalls.forEach((el, i) => {
     const vis = show && fl > steps[i] && fl < 0.97;
     el.style.opacity = vis ? 1 : 0;

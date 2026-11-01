@@ -191,6 +191,7 @@ export function initA(canvas, ui) {
   let clockT = 0;
   function update(_time, dt) {
     // „Bewegung anhalten“ (Puls · Scan): alles steht, die Liege ist sofort vollständig sichtbar
+    const dtCam = dt; // Ziehen dreht auch, wenn die Eigenbewegung angehalten ist
     if (ui && ui.isPaused && ui.isPaused()) { dt = 0; if (scanT < 1) { scanT = 1; U.uCut.value = 99; } }
     clockT += dt;
     const time = clockT;
@@ -216,7 +217,7 @@ export function initA(canvas, ui) {
 
     const idle = !reduced && !cam.dragging && performance.now() - cam.lastUser > 3000;
     if (idle) cam.yawTarget = damp(cam.yawTarget, Math.sin(time * 0.11) * 0.25, 0.6, dt);
-    cam.yaw = damp(cam.yaw, cam.yawTarget, 5, dt);
+    cam.yaw = damp(cam.yaw, cam.yawTarget, 5, dtCam);
     const yaw = 0.8 + cam.yaw, el = 0.44;
     const fit = st.aspect < 1.3 ? 1.3 / st.aspect : 1;
     const R = 7.3 * Math.pow(Math.min(fit, 1.8), 0.72);

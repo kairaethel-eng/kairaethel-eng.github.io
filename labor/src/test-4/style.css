@@ -116,7 +116,7 @@ main{position:relative;z-index:2}
 .sign b{display:block;margin-top:.625rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;font-style:normal;color:var(--txt)}
 
 /* Achse: Partikel-Wirbelsäule materialisiert sich zur 3D-Wirbelsäule, Kamerafahrt */
-.axis{height:540vh}
+.axis{height:440vh}
 .axis-sticky{position:sticky;top:0;height:100svh;overflow:hidden}
 .axis-inner{height:100%;display:grid;grid-template-columns:minmax(0,31.25rem) 1fr;grid-template-rows:auto auto 1fr auto;column-gap:2.5rem;padding-top:6.5rem;padding-bottom:1.75rem}
 .axis-head{grid-column:1}
@@ -411,3 +411,8 @@ main{position:relative;z-index:2}
   #t-title .lt{opacity:1}
   .roofline path{stroke-dashoffset:0}
 }
+
+/* Hinweis: Bewegung angehalten */
+.paused-note{position:fixed;z-index:40;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 1.25rem);transform:translateX(-50%);display:flex;align-items:center;gap:.875rem;padding:.625rem .75rem .625rem 1.125rem;border-radius:1.5rem;background:rgba(16,34,42,.95);border:1px solid rgba(224,154,53,.55);color:var(--txt);font:500 .875rem/1.2 var(--sans);box-shadow:0 .75rem 2.5rem rgba(0,0,0,.4);transition:opacity .5s,transform .5s}
+.paused-note button{height:2.25rem;padding:0 1rem;border-radius:1.125rem;border:0;background:var(--amber);color:#14110A;font:700 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.paused-note.gone{opacity:0;transform:translate(-50%,1rem);pointer-events:none}

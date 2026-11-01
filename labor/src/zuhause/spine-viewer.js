@@ -64,10 +64,11 @@ export function initSpineViewer(canvas, ui = {}) {
   function select(i) { seg = i; U.uZone.value = SEG_ZONES[i]; }
   select(0);
   function update(_t, dt) {
+    const dtCam = dt || 0.016;
     if (ui.isPaused && ui.isPaused()) dt = 0;
     t += dt;
     if (!reduced && !cam.dragging && performance.now() - cam.lastUser > 3000) cam.yawTarget += dt * 0.25;
-    cam.yaw = damp(cam.yaw, cam.yawTarget, 5, dt || 0.016);
+    cam.yaw = damp(cam.yaw, cam.yawTarget, 5, dtCam);
     group.rotation.y = -0.9 + cam.yaw;
     // Kamera: ganze Wirbelsäule, leicht zum gewählten Abschnitt geneigt und herangezoomt
     focusY = damp(focusY, (zoneY[SEG_ZONES[seg]] || 0) * 0.55, 3, dt || 0.016);

@@ -213,12 +213,13 @@ export function initThree(canvas, ui = {}) {
   let t = 0, scan = reduced ? 1 : 0;
   const rot = new THREE.Matrix4(), tilt = new THREE.Matrix4();
   function update(_t, dt) {
+    const dtCam = dt || 0.016;
     if (ui.isPaused && ui.isPaused()) { dt = 0; scan = 1; U.uCut.value = 99; }
     t += dt;
     // Scan von links nach rechts über die gedrehte Büste (wie bei der Liege)
     if (scan < 1) { scan = Math.min(1, scan + dt / 2.6); U.uCut.value = -1.3 + ease(scan) * 2.8; if (scan >= 1) U.uCut.value = 99; }
     if (!cam.dragging && performance.now() - cam.lastUser > 3000 && !reduced) cam.yawTarget += dt * 0.25;
-    cam.yaw = damp(cam.yaw, cam.yawTarget, 5, dt || 0.016);
+    cam.yaw = damp(cam.yaw, cam.yawTarget, 5, dtCam);
     M[0].copy(rot.makeRotationY(cam.yaw - 0.35)).premultiply(tilt.makeRotationX(0.04));
     U.uStip.value = stipSize(st, 26, pts.spacing, 0.6);
     const d = 4.3 * (st.aspect < 0.9 ? 0.9 / st.aspect : 1);
