@@ -21,7 +21,7 @@ Kurzfassung für neue Chats, damit der alte Verlauf nicht geladen werden muss.
 - `main.js` – Szene, Partikel-Shader (Formen 0 Körper · 1 Bewegung · 2 Wirbelsäule · 3 Haus · 4 HOP-Kreise), Kapitel-Logik, Wirbelsäulen-Scan (`updateAxis`), Rundgang (`updateTour`), lebende Überschriften, Ruhemodus/Pause.
 - `shapes.js` – Punktwolken (Körper, Wirbelsäule, Haus, Logo) + `spineStipple` (Knochen „Schichten“/„Körnung“, Nervenkurven).
 - `services.js` – Leistungs-Motive (eine Partikel-Bühne, Motive prozedural, Reihenfolge = Liste „Alle Leistungen“).
-- `praxis.js` – Praxis-Innenraum als Punktwolke aus V10-Grundriss (später durch echten 3D-Scan ersetzbar, gleiche Datenform).
+- `praxis.js` – Praxis-Innenraum (`praxisScan`: Scan-Linien + gestochene Möbel mit Kern, Wirbelsäulen-Modell `SPINE_AT` in Behandlung 1). Rundgang ohne Scrollen: `goRoom`, `tourIdx`, `xrayPose` in `main.js`.
 - Manuthera-Bühne (Kapitel 04, `#manuthera`): kommt aus `../manu/ideaA.js` (+ `common.js`, `stipple.js`), eigene WebGL-Bühne; in `main.js` `manu`, `manuVisible()` blendet Hintergrund und Röntgenblick aus.
 - `../shared/spine.js` – prozedurale Wirbelsäule (C1–Co), Zonen, Nervenwurzeln.
 - `page.html`, `style.css` – Inhalt/Gestaltung. Desktop-Grenze 920 px.
@@ -34,7 +34,7 @@ FRAGMENT_DIR=<scratchpad>/artifact node build.mjs test-4   # zusätzlich Fragmen
 - Screenshots im Container: `node tools/shot.cjs <seite.html> <präfix> <d|m> '<selektor>|<offset>' …` (Anleitung im Kopf der Datei; `WAIT=7000` bei Kamerafahrten, `REDUCED=1` für „Bewegung reduzieren“). SwiftShader ist langsam (~5–9 fps) → Kamera hängt nach. Kai will **keine** Screenshots geschickt bekommen; nur intern prüfen.
 - Scroll-Offsets Kapitel 03 (PC, in Bildschirmhöhen ab `#achse`, Kapitel seit 1.11. 440vh): C1–C2 0.61 · C5–C6 1.12 · Th 1.85 · L4–L5 2.58 · S1 3.1.
 - „Bewegung anhalten“ wird als `hop-motion` im Browser gemerkt und gilt für **alle** Labor-Seiten; beim Laden im angehaltenen Zustand erscheint ein Hinweis mit „Fortsetzen“. Ziehen/Drehen funktioniert auch angehalten.
-- Vorschau (privat): Artifact https://claude.ai/artifact/1YU9DYm46ZHqoMJu78dfoM (Fragment-Datei neu veröffentlichen).
+- Vorschau (privat): Artifact https://claude.ai/artifact/1YU9DYm46ZHqoMJu78dfoM (älter; maßgeblich ist die Testadresse).
 - **Testadresse (öffentlich, noindex):** https://kairaethel-eng.github.io/labor/ – Kai hat Go gegeben, **nur den Ordner `labor/`** auf `main` zu veröffentlichen:
   `git diff --stat origin/main..HEAD -- . ':(exclude)labor'` muss leer sein, dann `git push origin HEAD:main`. Arbeitszweig: `claude/3d-cinematic-website-effects-htd2aa`.
 
