@@ -100,3 +100,17 @@ addEventListener('scroll', onScroll, { passive: true });
 onScroll();
 // Handy: nach Klick im Inhaltsverzeichnis wieder zuklappen
 document.querySelectorAll('.toc-mob a').forEach((a) => a.addEventListener('click', () => { const d = a.closest('details'); if (d) d.open = false; }));
+
+// ---------- Herzschlag am Knopf „Zur Startseite“ (nur in Ruhe, Abstand wächst, ruht bei „Bewegung anhalten“) ----------
+{
+  const back = document.querySelector('.foot .back');
+  let lastIn = performance.now(), lastBeat = performance.now(), beats = 0;
+  ['scroll', 'pointermove', 'touchmove'].forEach((ev) => addEventListener(ev, () => (lastIn = performance.now()), { passive: true }));
+  back?.addEventListener('animationend', () => back.classList.remove('beat'));
+  setInterval(() => {
+    const now = performance.now();
+    if (!back || paused || reduced || document.hidden || now - lastIn < 3000 || now - lastBeat < Math.min(30000, 10000 + beats * 5000)) return;
+    const r = back.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return;
+    back.classList.remove('beat'); void back.offsetWidth; back.classList.add('beat'); lastBeat = now; beats++;
+  }, 1000);
+}

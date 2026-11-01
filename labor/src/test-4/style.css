@@ -458,6 +458,34 @@ main{position:relative;z-index:2}
   .roofline path{stroke-dashoffset:0}
 }
 
+/* ---------- Klickbares kenntlich machen (Go 1.11.2026) ---------- */
+/* Stufe 1: Herzschlag am Termin-Knopf */
+.btn{position:relative}
+.btn.beat::after{content:"";position:absolute;inset:-1.5px;border-radius:inherit;pointer-events:none;animation:beat 1.7s ease-out 1}
+@keyframes beat{0%{box-shadow:0 0 0 0 rgba(224,154,53,.7)}36%{box-shadow:0 0 0 .85rem rgba(224,154,53,0)}40%{box-shadow:0 0 0 0 rgba(224,154,53,.6)}88%,100%{box-shadow:0 0 0 1.1rem rgba(224,154,53,0)}}
+html.paused .btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}
+@media (prefers-reduced-motion:reduce){.btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}}
+/* Stufe 2: einmaliger Scan über Knopf-Gruppen, „+“ an den Leistungen, Nachgeben beim Antippen */
+.sheen{position:relative;overflow:hidden}
+.sheen::before{content:"";position:absolute;top:0;bottom:0;left:0;width:45%;pointer-events:none;background:linear-gradient(90deg,rgba(224,154,53,0),rgba(224,154,53,.32),rgba(224,154,53,0));transform:translateX(-130%)}
+.scan-run .sheen::before{animation:sheen 1.2s var(--ease) calc(var(--si,0) * 80ms + .15s) 1 both}
+@keyframes sheen{to{transform:translateX(330%)}}
+.ix-name{margin-right:auto}
+.ix-plus{position:relative;flex:none;align-self:center;width:.875rem;height:.875rem;margin-left:.25rem;transition:transform .45s var(--ease)}
+.ix-plus::before,.ix-plus::after{content:"";position:absolute;left:0;right:0;top:50%;height:1.5px;margin-top:-.75px;background:var(--amber);border-radius:1px}
+.ix-plus::after{transform:rotate(90deg)}
+.index button[aria-expanded="true"] .ix-plus{transform:rotate(135deg)}
+.btn:active,.t-play:active,.t-btn:active,.room-more:active,.segnav button:active,.roomnav button:active,.manu-modes button:active,.chap-now:active,.motion-btn:active,.style-switch button:active{transform:scale(.97)}
+/* Stufe 3: Wisch-Hinweis über Bildern zum Anfassen */
+.touch-hint{position:fixed;z-index:6;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:.5rem;pointer-events:none;opacity:0;transition:opacity .6s;font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--amber);white-space:nowrap;text-shadow:0 0 .75rem rgba(10,22,27,.95),0 0 .25rem rgba(10,22,27,.95)}
+.touch-hint.on{opacity:1}
+.touch-hint.in-stage{position:absolute;left:50%;top:auto;bottom:16%;transform:translateX(-50%)}
+.th-track{position:relative;display:block;width:4.75rem;height:1.5rem}
+.th-track::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:linear-gradient(90deg,rgba(224,154,53,0),rgba(224,154,53,.65),rgba(224,154,53,0))}
+.th-dot{position:absolute;top:50%;left:50%;width:1.25rem;height:1.25rem;margin:-.625rem 0 0 -.625rem;border-radius:50%;border:1.5px solid var(--amber);background:rgba(224,154,53,.2);box-shadow:0 0 1rem rgba(224,154,53,.5);animation:thSway 1.9s ease-in-out infinite}
+@keyframes thSway{0%,100%{transform:translateX(-1.5rem)}50%{transform:translateX(1.5rem)}}
+@media (prefers-reduced-motion:reduce){.th-dot{animation:none;transform:none}}
+
 /* Hinweis: Bewegung angehalten */
 .paused-note{position:fixed;z-index:40;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 1.25rem);transform:translateX(-50%);display:flex;align-items:center;gap:.875rem;padding:.625rem .75rem .625rem 1.125rem;border-radius:1.5rem;background:rgba(16,34,42,.95);border:1px solid rgba(224,154,53,.55);color:var(--txt);font:500 .875rem/1.2 var(--sans);box-shadow:0 .75rem 2.5rem rgba(0,0,0,.4);transition:opacity .5s,transform .5s}
 .paused-note button{height:2.25rem;padding:0 1rem;border-radius:1.125rem;border:0;background:var(--amber);color:#14110A;font:700 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}

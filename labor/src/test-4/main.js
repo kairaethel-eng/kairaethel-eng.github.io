@@ -811,6 +811,7 @@ function updateAxis(dt) {
 // ---------- Dach: Index ----------
 $$('.index li').forEach((li) => {
   const b = $('button', li);
+  b.insertAdjacentHTML('beforeend', '<span class="ix-plus" aria-hidden="true"></span>');
   b.addEventListener('click', () => {
     const open = !li.classList.contains('open');
     $$('.index li.open').forEach((o) => { o.classList.remove('open'); $('button', o).setAttribute('aria-expanded', 'false'); });
@@ -1330,8 +1331,68 @@ function tick() {
   if (renderer && !document.hidden) renderer.render(scene, camera);
   if (manu && manu.st.visible && !document.hidden) { manu.update(0, dt); manu.st.renderer.render(manu.st.scene, manu.st.camera); }
   if (!document.hidden) updateServices(dt);
+  updateHints(dt);
 }
 gsap.ticker.add(tick);
+
+
+// ---------- Klickbares kenntlich machen (Go 1.11.2026, Variante A) ----------
+// Stufe 1: Termin-Knöpfe schlagen ab und zu wie ein Herz (nur in Ruhe, immer nur einer, Abstand wächst).
+// Stufe 2: Knopf-Gruppen werden beim ersten Hereinkommen einmal „gescannt“; Leistungen haben ein „+“.
+// Stufe 3: Bilder zum Anfassen zeigen nach kurzer Zeit einen Wisch-Hinweis, bis man sie berührt.
+// Alles ruht bei „Bewegung anhalten“ und „Bewegung reduzieren“.
+const inView = (el) => { if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth; };
+{
+  const beatBtns = [$('.hero .btn:not(.btn-ghost)'), $('.door .btn:not(.btn-ghost)'), $('.top .btn-small')].filter(Boolean);
+  let lastBeat = performance.now(), beats = 0;
+  setInterval(() => {
+    const now = performance.now();
+    if (paused || reduced || document.hidden || now - lastInput < 3000 || now - lastBeat < Math.min(30000, 10000 + beats * 5000)) return;
+    const b = beatBtns.find(inView); if (!b) return;
+    b.classList.remove('beat'); void b.offsetWidth; b.classList.add('beat');
+    lastBeat = now; beats++;
+  }, 1000);
+  beatBtns.forEach((b) => b.addEventListener('animationend', () => b.classList.remove('beat')));
+}
+{
+  const groups = [$('.segnav'), $('.roomnav'), $('#manuModes'), $('#index')].filter(Boolean);
+  groups.forEach((g) => $$('button', g).forEach((b, i) => { b.classList.add('sheen'); b.style.setProperty('--si', i); }));
+  if (!reduced) {
+    const io = new IntersectionObserver((es) => es.forEach((e) => {
+      if (!e.isIntersecting || paused) return;
+      e.target.classList.add('scan-run'); io.unobserve(e.target);
+    }), { threshold: 0.6 });
+    groups.forEach((g) => io.observe(g));
+  }
+}
+const mkHint = (txt, parent) => {
+  const h = document.createElement('div'); h.className = 'touch-hint' + (parent ? ' in-stage' : ''); h.setAttribute('aria-hidden', 'true');
+  h.innerHTML = `<span class="th-track"><i class="th-dot"></i></span><span>${txt}</span>`;
+  (parent || document.body).appendChild(h); return h;
+};
+const hintBody = mkHint(finePointer ? 'Maus über den Körper' : 'Streichen');
+const hintHouse = mkHint(isDesktop() ? 'Ziehen zum Drehen' : 'Wischen oder Raum antippen');
+const hintManu = manuSec ? mkHint(finePointer ? 'Ziehen zum Drehen' : 'Seitlich wischen', $('.manu-stage')) : null;
+let houseUsed = false, manuUsed = false, xrayT = 0, manuT = 0, rotSeen = dragRot;
+$('#glManu')?.addEventListener('pointerdown', () => (manuUsed = true));
+manuBtns.forEach((b) => b.addEventListener('click', () => (manuUsed = true)));
+const t0Hints = performance.now();
+function updateHints(dt) {
+  const now = performance.now(), desk = isDesktop();
+  // Körper: bis zur ersten Berührung
+  const showBody = !touched && morphNow < 0.25 && now - t0Hints > 3500 && scrollY < innerHeight * 0.3;
+  hintBody.classList.toggle('on', showBody);
+  if (showBody) hintBody.style.transform = desk ? `translate(${innerWidth * 0.6}px, ${innerHeight * 0.6}px) translate(-50%,-50%)` : `translate(${innerWidth * 0.84}px, ${innerHeight * 0.24}px) translate(-50%,-50%)`; // neben der Figur, nicht auf den Partikeln
+  // Haus: PC im Röntgenblick (ziehen), Handy vor dem Betreten (wischen/antippen)
+  if (dragRot !== rotSeen || tourIdx >= 0) houseUsed = true;
+  const houseReady = desk ? xray > 0.6 && tourIdx < 0 : tourInView() && tourIdx < 0 && morphNow > 2.7 && morphNow < 3.3;
+  xrayT = houseReady ? xrayT + dt : 0;
+  const showHouse = !houseUsed && xrayT > 3;
+  hintHouse.classList.toggle('on', showHouse);
+  if (showHouse) hintHouse.style.transform = desk ? `translate(${innerWidth * 0.72}px, ${innerHeight * 0.84}px) translate(-50%,-50%)` : `translate(${innerWidth * 0.5}px, ${innerHeight * 0.36}px) translate(-50%,-50%)`;
+  // Manuthera-Liege
+  if (hintManu) { manuT = manuK > 0.8 ? manuT + dt : 0; hintManu.classList.toggle('on', !manuUsed && manuT > 3); }
+}
 
 // Intro
 if (!reduced) {
