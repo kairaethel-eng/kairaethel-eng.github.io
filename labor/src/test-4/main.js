@@ -950,15 +950,18 @@ scene.add(tourPts);
 // Raum-Beschriftungen im Raum
 // Schilder im Haus (Stil wie Design „Zuhause“): Nummer, Raum, darunter was dort wartet
 const ROOM_SUB = ['Ankommen', 'Wohnzimmer', 'Manuelle Therapie & mehr', 'Manuthera', 'Bewegung'];
-const tagHTML = (no, label, sub) => `<i>${no}</i><span><b>${label}</b><small>${sub}</small></span>`;
+const tagHTML = (no, label, sub, cta) => `<i>${no}</i><span><b>${label}</b><small class="s-norm">${sub}</small>${cta ? `<small class="s-cta">${cta}</small>` : ''}</span>`;
 const roomTags = ROOMS.map((r, i) => {
   const el = document.createElement('div'); el.className = 'room-tag' + (i === 3 ? ' hi' : ''); el.setAttribute('aria-hidden', 'true');
-  el.innerHTML = tagHTML(String(i + 1).padStart(2, '0'), r.short, ROOM_SUB[i]); document.body.appendChild(el);
+  el.innerHTML = tagHTML(String(i + 1).padStart(2, '0'), i === 3 ? 'Manuthera' : r.short, ROOM_SUB[i], i === 3 ? '▶ in Bewegung ansehen' : ''); document.body.appendChild(el);
   el.addEventListener('pointerenter', () => (hoverRoom = i)); el.addEventListener('pointerleave', () => (hoverRoom = -1));
-  el.addEventListener('click', () => goRoom(i));
+  // Im Röntgenblick ist Raum 04 ein Knopf direkt zur Manuthera-Bühne, im Rundgang ein normales Raum-Schild
+  el.addEventListener('click', () => { if (el.classList.contains('cta')) { const t = $('#manuthera'); if (t) scrollToY(t.getBoundingClientRect().top + scrollY); } else goRoom(i); });
   const [x, y, w, h] = r.r; const [cx, cz] = P(x + w / 2, y + h / 2);
   return { el, p: new V3(cx, EYE + 0.55, cz) };
 });
+// Manuthera-Knopf am rechten Rand von Behandlung 2 (ragt nach rechts aus dem Haus, überdeckt keine anderen Schilder)
+const manuCtaP = (() => { const [x, z] = P(404, 136); return new V3(x, EYE + 0.05, z); })();
 // Zusatz-Schild im Röntgenblick: Tür → Kontakt (Wirbelsäule hat ihr eigenes Kapitel 03, das Modell steht nur im Raum)
 const extraTags = [
   { no: '00', label: 'Tür', sub: 'Termin & Kontakt', at: (() => { const [x, z] = P(199, 272); return new V3(x, -3 + 0.5, z + 0.12); })(), to: '#tuer' },
@@ -989,7 +992,7 @@ function tourPose(st) {
   const inRoom = TOUR.rooms.includes(st), dir = Pw.clone().sub(T);
   if (inRoom) dir.y += 0.42 * X.w;
   const d = dir.length() * (inRoom ? (desk ? 1.85 : 3.0) : 1);
-  return frame(T, dir, d, desk ? 0.64 : 0.5, desk ? 0.5 : 0.3);
+  return frame(T, dir, d * (desk && inRoom ? 1.12 : 1), desk ? 0.68 : 0.5, desk ? 0.5 : 0.3);
 }
 let roomOn = -1;
 function setRoom(i) {
@@ -1055,7 +1058,7 @@ function placeManuTag() {
   addEventListener('pointerup', () => (down = null)); }
 function xrayPose() {
   const X = uniforms.uXf.value[3], desk = isDesktop();
-  return frame(toWorld(new V3(0, -1.75, 0.1)), new V3(0.18, 0.62, 1), (desk ? 14.5 : 17) * X.w, desk ? 0.67 : 0.5, desk ? 0.5 : 0.3);
+  return frame(toWorld(new V3(0, -1.75, 0.1)), new V3(0.18, 0.62, 1), (desk ? 20 : 17) * X.w, desk ? 0.69 : 0.5, desk ? 0.56 : 0.3);
 }
 function updateTour(dt) {
   manuTagVis = 0;
@@ -1090,13 +1093,13 @@ function updateTour(dt) {
     tourWant = pv > 0.3 ? xrayPose() : null;
     if (pv > 0.3) { // Räume, Tür und Modell als anklickbare Schilder
       tU.uRoom.value = hoverRoom;
-      const place = (t, i, p) => { const w = toWorld(p); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * innerWidth}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(-50%, -50%)`; };
-      roomTags.forEach((t, i) => place(t, i, t.p.clone().setY(EYE + 0.2)));
+      const place = (t, i, p, right) => { const w = toWorld(p); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * innerWidth}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(${right ? '-12%' : '-50%'}, -50%)`; };
+      roomTags.forEach((t, i) => { t.el.classList.toggle('cta', i === 3); place(t, i, i === 3 ? manuCtaP : t.p.clone().setY(EYE + 0.2), i === 3); });
       extraTags.forEach((t) => place(t, -9, t.p));
     } else { tU.uRoom.value = -1; [...roomTags, ...extraTags].forEach((t) => { t.el.classList.remove('click'); t.el.style.opacity = 0; }); }
     return;
   }
-  roomTags.forEach((t) => t.el.classList.remove('click'));
+  roomTags.forEach((t) => t.el.classList.remove('click', 'cta'));
   extraTags.forEach((t) => { t.el.classList.remove('click'); t.el.style.opacity = 0; });
   // Kamera: erst durch die Tür, dann zum Raum (die Kamera gleitet weich hinüber)
   if (viaEntry > 0) viaEntry -= dt;
