@@ -43,6 +43,8 @@ Rückweg: Diese Werte sind die Sicherung. Werden A und CNAME www wieder darauf g
 8. **Danach:** https://hopphysio.de/ und https://www.hopphysio.de/ auf iPhone/PC öffnen; Link-Vorschau testen (WhatsApp/iMessage-Link an sich selbst); Google-Unternehmensprofil weiter auf hopphysio.de (stimmt automatisch); Wix-Website nicht löschen, nur nicht mehr erreichbar; Wix-Premium/Domain/Google-Workspace-Rechnungen **vorerst unverändert** lassen (Domain und E-Mail hängen daran) [A, Kai prüft bei Wix, was wo abgerechnet wird].
 9. Später: `labor/` unter hopphysio.de/labor/ ist weiter aufrufbar (alles noindex) – ok oder vor dem Livegang auf das Nötigste kürzen [O, Kai].
 
-## Offen
-- Hausordnung in der PC-Kapitelleiste (Kai). Porträtfoto. Echter Grundriss. Leistungs-Motive prüfen. Flüssigkeit auf echten Handys.
+## Offen (Stand 2.11., nach Kais Antworten)
+- Rechtlich: Behörde laut Erlaubnisurkunde, Berufshaftpflicht (Kai); Anwalt prüft am Ende. 2FA für GitHub und Wix noch nicht eingerichtet (Kai, vor dem Livegang empfohlen).
+- Inhalt: Porträtfoto kommt „diese Tage“; Porträt und Einblicke im Haus unterbringen (Entwurf nötig); echter 3D-Scan später, Räume ↔ Therapien bis dahin Annahme. Leistungs-Motive prüfen (neu: Thermische Behandlung, Reizstrom). Flüssigkeit auf echten Handys.
+- Später: Praxis-WhatsApp (Datenschutz ergänzen), Newsletter.
 - Rechtstexte final (siehe Schritt 2). Newsletter/WhatsApp später mit Datenschutz-Ergänzung.

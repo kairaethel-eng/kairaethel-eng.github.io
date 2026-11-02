@@ -50,8 +50,13 @@ export const MOTIFS = [
   { name: 'Traktion im Schlingentisch', parts: () => [T(6, box([0, 1.0, 0], [2.3, 0.06, 0.12]), 4, 0), ...[-0.65, 0.55].flatMap((x) => [T(3, seg([x, 0.97, 0], [x, -0.08, 0]), 2, 6, (p) => (0.97 - p[1]) / 1.05), T(3, ring([x, -0.16, 0], 0.13, Math.PI, 2 * Math.PI, 'xy', 0.03), 2, 6, () => 1)]),
     T(12, capsule([-1.0, -0.18, 0], [1.0, -0.26, 0], 0.11), 0, 6, () => 1), T(4, seg([-1.2, -0.75, -0.4], [1.2, -0.75, 0.4]), 4, 0)] },
   { name: 'Osteopathische Ansätze', parts: () => [T(18, () => { const x = (R() * 2 - 1) * 1.15, z = (R() * 2 - 1) * 0.55; const onLine = R() < 0.5; const gx = onLine ? Math.round(x / 0.23) * 0.23 : x, gz = onLine ? z : Math.round(z / 0.18) * 0.18; return [gx, -0.35, gz]; }, 2, 8), ...hand(1, 0.25, 0).map((p) => ({ ...p, fn: ((f) => () => { const q = f(); return [q[0] - 0.55, q[1], q[2]]; })(p.fn) }))] },
-  { name: 'Fango · Reizstrom', parts: () => [T(10, box([-0.5, -0.35, 0], [0.8, 0.14, 0.5]), 1, 0), ...[-0.75, -0.5, -0.25].map((x) => T(3.5, () => { const t = R(); return [x + Math.sin(t * 9) * 0.06, -0.25 + t * 0.95, 0]; }, 1, 5, (p) => (p[1] + 0.25) / 0.95)),
-    ...[0.4, 0.95].map((x) => T(4, box([x, -0.38, 0], [0.3, 0.05, 0.3]), 2, 0)), T(3, () => { const t = R(); return [0.4 + t * 0.55, -0.15 + Math.abs(Math.sin(t * 18)) * 0.12, 0]; }, 2, 9), T(3, () => { const t = R(), s = R() < 0.5 ? 0.4 : 0.95; return [s, -0.36 + t * 0.35, (R() - 0.5) * 0.02]; }, 4, 0)] },
+  // Thermische Behandlung: links Fangopackung mit aufsteigender Wärme, rechts Kältepackung mit Frost-Hof (Kai 2.11.: Fango + Kälte als ein Thema)
+  { name: 'Thermische Behandlung', parts: () => [T(10, box([-0.6, -0.35, 0], [0.8, 0.14, 0.5]), 1, 0), ...[-0.85, -0.6, -0.35].map((x) => T(3.5, () => { const t = R(); return [x + Math.sin(t * 9) * 0.06, -0.25 + t * 0.95, 0]; }, 1, 5, (p) => (p[1] + 0.25) / 0.95)),
+    T(9, box([0.6, -0.35, 0], [0.72, 0.12, 0.46]), 2, 0), T(5, () => { const a = R() * 6.283, t = Math.sqrt(R()); return [0.6 + Math.cos(a) * t * 0.42, -0.05 + Math.sin(a) * t * 0.3, (R() - 0.5) * 0.08]; }, 2, 10, () => R()),
+    ...[0, 1, 2].map((i) => T(1.6, seg([0.6 + Math.cos(i * 1.047) * -0.18, 0.05 + Math.sin(i * 1.047) * -0.18, 0], [0.6 + Math.cos(i * 1.047) * 0.18, 0.05 + Math.sin(i * 1.047) * 0.18, 0]), 2, 0))] },
+  // Reizstrom: zwei Elektroden, dazwischen springt der Funke, Kabel nach unten
+  { name: 'Reizstrom', parts: () => [...[-0.45, 0.45].map((x) => T(5, box([x, -0.38, 0], [0.34, 0.05, 0.34]), 2, 0)), T(4, () => { const t = R(); return [-0.45 + t * 0.9, -0.15 + Math.abs(Math.sin(t * 18)) * 0.14, 0]; }, 2, 9),
+    T(3, () => { const t = R(), s = R() < 0.5 ? -0.45 : 0.45; return [s, -0.36 + t * 0.35, (R() - 0.5) * 0.02]; }, 4, 0), ...[-0.45, 0.45].map((x) => T(2.5, seg([x, -0.41, 0], [x * 1.6, -0.8, 0.1]), 4, 0))] },
   { name: 'Lojer Manuthera', parts: () => [T(4, box([-0.95, 0, 0], [0.3, 0.1, 0.32]), 0, 0), T(6, box([-0.55, 0, 0], [0.45, 0.1, 0.6]), 0, 0), T(6, box([-0.05, 0, 0], [0.48, 0.1, 0.6]), 0, 0), T(10, box([0.62, 0, 0], [0.8, 0.1, 0.6]), 1, 11),
     T(5, box([0, -0.33, 0], [0.9, 0.22, 0.24]), 4, 0), T(4, box([0, -0.68, 0], [1.4, 0.04, 0.5]), 4, 0)] },
 ];

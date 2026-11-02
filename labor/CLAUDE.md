@@ -38,7 +38,7 @@ LIVE_ROOT=1 node build.mjs live     # Wurzel /index.html + Rechtsseiten für hop
 - „Bewegung anhalten“ wird als `hop-motion` im Browser gemerkt und gilt für **alle** Labor-Seiten; beim Laden im angehaltenen Zustand erscheint ein Hinweis mit „Fortsetzen“. Ziehen/Drehen funktioniert auch angehalten.
 - Vorschau (privat): Artifact https://claude.ai/artifact/1YU9DYm46ZHqoMJu78dfoM (älter; maßgeblich ist die Testadresse).
 - **Testadresse (öffentlich, noindex):** https://kairaethel-eng.github.io/labor/ – Kai hat Go gegeben, **nur den Ordner `labor/`** auf `main` zu veröffentlichen:
-  `git diff --stat origin/main..HEAD -- . ':(exclude)labor'` muss leer sein (Ausnahme: die drei gebauten Wurzel-Dateien nach Kais Go), dann `git push origin HEAD:main`. Arbeitszweig: `claude/3d-cinematic-website-effects-htd2aa`.
+  `git diff --stat origin/main..HEAD -- . ':(exclude)labor'` muss leer sein (Ausnahme: die drei gebauten Wurzel-Dateien nach Kais Go), dann `git push origin HEAD:main`. Arbeitszweig `claude/3d-cinematic-website-effects-htd2aa` ist identisch mit `main` und wird von Kai auf GitHub gelöscht (Entscheidung 2.11.2026); danach gibt es nur noch `main`.
 
 ## Technische Merkpunkte
 - Größen: CSS in **rem**, Grundschrift wächst ab 1600 px (`html{font-size:clamp(...)}` oben in jeder style.css); neue Werte in rem schreiben, Haarlinien in px. Zum Prüfen großer Monitore auch 2560×1440 ansehen (Kai).

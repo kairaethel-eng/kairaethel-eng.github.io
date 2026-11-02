@@ -1324,10 +1324,12 @@ function tick() {
   // Navigation
   top.classList.toggle('scrolled', scrollY > 30);
   const ci = Math.round(clamp(morphNow, 0, 4));
-  navLinks.forEach((a, k) => a.classList.toggle('on', k === Math.min(ci, 4)));
   const rr2 = rules.getBoundingClientRect();
   const chapKey = rr2.top < innerHeight * 0.5 && rr2.bottom > innerHeight * 0.5 ? 9 : ci;
-  if (chapKey !== chapShown) { chapShown = chapKey; chapNow.innerHTML = chapKey === 9 ? '<i>§</i>Hausordnung' : navLinks[Math.min(ci, 4)].innerHTML; }
+  // Leiste: 01–04, § Hausordnung (Eintrag 4), 05 Tür (Eintrag 5) – Kais Wunsch 2.11.: Hausordnung auch am PC in der Leiste
+  const navIdx = chapKey === 9 ? 4 : ci >= 4 ? 5 : ci;
+  navLinks.forEach((a, k) => a.classList.toggle('on', k === navIdx));
+  if (chapKey !== chapShown) { chapShown = chapKey; chapNow.innerHTML = navLinks[navIdx].innerHTML; }
 
   camera.position.copy(cam.pos); camera.lookAt(cam.target);
   if (renderer && !document.hidden) renderer.render(scene, camera);
