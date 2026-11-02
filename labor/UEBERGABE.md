@@ -1,7 +1,12 @@
-# Übergabe – Stand 1.11.2026 abends (Chat-Ende)
+# Übergabe – Stand 2.11.2026 (Livegang vorbereitet)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
-> Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md` und `labor/ENTSCHEIDUNGEN.md` (Branch `main`; der Arbeitszweig `claude/3d-cinematic-website-effects-htd2aa` steht auf demselben Stand). Wir verfeinern „Puls · Scan“. Hier meine Punkte: …
+> Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (Branch `main`; der Arbeitszweig `claude/3d-cinematic-website-effects-htd2aa` steht auf demselben Stand). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
+
+## Livegang (2.11.2026)
+- Entscheidung Kai: **GitHub Pages mit Domain hopphysio.de**, Wix-Website wird abgelöst, Domain/E-Mail (Google Workspace) bleiben bei Wix. Plan, DNS-Ist-Zustand, Reihenfolge: `LIVEGANG.md`.
+- Gebaut: `node build.mjs live` → Vorschau `labor/live/` (https://kairaethel-eng.github.io/labor/live/, noindex). Wurzel-Build `LIVE_ROOT=1 node build.mjs live` erst nach Go.
+- Noch nötig vor dem Go: Kais Prüfung der Vorschau, Rechtsangaben (Behörde, Haftpflicht, Google Workspace im Datenschutz), Inhaltsfragen (siehe LIVEGANG.md „Reihenfolge“).
 
 ## Prüfung 1.11. abends (lokal auf Kais PC, portables Node im Scratchpad)
 - Vollprüfung Puls · Scan (PC, Handy 375/320 px), Wurzelseiten, Live-Wix, Doku → Bericht `Desktop\Claude\claude hop v10\PRUEFBERICHT-Puls-Scan-2026-11-01.md`.

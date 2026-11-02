@@ -30,6 +30,8 @@ Kurzfassung für neue Chats, damit der alte Verlauf nicht geladen werden muss.
 ```bash
 cd labor && npm install && node build.mjs test-4      # baut labor/test-4-puls-scan.html
 FRAGMENT_DIR=<scratchpad>/artifact node build.mjs test-4   # zusätzlich Fragment für die private Claude-Vorschau
+node build.mjs live                 # Livegang-Vorschau labor/live/ (ohne Labor-Reste, mit Favicon/OG/Praxisdaten, noindex)
+LIVE_ROOT=1 node build.mjs live     # Wurzel /index.html + Rechtsseiten für hopphysio.de – NUR nach Kais Go (siehe LIVEGANG.md)
 ```
 - Screenshots im Container: `node tools/shot.cjs <seite.html> <präfix> <d|m> '<selektor>|<offset>' …` (Anleitung im Kopf der Datei; `WAIT=7000` bei Kamerafahrten, `REDUCED=1` für „Bewegung reduzieren“). SwiftShader ist langsam (~5–9 fps) → Kamera hängt nach. Kai will **keine** Screenshots geschickt bekommen; nur intern prüfen.
 - Scroll-Offsets Kapitel 03 (PC, in Bildschirmhöhen ab `#achse`, Kapitel seit 1.11. 440vh): C1–C2 0.61 · C5–C6 1.12 · Th 1.85 · L4–L5 2.58 · S1 3.1.

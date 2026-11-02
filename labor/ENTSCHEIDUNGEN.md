@@ -6,6 +6,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 ## Richtung
 - Favorit: Konzept **Puls** (dunkel, Partikel, Bernstein-Akzente). Seiten 1–3 bleiben nur zum Vergleich.
 - **Kai, 1.11.2026 (spät):** Die Live-Wix-Seite hopphysio.de wird vorerst **nicht** angefasst (Banner, Tippfehler, Alt-Texte bleiben). **Puls · Scan wird fertiggestellt und geht dann als neue Website live.** Wie (Hosting/Domain) ist noch zu entscheiden; siehe „Offen für die echte Website“.
+- **Kai, 2.11.2026: Hosting = GitHub Pages mit eigener Domain hopphysio.de** (DNS der Domain zeigt auf GitHub Pages; Wix behält Domain-Verwaltung und E-Mail, die Wix-Website wird dadurch unter hopphysio.de abgelöst). Puls · Scan wird als `/index.html` gebaut, Impressum/Datenschutz daneben; keine Drittskripte, kein Cookie-Banner nötig. Vorbereitung: Build-Ziel `live` → Vorschau `labor/live/` (noindex), Wurzel erst nach Go.
 
 ## Umgesetzte Entscheidungen
 
@@ -72,6 +73,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - Zuordnung Therapien → Räume im Rundgang ist eine Annahme (B1: MT, CMD, Atlas-Axis, Osteopathie, Schmerz, Fango/Reizstrom, Stoßwelle · B2: Manuthera, MT · Training: KG, Sport, Schlingentisch) – Kai prüft.
 - Flüssigkeit auf echten Handys messen (Testumgebung ohne Grafikkarte).
 - Seiten tragen `noindex`; Veröffentlichung erst nach Freigabe. Keine externen Abrufe (Schriften und Bibliotheken eingebettet).
+- **Livegang-Vorbereitung (2.11.2026, nach Hosting-Entscheidung):** Build-Ziel `live` (siehe `LIVEGANG.md`): Labor-Reste entfernt, Titel/Beschreibung, Canonical, Favicon (SVG inline), `apple-touch-icon.png`, Open Graph mit `og.jpg` (aus der Seite mit deren Schriften gezeichnet), schema.org `Physiotherapy` mit Adresse/Telefon/Zeiten. Vorschau `labor/live/` (noindex) → Kai prüft. E-Mail läuft laut DNS (MX) über Google Workspace → im Datenschutz ergänzen.
 
 ## Rechtsseiten (Go 31.10.2026, Entwurf)
 - **1.11.2026 überarbeitet (Kais Auftrag):** Datenschutz neu für Puls · Scan geschrieben: GitHub Pages (GitHub ist nach dem EU-US Data Privacy Framework zertifiziert, laut GitHub-Datenschutzerklärung geprüft), keine Cookies/Analyse/fremden Inhalte, „Bewegung anhalten“ im lokalen Speicher nur nach Klick (§ 25 Abs. 2 Nr. 2 TDDDG), Kontakt per E-Mail und Anrufbeantworter (Art. 6/9 DSGVO, Hinweis keine Gesundheitsangaben), Google-Maps-Link, Rechte, Aufsicht LfDI BW mit **neuer Adresse Heilbronner Straße 35, 70191 Stuttgart (seit 22.12.2025)**. Newsletter und Wix-Statistik entfernt (bei Einführung ergänzen). Impressum: „ich“-Form, Anrufbeantworter, Berufsbezeichnung präzisiert, „Regierungspräsidium Baden-Württemberg“ (gibt es so nicht) ersetzt durch Platzhalter „Behörde laut Erlaubnisurkunde“, PhysTh-APrV ergänzt, Haftung für Links. Lange Wörter in Überschriften mit Trennstellen (Handy zoomte vorher heraus). Puls · Scan verlinkt jetzt diese Entwürfe.
