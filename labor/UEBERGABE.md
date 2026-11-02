@@ -11,7 +11,7 @@
 ## Prüfung 1.11. abends (lokal auf Kais PC, portables Node im Scratchpad)
 - Vollprüfung Puls · Scan (PC, Handy 375/320 px), Wurzelseiten, Live-Wix, Doku → Bericht `Desktop\Claude\claude hop v10\PRUEFBERICHT-Puls-Scan-2026-11-01.md`.
 - Umgesetzt (Go): Motiv-Name Leistungen, Figur Hero Handy, Manuthera-Schild Tastatur, THREE.Timer; ENTSCHEIDUNGEN bereinigt (veraltete V10-/Wix-Zeilen, Manuthera-Widerspruch).
-- Kais PC hat kein Node.js und keinen Klon; Bauen lokal nur mit portablem Node (Scratchpad) oder in der Cloud.
+- Seit 2.11.2026: **Node.js LTS (v26) installiert, fester Klon `C:\Users\Kai\Desktop\Claude\hop-site`** (nur `main`). Bauen: `cd labor; npm ci; node build.mjs live`. Vorher nur portables Node im Scratchpad.
 
 ## Was gilt jetzt
 - **V10 ist entfernt** (1.11., Kais Auftrag). Sicherung: ZIP bei Kai + Git-Verlauf bis Commit dd917c6.

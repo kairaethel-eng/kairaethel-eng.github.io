@@ -140,7 +140,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   if (cfg.live) { head = liveHead(head, cfg.live); body = liveBody(body); }
   const full = `<!doctype html>\n<html lang="de">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n${head}\n</head>\n<body>\n${body}\n</body>\n</html>\n`;
   mkdirSync(dirname(join(root, cfg.out)), { recursive: true });
-  writeFileSync(join(root, cfg.out), full);
+  writeFileSync(join(root, cfg.out), full.replace(/\r\n?/g, '\n'));
   if (cfg.live === 'index.html') {
     // Bilder für Link-Vorschau und Home-Bildschirm (Quelle labor/assets/, erzeugt aus der Seite selbst)
     for (const img of ['og.jpg', 'apple-touch-icon.png']) {

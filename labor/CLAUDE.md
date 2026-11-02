@@ -29,6 +29,7 @@ Kurzfassung für neue Chats, damit der alte Verlauf nicht geladen werden muss.
 ## Bauen, prüfen, veröffentlichen
 ```bash
 cd labor && npm install && node build.mjs test-4      # baut labor/test-4-puls-scan.html
+# Lokal auf Kais PC (seit 2.11.2026): Node LTS installiert, Klon C:\Users\Kai\Desktop\Claude\hop-site (Branch main). Build-Ausgabe immer LF.
 FRAGMENT_DIR=<scratchpad>/artifact node build.mjs test-4   # zusätzlich Fragment für die private Claude-Vorschau
 node build.mjs live                 # Livegang-Vorschau labor/live/ (ohne Labor-Reste, mit Favicon/OG/Praxisdaten, noindex)
 LIVE_ROOT=1 node build.mjs live     # Wurzel /index.html + Rechtsseiten für hopphysio.de – NUR nach Kais Go (siehe LIVEGANG.md)
