@@ -743,7 +743,7 @@ function mobileCard() {
   const rs = cards.map((c) => c.getBoundingClientRect());
   rs.forEach((r, i) => { const d = Math.abs(r.top - vh * 0.5); if (d < bd) { bd = d; best = i; } });
   // Karten leben in der unteren Bildhälfte und blenden nach oben aus, damit die Wirbelsäule frei bleibt
-  rs.forEach((r, i) => { cards[i].style.opacity = (smooth(vh * 0.1, vh * 0.4, r.top) * (i === best ? 1 : 0.55)).toFixed(3); });
+  rs.forEach((r, i) => { cards[i].style.opacity = (smooth(vh * 0.1, vh * 0.4, r.top) * (i === best ? 1 : 0.8)).toFixed(3); });
   return best;
 }
 dots.forEach((d) => d.addEventListener('click', () => {
@@ -1048,7 +1048,7 @@ let tourWant = null, tourHide = 0, xray = 0, dragRot = 0, hoverRoom = -1;
 const manuTag = document.createElement('a');
 manuTag.className = 'manu-tag'; manuTag.href = '#manuthera'; manuTag.setAttribute('aria-label', 'Manuthera ansehen');
 manuTag.innerHTML = '<b class="dot" aria-hidden="true"></b>Manuthera <span aria-hidden="true">↓</span>';
-document.body.appendChild(manuTag);
+($('main') || document.body).appendChild(manuTag);
 manuTag.addEventListener('click', (e) => { e.preventDefault(); const t = $('#manuthera'); if (t) scrollToY(t.getBoundingClientRect().top + scrollY); });
 const manuTagP = (() => { const [x, z] = P(320, 136); return new V3(x, EYE - 0.22, z); })();
 let manuTagVis = 0;
