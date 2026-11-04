@@ -1,6 +1,6 @@
 // Baut jede Testseite zu EINER eigenständigen HTML-Datei:
 // Schriften als Base64, CSS und JS inline – keine externen Abrufe (DSGVO-freundlich).
-// Aufruf: npm run build   (optional: node build.mjs test-1)
+// Aufruf: npm run build   (optional: node build.mjs test-4)
 import { build } from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -16,9 +16,6 @@ const liveDir = LIVE_ROOT ? '..' : 'live';
 const BASE = LIVE_ROOT ? 'https://hopphysio.de/' : 'https://kairaethel-eng.github.io/labor/live/';
 
 const PAGES = {
-  'test-1': { out: 'test-1-achse.html' },
-  'test-2': { out: 'test-2-puls.html' },
-  'test-3': { out: 'test-3-puls-achse.html' },
   'test-4': { out: 'test-4-puls-scan.html' },
   'haus': { out: 'hausbesuch.html', fonts: 'haus' },
   'manu': { out: 'manuthera.html' },

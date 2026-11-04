@@ -10,7 +10,7 @@ Kurzfassung für neue Chats, damit der alte Verlauf nicht geladen werden muss.
 ## Projekt
 - Neue Website-Richtung **„Puls · Scan“**: dunkel, Partikel (three.js), Bernstein-Akzente, „die Seite lebt“. Startadresse (`/index.html`, `/impressum.html`, `/datenschutz.html`) **nie ändern ohne ausdrückliches Go**. Seit 1.11.2026 ist V10 entfernt (Kais Auftrag; Sicherung = Git-Verlauf bis Commit dd917c6 + ZIP bei Kai). Die Wurzel ist jetzt eine Übergangsseite; alle drei Dateien werden aus `labor/src` gebaut: `node build.mjs start` (Quelle `src/start`), `start-ds`/`start-imp` (Quelle `src/recht`, ohne Labor-Hinweis, Links auf die Wurzel).
 - Arbeitsstand: `labor/src/test-4/` → Build erzeugt `labor/test-4-puls-scan.html` (eine Datei, Schriften/JS eingebettet, keine externen Abrufe, `noindex`).
-- Archiv (seit 4.11.2026 nicht mehr in der Labor-Übersicht verlinkt, Kai besucht sie nicht mehr; Dateien bleiben): `test-1` Achse, `test-2` Puls, `test-3` Puls + Achse. Weiterhin verlinkt: `haus` Hausbesuch (warmes 3D-Haus, nur PC).
+- Die alten Vergleichsseiten `test-1` Achse, `test-2` Puls, `test-3` Puls + Achse sind seit 4.11.2026 gelöscht (Kais Go; zurückholbar aus dem Git-Verlauf vor dem Lösch-Commit). Weitere Seite: `haus` Hausbesuch (warmes 3D-Haus, nur PC).
 - `zuhause` → `zuhause.html`: **Design 2**, Haus als Startmenü (ein Bildschirm, Räume anklicken, Panel/Blatt mit Inhalt). Nutzt `test-4/praxis.js`, `test-4/shapes.js` (housePoints), `manu/ideaA.js`.
 - `recht` → `recht-impressum.html`, `recht-datenschutz.html` (Entwürfe) · `portrait` → `portrait.html` (3 Ideen, Beispiel-Büste).
 - `manu` → `manuthera.html`: drei Entwürfe für das Manuthera-Highlight (A Bühne, B Raum schaffen, C Drei Ebenen), Vorschau privat https://claude.ai/artifact/74Cab3W8CQXB2hoMBGbtiv.
