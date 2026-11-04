@@ -1223,6 +1223,8 @@ addEventListener('keydown', (e) => {
   st?.addEventListener('touchstart', (e) => { if (e.target.closest('a,button')) return; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
   st?.addEventListener('touchend', (e) => { if (x0 === null) return; const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) tourStep(dx < 0 ? 1 : -1); }, { passive: true }); }
 let tourWant = null, tourHide = 0, xray = 0, dragRot = 0, hoverRoom = -1;
+// Handy: Röntgenblick ruhiger (Linien 40 %), bis man den Rundgang betritt – der Text von Kapitel 04 liegt darüber
+let tourEngaged = false, xrayCalm = 1, viewLift = 0;
 // Schild „Manuthera“ an der Liege in Raum 04 (Röntgenblick und Rundgang, PC und Handy)
 const manuTag = document.createElement('a');
 manuTag.className = 'manu-tag'; manuTag.href = '#manuthera'; manuTag.setAttribute('aria-label', 'Manuthera ansehen');
@@ -1257,7 +1259,7 @@ function xrayPose() {
 // Handy: nach dem Rundgang (bis die Manuthera-Bühne vorbei ist) kein Haus/Röntgenblick mehr – 0 … 1
 function houseGone() {
   const vh = MINH, tb = tourEl.getBoundingClientRect().bottom, mb = manuSec ? manuSec.getBoundingClientRect().bottom : 0;
-  return (1 - smooth(vh * 0.45, vh * 0.95, tb)) * smooth(vh * 0.1, vh * 0.5, mb);
+  return (1 - smooth(vh * 0.55, vh * 0.98, tb)) * smooth(vh * 0.1, vh * 0.5, mb); // blendet aus, sobald die Knöpfe hochwandern
 }
 function updateTour(dt) {
   manuTagVis = 0;
@@ -1280,9 +1282,11 @@ function updateTour(dt) {
   const pvIn = desk ? smooth(2.55, 2.95, morphNow) : Math.min(smooth(2.7, 2.95, morphNow), smooth(MINH * 1.02, MINH * 0.72, roofIntro.getBoundingClientRect().top));
   const pv = morphNow > 2.55 && morphNow < 3.45 ? pvIn * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) * (1 - listK) * (desk ? 1 : 1 - houseGone()) : 0;
   xray = pv;
+  if (tourIdx >= 0) tourEngaged = true; else if (!tourInView()) tourEngaged = false;
+  xrayCalm += ((desk || tourEngaged ? 1 : 0.4) - xrayCalm) * (1 - Math.exp(-dt * 3));
   tU.uCut.value = inside > 0.001 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
   tU.uOn.value = inside > 0.001 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0.001 || pv > 0;
-  tU.uFade.value = inside > 0.001 ? Math.max(inside, pv * 0.55) : pv * 0.55;
+  tU.uFade.value = inside > 0.001 ? Math.max(inside, pv * 0.55 * xrayCalm) : pv * 0.55 * xrayCalm;
   tU.uReady.value = prx ? ramp(tU.uReady.value, dt) : 0;
   if (prx) tU.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * GLH * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * prx.spacing * uniforms.uXf.value[3].w * 0.62;
   uniforms.uRoofLift.value += (Math.max(pv * 1.3, inside * 1.1) - uniforms.uRoofLift.value) * 0.08;
@@ -1492,7 +1496,7 @@ function tick() {
     if (morphNow > 0.3 && morphNow < 1.6) dim = Math.max(dim, 0.55); // Bewegungslinien leise hinter Text
   }
   if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
-  dim = Math.max(dim, tourHide, xray * 0.4); // im Rundgang/Röntgenblick tritt das äußere Partikel-Haus zurück
+  dim = Math.max(dim, tourHide, xray * (0.4 + (1 - xrayCalm) * 0.6)); // im Rundgang/Röntgenblick tritt das äußere Partikel-Haus zurück (Handy vor dem Betreten stärker)
   dim = Math.max(dim, manuK, listK); // Manuthera-Bühne und Leistungen: Partikel-Hintergrund blendet ganz aus
   if (licht && lichtK > 0) dim = Math.max(dim, lichtK); // K1: Partikel weichen dem Sonnenstaub
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
@@ -1542,6 +1546,11 @@ function tick() {
   if (chapKey !== chapShown) { chapShown = chapKey; chapNow.innerHTML = navLinks[navIdx].innerHTML; }
 
   camera.position.copy(cam.pos); camera.lookAt(cam.target);
+  { // Handy: Ende des Rundgangs – die Szene scrollt mit Text und Knöpfen nach oben weg (Bildausschnitt verschieben)
+    const tb = isDesktop() ? -1 : tourEl.getBoundingClientRect().bottom;
+    const lift = tb > 0 && houseGone() < 0.999 ? Math.max(0, VH - tb) : 0;
+    if (lift !== viewLift || (camera.view && camera.view.enabled && camera.view.fullHeight !== GLH)) { viewLift = lift; if (lift > 0) camera.setViewOffset(VW, GLH, 0, lift, VW, GLH); else camera.clearViewOffset(); }
+  }
   if (renderer && !document.hidden) renderer.render(scene, camera);
   if (manu && manu.st.visible && !document.hidden) { manu.update(0, dt); manu.st.renderer.render(manu.st.scene, manu.st.camera); }
   if (!document.hidden) updateServices(dt);
