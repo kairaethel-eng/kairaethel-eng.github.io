@@ -157,3 +157,5 @@ Arbeitszweig → `labor/` auf `main`. Wurzel unberührt.
 - Nachtrag 4.11. abends (Stufe 2a auf main, nach 2b): axe meldete bei 768 px 10× color-contrast an einer Wirbelsäulen-Karte – Deckkraft blieb beim Hinausscrollen auf ~0,1 stehen (Karten wurden nur während der Kamerafahrt nachgeführt, älterer Fehler, durch neue Seitenhöhe sichtbar). Jetzt nachgeführt, solange das Kapitel in der Nähe ist; axe wieder 0 bei 320/390/768/1440.
 
 **K1 „Die Tür geht auf“ – Entscheidung Kai 4.11.: „Licht ja“.** Ist jetzt Standard (ohne Parameter). `?licht=0` zeigt zum Vergleich die dunkle Variante.
+
+**Handy-/Tablet-Hero (Go Kai 4.11., Option 2; ≤ 920 px):** Titel oben, Figur groß darunter (Bühne `#heroStage`, Figur wird per `fitHero` eingepasst, ersetzt die kleine Lücken-Lösung), darunter Spannungsanzeige und „Weiter“, danach Untertitel und Knöpfe. Auf der Bühne `touch-action:none`: senkrechtes Streichen löst Spannung, scrollt nicht; auf Titel/Rest scrollt man normal. PC unverändert. Geprüft: Wisch auf Figur → scrollY 0, Anzeige sinkt; Wisch auf Titel scrollt. Offen [O]: ohne WebGL liegt das Standbild noch nach altem Muster (nicht nachgezogen).

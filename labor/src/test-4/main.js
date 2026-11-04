@@ -246,7 +246,7 @@ function layout() {
     X[4].set(hw * 0.46, 0, 0, 0.72);
   } else {
     X[0].set(0, 2.35, 0, 0.40);        // Handy: etwas kleiner und höher, Füße über dem Kicker (Prüfung 1.11.)
-    if (heroFit) { const wpp = 8.19 / VH, hw2 = (heroFit.bot - heroFit.top) * wpp; X[0].set(0, (VH / 2 - (heroFit.top + heroFit.bot) / 2) * wpp, 0, Math.min(0.4, hw2 / 7.75)); } // Figur zwischen Leiste und Kicker (4.11.)
+    if (heroFit) { const wpp = 8.19 / VH, hw2 = (heroFit.bot - heroFit.top) * wpp; X[0].set(0, (VH / 2 - (heroFit.top + heroFit.bot) / 2) * wpp, 0, Math.min(0.8, hw2 / 7.75)); } // Figur zwischen Leiste und Kicker (4.11.)
     X[1].set(0, 0, 0, 1.25);           // 1A: Bewegungslinien über den ganzen Bildschirm
     X[2].set(0, 1.65, 0, 0.28);        // 4A: Wirbelsäule in der oberen Bildhälfte
     X[3].set(0, 2.5, 0, 0.42);         // 2B: wird beim Scrollen zum Emblem (siehe roofEmblem)
@@ -1515,7 +1515,7 @@ function updateHints(dt) {
   // Körper: bis zur ersten Berührung
   const showBody = !touched && morphNow < 0.25 && now - t0Hints > 3500 && scrollY < VH * 0.3;
   hintBody.classList.toggle('on', showBody);
-  if (showBody) hintBody.style.transform = desk ? `translate(${VW * 0.6}px, ${VH * 0.6}px) translate(-50%,-50%)` : `translate(${VW * 0.84}px, ${VH * 0.24}px) translate(-50%,-50%)`; // neben der Figur, nicht auf den Partikeln
+  if (showBody) hintBody.style.transform = desk ? `translate(${VW * 0.6}px, ${VH * 0.6}px) translate(-50%,-50%)` : `translate(${VW * 0.84}px, ${heroFit ? heroFit.top + (heroFit.bot - heroFit.top) * 0.3 - scrollY : VH * 0.24}px) translate(-50%,-50%)`; // neben der Figur, nicht auf den Partikeln
   // Haus: PC im Röntgenblick (ziehen), Handy vor dem Betreten (wischen/antippen)
   if (dragRot !== rotSeen || tourIdx >= 0) houseUsed = true;
   const houseReady = desk ? xray > 0.6 && tourIdx < 0 : tourInView() && tourIdx < 0 && morphNow > 2.7 && morphNow < 3.3;
@@ -1578,13 +1578,12 @@ if (!reduced) requestAnimationFrame(() => {
   }
 }
 
-// Handy: Figur zwischen Leiste (zweizeilig seit A3) und Kicker einpassen – nach dem ersten Bild messen (kein Layout beim Start, A1)
+// Handy: Figur in die Bühne unter dem Titel einpassen (#heroStage) – nach dem ersten Bild messen (kein Layout beim Start, A1)
 function fitHero() {
   if (isDesktop()) { heroFit = null; layout(); return; }
-  const k = document.querySelector('.hero .kicker'), bar = document.getElementById('top');
-  if (!k || !bar) return;
-  const ky = (window.gsap && gsap.getProperty(k, 'y')) || 0;
-  const bot = k.getBoundingClientRect().top + scrollY - ky - 14, top = bar.getBoundingClientRect().bottom + 6;
+  const st = document.getElementById('heroStage');
+  if (!st) return;
+  const r = st.getBoundingClientRect(), top = r.top + scrollY + 4, bot = r.bottom + scrollY - 4;
   if (bot - top > 60) { heroFit = { top, bot }; layout(); }
 }
 requestAnimationFrame(() => requestAnimationFrame(fitHero));

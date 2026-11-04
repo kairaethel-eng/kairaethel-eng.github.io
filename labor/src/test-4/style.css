@@ -107,6 +107,7 @@ main{position:relative;z-index:2}
 /* Hero */
 .hero{display:flex;flex-direction:column;justify-content:flex-end;padding-top:7.5rem;padding-bottom:clamp(3.75rem,9vh,6.875rem)}
 .hero-inner{position:relative}
+.hero-stage,.hero-more{display:none}
 .kinetic{font-size:clamp(3.625rem,9.8vw,10.75rem);line-height:.86;letter-spacing:-.045em;margin-bottom:2.125rem;max-width:7.2ch;color:var(--txt)}
 .kinetic .ch{display:inline-block;font-weight:var(--w,800);transition:color .4s}
 .kinetic .ch.hot{color:var(--amber)}
@@ -448,6 +449,20 @@ canvas.gl-wait{opacity:0}
   .manifest{padding-block:6.875rem}
   .door-inner{grid-template-columns:1fr}
   .hero{justify-content:flex-end}
+}
+/* Handy/Tablet-Hero (Go Kai 4.11., Option 2): erster Bildschirm = Titel + große Figur + Anzeige; Text und Knöpfe nach kleinem Scroll */
+@media (max-width:920px){
+  .hero{padding-top:5.75rem;justify-content:flex-start}
+  .hero-inner{display:flex;flex-direction:column}
+  .hero-inner>.kicker{order:0}.hero-inner>.kinetic{order:1;margin-bottom:.5rem}
+  .hero-stage{display:block;order:2;height:max(15rem,calc(100svh - 19rem));touch-action:none;-webkit-tap-highlight-color:transparent}
+  .hero-inner>.meter{order:3;margin-top:.25rem}
+  .hero-more{display:inline-flex;order:4;align-self:center;align-items:center;gap:.375rem;min-height:2.75rem;padding:0 1rem;font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);text-decoration:none}
+  .hero-more svg{width:1rem;height:1rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .hero-inner>.hero-sub{order:5;margin-top:1.25rem}
+  .hero-inner>.nogl-note{order:6}
+  @media (min-width:601px){.hero-stage{height:max(15rem,calc(100svh - 26rem))}}
+  .hero-inner>.actions{order:7}
 }
 @media (max-width:600px){
   body{font-size:1rem}
