@@ -4,6 +4,7 @@
 <meta name="description" content="Testseite 4 (Puls · Scan): HOP – Home of Physiotherapy als dunkle Partikel-Inszenierung, Wirbelsäule als gescannte Punktwolke mit Kamerafahrt.">
 <style>/*FONTS*//*CSS*/</style>
 <!--BODY-->
+<a class="skip" href="#start">Zum Inhalt</a>
 <canvas id="gl" aria-hidden="true"></canvas>
 <div class="grain" aria-hidden="true"></div>
 <div class="hand" id="hand" aria-hidden="true"><span>lösen</span></div>
@@ -13,12 +14,12 @@
     <svg viewBox="0 0 560 240" aria-hidden="true"><circle cx="110" cy="120" r="66" fill="#7FAF45"/><circle cx="300" cy="120" r="66" fill="#3C7189"/><circle cx="490" cy="120" r="66" fill="#3F86B5"/><g font-family="Archivo Expanded,Archivo,Arial,sans-serif" font-weight="800" font-size="60" fill="#fff" text-anchor="middle"><text x="110" y="142">H</text><text x="300" y="142">O</text><text x="490" y="142">P</text></g></svg>
   </a>
   <ol class="chapters" id="chapters" aria-label="Kapitel">
-    <li><a href="#start"><i>01</i>Spannung</a></li>
-    <li><a href="#bewegung"><i>02</i>Bewegung</a></li>
-    <li><a href="#achse"><i>03</i>Achse</a></li>
-    <li><a href="#dach"><i>04</i>Dach</a></li>
-    <li><a href="#hausordnung"><i>§</i>Hausordnung</a></li>
-    <li><a href="#tuer"><i>05</i>Tür</a></li>
+    <li><a href="#start"><i>01</i><span class="ct">Spannung<small>Start</small></span></a></li>
+    <li><a href="#bewegung"><i>02</i><span class="ct">Bewegung<small>Über HOP</small></span></a></li>
+    <li><a href="#achse"><i>03</i><span class="ct">Achse<small>Wirbelsäule</small></span></a></li>
+    <li><a href="#dach"><i>04</i><span class="ct">Dach<small>Praxis &amp; Leistungen</small></span></a></li>
+    <li><a href="#hausordnung"><i>§</i><span class="ct">Hausordnung</span></a></li>
+    <li><a href="#tuer"><i>05</i><span class="ct">Tür<small>Kontakt &amp; Termin</small></span></a></li>
   </ol>
   <button type="button" class="chap-now" id="chapNow" aria-expanded="false" aria-controls="chapters" aria-label="Kapitel wählen"></button>
   <button type="button" class="motion-btn" id="motionBtn" aria-pressed="false" aria-label="Bewegung anhalten" title="Bewegung anhalten"><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bewegung</span></button>
@@ -31,7 +32,7 @@
     <div class="wrap hero-inner">
       <p class="kicker">HOP · Home of Physiotherapy · Schorndorf</p>
       <h1 class="kinetic" id="heroTitle" aria-label="Spannung lösen.">Spannung lösen.</h1>
-      <p class="hero-sub">Physiotherapie mit Kompetenz und Herz. <span class="only-fine">Fahren Sie mit der Maus über den Körper und lösen Sie die Verspannungen.</span><span class="only-touch">Streichen Sie über den Körper und lösen Sie die Verspannungen.</span></p>
+      <p class="hero-sub">Physiotherapie in Schorndorf mit Kompetenz und Herz. <span class="only-fine">Fahren Sie mit der Maus über den Körper und lösen Sie die Verspannungen.</span><span class="only-touch">Streichen Sie über den Körper und lösen Sie die Verspannungen.</span></p>
       <p class="nogl-note">Die bewegte Ansicht braucht einen aktuellen Browser.</p>
       <div class="actions">
         <a class="btn" href="#tuer">Termin anfragen</a>
@@ -237,16 +238,18 @@
         <h2 id="t-title">Der erste<br><em>Schritt.</em></h2>
         <p class="lead">Schreiben Sie mir eine E-Mail oder sprechen Sie auf den Anrufbeantworter. Ich melde mich mit einem Terminvorschlag.</p>
         <div class="actions">
-          <a class="btn" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage">Termin anfragen</a>
+          <a class="btn" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage&amp;body=Guten%20Tag%20Herr%20Raethel%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20einen%20Termin%20anfragen.%0D%0A%0D%0AName%3A%0D%0AR%C3%BCckrufnummer%3A%0D%0AWunschzeiten%3A%0D%0A%C3%84rztliche%20Verordnung%20vorhanden%20%28ja%2Fnein%29%3A%0D%0A%0D%0AMeine%20Beschwerde%20schildere%20ich%20Ihnen%20bitte%20erst%20im%20Gespr%C3%A4ch%2C%20nicht%20per%20E-Mail.%0D%0A%0D%0AVielen%20Dank">Termin anfragen</a>
           <a class="btn btn-ghost" href="tel:+4971819931470">07181 9931470</a>
+          <button type="button" class="btn btn-ghost" id="copyMail" hidden>E-Mail-Adresse kopieren</button>
         </div>
+        <p class="copy-state" id="copyState" role="status"></p>
         <p class="small">Bitte keine ausführlichen Gesundheitsangaben per E-Mail oder auf dem Anrufbeantworter. Die besprechen wir persönlich.</p>
       </div>
       <dl class="facts">
-        <div><dt>E-Mail</dt><dd><a href="mailto:kontakt@hopphysio.de">kontakt@hopphysio.de</a></dd></div>
-        <div><dt>Telefon</dt><dd><a href="tel:+4971819931470">07181 9931470</a><span class="dd-note">Nur Anrufbeantworter. Ich rufe Sie zurück, schneller geht es per E-Mail.</span></dd></div>
+        <div><dt>E-Mail</dt><dd><a id="mailAddr" href="mailto:kontakt@hopphysio.de">kontakt@hopphysio.de</a></dd></div>
+        <div><dt>Telefon</dt><dd><a href="tel:+4971819931470">07181 9931470</a><span class="dd-note">Nur Anrufbeantworter. Ich rufe Sie zurück, schneller geht es per E-Mail.</span><a class="vc" href="hop-physiotherapie.vcf" download>Praxis im Telefon speichern</a></dd></div>
         <div><dt>Adresse</dt><dd><a href="https://www.google.com/maps/search/?api=1&amp;query=Schlichtener%20Stra%C3%9Fe%2087%2C%2073614%20Schorndorf" target="_blank" rel="noopener">Schlichtener Straße 87, 73614 Schorndorf</a><span class="dd-note">In Google Maps öffnen</span></dd></div>
-        <div><dt>Zeiten</dt><dd>Mo–Fr 8:30–19:30 Uhr<br>Sa nach Absprache<br>So und feiertags geschlossen<span class="dd-note">Termine nach Vereinbarung</span></dd></div>
+        <div><dt>Zeiten</dt><dd>Mo–Fr 8:30–19:30 Uhr<br>Sa nach Absprache<br>So und feiertags geschlossen<span class="dd-note">Termine nach Vereinbarung</span><span class="dd-open" id="openNow" hidden></span></dd></div>
         <div><dt>Abrechnung</dt><dd>Kassenpatienten, Privatpatienten und Selbstzahler<span class="dd-note">Ihre ärztliche Verordnung (falls vorhanden) bitte zum ersten Termin mitbringen.</span></dd></div>
         <div><dt>Parken</dt><dd>Direkt vor dem Haus und in der Nähe</dd></div>
         <div><dt>ÖPNV</dt><dd>VVS-Bus „Schlichtener Straße“ / „Grauhalde“</dd></div>

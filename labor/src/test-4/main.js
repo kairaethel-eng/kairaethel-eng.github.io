@@ -1528,3 +1528,47 @@ if (!reduced) requestAnimationFrame(() => {
   gsap.to(uniforms.uIntro, { value: 1, duration: 3.2, ease: 'expo.out', delay: 0.1 });
   gsap.from(['.hero .kicker', '.kinetic', '.hero-sub', '.hero .actions', '.meter', '.top'], { opacity: 0, y: 20, duration: 1.1, stagger: 0.06, ease: 'expo.out', delay: 0.2 });
 });
+
+// A4 · Kontakt: E-Mail kopieren, Öffnungsstatus (rein clientseitig, ohne JS bleibt die Zeitenliste)
+{
+  const copyBtn = document.getElementById('copyMail'), copyState = document.getElementById('copyState'), mailA = document.getElementById('mailAddr');
+  if (copyBtn && copyState && mailA) {
+    copyBtn.hidden = false;
+    let tm = 0;
+    const say = (t) => { copyState.textContent = t; clearTimeout(tm); tm = setTimeout(() => { copyState.textContent = ''; }, 4000); };
+    const selectAddr = () => { const r = document.createRange(); r.selectNodeContents(mailA); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+    copyBtn.addEventListener('click', async () => {
+      const addr = mailA.textContent.trim();
+      try { await navigator.clipboard.writeText(addr); say('Kopiert'); }
+      catch (e) { selectAddr(); say('Adresse markiert – bitte selbst kopieren'); }
+    });
+  }
+  const openEl = document.getElementById('openNow');
+  if (openEl) {
+    // Feiertage Baden-Württemberg 2026/2027 (feste Liste)
+    const HOL = new Set(['2026-01-01', '2026-01-06', '2026-04-03', '2026-04-06', '2026-05-01', '2026-05-14', '2026-05-25', '2026-06-04', '2026-10-03', '2026-11-01', '2026-12-25', '2026-12-26',
+      '2027-01-01', '2027-01-06', '2027-03-26', '2027-03-29', '2027-05-01', '2027-05-06', '2027-05-17', '2027-05-27', '2027-10-03', '2027-11-01', '2027-12-25', '2027-12-26']);
+    const DAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+    const OPEN = 8 * 60 + 30, CLOSE = 19 * 60 + 30;
+    const upd = () => {
+      try {
+        const p = {};
+        new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date()).forEach((x) => { p[x.type] = x.value; });
+        const base = Date.UTC(+p.year, +p.month - 1, +p.day), mins = +p.hour * 60 + +p.minute;
+        const info = (k) => { const d = new Date(base + k * 864e5); return { wd: d.getUTCDay(), key: d.toISOString().slice(0, 10) }; };
+        const isOpenDay = (k) => { const d = info(k); return d.wd >= 1 && d.wd <= 5 && !HOL.has(d.key); };
+        const lastKey = info(0).key.slice(0, 4);
+        if (lastKey > '2027') { openEl.hidden = true; return; }
+        let t;
+        if (isOpenDay(0) && mins < OPEN) t = 'Heute ab 8:30 geöffnet';
+        else if (isOpenDay(0) && mins < CLOSE) t = 'Heute geöffnet bis 19:30';
+        else {
+          let k = 1; while (k < 10 && !isOpenDay(k)) k++;
+          t = k === 1 ? 'Morgen ab 8:30' : DAYS[info(k).wd] + ' ab 8:30';
+        }
+        openEl.textContent = t; openEl.hidden = false;
+      } catch (e) { openEl.hidden = true; }
+    };
+    upd(); setInterval(upd, 60000);
+  }
+}

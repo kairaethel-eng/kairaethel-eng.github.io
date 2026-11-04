@@ -1,7 +1,12 @@
-# Übergabe – Stand 4.11.2026 (Stufe 2a; Livegang vorbereitet seit 2.11.)
+# Übergabe – Stand 4.11.2026 (Stufe 2b; Livegang vorbereitet seit 2.11.)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
+
+## Stand 4.11.2026 spät – Stufe 2b umgesetzt (Go: A3, A4, A5, A7; A6 nur Vorschlag)
+Details `ENTSCHEIDUNGEN.md` → „Stufe 2b“. Auf `main` nur `labor/`.
+- A3 Navigation zweizeilig (Untertitel), A4 Kontakt (mailto-Vorlage, E-Mail kopieren, vCard `hop-physiotherapie.vcf`, Öffnungsstatus), A5 Hero-Untertitel mit Ort, A7 Skip-Link. A6 Etiketten-Tabelle liegt nur in ENTSCHEIDUNGEN (Kai bestätigt). Stufe-1-Plan (gelöscht, Git-Verlauf) gelöscht.
+- **Offen:** A6 Kais Bestätigung · A8 rechtlich (Kai) · A9 iPhone-Prüfung · Datenschutz: Google Workspace als E-Mail-Verarbeiter ergänzen · Wurzel erst nach Kais Go (`LIVEGANG.md`).
 
 ## Stand 4.11.2026 abends – Stufe 2a umgesetzt (Go: A1, A2, K1)
 Commit auf Arbeitszweig `claude/hop-website-design-review-lwh3ps`, **noch nicht auf `main`** (Testadresse zeigt es erst danach). Messwerte und Details: `ENTSCHEIDUNGEN.md` → „Stufe 2a“.
@@ -20,7 +25,7 @@ Commit auf Arbeitszweig `claude/hop-website-design-review-lwh3ps`, **noch nicht 
 - [B] Rest-Lang-Tasks kommen vom Browser selbst (HTML/Schriften parsen, erstes Layout): schon ohne JS 320 ms bei CPU ×4.
 
 ## Stand 4.11.2026 – offene Punkte (Kai arbeitet sie später ab)
-Erledigt 3./4.11. (Details `ENTSCHEIDUNGEN.md`): Stufe 1 aus `PLAN-Stufe1-2026-11-03.md` (axe target-size/color-contrast/region = 0 bei 320/390/768/1440), ärztlicher Hinweis „immer zuerst ärztlich abklären“ (alle Labor-Seiten), Spannung bis 0 mit „Entspannt.“ + ruhigem Atem, Wisch-Hinweis Manuthera erst nach echtem Wischen weg, Vergleichsseiten test-1–3 gelöscht (Git-Verlauf bis 54d7812). Kais Sichtprüfung 3.11.: Stufe 1 passt.
+Erledigt 3./4.11. (Details `ENTSCHEIDUNGEN.md`): Stufe 1 aus Stufe-1-Plan (gelöscht, Git-Verlauf) (axe target-size/color-contrast/region = 0 bei 320/390/768/1440), ärztlicher Hinweis „immer zuerst ärztlich abklären“ (alle Labor-Seiten), Spannung bis 0 mit „Entspannt.“ + ruhigem Atem, Wisch-Hinweis Manuthera erst nach echtem Wischen weg, Vergleichsseiten test-1–3 gelöscht (Git-Verlauf bis 54d7812). Kais Sichtprüfung 3.11.: Stufe 1 passt.
 
 **Kai prüft am iPhone**
 1. Körper ganz freistreichen → Anzeige 0 und „Entspannt.“? Ruhiger Atem gefällt?
