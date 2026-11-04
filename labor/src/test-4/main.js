@@ -46,6 +46,11 @@ const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t *
 // mitten im Start-Skript setzen. Media-Queries kennen die Größe ohne Layout; danach hält „resize“ die Werte aktuell.
 const mqSize = (dim) => { let lo = 0, hi = 16384; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (matchMedia(`(min-${dim}: ${m}px)`).matches) lo = m; else hi = m; } return lo; };
 let VW = mqSize('width'), VH = mqSize('height');
+// Höhe der 3D-Szene (Handy): wächst nur mit, schrumpft nicht, solange die Breite gleich bleibt. Safari blendet beim
+// Wischen die Adressleiste ein/aus (Fensterhöhe ändert sich) – die Szene würde sonst jedes Mal neu eingepasst und zucken.
+let GLH = VH, GLW = VW;
+// kleinste sichtbare Höhe bei gleicher Breite (Leiste sichtbar): stabile Grundlage für Scroll-Schwellen am Handy
+let MINH = VH;
 addEventListener('resize', () => { VW = innerWidth; VH = innerHeight; });
 const isDesktop = () => VW > 920;
 
@@ -235,7 +240,7 @@ scene.add(points);
 // ---------- Layout je Form (Position/Skalierung) ----------
 let heroFit = null;
 function layout() {
-  const d = isDesktop(), a = VW / VH;
+  const d = isDesktop(), a = VW / GLH;
   const hw = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)) * a; // halbe sichtbare Breite bei z=0
   const X = uniforms.uXf.value;
   if (d) {
@@ -246,18 +251,26 @@ function layout() {
     X[4].set(hw * 0.46, 0, 0, 0.72);
   } else {
     X[0].set(0, 2.35, 0, 0.40);        // Handy: etwas kleiner und höher, Füße über dem Kicker (Prüfung 1.11.)
-    if (heroFit) { const wpp = 8.19 / VH, hw2 = (heroFit.bot - heroFit.top) * wpp; X[0].set(0, (VH / 2 - (heroFit.top + heroFit.bot) / 2) * wpp, 0, Math.min(0.8, hw2 / 7.75)); } // Figur zwischen Leiste und Kicker (4.11.)
+    if (heroFit) { const wpp = 8.19 / GLH, hw2 = (heroFit.bot - heroFit.top) * wpp; X[0].set(0, (GLH / 2 - (heroFit.top + heroFit.bot) / 2) * wpp, 0, Math.min(0.8, hw2 / 7.75)); } // Figur zwischen Leiste und Kicker (4.11.)
     X[1].set(0, 0, 0, 1.25);           // 1A: Bewegungslinien über den ganzen Bildschirm
     X[2].set(0, 1.65, 0, 0.28);        // 4A: Wirbelsäule in der oberen Bildhälfte
     X[3].set(0, 2.5, 0, 0.42);         // 2B: wird beim Scrollen zum Emblem (siehe roofEmblem)
     X[4].set(0, 2.15, 0, 0.32);        // 3: tiefer und kleiner, frei von der Leiste
   }
-  uniforms.uPix.value = renderer ? renderer.getPixelRatio() * (VH / 900) * (d ? 1 : 1.25) : 1;
+  uniforms.uPix.value = renderer ? renderer.getPixelRatio() * (GLH / 900) * (d ? 1 : 1.25) : 1;
 }
 function resize() {
   if (isDesktop()) [...$$('.seg-card'), ...$$('#achse .note')].forEach((c) => { c.style.opacity = ''; c.style.transform = ''; });
-  camera.aspect = VW / VH; camera.updateProjectionMatrix();
-  if (renderer) renderer.setSize(VW, VH, false);
+  MINH = VW !== GLW || isDesktop() ? VH : Math.min(MINH, VH);
+  if (isDesktop() || VW !== GLW || VH > GLH || VH < GLH * 0.7) GLH = VH;
+  GLW = VW;
+  camera.aspect = VW / GLH; camera.updateProjectionMatrix();
+  if (renderer) {
+    const cv = renderer.domElement, pr = renderer.getPixelRatio();
+    // nur bei echter Änderung neu anlegen (gleiche Größe setzen leert sonst die Zeichenfläche → Flackern)
+    if (cv.width !== Math.floor(VW * pr) || cv.height !== Math.floor(GLH * pr)) renderer.setSize(VW, GLH, false);
+    cv.style.height = isDesktop() ? '' : GLH + 'px';
+  }
   layout();
 }
 addEventListener('resize', resize); resize();
@@ -267,7 +280,7 @@ const hand = $('#hand');
 const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), hit = new THREE.Vector3();
 let lastPaint = null, touched = false;
 function paintAt(cx, cy) {
-  ndc.set(cx / VW * 2 - 1, -(cy / VH) * 2 + 1);
+  ndc.set(cx / VW * 2 - 1, -(cy / GLH) * 2 + 1);
   raycaster.setFromCamera(ndc, camera);
   if (!raycaster.ray.intersectPlane(plane, hit)) return;
   const X = uniforms.uXf.value[0];
@@ -577,7 +590,7 @@ function updatePeri(zoneKey) {
   sU.uPeriStart.value = start;
   // Beschriftung am sichtbaren Ende der Bahn
   curve.getPointAt(desk ? 0.72 : 0.6, _pv); _pv.project(camera);
-  const lx = Math.min((_pv.x * 0.5 + 0.5) * VW, VW - 16), ly = (-_pv.y * 0.5 + 0.5) * VH;
+  const lx = Math.min((_pv.x * 0.5 + 0.5) * VW, VW - 16), ly = (-_pv.y * 0.5 + 0.5) * GLH;
   periLabel.style.transform = `translate(${lx}px, ${ly}px) translate(-100%, -260%)`;
   periLabel.textContent = cfg.txt;
 }
@@ -673,7 +686,7 @@ const nlines = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 nlines.setAttribute('class', 'nlines'); nlines.setAttribute('aria-hidden', 'true');
 nlines.innerHTML = '<line/><line/><line/><line/>'; document.body.appendChild(nlines);
 const nl = [...nlines.querySelectorAll('line')];
-const toPx = (v) => { const q = v.clone().project(camera); return [(q.x * 0.5 + 0.5) * VW, (-q.y * 0.5 + 0.5) * VH]; };
+const toPx = (v) => { const q = v.clone().project(camera); return [(q.x * 0.5 + 0.5) * VW, (-q.y * 0.5 + 0.5) * GLH]; };
 // Hindernisse auf dem Bildschirm: jeder sichtbare Wirbel als Rechteck (inkl. Fortsätze), Silhouette, Zielpunkt
 function spineRects() {
   const X = uniforms.uXf.value[2], rot = uniforms.uSpineRot.value, out = [];
@@ -788,17 +801,19 @@ const dotsBox = $('.seg-dots');
 // Unterkante der klebenden Punkte-Leiste (Handy) – darüber ist kein Platz für die Wirbelsäule
 function measureDots() { dotsStuck = dotsBox && !isDesktop() ? (parseFloat(getComputedStyle(dotsBox).top) || 0) + dotsBox.offsetHeight : 0; }
 addEventListener('resize', () => (dotsStuck = 0)); // neu messen (lazy: beim Start kein Layout erzwingen)
-const cardFade = (r, vh) => smooth(vh * 0.95, vh * 0.7, r.top) * Math.max(smooth(vh * 0.15, vh * 0.42, r.top), smooth(vh * 0.55, vh * 0.85, r.bottom));
+// Karte: kommt von unten (Oberkante 98 → 85 % Bildhöhe), lesbar bis ~45 %, dann aus; hohe Karten erst, wenn ihr Ende im Bild war
+const cardIn = (r, vh) => smooth(vh * 0.98, vh * 0.85, r.top);
+const cardFade = (r, vh) => cardIn(r, vh) * Math.max(smooth(vh * 0.25, vh * 0.45, r.top), smooth(vh * 0.55, vh * 0.85, r.bottom));
 function mobileCard(gate) {
-  const vh = VH;
+  const vh = MINH; // stabil: Safaris Leiste verschiebt sonst beim Wischen alle Schwellen
   const rs = cards.map((c) => c.getBoundingClientRect());
   // aktiv ist die letzte Karte, deren Oberkante den Bildrand fast erreicht hat (die vorige ist dann schon ausgeblendet)
   let best = 0;
-  rs.forEach((r, i) => { if (r.top < vh * 1.08) best = i; });
+  rs.forEach((r, i) => { if (r.top < vh * 1.0) best = i; });
   rs.forEach((r, i) => {
     const a = cardFade(r, vh) * (i === best ? gate : 0.8);
     cards[i].style.opacity = a.toFixed(3);
-    cards[i].style.transform = a > 0.999 ? '' : `translateY(${((1 - smooth(vh * 0.95, vh * 0.7, r.top)) * 1.5).toFixed(3)}rem)`;
+    cards[i].style.transform = a > 0.999 ? '' : `translateY(${((1 - cardIn(r, vh)) * 1.5).toFixed(3)}rem)`;
   });
   if (axisNote) axisNote.style.opacity = cardFade(axisNote.getBoundingClientRect(), vh).toFixed(3);
   return best;
@@ -820,17 +835,21 @@ function updateAxis(dt) {
   let mob = null;
   if (!desk && r.top < VH * 2 && r.bottom > -VH) {
     if (!dotsStuck) measureDots();
-    const vh = VH, c0 = cards[0].getBoundingClientRect().top, nt = axisNote ? axisNote.getBoundingClientRect().top : r.bottom;
+    const vh = MINH, c0 = cards[0].getBoundingClientRect().top, nt = axisNote ? axisNote.getBoundingClientRect().top : r.bottom;
     mob = {
-      inK: smooth(vh * 1.35, vh * 1.1, c0),   // Scan baut sich auf, bevor die erste Karte kommt
-      wIn: smooth(vh * 1.2, vh * 0.95, c0),   // Kamerafahrt zum ersten Abschnitt (Karte noch unsichtbar)
-      endK: smooth(vh * 0.45, vh * 0.15, nt), // nach letzter Karte + Hinweis: ganze Wirbelsäule
+      inK: smooth(vh * 2.0, vh * 1.7, c0),    // Scan baut sich schon mit der Überschrift auf
+      bigK: smooth(vh * 1.75, vh * 1.35, c0), // Überschrift geht: ganze Wirbelsäule groß und mittig (bleibt groß)
+      wIn: smooth(vh * 1.15, vh * 0.98, c0),  // Kamerafahrt zum ersten Abschnitt (Karte noch unsichtbar)
+      endK: smooth(vh * 0.45, vh * 0.2, nt),  // nach letzter Karte + Hinweis: zurück zur ganzen Wirbelsäule
       outK: smooth(vh * 1.05, vh * 0.6, dachSec.getBoundingClientRect().top), // auflösen (nach oben)
     };
-    // ganze Wirbelsäule (Kopf bis Kreuzbein) groß und mittig im freien Bereich unter der Punkte-Leiste
-    const top = clamp(dotsStuck / vh, 0.08, 0.3), bot = 0.97, e = mob.endK;
+    // ganze Wirbelsäule (Kopf bis Kreuzbein) groß und mittig im sichtbaren Bereich unter der Punkte-Leiste
+    // (Bruchteile der Szenenhöhe GLH; Abschnitts-Posen rechnen relativ dazu, die Nahansichten bleiben gleich)
+    const top = clamp(dotsStuck / GLH, 0.08, 0.3), bot = (MINH * 0.97) / GLH, e = mob.bigK;
     const sEnd = ((bot - top) * 8.197 * 0.86) / 8.7, yEnd = (0.5 - (top + bot) / 2) * 8.197;
-    X.set(0, MOB_X2.y + (yEnd - MOB_X2.y) * e + mob.outK * 1.1, 0, MOB_X2.s + (sEnd - MOB_X2.s) * e);
+    const ty = MOB_X2.y + (yEnd - MOB_X2.y) * e + mob.outK * 1.1, ts = MOB_X2.s + (sEnd - MOB_X2.s) * e;
+    const kx = reduced ? 1 : 1 - Math.exp(-dt * 6); // weich nachführen statt hart am Scrollen (kein Zucken)
+    X.set(X.x * (1 - kx), X.y + (ty - X.y) * kx, 0, X.w + (ts - X.w) * kx);
   }
   // Scan (0 = grobe Partikel, 1 = detaillierte Punktwolke)
   const solid = (!inSec ? 0 : mob ? mob.inK * (1 - mob.outK) : p <= 0 || p >= 1 ? 0 : p < ph.M1 ? smooth(0.005, ph.M0, p) : 1 - smooth(ph.M1, 0.995, p)) * spineK;
@@ -841,7 +860,7 @@ function updateAxis(dt) {
   sU.uOn.value = solid > 0 ? 1 : 0;
   // Punktgröße so, dass die Knochenpunkte bei jeder Entfernung dicht an dicht liegen
   // Punktgröße: Körnung dicht an dicht, Schichten als feine Linie
-  if (bones) bones.pts.material.uniforms.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * VH * 0.5 / tanH * X.w * (bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);
+  if (bones) bones.pts.material.uniforms.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * GLH * 0.5 / tanH * X.w * (bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);
 
   // Kamera: Übersicht ↔ Kamerafahrt
   const w = !inSec ? 0 : (mob ? mob.wIn * (1 - mob.endK) : smooth(ph.M0, ph.J0, p) * (1 - smooth(ph.J1, ph.M1, p))) * spineK;
@@ -852,11 +871,11 @@ function updateAxis(dt) {
     // Karte erst zeigen, wenn die Kamera am Abschnitt steht (ohne Kamerafahrt, z. B. ohne WebGL: sofort)
     if (axisWant && w > 0.01) {
       const err = cam.pos.distanceTo(axisWant.pos) / Math.max(0.01, axisWant.pos.distanceTo(axisWant.target));
-      if (err < 0.25) camArrive = Math.max(camArrive, 0.001);
+      if (err < 0.5) camArrive = Math.max(camArrive, 0.001); // ungefähr am Ziel genügt
     }
     else if (!(w > 0.01)) camArrive = 0;
     const arrived = !(w > 0.01) || camArrive > 0;
-    gateK = reduced ? (arrived ? 1 : 0) : gateK + ((arrived ? 1 : 0) - gateK) * (1 - Math.exp(-dt * 5));
+    gateK = reduced ? (arrived ? 1 : 0) : gateK + ((arrived ? 1 : 0) - gateK) * (1 - Math.exp(-dt * 9));
     const sel = mobileCard(gateK);
     if (sel !== mobSel) { mobSel = sel; camArrive = 0; if (w > 0.01) gateK = 0; }
   }
@@ -871,7 +890,7 @@ function updateAxis(dt) {
       setActive(zoneIdx);
     } else {
       // Abschnitt über der Kartenoberkante halten: rutscht die Karte beim Lesen nach oben, wandert er mit
-      const ct = cards[mobSel].getBoundingClientRect().top / VH, top = clamp(dotsStuck / VH, 0.08, 0.3);
+      const ct = cards[mobSel].getBoundingClientRect().top / GLH, top = clamp(dotsStuck / GLH, 0.08, 0.3);
       setActive(mobSel); jPose = stopPose(mobSel, clamp((top + ct) / 2, top + 0.04, 0.3)); zoneIdx = mobSel;
     }
   }
@@ -917,11 +936,11 @@ $$('.index li').forEach((li) => {
 const rules = $('#hausordnung'), laws = $$('#laws li'), door = $('#tuer');
 let lawOn = 0;
 
-// ---------- K1 „Die Tür geht auf“ (Standard seit 4.11., ?licht=0 = dunkel): Kapitel 05 wird hell ----------
+// ---------- K1 „Die Tür geht auf“ (nur mit ?licht=1; Standard dunkel seit 4.11. abends): Kapitel 05 wird hell ----------
 // Über die letzten 60 % der Hausordnung blendet die Seite von Dunkel in warmes Off-White (V10-Palette),
 // Bernstein bleibt, die Partikel weichen warmem Sonnenstaub. Der Übergang hängt allein am Scrollen
 // (keine Eigenbewegung); bei „Bewegung anhalten“ steht der Staub still, bei „reduzieren“ treibt er langsam.
-const licht = new URLSearchParams(location.search).get('licht') !== '0'; // seit 4.11. (Kai: „Licht ja“) Standard; ?licht=0 = dunkel zum Vergleich
+const licht = new URLSearchParams(location.search).get('licht') === '1'; // seit 4.11. abends wieder aus (Kai: „erschlägt“, alles dunkel); ?licht=1 = hell zum Vergleich
 let lichtK = -1;
 const hexRGB = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 const LICHT = { // [dunkel, hell, Text?] – Textfarben springen schnell in der Mitte um, damit nichts verschwimmt
@@ -1007,6 +1026,8 @@ function targetMorph() {
     if (!isDesktop() && prev === 0 && s === 1) t = smooth(vh * 0.03, vh * 0.4, scrollY);
     // Handy: Wirbelsäule → Haus kürzer, damit das Haus fertig in der Bildmitte steht, bevor der Text von Kapitel 04 kommt
     if (!isDesktop() && prev === 2 && s === 3) t = smooth(vh * 0.95, vh * 0.3, r.top);
+    // Handy: Bewegungslinien → Wirbelsäule früher fertig, damit der Scan schon mit der Überschrift entsteht
+    if (!isDesktop() && prev === 1 && s === 2) t = smooth(vh * 0.95, vh * 0.4, r.top);
     if (t > 0) m = prev + (s - prev) * t;
   }
   return m;
@@ -1223,7 +1244,7 @@ function placeManuTag() {
   manuTag.style.opacity = vis.toFixed(2);
   manuTag.classList.toggle('on', vis > 0.3);
   manuTag.tabIndex = vis > 0.3 ? 0 : -1; // unsichtbar auch nicht per Tastatur erreichbar
-  if (vis > 0) manuTag.style.transform = `translate(${((w.x * 0.5 + 0.5) * VW).toFixed(1)}px, ${((-w.y * 0.5 + 0.5) * VH - 30).toFixed(1)}px) translate(-50%, -100%)`;
+  if (vis > 0) manuTag.style.transform = `translate(${((w.x * 0.5 + 0.5) * VW).toFixed(1)}px, ${((-w.y * 0.5 + 0.5) * GLH - 30).toFixed(1)}px) translate(-50%, -100%)`;
 }
 // Haus mit gedrückter Maus drehen (PC, Röntgenblick)
 { let down = null; addEventListener('pointerdown', (e) => { if (xray > 0.4 && e.pointerType === 'mouse' && e.clientX > VW * 0.45 && !e.target.closest('a,button,.room-tag')) down = e.clientX; });
@@ -1232,6 +1253,11 @@ function placeManuTag() {
 function xrayPose() {
   const X = uniforms.uXf.value[3], desk = isDesktop();
   return frame(toWorld(new V3(0, -1.75, 0.1)), new V3(0.18, 0.62, 1), (desk ? 20 : 17) * X.w, desk ? 0.69 : 0.5, desk ? 0.56 : 0.3);
+}
+// Handy: nach dem Rundgang (bis die Manuthera-Bühne vorbei ist) kein Haus/Röntgenblick mehr – 0 … 1
+function houseGone() {
+  const vh = MINH, tb = tourEl.getBoundingClientRect().bottom, mb = manuSec ? manuSec.getBoundingClientRect().bottom : 0;
+  return (1 - smooth(vh * 0.45, vh * 0.95, tb)) * smooth(vh * 0.1, vh * 0.5, mb);
 }
 function updateTour(dt) {
   manuTagVis = 0;
@@ -1251,14 +1277,14 @@ function updateTour(dt) {
   const inside = near ? insideK : 0;
   // Röntgenblick (PC): von außen leuchtet das Innere durch das Haus, das Dach schwebt angehoben
   // Handy: erst steht das Haus groß in der Bildmitte; der Röntgenblick (Haus oben) kommt mit dem Text von unten
-  const pvIn = desk ? smooth(2.55, 2.95, morphNow) : Math.min(smooth(2.7, 2.95, morphNow), smooth(vh * 1.02, vh * 0.72, roofIntro.getBoundingClientRect().top));
-  const pv = morphNow > 2.55 && morphNow < 3.45 ? pvIn * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) * (1 - listK) : 0;
+  const pvIn = desk ? smooth(2.55, 2.95, morphNow) : Math.min(smooth(2.7, 2.95, morphNow), smooth(MINH * 1.02, MINH * 0.72, roofIntro.getBoundingClientRect().top));
+  const pv = morphNow > 2.55 && morphNow < 3.45 ? pvIn * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) * (1 - listK) * (desk ? 1 : 1 - houseGone()) : 0;
   xray = pv;
   tU.uCut.value = inside > 0.001 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
   tU.uOn.value = inside > 0.001 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0.001 || pv > 0;
   tU.uFade.value = inside > 0.001 ? Math.max(inside, pv * 0.55) : pv * 0.55;
   tU.uReady.value = prx ? ramp(tU.uReady.value, dt) : 0;
-  if (prx) tU.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * VH * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * prx.spacing * uniforms.uXf.value[3].w * 0.62;
+  if (prx) tU.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * GLH * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * prx.spacing * uniforms.uXf.value[3].w * 0.62;
   uniforms.uRoofLift.value += (Math.max(pv * 1.3, inside * 1.1) - uniforms.uRoofLift.value) * 0.08;
   tourHide = Math.min(1, inside * 1.4);
   // Hausdrehung festhalten, solange wir drinnen sind
@@ -1269,7 +1295,7 @@ function updateTour(dt) {
     tourWant = pv > 0.3 ? xrayPose() : null;
     if (pv > 0.3) { // Räume, Tür und Modell als anklickbare Schilder
       tU.uRoom.value = hoverRoom;
-      const place = (t, i, p, right) => { const w = toWorld(p); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * VW}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(${right ? '-12%' : '-50%'}, -50%)`; };
+      const place = (t, i, p, right) => { const w = toWorld(p); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * VW}px, ${(-w.y * 0.5 + 0.5) * GLH}px) translate(${right ? '-12%' : '-50%'}, -50%)`; };
       roomTags.forEach((t, i) => { t.el.classList.toggle('cta', i === 3); place(t, i, i === 3 ? manuCtaP : t.p.clone().setY(EYE + 0.2), i === 3); });
       extraTags.forEach((t) => place(t, -9, t.p));
     } else { tU.uRoom.value = -1; [...roomTags, ...extraTags].forEach((t) => { t.el.classList.remove('click'); t.el.style.opacity = 0; }); }
@@ -1293,7 +1319,7 @@ function updateTour(dt) {
     const vis = desk && inside > 0.9 && w.z < 1 && Math.abs(w.x) < 0.95 && Math.abs(w.y) < 0.9 && sx - t.el.offsetWidth / 2 > colR;
     t.el.style.opacity = vis ? (i === room ? 1 : 0.55) : 0;
     t.el.classList.toggle('on', i === room);
-    if (vis) t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * VW}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(-50%, -50%)`;
+    if (vis) t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * VW}px, ${(-w.y * 0.5 + 0.5) * GLH}px) translate(-50%, -50%)`;
   });
 }
 
@@ -1353,13 +1379,13 @@ function livingHeadlines() {
 // ---------- Dach (Handy): Haus wird beim Scrollen zum kleinen Emblem oben rechts ----------
 const roofHead = $('#allTitle');
 function roofEmblem() {
-  const vh = VH, a = VW / vh;
+  const vh = VH, a = VW / GLH;
   const hh = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)), hw = hh * a;
   const k = smooth(vh * 0.62, vh * 0.12, roofHead.getBoundingClientRect().top);
-  const navW = (78 / vh) * 2 * hh; // Leistenhöhe in Welt-Einheiten
+  const navW = (78 / GLH) * 2 * hh; // Leistenhöhe in Welt-Einheiten
   // groß: Haus mittig unter der Leiste, Breite ≈ 86 % des Bildes (Auftrag 1, 4.11.; vorher y 2.5, s 0.42 = oben)
   const bs = Math.min(0.52, (hw * 2 * 0.86) / 7.1);
-  const big = { x: 0, y: 0.16 + 0.55 * bs, s: bs }, small = { x: hw - 0.48, y: hh - navW - 0.42, s: 0.085 };
+  const big = { x: 0, y: 0.16 + 0.55 * bs + ((GLH - MINH) / 2) * (2 * hh / GLH), s: bs }, small = { x: hw - 0.48, y: hh - navW - 0.42, s: 0.085 };
   uniforms.uXf.value[3].set(big.x + (small.x - big.x) * k, big.y + (small.y - big.y) * k, 0, big.s + (small.s - big.s) * k);
   emblemK = k;
 }
@@ -1470,6 +1496,12 @@ function tick() {
   dim = Math.max(dim, manuK, listK); // Manuthera-Bühne und Leistungen: Partikel-Hintergrund blendet ganz aus
   if (licht && lichtK > 0) dim = Math.max(dim, lichtK); // K1: Partikel weichen dem Sonnenstaub
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
+  if (!isDesktop()) {
+    // Handy: Partikel-Haus ohne Verzögerung ausblenden, sobald der Rundgang vorbei ist bzw. die Manuthera-Bühne kommt –
+    // sonst laufen beim schnellen Wischen Haus und Liege ineinander
+    const out = Math.max(manuK, houseGone());
+    if (uniforms.uAlpha.value > 1 - out) uniforms.uAlpha.value = 1 - out;
+  }
   uniforms.uSize.value = isDesktop() ? 1 : 1.1 - (morphNow > 2.5 && morphNow < 3.5 ? emblemK * 0.45 : 0);
   uniforms.uSpread.value = reduced ? 0 : isDesktop() ? 0.32 : 0.28;
   if (!isDesktop()) roofEmblem();
