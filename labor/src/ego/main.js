@@ -30,12 +30,12 @@ function resize() {
 addEventListener('resize', resize); resize();
 
 const U = {
-  uPix: { value: 1 }, uStip: { value: 1 }, uDoor: { value: 0 }, uHinge: { value: new THREE.Vector2((182 - 210) * K, (272 - 140) * K) },
+  uPix: { value: 1 }, uStip: { value: 1 }, uLogo: { value: 1 }, uBig: { value: 1 }, uDoor: { value: 0 }, uHinge: { value: new THREE.Vector2((182 - 210) * K, (272 - 140) * K) },
   cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') }, cBlue: { value: C('#5AA2D6') }, cGreen: { value: C('#8BC34A') }, cPetrol: { value: C('#4E7F93') }, cCore: { value: C('#0E1C22') },
 };
 const COMMON = /* glsl */`
   attribute float aKind, aRoom, aDoor;
-  uniform float uPix, uStip, uDoor; uniform vec2 uHinge;
+  uniform float uPix, uStip, uDoor, uBig; uniform vec2 uHinge;
   uniform vec3 cBone, cAmber, cBlue, cGreen, cPetrol, cCore;
   vec3 doorP(vec3 p, float door){ if (door < .5) return p; float a = uDoor; float dx = p.x - uHinge.x, dz = p.z - uHinge.y; float c = cos(a), s = sin(a);
     return vec3(uHinge.x + c*dx + s*dz, p.y, uHinge.y - s*dx + c*dz); }`;
@@ -66,7 +66,7 @@ function build(prx) {
         vec3 col = aKind < .5 ? cPetrol * .85 : aKind < 1.5 ? cBone * .5 : aKind > 3.5 && aKind < 4.5 ? cAmber * 1.1 : cBone * .9;
         vec4 mv = viewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
         float d = -mv.z;
-        gl_PointSize = clamp(uPix * (aKind > 5.5 ? 1.5 : 1.2) * 7. / d, 1.3, 4.5);
+        gl_PointSize = clamp(uPix * (aKind > 5.5 ? 1.5 : 1.2) * 7. / d, 1.3, 4.5) * uBig;
         float near = smoothstep(.12, .5, d), far = 1. - smoothstep(7., 14., d) * .6;
         vA = (aKind < .5 ? .5 : aKind < 1.5 ? .6 : .95) * near * far;
         vCol = col;
@@ -88,7 +88,7 @@ function build(prx) {
         vCol = base * (.3 + .7 * lam) + cBlue * rim * .12;
         vec4 mv = viewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
         float d = -mv.z;
-        gl_PointSize = clamp(uStip / d, 1.3, 7.);
+        gl_PointSize = clamp(uStip / d, 1.3, 7.) * uBig;
         float h = fract(sin(dot(position.xz, vec2(12.9898, 78.233)) + position.y * 37.7) * 43758.5453);
         vVis = step(h, smoothstep(.1, .4, d));
       }`,
@@ -108,14 +108,64 @@ function build(prx) {
     }`,
   }));
   [core, furn, lines].forEach((o, i) => { o.frustumCulled = false; o.renderOrder = i; scene.add(o); });
+  scene.add(buildLogoSign());
   U.uStip.value = 1; stipSpacing = prx.spacing;
 }
 let stipSpacing = 0.02;
 
+// ---------- Logo-Schild rechts neben der Tür (Außenwand, Augenhöhe) ----------
+// Eigene Gruppe `logoSign`: später gegen einen 3D-Scan des echten Schilds austauschbar (Gruppe entfernen, Scan einsetzen).
+// Zeichnung = HOP-Logo in SVG-Koordinaten (viewBox 560×240, Kreise r 66 bei x 110/300/490, y 120), Breite 1,2 m.
+const SIGN = { px: 250, width: 0.6, out: 0.012 };       // Mitte in Grundriss-Pixel, Breite in Formeinheiten (1 Einheit = 2 m), Abstand vor der Wand
+SIGN.z = (272 - 140) * K + SIGN.out;
+function buildLogoSign() {
+  const s = SIGN.width / 512, ox = (SIGN.px - 210) * K, oy = EYE;
+  const pos = [], col = [];
+  let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  const put = (x, y, c, k, dz = 0) => { pos.push(ox + (x - 300) * s, oy - (y - 120) * s, SIGN.z + dz); col.push(c.r * k, c.g * k, c.b * k); };
+  const fill = (x0, x1, y0, y1, g, test, c, k, dz) => {
+    for (let y = y0; y <= y1; y += g) for (let x = x0; x <= x1; x += g) {
+      const jx = x + (rnd() - 0.5) * g * 0.7, jy = y + (rnd() - 0.5) * g * 0.7;
+      if (test(jx, jy)) put(jx, jy, c, k, dz);
+    }
+  };
+  const bone = C('#EDE8DC');
+  [[110, '#7FAF45'], [300, '#3C7189'], [490, '#3F86B5']].forEach(([cx, hex]) => {
+    const c = C(hex);
+    fill(cx - 66, cx + 66, 54, 186, 3.3, (x, y) => (x - cx) ** 2 + (y - 120) ** 2 <= 63 ** 2, c, 0.8, 0);
+    for (let a = 0; a < Math.PI * 2; a += 2 / 66) { put(cx + Math.cos(a) * 66, 120 + Math.sin(a) * 66, c, 1.2, 0.002); put(cx + Math.cos(a) * 64.6, 120 + Math.sin(a) * 64.6, c, 1.2, 0.002); }
+  });
+  // Buchstaben als gefüllte Striche (Archivo-ähnlich, Höhe 44)
+  const G = 1.5, L = 0.004;
+  fill(90, 130, 98, 142, G, (x, y) => { const u = x - 110, v = y - 120; return (Math.abs(u) >= 12 && Math.abs(u) <= 20 && Math.abs(v) <= 22) || (Math.abs(u) <= 12 && Math.abs(v) <= 4); }, bone, 1, L);
+  fill(270, 330, 96, 144, G, (x, y) => { const u = x - 300, v = y - 120; return (u / 26) ** 2 + (v / 23) ** 2 <= 1 && (u / 18) ** 2 + (v / 15) ** 2 >= 1; }, bone, 1, L);
+  fill(468, 508, 98, 142, G, (x, y) => {
+    const u = x - 494, v = y - 120;                 // P, um 4 nach rechts gerückt (optische Mitte)
+    return (u >= -18 && u <= -10 && Math.abs(v) <= 22) || (u >= -10 && u <= -4 && ((v >= -22 && v <= -14.5) || (v >= -1.5 && v <= 6)))
+      || (u >= -4 && (u + 4) ** 2 + (v + 8) ** 2 <= 14 ** 2 && (u + 4) ** 2 + (v + 8) ** 2 >= 6.5 ** 2);
+  }, bone, 1, L);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+  g.setAttribute('aCol', new THREE.BufferAttribute(new Float32Array(col), 3));
+  const pts = new THREE.Points(g, new THREE.ShaderMaterial({
+    uniforms: U,
+    vertexShader: /* glsl */`attribute vec3 aCol; uniform float uLogo, uBig; varying vec3 vC;
+      void main(){ vC = aCol; vec4 mv = viewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
+        gl_PointSize = cameraPosition.z < ${(SIGN.z - 0.03).toFixed(4)} ? 0. : clamp(uLogo * uBig / -mv.z, 1.4, 9.); }`,   // von innen nicht sichtbar (wäre seitenverkehrt)
+    fragmentShader: /* glsl */`varying vec3 vC;
+      void main(){ float d = length(gl_PointCoord - .5); if (d > .5) discard; gl_FragColor = vec4(vC * (1. - smoothstep(.25, .5, d) * .4), 1.);
+        #include <colorspace_fragment>
+      }`,
+  }));
+  pts.frustumCulled = false; pts.renderOrder = 3;
+  const grp = new THREE.Group(); grp.name = 'logoSign'; grp.add(pts);
+  return grp;
+}
+
 // ---------- Route (Grundriss-Pixel) ----------
 const pt = (x, y) => { const [a, b] = P(x, y); return new V3(a, EYE, b); };
 const STOPS = [
-  { at: [199, 320], look: [199, 230], no: '00', kick: 'Tür', title: 'Die Tür', text: 'Hier beginnt es. Die Tür geht auf, Sie treten ein – und werden mit Namen begrüßt.' },
+  { at: [199, mobile ? 420 : 360], look: [mobile ? 222 : 199, 230], no: '00', kick: 'Tür', title: 'Die Tür', text: 'Hier beginnt es. Die Tür geht auf, Sie treten ein – und werden mit Namen begrüßt.' },
   { at: [140, 205], look: [60, 250], room: 1, via: [[199, 262], [196, 226], [176, 208]] },
   { at: [140, 58], look: [70, 52], room: 0, via: [[176, 208], [196, 150], [196, 78], [170, 60]] },
   { at: [262, 50], look: [320, 48], room: 2, via: [[196, 78], [212, 58], [240, 50]] },
@@ -128,7 +178,11 @@ STOPS.forEach((s) => {
   if (s.room !== undefined) { const r = ROOMS[s.room]; s.no = String(s.room + 1).padStart(2, '0'); s.kick = r.short; s.title = r.n; s.text = r.d; }
   s.viaP = (s.via || []).map((v) => pt(...v));
 });
-const state = { idx: 0, from: 0, to: 0, t: 1, dur: 3.4, playing: false, hold: 0 };
+const state = { idx: 0, from: 0, to: 0, t: 1, dur: 3.4, playing: false, hold: 0, doorWait: 0, jumping: false };
+// Darstellung für Besucher mit Bedarf: ohne Fahrt (Sprung mit Überblenden), ruhiges Tempo (−40 %), größere Punkte
+const opt = { still: reduced, calm: false, big: false };
+// Lesezeit im Autoplay nach Textlänge: ca. 6–8,5 s (ruhig: +30 %)
+const holdFor = (i) => clamp(4 + (STOPS[i].title.length + STOPS[i].text.length) / 26, 6, 8.5) * (opt.calm ? 1.3 : 1);
 let leg = null, yawOff = 0, pitchOff = 0, drag = null, lastInput = -9;
 const camPos = STOPS[0].pos.clone(), camLook = STOPS[0].lk.clone();
 
@@ -138,14 +192,27 @@ function setLeg(a, b) {
   else { leg = { pts: [A.pos, ...[...A.viaP].reverse(), B.pos], a: A, b: B }; }
   leg.curve = new THREE.CatmullRomCurve3(leg.pts, false, 'centripetal', 0.5);
   leg.len = leg.curve.getLength();
-  state.dur = reduced ? 0.01 : clamp(leg.len * 1.35 + 1.4, 2.4, 6.5);
+  state.dur = clamp(leg.len * 1.35 + 1.4, 2.4, 6.5) / (opt.calm ? 0.6 : 1);
 }
 function go(i) {
-  i = clamp(i, 0, STOPS.length - 1); if (i === state.idx && state.t >= 1) return;
+  i = clamp(i, 0, STOPS.length - 1); if (state.jumping || (i === state.idx && state.t >= 1)) return;
   const cur = state.t >= 1 ? state.idx : state.to;
-  state.from = cur; state.to = i; state.t = 0; setLeg(cur, i); state.idx = i;
   $('#cap').classList.add('hide');
+  if (opt.still) { jump(i); return; }
+  state.from = cur; state.to = i; state.t = 0; setLeg(cur, i); state.idx = i;
+  state.doorWait = cur === 0 && i > 0 ? (opt.calm ? 2 : 1.5) : 0;      // Tür bleibt kurz zu (0,4 s), geht dann auf, danach Fahrt
 }
+// „Ohne Fahrt“: kurz ausblenden, Kamera setzen, wieder einblenden
+function jump(i) {
+  state.jumping = true; $('#veil').classList.add('on');
+  setTimeout(() => {
+    state.idx = state.from = state.to = i; state.t = 1;
+    camPos.copy(STOPS[i].pos); camLook.copy(STOPS[i].lk); U.uDoor.value = i === 0 ? 0 : 1.75;
+    $('#veil').classList.remove('on');
+    setTimeout(() => { state.jumping = false; arrive(); }, 200);
+  }, 220);
+}
+function arrive() { showCap(state.idx); if (state.playing) state.hold = holdFor(state.idx); setPlayLabel(); }
 function showCap(i) {
   const s = STOPS[i];
   $('#capNo').textContent = s.no; $('#capKick').textContent = s.kick; $('#capTitle').textContent = s.title; $('#capText').textContent = s.text;
@@ -157,10 +224,17 @@ $('#prev').addEventListener('click', () => { state.playing = false; setPlayLabel
 function setPlayLabel() { $('#play').textContent = state.playing ? '❚❚ Pause' : (state.idx >= STOPS.length - 1 ? '↺ Noch einmal' : (state.idx === 0 ? '▶ Rundgang starten' : '▶ Weiter')); }
 $('#play').addEventListener('click', () => {
   if (state.playing) { state.playing = false; setPlayLabel(); return; }
-  if (state.idx >= STOPS.length - 1) { state.t = 1; state.idx = 0; camPos.copy(STOPS[0].pos); camLook.copy(STOPS[0].lk); showCap(0); state.playing = true; state.hold = 1.2; }
-  else { state.playing = true; state.hold = state.t >= 1 ? 0.2 : 0; }
+  if (state.idx >= STOPS.length - 1) { state.t = 1; state.idx = 0; camPos.copy(STOPS[0].pos); camLook.copy(STOPS[0].lk); showCap(0); state.playing = true; state.hold = 2.5; }
+  else { state.playing = true; state.hold = state.t >= 1 ? (state.idx === 0 ? 2.5 : 0.2) : 0; }
   setPlayLabel();
 });
+// Schalter „Darstellung“
+function bindOpt(id, key, on) {
+  const b = $(id); b.setAttribute('aria-pressed', String(opt[key]));
+  b.addEventListener('click', () => { opt[key] = !opt[key]; b.setAttribute('aria-pressed', String(opt[key])); if (on) on(); });
+}
+bindOpt('#optStill', 'still'); bindOpt('#optCalm', 'calm'); bindOpt('#optBig', 'big');
+if (reduced) { $('#optStill').disabled = true; $('#optStill').title = 'Automatisch an, weil „Bewegung reduzieren“ eingestellt ist'; }
 addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { state.playing = false; setPlayLabel(); go(state.idx + 1); }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { state.playing = false; setPlayLabel(); go(state.idx - 1); }
@@ -177,7 +251,8 @@ let last = performance.now(), ready = false;
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (ready) {
-    if (state.t < 1) {
+    if (state.t < 1 && state.doorWait > 0) state.doorWait -= dt;      // Tür geht auf, Kamera wartet
+    else if (state.t < 1) {
       state.t = Math.min(1, state.t + dt / state.dur);
       const e = ease(state.t);
       leg.curve.getPoint(e, camPos);
@@ -186,13 +261,13 @@ function frame(now) {
       const s0 = smooth(0, 0.3, e), s1 = smooth(0.62, 1, e);
       const ahead = tmpB.clone();
       camLook.copy(leg.a.lk).lerp(ahead, s0).lerp(leg.b.lk, s1);
-      if (state.t >= 1) { showCap(state.idx); if (state.playing) state.hold = reduced ? 1 : 4.2; setPlayLabel(); }
-    } else if (state.playing) {
+      if (state.t >= 1) arrive();
+    } else if (state.playing && !state.jumping) {
       state.hold -= dt;
       if (state.hold <= 0) { if (state.idx < STOPS.length - 1) go(state.idx + 1); else { state.playing = false; setPlayLabel(); } }
     }
     // Tür: offen, sobald man am Eingang vorbei ist
-    const wantOpen = state.idx === 0 && state.t >= 1 ? 0 : (state.t < 1 && state.to === 0 && state.from === 0 ? 0 : 1.75);
+    const wantOpen = (state.idx === 0 && state.t >= 1) || (state.from === 0 && state.doorWait > 1.1) ? 0 : (state.t < 1 && state.to === 0 && state.from === 0 ? 0 : 1.75);
     U.uDoor.value += (wantOpen - U.uDoor.value) * (1 - Math.exp(-dt * 2.2));
     // Umschau-Versatz fällt zurück
     if (!drag && performance.now() - lastInput > 1200) { const k = 1 - Math.exp(-dt * 1.6); yawOff -= yawOff * k; pitchOff -= pitchOff * k; }
@@ -201,6 +276,8 @@ function frame(now) {
     const r = tmpA.length(), yaw = Math.atan2(tmpA.x, tmpA.z) + yawOff, pit = Math.asin(clamp(tmpA.y / r, -1, 1)) + pitchOff;
     camera.lookAt(camPos.x + Math.sin(yaw) * Math.cos(pit), camPos.y + Math.sin(pit), camPos.z + Math.cos(yaw) * Math.cos(pit));
     U.uPix.value = pr * (H / 900);
+    U.uBig.value += ((opt.big ? 1.6 : 1) - U.uBig.value) * (1 - Math.exp(-dt * 8));
+    U.uLogo.value = pr * H * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 0.0042 * 1.05;
     U.uStip.value = pr * H * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * stipSpacing * 0.62;
     renderer.render(scene, camera);
   }

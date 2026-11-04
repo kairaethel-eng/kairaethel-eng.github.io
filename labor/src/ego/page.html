@@ -5,6 +5,7 @@
 <style>/*FONTS*//*CSS*/</style>
 <!--BODY-->
 <canvas id="gl" aria-hidden="true"></canvas>
+<div class="veil" id="veil" aria-hidden="true"></div>
 <main class="ui">
   <header class="bar">
     <a class="back" href="test-4-puls-scan.html#dach">‹ Zur Seite</a>
@@ -21,6 +22,11 @@
     <button type="button" id="play" class="go">▶ Rundgang starten</button>
     <button type="button" id="next" aria-label="Weiter">›</button>
   </nav>
+  <div class="opts" role="group" aria-label="Darstellung">
+    <button type="button" id="optStill" aria-pressed="false">Ohne Fahrt</button>
+    <button type="button" id="optCalm" aria-pressed="false">Ruhig</button>
+    <button type="button" id="optBig" aria-pressed="false">Größere Punkte</button>
+  </div>
   <p class="hint" id="hint">Ziehen = umschauen · Pfeiltasten = weiter</p>
 </main>
 <!--JS-->
