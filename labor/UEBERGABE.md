@@ -3,6 +3,9 @@
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
 
+## Zweitmeinung 3.11. (Cloud-Session, Fable 5.1)
+- Unabhängige zweite Prüfung mit CPU-Profil des Seitenstarts, Test ohne WebGL, axe-core und Recherche (Vorbilder, Technik, Skills): `labor/PRUEFUNG-Zweitmeinung-Puls-Scan-2026-11-03.md`. Neu gegenüber dem Prüfbericht vom selben Tag: Start-Blocker durch synchrone Punktwolken-Berechnung (M1, Lazy/Worker), Fallback ohne WebGL inkl. iOS-Lockdown-Modus (M2), `mailto:`-Schwäche am PC (S3), Navigations-Untertitel aus Patientensicht (S1), Idee „Die Tür geht auf“ (K1), Werkzeug-Liste (Abschnitt 6).
+
 ## Livegang (2.11.2026)
 - Entscheidung Kai: **GitHub Pages mit Domain hopphysio.de**, Wix-Website wird abgelöst, Domain/E-Mail (Google Workspace) bleiben bei Wix. Plan, DNS-Ist-Zustand, Reihenfolge: `LIVEGANG.md`.
 - Gebaut: `node build.mjs live` → Vorschau `labor/live/` (https://kairaethel-eng.github.io/labor/live/, noindex). Wurzel-Build `LIVE_ROOT=1 node build.mjs live` erst nach Go.
