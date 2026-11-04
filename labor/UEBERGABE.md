@@ -3,6 +3,27 @@
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
 
+## Stand 4.11.2026 – offene Punkte (Kai arbeitet sie später ab)
+Erledigt 3./4.11. (Details `ENTSCHEIDUNGEN.md`): Stufe 1 aus `PLAN-Stufe1-2026-11-03.md` (axe target-size/color-contrast/region = 0 bei 320/390/768/1440), ärztlicher Hinweis „immer zuerst ärztlich abklären“ (alle Labor-Seiten), Spannung bis 0 mit „Entspannt.“ + ruhigem Atem, Wisch-Hinweis Manuthera erst nach echtem Wischen weg, Vergleichsseiten test-1–3 gelöscht (Git-Verlauf bis 54d7812). Kais Sichtprüfung 3.11.: Stufe 1 passt.
+
+**Kai prüft am iPhone**
+1. Körper ganz freistreichen → Anzeige 0 und „Entspannt.“? Ruhiger Atem gefällt?
+2. Manuthera-Liege: erscheint „Seitlich wischen“ jetzt (nach ~1,5 s)?
+
+**Claude prüft (auf Zuruf)**
+3. PC, Raum 04 im Rundgang: Schild „Manuthera ↓“ liegt seit Stufe 1 in `<main>` (Stapelebene von `main`, z-index 2) – sitzt es noch richtig über den Raumschildern?
+
+**Braucht Kai / Fachleute**
+4. Impressum: zuständige Behörde laut Erlaubnisurkunde, Berufshaftpflicht (Name + Sitz).
+5. Heilmittelwerbegesetz: Formulierungen wie „Osteopathische Ansätze“ anwaltlich prüfen lassen.
+6. `PLAN-Livegang-2026-11-04.md` (andere Sitzung, Entwurf) lesen und Go/Änderungen geben.
+
+**Hinweise**
+- „· schematisch“ fehlt am Handy seit Stufe 1 (doppelter Hinweis entfernt); passt zu „Labor-Hinweise vor Livegang entfernen“ (unten).
+- Nur **eine** Sitzung gleichzeitig an `labor/` arbeiten lassen (am 4.11. zweimal fremde Commits zusammengeführt).
+- Arbeitszweig `claude/hop-website-design-review-lwh3ps` = `main`; kann auf GitHub gelöscht werden.
+- Skill `hop-praxis` aktualisiert (Standard-Hinweis, Stand 4.11.) – als `.skill`-Datei an Kai geliefert.
+
 ## Zweitmeinung 3.11. (Cloud-Session, Fable 5.1)
 - Unabhängige zweite Prüfung mit CPU-Profil des Seitenstarts, Test ohne WebGL, axe-core und Recherche (Vorbilder, Technik, Skills): `labor/PRUEFUNG-Zweitmeinung-Puls-Scan-2026-11-03.md`. Neu gegenüber dem Prüfbericht vom selben Tag: Start-Blocker durch synchrone Punktwolken-Berechnung (M1, Lazy/Worker), Fallback ohne WebGL inkl. iOS-Lockdown-Modus (M2), `mailto:`-Schwäche am PC (S3), Navigations-Untertitel aus Patientensicht (S1), Idee „Die Tür geht auf“ (K1), Werkzeug-Liste (Abschnitt 6).
 
@@ -43,4 +64,4 @@
 - **Eine** Nachricht, Bilder zugeschnitten, durchnummeriert: „Bild 1 (PC): … · Bild 2 (Handy): …“, am Ende „Go“.
 
 ## Prüfbericht und Plan (3.11.2026)
-- Gründliche Prüfung (Render 320–2560 px, axe, Tastatur) plus Netz-Recherche: `labor/PRUEFBERICHT-IDEEN-Puls-Scan-2026-11-03.md`. Umsetzungsplan Stufe 1 (Muss-Punkte vor Livegang, wartet auf Kais Go): `labor/PLAN-Stufe1-2026-11-03.md`. Empfehlung: Stufe 1 in neuer Session mit Sonnet, nur CLAUDE.md + Plan lesen.
+- Gründliche Prüfung (Render 320–2560 px, axe, Tastatur) plus Netz-Recherche: `labor/PRUEFBERICHT-IDEEN-Puls-Scan-2026-11-03.md`. Umsetzungsplan Stufe 1 (Muss-Punkte vor Livegang, **umgesetzt 3.11.**): `labor/PLAN-Stufe1-2026-11-03.md`. Empfehlung: Stufe 1 in neuer Session mit Sonnet, nur CLAUDE.md + Plan lesen.
