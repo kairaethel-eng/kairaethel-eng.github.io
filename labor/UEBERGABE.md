@@ -3,6 +3,24 @@
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
 
+## Stand 4.11.2026 abends – zwei Aufträge für neue Sessions (beide: Go Kai)
+Auf `main` liegt alles bis Commit „Rundgang aus Augenhöhe – Machbarkeitstest“. Neue Session: `git pull`, dann `labor/CLAUDE.md` + diesen Abschnitt lesen. Veröffentlichen wie immer: nur `labor/` auf `main`.
+
+**Auftrag 1 · Paket Handy Kapitel 03 → 04 (Opus)** – Quelle `src/test-4/main.js` (`PH`, `mobileCard`, `stopPose`, `updateAxis`, `roofEmblem`, `layout()` X[2]/X[3]), `style.css` (`.seg-cards`, `.seg-card`, ≤ 920 px). Nur Handy/Tablet, PC unverändert. Kais Beobachtungen (iPhone, 9 Bilder):
+1. C1–C2: Die erste Karte läuft früh durch die Wirbelsäule (verdeckt sie). → Karten erst einblenden, wenn die Kamera am Abschnitt steht (ca. ab 60 % Bildhöhe), Wirbelsäule vorher frei.
+2. Nächste Karte verdeckt den erklärten Bereich (Hals/Nerven). → Kamera/Wirbelsäule über dem Kartenanfang halten, Karte nur im unteren Bildteil, von unten einblenden.
+3. Bild mit Wirbelsäule + Karte über den ganzen Bildschirm (C5–C6) passt – nicht anfassen.
+4. Nach der letzten Karte wird die Wirbelsäule klein und liegt oben, darunter toter Bereich. → Am Ende groß, zentriert, ganz sichtbar (Kopf bis Kreuzbein), etwas stehen lassen, dann auflösen (Kais Highlight).
+5. Das Haus entsteht nur im oberen Bildschirm. → Wirbelsäule löst sich nach oben auf, Haus aus der Bildmitte, größer (Handy-Skalierung/Position anpassen).
+6. Toter Bereich unten bis der Text von Kapitel 04 kommt. → Text näher heranrücken oder Haus füllt den Raum.
+Prüfen: 390×844, 390×664, 320×568 (iPhone-Safari-Leiste!), axe target-size/color-contrast/region = 0, keine Konsolenfehler. Kai gibt Erfolg per iPhone zurück.
+
+**Auftrag 2 · Ego-Rundgang: Tür, Logo, Barrierefreiheit (Sonnet)** – Quelle `src/ego/{main.js,style.css,page.html}`, Build `node build.mjs ego` → `rundgang-ego.html` (https://kairaethel-eng.github.io/labor/rundgang-ego.html). Kais Rückmeldung: Fahrt „super geil“, Handy-Ansicht gut, kein Schwindel.
+1. Tür: Start ca. 1,5 m weiter zurück (STOPS[0].at y≈320 → ≈360), Tür ganz sichtbar, kurze Pause, dann Aufgehen.
+2. Logo-Schild **rechts neben der Tür** an der Außenwand, Augenhöhe: HOP-Kreise (Grün #7FAF45, Petrol #3C7189, Blau #3F86B5, Buchstaben H O P) als Punkt-/Linien-Umriss in eigener Gruppe (später gegen 3D-Scan austauschbar).
+3. Ältere/sehschwächere Besucher: Lesezeit im Autoplay nach Textlänge (ca. 6–8 s statt 4,2 s), Kartentext ≥ 18 px mit mehr Kontrast, Schalter „Ohne Fahrt“ (Sprung mit kurzem Überblenden; automatisch bei „Bewegung reduzieren“ – das gibt es schon). Tempo „Ruhig“ (−40 %) und „Größere Punkte“ nur bei Bedarf.
+Prüfen: 390 und 1440 px, Autoplay bis Ende, keine Konsolenfehler.
+
 ## Stand 4.11.2026 spät – Stufe 2b umgesetzt (Go: A3, A4, A5, A7; A6 nur Vorschlag)
 Details `ENTSCHEIDUNGEN.md` → „Stufe 2b“. Auf `main` nur `labor/`.
 - A3 Navigation zweizeilig (Untertitel), A4 Kontakt (mailto-Vorlage, E-Mail kopieren, vCard `hop-physiotherapie.vcf`, Öffnungsstatus), A5 Hero-Untertitel mit Ort, A7 Skip-Link. A6 Etiketten-Tabelle liegt nur in ENTSCHEIDUNGEN (Kai bestätigt). Stufe-1-Plan (gelöscht, Git-Verlauf) gelöscht.
