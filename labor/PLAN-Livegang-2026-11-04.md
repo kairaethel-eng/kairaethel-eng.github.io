@@ -29,8 +29,8 @@ Messung vorher/nachher: Playwright mit `cpuThrottlingRate: 4`, längster Task pe
 - iOS-Lockdown-Modus schaltet WebGL ab [B Zweitmeinung] → so sieht die Seite trotzdem fertig aus.
 
 ### A3 · Navigation: Poesie + Nutzen (S1 beide) – Sonnet
-- `page.html` 15–21: je Eintrag `<small>` als zweite Zeile: „01 Spannung · Start“, „02 Bewegung · Über HOP“, „03 Achse · Wirbelsäule“, „04 Dach · Rundgang & Leistungen“, „§ Hausordnung“, „05 Tür · Kontakt & Termin“. Zusätzlich Eintrag **„Leistungen“** → `#allTitle` (häufigste Suchabsicht).
-- CSS: PC zweizeilig klein (`font-size:.6875rem`, `--mute`), Handy-Klappmenü mit Untertitel; `chapNow` zeigt Titel + Untertitel. Kapitel-Erkennung in `tick()` (navIdx) um den Leistungen-Eintrag erweitern (aktiv, wenn `#allTitle` im Bild).
+- `page.html` 15–21: je Eintrag `<small>` als zweite Zeile: „01 Spannung · Start“, „02 Bewegung · Über HOP“, „03 Achse · Wirbelsäule“, „04 Dach · Praxis & Leistungen“, „§ Hausordnung“, „05 Tür · Kontakt & Termin“. **Kein** zusätzlicher Eintrag „Leistungen“ (Kai, 4.11.); „04 Dach · Praxis & Leistungen“ übernimmt das.
+- CSS: PC zweizeilig klein (`font-size:.6875rem`, `--mute`), Handy-Klappmenü mit Untertitel; `chapNow` zeigt Titel + Untertitel.
 
 ### A4 · Kontakt: Kopieren, Vorlage, vCard, Öffnungsstatus (S3 beide) – Sonnet
 - „Termin anfragen“: `mailto:` mit `subject=Terminanfrage` und `body=` Vorlage (Name · Rückrufnummer · Wunschzeiten · Verordnung vorhanden ja/nein · Beschwerde bitte erst im Gespräch). Daneben Knopf **„E-Mail-Adresse kopieren“** (Clipboard-API, Rückmeldung „Kopiert“ per `role="status"`, Fallback: Adresse markieren).
