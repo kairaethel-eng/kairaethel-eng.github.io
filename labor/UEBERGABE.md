@@ -6,7 +6,7 @@
 ## Stand 4.11.2026 abends – zwei Aufträge für neue Sessions (beide: Go Kai)
 Auf `main` liegt alles bis Commit „Rundgang aus Augenhöhe – Machbarkeitstest“. Neue Session: `git pull`, dann `labor/CLAUDE.md` + diesen Abschnitt lesen. Veröffentlichen wie immer: nur `labor/` auf `main`.
 
-**Auftrag 1 · Paket Handy Kapitel 03 → 04 (Opus)** – Quelle `src/test-4/main.js` (`PH`, `mobileCard`, `stopPose`, `updateAxis`, `roofEmblem`, `layout()` X[2]/X[3]), `style.css` (`.seg-cards`, `.seg-card`, ≤ 920 px). Nur Handy/Tablet, PC unverändert. Kais Beobachtungen (iPhone, 9 Bilder):
+**Auftrag 1 · Paket Handy Kapitel 03 → 04 (Opus)** – ✅ umgesetzt 4.11. (Details ENTSCHEIDUNGEN.md; geprüft 390×844/664, 320×568, Tablet 820, „Bewegung reduzieren“, axe 0, keine Konsolenfehler; offen: Kais iPhone-Rückmeldung) – – Quelle `src/test-4/main.js` (`PH`, `mobileCard`, `stopPose`, `updateAxis`, `roofEmblem`, `layout()` X[2]/X[3]), `style.css` (`.seg-cards`, `.seg-card`, ≤ 920 px). Nur Handy/Tablet, PC unverändert. Kais Beobachtungen (iPhone, 9 Bilder):
 1. C1–C2: Die erste Karte läuft früh durch die Wirbelsäule (verdeckt sie). → Karten erst einblenden, wenn die Kamera am Abschnitt steht (ca. ab 60 % Bildhöhe), Wirbelsäule vorher frei.
 2. Nächste Karte verdeckt den erklärten Bereich (Hals/Nerven). → Kamera/Wirbelsäule über dem Kartenanfang halten, Karte nur im unteren Bildteil, von unten einblenden.
 3. Bild mit Wirbelsäule + Karte über den ganzen Bildschirm (C5–C6) passt – nicht anfassen.

@@ -255,7 +255,7 @@ function layout() {
   uniforms.uPix.value = renderer ? renderer.getPixelRatio() * (VH / 900) * (d ? 1 : 1.25) : 1;
 }
 function resize() {
-  if (isDesktop()) $$('.seg-card').forEach((c) => (c.style.opacity = ''));
+  if (isDesktop()) [...$$('.seg-card'), ...$$('#achse .note')].forEach((c) => { c.style.opacity = ''; c.style.transform = ''; });
   camera.aspect = VW / VH; camera.updateProjectionMatrix();
   if (renderer) renderer.setSize(VW, VH, false);
   layout();
@@ -601,13 +601,13 @@ function frame(T, dir, d, fx, fy) {
   const shift = right.multiplyScalar(-(fx - 0.5) * 2 * hw).add(up.multiplyScalar((fy - 0.5) * 2 * hh));
   return { pos: pos.add(shift), target: T.clone().add(shift) };
 }
-function stopPose(i) {
+function stopPose(i, fy = 0.3) { // fy: Höhe des Abschnitts im Bild (nur Handy; 0.3 = Standard)
   const s = STOPS[i], rot = PROFILE + s.az, X = uniforms.uXf.value[2], desk = isDesktop();
   const c = new V3();
   s.ids.forEach((id) => { const lv = det.levels.find((l) => l.id === id); c.add(new V3(lv.center.x * SC, (lv.center.y - CY) * SC, lv.center.z * SC)); });
   c.divideScalar(s.ids.length).applyAxisAngle(new V3(0, 1, 0), rot).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z));
   const d = s.d * SC * X.w * 0.86 * (desk ? 1 : 2.1);
-  return { ...frame(c, new V3(0, 0.12, 1), d, desk ? 0.56 : 0.5, desk ? 0.5 : 0.3), rot };
+  return { ...frame(c, new V3(0, 0.12, 1), d, desk ? 0.56 : 0.5, desk ? 0.5 : fy), rot };
 }
 const OVERVIEW = { pos: new V3(0, 0, 13), target: new V3(0, 0, 0) };
 const lerpPose = (a, b, t) => ({ pos: a.pos.clone().lerp(b.pos, t), target: a.target.clone().lerp(b.target, t), rot: b.rot !== undefined && a.rot !== undefined ? THREE.MathUtils.lerp(a.rot, b.rot, t) : (b.rot ?? a.rot) });
@@ -776,14 +776,31 @@ segBtns.forEach((b) => b.addEventListener('click', () => {
   const p = ph.J0 + (i / (STOPS.length - 1)) * (ph.J1 - ph.J0);
   scrollToY(r.top + scrollY + p * (r.height - VH) + 2);
 }));
-// Handy: Karten laufen untereinander durch; die Karte in der unteren Bildmitte bestimmt den Abschnitt
-function mobileCard() {
+// Handy (Auftrag 1, 4.11.): Kapitel 03 hängt an den Karten statt am Kapitel-Fortschritt.
+// Ablauf je Karte: Kamera fährt zuerst zum Abschnitt (Karte noch unsichtbar) → Karte blendet von unten ein,
+// sobald die Kamera steht, und lebt nur im unteren Bildteil → beim Weiterscrollen bleibt der Abschnitt über
+// der Kartenoberkante → Karte blendet oben aus. Nach der letzten Karte: ganze Wirbelsäule groß in der Mitte,
+// stehen lassen, dann löst sie sich nach oben auf und das Haus entsteht in der Bildmitte.
+const axisNote = $('#achse .note'), dachSec = $('#dach'), roofIntro = $('#tour .roof-intro');
+const MOB_X2 = { x: 0, y: 1.65, s: 0.28 }; // = layout() Handy (4A)
+let camArrive = 0, gateK = 1, dotsStuck = 0;
+const dotsBox = $('.seg-dots');
+// Unterkante der klebenden Punkte-Leiste (Handy) – darüber ist kein Platz für die Wirbelsäule
+function measureDots() { dotsStuck = dotsBox && !isDesktop() ? (parseFloat(getComputedStyle(dotsBox).top) || 0) + dotsBox.offsetHeight : 0; }
+addEventListener('resize', () => (dotsStuck = 0)); // neu messen (lazy: beim Start kein Layout erzwingen)
+const cardFade = (r, vh) => smooth(vh * 0.95, vh * 0.7, r.top) * Math.max(smooth(vh * 0.15, vh * 0.42, r.top), smooth(vh * 0.55, vh * 0.85, r.bottom));
+function mobileCard(gate) {
   const vh = VH;
-  let best = mobSel, bd = 1e9;
   const rs = cards.map((c) => c.getBoundingClientRect());
-  rs.forEach((r, i) => { const d = Math.abs(r.top - vh * 0.5); if (d < bd) { bd = d; best = i; } });
-  // Karten leben in der unteren Bildhälfte und blenden nach oben aus, damit die Wirbelsäule frei bleibt
-  rs.forEach((r, i) => { cards[i].style.opacity = (smooth(vh * 0.1, vh * 0.4, r.top) * (i === best ? 1 : 0.8)).toFixed(3); });
+  // aktiv ist die letzte Karte, deren Oberkante den Bildrand fast erreicht hat (die vorige ist dann schon ausgeblendet)
+  let best = 0;
+  rs.forEach((r, i) => { if (r.top < vh * 1.08) best = i; });
+  rs.forEach((r, i) => {
+    const a = cardFade(r, vh) * (i === best ? gate : 0.8);
+    cards[i].style.opacity = a.toFixed(3);
+    cards[i].style.transform = a > 0.999 ? '' : `translateY(${((1 - smooth(vh * 0.95, vh * 0.7, r.top)) * 1.5).toFixed(3)}rem)`;
+  });
+  if (axisNote) axisNote.style.opacity = cardFade(axisNote.getBoundingClientRect(), vh).toFixed(3);
   return best;
 }
 dots.forEach((d) => d.addEventListener('click', () => {
@@ -799,9 +816,24 @@ function updateAxis(dt) {
   const inSec = r.top < VH && r.bottom > 0 && morphNow > 1.6 && morphNow < 2.4;
   // noch nicht fertig gerechnet: grobe Partikel bleiben, danach fahren Scan und Kamera sanft nach
   spineK = bones ? ramp(spineK, dt) : 0;
-  // Scan (0 = grobe Partikel, 1 = detaillierte Punktwolke)
-  const solid = (!inSec || p <= 0 || p >= 1 ? 0 : p < ph.M1 ? smooth(0.005, ph.M0, p) : 1 - smooth(ph.M1, 0.995, p)) * spineK;
   const X = uniforms.uXf.value[2];
+  let mob = null;
+  if (!desk && r.top < VH * 2 && r.bottom > -VH) {
+    if (!dotsStuck) measureDots();
+    const vh = VH, c0 = cards[0].getBoundingClientRect().top, nt = axisNote ? axisNote.getBoundingClientRect().top : r.bottom;
+    mob = {
+      inK: smooth(vh * 1.35, vh * 1.1, c0),   // Scan baut sich auf, bevor die erste Karte kommt
+      wIn: smooth(vh * 1.2, vh * 0.95, c0),   // Kamerafahrt zum ersten Abschnitt (Karte noch unsichtbar)
+      endK: smooth(vh * 0.45, vh * 0.15, nt), // nach letzter Karte + Hinweis: ganze Wirbelsäule
+      outK: smooth(vh * 1.05, vh * 0.6, dachSec.getBoundingClientRect().top), // auflösen (nach oben)
+    };
+    // ganze Wirbelsäule (Kopf bis Kreuzbein) groß und mittig im freien Bereich unter der Punkte-Leiste
+    const top = clamp(dotsStuck / vh, 0.08, 0.3), bot = 0.97, e = mob.endK;
+    const sEnd = ((bot - top) * 8.197 * 0.86) / 8.7, yEnd = (0.5 - (top + bot) / 2) * 8.197;
+    X.set(0, MOB_X2.y + (yEnd - MOB_X2.y) * e + mob.outK * 1.1, 0, MOB_X2.s + (sEnd - MOB_X2.s) * e);
+  }
+  // Scan (0 = grobe Partikel, 1 = detaillierte Punktwolke)
+  const solid = (!inSec ? 0 : mob ? mob.inK * (1 - mob.outK) : p <= 0 || p >= 1 ? 0 : p < ph.M1 ? smooth(0.005, ph.M0, p) : 1 - smooth(ph.M1, 0.995, p)) * spineK;
   const topY = X.y + 4.35 * X.w, botY = X.y - 4.35 * X.w;
   const cut = solid <= 0 ? 100 : THREE.MathUtils.lerp(topY + 0.05, botY - 0.05, solid);
   uniforms.uCut.value = cut;
@@ -812,11 +844,22 @@ function updateAxis(dt) {
   if (bones) bones.pts.material.uniforms.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * VH * 0.5 / tanH * X.w * (bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);
 
   // Kamera: Übersicht ↔ Kamerafahrt
-  const w = inSec ? smooth(ph.M0, ph.J0, p) * (1 - smooth(ph.J1, ph.M1, p)) * spineK : 0;
+  const w = !inSec ? 0 : (mob ? mob.wIn * (1 - mob.endK) : smooth(ph.M0, ph.J0, p) * (1 - smooth(ph.J1, ph.M1, p))) * spineK;
   let jPose = null, zoneIdx = active, localF = 0;
   // Handy: Karten-Deckkraft immer nachführen, solange das Kapitel in der Nähe ist – sonst bleibt beim
   // Hinausscrollen eine Karte halb sichtbar stehen (Kamerafahrt endet vorher, w = 0)
-  if (!desk && r.top < VH * 2 && r.bottom > -VH) mobSel = mobileCard();
+  if (!desk && r.top < VH * 2 && r.bottom > -VH) {
+    // Karte erst zeigen, wenn die Kamera am Abschnitt steht (ohne Kamerafahrt, z. B. ohne WebGL: sofort)
+    if (axisWant && w > 0.01) {
+      const err = cam.pos.distanceTo(axisWant.pos) / Math.max(0.01, axisWant.pos.distanceTo(axisWant.target));
+      if (err < 0.25) camArrive = Math.max(camArrive, 0.001);
+    }
+    else if (!(w > 0.01)) camArrive = 0;
+    const arrived = !(w > 0.01) || camArrive > 0;
+    gateK = reduced ? (arrived ? 1 : 0) : gateK + ((arrived ? 1 : 0) - gateK) * (1 - Math.exp(-dt * 5));
+    const sel = mobileCard(gateK);
+    if (sel !== mobSel) { mobSel = sel; camArrive = 0; if (w > 0.01) gateK = 0; }
+  }
   if (w > 0) {
     if (desk) {
       const x = clamp((p - ph.J0) / (ph.J1 - ph.J0)) * (STOPS.length - 1);
@@ -826,7 +869,11 @@ function updateAxis(dt) {
       zoneIdx = Math.min(STOPS.length - 1, Math.round(x));
       localF = zoneIdx === 0 ? x * 1.8 : zoneIdx === STOPS.length - 1 ? (x - zoneIdx + 0.5) * 1.8 : x - zoneIdx + 0.5;
       setActive(zoneIdx);
-    } else { setActive(mobSel); jPose = stopPose(mobSel); zoneIdx = mobSel; }
+    } else {
+      // Abschnitt über der Kartenoberkante halten: rutscht die Karte beim Lesen nach oben, wandert er mit
+      const ct = cards[mobSel].getBoundingClientRect().top / VH, top = clamp(dotsStuck / VH, 0.08, 0.3);
+      setActive(mobSel); jPose = stopPose(mobSel, clamp((top + ct) / 2, top + 0.04, 0.3)); zoneIdx = mobSel;
+    }
   }
   axisWant = jPose && w > 0 ? lerpPose({ ...OVERVIEW, rot: jPose.rot }, jPose, w) : null;
 
@@ -958,6 +1005,8 @@ function targetMorph() {
     let t = smooth(vh * 0.95, vh * 0.05, r.top); // Formwechsel über eine längere Strecke
     // Handy: die Figur löst sich schon beim ersten Scrollen an Ort und Stelle in Bewegungslinien auf
     if (!isDesktop() && prev === 0 && s === 1) t = smooth(vh * 0.03, vh * 0.4, scrollY);
+    // Handy: Wirbelsäule → Haus kürzer, damit das Haus fertig in der Bildmitte steht, bevor der Text von Kapitel 04 kommt
+    if (!isDesktop() && prev === 2 && s === 3) t = smooth(vh * 0.95, vh * 0.3, r.top);
     if (t > 0) m = prev + (s - prev) * t;
   }
   return m;
@@ -1201,7 +1250,9 @@ function updateTour(dt) {
   insideK = reduced ? want : insideK + (want - insideK) * (1 - Math.exp(-dt * (want ? 1.5 : 2.6)));
   const inside = near ? insideK : 0;
   // Röntgenblick (PC): von außen leuchtet das Innere durch das Haus, das Dach schwebt angehoben
-  const pv = morphNow > 2.55 && morphNow < 3.45 ? smooth(2.55, 2.95, morphNow) * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) * (1 - listK) : 0;
+  // Handy: erst steht das Haus groß in der Bildmitte; der Röntgenblick (Haus oben) kommt mit dem Text von unten
+  const pvIn = desk ? smooth(2.55, 2.95, morphNow) : Math.min(smooth(2.7, 2.95, morphNow), smooth(vh * 1.02, vh * 0.72, roofIntro.getBoundingClientRect().top));
+  const pv = morphNow > 2.55 && morphNow < 3.45 ? pvIn * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) * (1 - listK) : 0;
   xray = pv;
   tU.uCut.value = inside > 0.001 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
   tU.uOn.value = inside > 0.001 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0.001 || pv > 0;
@@ -1306,7 +1357,9 @@ function roofEmblem() {
   const hh = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)), hw = hh * a;
   const k = smooth(vh * 0.62, vh * 0.12, roofHead.getBoundingClientRect().top);
   const navW = (78 / vh) * 2 * hh; // Leistenhöhe in Welt-Einheiten
-  const big = { x: 0, y: 2.5, s: 0.42 }, small = { x: hw - 0.48, y: hh - navW - 0.42, s: 0.085 };
+  // groß: Haus mittig unter der Leiste, Breite ≈ 86 % des Bildes (Auftrag 1, 4.11.; vorher y 2.5, s 0.42 = oben)
+  const bs = Math.min(0.52, (hw * 2 * 0.86) / 7.1);
+  const big = { x: 0, y: 0.16 + 0.55 * bs, s: bs }, small = { x: hw - 0.48, y: hh - navW - 0.42, s: 0.085 };
   uniforms.uXf.value[3].set(big.x + (small.x - big.x) * k, big.y + (small.y - big.y) * k, 0, big.s + (small.s - big.s) * k);
   emblemK = k;
 }

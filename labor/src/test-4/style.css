@@ -368,7 +368,7 @@ canvas.gl-wait{opacity:0}
   /* 4A: Handy – Wirbelsäule oben, Karten laufen untereinander durch (normales Scrollen) */
   .axis{height:auto}
   .axis-sticky{position:static;height:auto;overflow:visible}
-  .axis-inner{display:block;height:auto;padding-top:1.5rem;padding-bottom:40svh}
+  .axis-inner{display:block;height:auto;padding-top:1.5rem;padding-bottom:120svh} /* Auftrag 1: ganze Wirbelsäule stehen lassen, dann auflösen */
   .axis-head h2{font-size:clamp(1.75rem,7.4vw,2.5rem);margin-bottom:.5rem}
   .axis-hint{font-size:.8438rem}
   .only-desk{display:none}.only-mob{display:inline}
@@ -379,8 +379,8 @@ canvas.gl-wait{opacity:0}
   .seg-dots button{position:relative}
   .seg-dots button::before{content:"";position:absolute;inset:-8px}
   .seg-dots button.is-on{width:1.625rem;background:var(--amber)}
-  .seg-cards{display:block;min-height:0;margin-top:52svh}
-  .seg-card{position:relative;inset:auto;visibility:visible;transform:none;margin-bottom:52svh;padding:1rem 1rem 1.125rem;background:rgba(14,30,37,.97);border:1px solid var(--line);border-radius:.375rem;transition:border-color .4s}
+  .seg-cards{display:block;min-height:0;margin-top:100svh} /* Auftrag 1: erst Kamerafahrt, dann Karte */
+  .seg-card{position:relative;inset:auto;visibility:visible;transform:none;margin-bottom:60svh;padding:1rem 1rem 1.125rem;background:rgba(14,30,37,.97);border:1px solid var(--line);border-radius:.375rem;transition:border-color .4s}
   .seg-card:last-child{margin-bottom:0}
   .seg-card.is-on{border-color:rgba(224,154,53,.55);transform:none}
   .seg-card dt{color:#A8BABF} /* auch bei Deckkraft .8 (nicht aktive Karte) ≥ 4,5:1 */
