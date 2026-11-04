@@ -155,3 +155,5 @@ Arbeitszweig → `labor/` auf `main`. Wurzel unberührt.
 - **A10:** Stufe-1-Plan (gelöscht, Git-Verlauf) gelöscht (erledigt, Verlauf in Git).
 
 - Nachtrag 4.11. abends (Stufe 2a auf main, nach 2b): axe meldete bei 768 px 10× color-contrast an einer Wirbelsäulen-Karte – Deckkraft blieb beim Hinausscrollen auf ~0,1 stehen (Karten wurden nur während der Kamerafahrt nachgeführt, älterer Fehler, durch neue Seitenhöhe sichtbar). Jetzt nachgeführt, solange das Kapitel in der Nähe ist; axe wieder 0 bei 320/390/768/1440.
+
+**K1 „Die Tür geht auf“ – Entscheidung Kai 4.11.: „Licht ja“.** Ist jetzt Standard (ohne Parameter). `?licht=0` zeigt zum Vergleich die dunkle Variante.

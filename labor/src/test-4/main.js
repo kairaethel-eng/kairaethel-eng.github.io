@@ -870,11 +870,11 @@ $$('.index li').forEach((li) => {
 const rules = $('#hausordnung'), laws = $$('#laws li'), door = $('#tuer');
 let lawOn = 0;
 
-// ---------- K1 „Die Tür geht auf“ (Vergleich, nur mit ?licht=1): Kapitel 05 wird hell ----------
+// ---------- K1 „Die Tür geht auf“ (Standard seit 4.11., ?licht=0 = dunkel): Kapitel 05 wird hell ----------
 // Über die letzten 60 % der Hausordnung blendet die Seite von Dunkel in warmes Off-White (V10-Palette),
 // Bernstein bleibt, die Partikel weichen warmem Sonnenstaub. Der Übergang hängt allein am Scrollen
 // (keine Eigenbewegung); bei „Bewegung anhalten“ steht der Staub still, bei „reduzieren“ treibt er langsam.
-const licht = new URLSearchParams(location.search).get('licht') === '1';
+const licht = new URLSearchParams(location.search).get('licht') !== '0'; // seit 4.11. (Kai: „Licht ja“) Standard; ?licht=0 = dunkel zum Vergleich
 let lichtK = -1;
 const hexRGB = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 const LICHT = { // [dunkel, hell, Text?] – Textfarben springen schnell in der Mitte um, damit nichts verschwimmt
