@@ -812,6 +812,9 @@ function updateAxis(dt) {
   // Kamera: Übersicht ↔ Kamerafahrt
   const w = inSec ? smooth(ph.M0, ph.J0, p) * (1 - smooth(ph.J1, ph.M1, p)) * spineK : 0;
   let jPose = null, zoneIdx = active, localF = 0;
+  // Handy: Karten-Deckkraft immer nachführen, solange das Kapitel in der Nähe ist – sonst bleibt beim
+  // Hinausscrollen eine Karte halb sichtbar stehen (Kamerafahrt endet vorher, w = 0)
+  if (!desk && r.top < VH * 2 && r.bottom > -VH) mobSel = mobileCard();
   if (w > 0) {
     if (desk) {
       const x = clamp((p - ph.J0) / (ph.J1 - ph.J0)) * (STOPS.length - 1);
@@ -821,7 +824,7 @@ function updateAxis(dt) {
       zoneIdx = Math.min(STOPS.length - 1, Math.round(x));
       localF = zoneIdx === 0 ? x * 1.8 : zoneIdx === STOPS.length - 1 ? (x - zoneIdx + 0.5) * 1.8 : x - zoneIdx + 0.5;
       setActive(zoneIdx);
-    } else { mobSel = mobileCard(); setActive(mobSel); jPose = stopPose(mobSel); zoneIdx = mobSel; }
+    } else { setActive(mobSel); jPose = stopPose(mobSel); zoneIdx = mobSel; }
   }
   axisWant = jPose && w > 0 ? lerpPose({ ...OVERVIEW, rot: jPose.rot }, jPose, w) : null;
 
