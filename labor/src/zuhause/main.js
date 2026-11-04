@@ -309,12 +309,21 @@ function frame(now) {
   U.uStip.value = pr * H * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * prx.spacing * 0.62;
   // Schilder
   const showTags = current < 0 && scan >= 1;
+  const pos = [];
   PLACES.forEach((p) => {
     tmp.copy(p.at); house.localToWorld(tmp); tmp.project(camera);
     const vis = showTags && tmp.z < 1 && Math.abs(tmp.x) < 0.96 && Math.abs(tmp.y) < 0.92;
     p.tag.classList.toggle('on', vis);
-    if (vis) p.tag.style.transform = `translate(${((tmp.x * 0.5 + 0.5) * W).toFixed(1)}px, ${((-tmp.y * 0.5 + 0.5) * H).toFixed(1)}px) translate(-50%, -50%)`;
+    if (vis) pos.push({ p, x: (tmp.x * 0.5 + 0.5) * W, y: (-tmp.y * 0.5 + 0.5) * H });
   });
+  if (!isDesktop()) { // Handy: Nummern-Marken auseinanderschieben, damit sie sich nicht überdecken (Go Kai 4.11.)
+    const D = 38;
+    for (let it = 0; it < 10; it++) for (let a = 0; a < pos.length; a++) for (let b = a + 1; b < pos.length; b++) {
+      const dx = pos[b].x - pos[a].x, dy = pos[b].y - pos[a].y, d = Math.hypot(dx, dy) || 0.01;
+      if (d < D) { const k = (D - d) / 2 / d; pos[a].x -= dx * k; pos[a].y -= dy * k; pos[b].x += dx * k; pos[b].y += dy * k; }
+    }
+  }
+  pos.forEach((o) => { o.p.tag.style.transform = `translate(${o.x.toFixed(1)}px, ${o.y.toFixed(1)}px) translate(-50%, -50%)`; });
   if (renderer && !document.hidden) renderer.render(scene, camera);
   if (manu && manu.st.visible && current >= 0) { manu.update(0, dt); manu.st.renderer.render(manu.st.scene, manu.st.camera); }
   if (spine && spine.st.visible && current >= 0) { spine.update(0, dt); spine.st.renderer.render(spine.st.scene, spine.st.camera); }

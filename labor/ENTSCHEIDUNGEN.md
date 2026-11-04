@@ -159,3 +159,5 @@ Arbeitszweig → `labor/` auf `main`. Wurzel unberührt.
 **K1 „Die Tür geht auf“ – Entscheidung Kai 4.11.: „Licht ja“.** Ist jetzt Standard (ohne Parameter). `?licht=0` zeigt zum Vergleich die dunkle Variante.
 
 **Handy-/Tablet-Hero (Go Kai 4.11., Option 2; ≤ 920 px):** Titel oben, Figur groß darunter (Bühne `#heroStage`, Figur wird per `fitHero` eingepasst, ersetzt die kleine Lücken-Lösung), darunter Spannungsanzeige und „Weiter“, danach Untertitel und Knöpfe. Auf der Bühne `touch-action:none`: senkrechtes Streichen löst Spannung, scrollt nicht; auf Titel/Rest scrollt man normal. PC unverändert. Geprüft: Wisch auf Figur → scrollY 0, Anzeige sinkt; Wisch auf Titel scrollt. Offen [O]: ohne WebGL liegt das Standbild noch nach altem Muster (nicht nachgezogen).
+
+**`zuhause` Handy/Tablet (Go Kai 4.11., Option 1):** Am Haus nur Nummern-Marken (2,125 rem, Namen stehen in den Raumkarten, `aria-label` bleibt), per Abstandsschleife (38 px) auseinandergeschoben. PC unverändert (dort bleiben Namensschilder; leichte Berührungen bekannt).

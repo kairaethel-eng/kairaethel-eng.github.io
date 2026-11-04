@@ -157,6 +157,11 @@ blockquote b{display:block;margin-top:.5rem;font:600 .75rem/1 var(--sans);font-s
 
 /* Handy: Haus oben, Räume als Leiste unten, Inhalt als Blatt */
 @media (max-width:920px){
+  /* Handy/Tablet: nur Nummern-Marken am Haus (Namen stehen in den Raumkarten, Go Kai 4.11.) */
+  .tag{justify-content:center;gap:0;width:2.125rem;height:2.125rem;padding:0;border-radius:50%}
+  .tag span{display:none}
+  .tag i{font-size:1rem}
+  .tag.hi::after{right:-2px;top:-2px}
   .only-wide{display:none}
   .top{gap:.75rem}
   .brand svg{width:3.875rem}
