@@ -521,6 +521,7 @@ html.paused .btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}
 .touch-hint{position:fixed;z-index:6;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:.5rem;pointer-events:none;opacity:0;transition:opacity .6s;font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--amber);white-space:nowrap;text-shadow:0 0 .75rem rgba(10,22,27,.95),0 0 .25rem rgba(10,22,27,.95)}
 .touch-hint.on{opacity:1}
 .touch-hint.in-stage{position:absolute;left:50%;top:auto;bottom:16%;transform:translateX(-50%)}
+.touch-hint.th-pill>span:last-child{padding:.5rem .875rem;border-radius:1.25rem;background:rgba(10,22,27,.86);border:1px solid rgba(224,154,53,.4);text-shadow:none} /* Handy: Hinweis über dem Haus lesbar */
 .th-track{position:relative;display:block;width:4.75rem;height:1.5rem}
 .th-track::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:linear-gradient(90deg,rgba(224,154,53,0),rgba(224,154,53,.65),rgba(224,154,53,0))}
 .th-dot{position:absolute;top:50%;left:50%;width:1.25rem;height:1.25rem;margin:-.625rem 0 0 -.625rem;border-radius:50%;border:1.5px solid var(--amber);background:rgba(224,154,53,.2);box-shadow:0 0 1rem rgba(224,154,53,.5);animation:thSway 1.9s ease-in-out infinite}
