@@ -97,6 +97,7 @@ const uniforms = {
   uRelax: { value: relaxTex }, uBodyWH: { value: new THREE.Vector2(BODY_W * BODY_SCALE, BODY_H * BODY_SCALE) },
   uXf: { value: [0, 1, 2, 3, 4].map(() => new THREE.Vector4(0, 0, 0, 1)) },
   uSpineRot: { value: -0.9 }, uCut: { value: 100 }, uHouseRot: { value: -0.55 }, uRoofLift: { value: 0 },
+  uBreath: { value: 0 }, uCalm: { value: 0 }, // Atem-Phase, „Entspannt“ (0..1)
   uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 },
   cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') },
   cBlue: { value: C('#5AA2D6') }, cGreen: { value: C('#8BC34A') }, cLogoP: { value: C('#2C6478') }, cGrey: { value: C('#8C979B') },
@@ -105,6 +106,7 @@ const uniforms = {
 const vert = /* glsl */`
   attribute float aHeat; attribute vec3 pos2; attribute vec3 pos3; attribute float kind3; attribute vec3 pos4; attribute float kind4; attribute vec4 aRand;
   uniform float uSpread, uFadeMid;
+  uniform float uBreath, uCalm;
   uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uHouseRot, uRoofLift;
   uniform sampler2D uRelax; uniform vec2 uBodyWH; uniform vec4 uXf[5];
   uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey;
@@ -122,8 +124,8 @@ const vert = /* glsl */`
       vec2 uv = position.xy / uBodyWH + .5;
       float relax = texture2D(uRelax, vec2(uv.x, 1.-uv.y)).r;
       float tension = aHeat * (1. - relax);
-      float breath = sin(uTime*1.15);
-      p = position * vec3(1. + breath*.007, 1. + breath*.004, 1.) + jitter(.012 + tension*.11, 6. + tension*10.);
+      float breath = sin(uBreath) * (1. + uCalm*1.3); // entspannt: ruhiger, tiefer Atem
+      p = position * vec3(1. + breath*.007, 1. + breath*.004, 1.) + jitter(.012*(1. - uCalm*.6) + tension*.11, 6. + tension*10.);
       p = rotY(p, sin(uTime*.25)*.32);
       vec3 base = mix(cPetrol, cBone, .25 + aRand.y*.35);
       float throb = .7 + .3*sin(uTime*3.4 + aRand.x*.8);
@@ -268,7 +270,8 @@ addEventListener('pointerleave', () => hand.classList.remove('on'));
 
 // Spannungsanzeige
 const tensionBar = $('#tension'), tensionVal = $('#tensionVal');
-let tensionShown = 100;
+let tensionShown = 100, calm = false;
+const meter = $('.meter'), meterLbl = $('.meter span');
 function measureTension() {
   const d = rctx.getImageData(0, 0, RW, RH).data;
   let sum = 0, w = 0;
@@ -276,7 +279,7 @@ function measureTension() {
     const x = Math.round(h.x / BODY_W * RW), y = Math.round(h.y / BODY_H * RH);
     for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
       const xx = clamp(x + dx, 0, RW - 1), yy = clamp(y + dy, 0, RH - 1);
-      sum += h.k * (1 - d[(yy * RW + xx) * 4] / 255); w += h.k;
+      sum += h.k * Math.max(0, 1 - d[(yy * RW + xx) * 4] / 245); w += h.k; // Zeichenfläche (8 bit) bleibt bei ~251 stehen → ≥ 245 = gelöst
     }
   });
   return Math.round(sum / w * 100);
@@ -286,6 +289,7 @@ setInterval(() => {
   const t = measureTension();
   gsap.to({ v: tensionShown }, { v: t, duration: 0.5, onUpdate() { tensionShown = this.targets()[0].v; tensionVal.textContent = Math.round(tensionShown); } });
   tensionBar.style.transform = `scaleX(${t / 100})`;
+  if (t === 0 && !calm) { calm = true; meter?.classList.add('is-calm'); if (meterLbl) meterLbl.textContent = 'Entspannt.'; }
 }, 300);
 
 // ---------- Kinetischer Titel: Buchstaben entspannen sich unter der Hand ----------
@@ -1270,6 +1274,8 @@ function tick() {
   timer.update();
   const dt = Math.min(timer.getDelta(), 0.05);
   uniforms.uTime.value += paused ? 0 : dt * CALM;
+  uniforms.uCalm.value += ((calm ? 1 : 0) - uniforms.uCalm.value) * Math.min(1, dt * 0.8);
+  uniforms.uBreath.value += paused ? 0 : dt * CALM * (1.15 - uniforms.uCalm.value * 0.45);
   const tm = targetMorph();
   morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uMorph.value = morphNow;
@@ -1378,7 +1384,11 @@ const hintBody = mkHint(finePointer ? 'Maus über den Körper' : 'Streichen');
 const hintHouse = mkHint(isDesktop() ? 'Ziehen zum Drehen' : 'Wischen oder Raum antippen');
 const hintManu = manuSec ? mkHint(finePointer ? 'Ziehen zum Drehen' : 'Seitlich wischen', $('.manu-stage')) : null;
 let houseUsed = false, manuUsed = false, xrayT = 0, manuT = 0, rotSeen = dragRot;
-$('#glManu')?.addEventListener('pointerdown', () => (manuUsed = true));
+// Hinweis gilt erst als erledigt, wenn wirklich seitlich gewischt/gezogen wurde (nicht schon beim Antippen oder Scrollen)
+{ let mx = null, my = 0; const gm = $('#glManu');
+  gm?.addEventListener('pointerdown', (e) => { mx = e.clientX; my = e.clientY; });
+  gm?.addEventListener('pointermove', (e) => { if (mx === null) return; const dx = e.clientX - mx, dy = e.clientY - my; if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy) * 1.3) { manuUsed = true; mx = null; } });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => gm?.addEventListener(t, () => (mx = null))); }
 manuBtns.forEach((b) => b.addEventListener('click', () => (manuUsed = true)));
 const t0Hints = performance.now();
 function updateHints(dt) {
@@ -1395,7 +1405,7 @@ function updateHints(dt) {
   hintHouse.classList.toggle('on', showHouse);
   if (showHouse) hintHouse.style.transform = desk ? `translate(${innerWidth * 0.72}px, ${innerHeight * 0.84}px) translate(-50%,-50%)` : `translate(${innerWidth * 0.5}px, ${innerHeight * 0.36}px) translate(-50%,-50%)`;
   // Manuthera-Liege
-  if (hintManu) { manuT = manuK > 0.8 ? manuT + dt : 0; hintManu.classList.toggle('on', !manuUsed && manuT > 3); }
+  if (hintManu) { manuT = manuK > 0.8 ? manuT + dt : 0; hintManu.classList.toggle('on', !manuUsed && manuT > 1.5); }
 }
 
 // Intro

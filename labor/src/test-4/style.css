@@ -109,6 +109,10 @@ main{position:relative;z-index:2}
 .meter-bar{width:9.375rem;height:2px;background:var(--line);position:relative;overflow:hidden}
 .meter-bar i{position:absolute;inset:0;background:linear-gradient(90deg,var(--blue),var(--amber));transform-origin:left;transition:transform .3s}
 .meter b{font:italic 400 1.875rem/1 var(--serif);letter-spacing:0;color:var(--txt);min-width:2.2ch;text-align:right;font-variant-numeric:tabular-nums}
+.meter span{transition:color .8s}
+.meter.is-calm span{font:italic 400 1.125rem/1 var(--serif);letter-spacing:0;text-transform:none;color:var(--green);animation:calmIn 1.2s var(--ease)}
+@keyframes calmIn{from{opacity:0;transform:translateY(.375rem)}}
+@media (prefers-reduced-motion:reduce){.meter.is-calm span{animation:none}}
 
 /* Manifest */
 .manifest{display:flex;align-items:center;padding-block:8.75rem}
