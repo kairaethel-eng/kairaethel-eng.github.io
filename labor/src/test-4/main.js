@@ -233,6 +233,7 @@ points.frustumCulled = false;
 scene.add(points);
 
 // ---------- Layout je Form (Position/Skalierung) ----------
+let heroFit = null;
 function layout() {
   const d = isDesktop(), a = VW / VH;
   const hw = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)) * a; // halbe sichtbare Breite bei z=0
@@ -245,6 +246,7 @@ function layout() {
     X[4].set(hw * 0.46, 0, 0, 0.72);
   } else {
     X[0].set(0, 2.35, 0, 0.40);        // Handy: etwas kleiner und höher, Füße über dem Kicker (Prüfung 1.11.)
+    if (heroFit) { const wpp = 8.19 / VH, hw2 = (heroFit.bot - heroFit.top) * wpp; X[0].set(0, (VH / 2 - (heroFit.top + heroFit.bot) / 2) * wpp, 0, Math.min(0.4, hw2 / 7.75)); } // Figur zwischen Leiste und Kicker (4.11.)
     X[1].set(0, 0, 0, 1.25);           // 1A: Bewegungslinien über den ganzen Bildschirm
     X[2].set(0, 1.65, 0, 0.28);        // 4A: Wirbelsäule in der oberen Bildhälfte
     X[3].set(0, 2.5, 0, 0.42);         // 2B: wird beim Scrollen zum Emblem (siehe roofEmblem)
@@ -1575,3 +1577,16 @@ if (!reduced) requestAnimationFrame(() => {
     upd(); setInterval(upd, 60000);
   }
 }
+
+// Handy: Figur zwischen Leiste (zweizeilig seit A3) und Kicker einpassen – nach dem ersten Bild messen (kein Layout beim Start, A1)
+function fitHero() {
+  if (isDesktop()) { heroFit = null; layout(); return; }
+  const k = document.querySelector('.hero .kicker'), bar = document.getElementById('top');
+  if (!k || !bar) return;
+  const ky = (window.gsap && gsap.getProperty(k, 'y')) || 0;
+  const bot = k.getBoundingClientRect().top + scrollY - ky - 14, top = bar.getBoundingClientRect().bottom + 6;
+  if (bot - top > 60) { heroFit = { top, bot }; layout(); }
+}
+requestAnimationFrame(() => requestAnimationFrame(fitHero));
+addEventListener('resize', () => requestAnimationFrame(fitHero));
+document.fonts && document.fonts.ready.then(fitHero);
