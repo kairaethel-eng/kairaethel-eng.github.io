@@ -4,10 +4,12 @@
 import * as THREE from 'three';
 import gsap from 'gsap';
 import Lenis from 'lenis';
-import { bodyPoints, spinePoints, housePoints, logoPoints, spineStipple, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
-import { praxisScan, ROOMS, EYE, P } from './praxis.js';
-import { initA as initManu, MODES as MANU_MODES } from '../manu/ideaA.js';
-import { initServices } from './services.js';
+import { bodyPoints, spinePointsGen, housePoints, logoPoints, spineStippleGen, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
+import { praxisScanGen, ROOMS, EYE, P } from './praxis.js';
+import { initAGen as initManuGen, MODES as MANU_MODES } from '../manu/ideaA.js';
+import { glContext } from '../manu/common.js';
+import { initServicesGen } from './services.js';
+import { runSliced } from '../shared/slice.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -40,14 +42,22 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
-const isDesktop = () => innerWidth > 920;
+// Fenstergröße beim Start ohne erzwungenes Layout (A1): innerWidth/innerHeight ließen den Browser die ganze Seite
+// mitten im Start-Skript setzen. Media-Queries kennen die Größe ohne Layout; danach hält „resize“ die Werte aktuell.
+const mqSize = (dim) => { let lo = 0, hi = 16384; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (matchMedia(`(min-${dim}: ${m}px)`).matches) lo = m; else hi = m; } return lo; };
+let VW = mqSize('width'), VH = mqSize('height');
+addEventListener('resize', () => { VW = innerWidth; VH = innerHeight; });
+const isDesktop = () => VW > 920;
 
 // ---------- Scrollen ----------
 let lenis = null;
 if (!reduced) {
-  // ruhiges Scrollen: Mausrad langsamer, weiches Nachgleiten (Scrollbalken bleibt direkt)
-  lenis = new Lenis({ lerp: 0.055, smoothWheel: true, wheelMultiplier: 0.6 });
-  gsap.ticker.add((t) => lenis.raf(t * 1000));
+  // ruhiges Scrollen: Mausrad langsamer, weiches Nachgleiten (Scrollbalken bleibt direkt).
+  // Erst nach dem ersten Bild anlegen: Lenis misst die Seite, das erzwänge sonst ein zweites Layout im Start-Task (A1).
+  requestAnimationFrame(() => setTimeout(() => {
+    lenis = new Lenis({ lerp: 0.055, smoothWheel: true, wheelMultiplier: 0.6 });
+    gsap.ticker.add((t) => lenis.raf(t * 1000));
+  }, 0));
   gsap.ticker.lagSmoothing(0);
 }
 const scrollToY = (y) => (lenis ? lenis.scrollTo(y, { duration: 1.8 }) : scrollTo({ top: y }));
@@ -59,9 +69,13 @@ $$('a[href^="#"]').forEach((a) => a.addEventListener('click', (e) => {
 // ---------- Renderer ----------
 const canvas = $('#gl');
 let renderer = null;
-try { renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' }); } catch (e) { /* ohne WebGL bleibt die Seite lesbar */ }
+const glCtx = glContext(canvas);
+if (glCtx) try { renderer = new THREE.WebGLRenderer({ canvas, context: glCtx, antialias: false, alpha: false, powerPreference: 'high-performance' }); } catch (e) { /* ohne WebGL bleibt die Seite lesbar */ }
+// Ohne WebGL (oder wenn eine Bühne scheitert): Standbilder statt Partikel, Hinweise weg (A2, CSS html.no-gl)
+const noGl = () => document.documentElement.classList.add('no-gl');
+if (!renderer) noGl();
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(35, VW / VH, 0.1, 100);
 camera.position.set(0, 0, 13);
 if (renderer) {
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, isDesktop() ? 1.6 : 1.4));
@@ -70,11 +84,22 @@ if (renderer) {
 
 // ---------- Partikel ----------
 const N = isDesktop() ? 64000 : 26000;
-const body = bodyPoints(N), spine = spinePoints(N), house = housePoints(N), logo = logoPoints(N);
+const body = bodyPoints(N), house = housePoints(N), logo = logoPoints(N);
 const geo = new THREE.BufferGeometry();
 geo.setAttribute('position', new THREE.BufferAttribute(body.pos, 3));
 geo.setAttribute('aHeat', new THREE.BufferAttribute(body.heat, 1));
-geo.setAttribute('pos2', new THREE.BufferAttribute(spine.pos, 3));
+// Startzeit (A1, Go 4.11.2026): der Hero braucht nur die Körper-Wolke. Das Morph-Ziel Wirbelsäule wird nach dem
+// ersten Bild in Zeitscheiben gerechnet (bis dahin hält die Wolke die Körperform), die Detailbühnen je Kapitel.
+geo.setAttribute('pos2', new THREE.BufferAttribute(body.pos.slice(), 3));
+if (renderer) runSliced(spinePointsGen(N)).then((sp) => { geo.attributes.pos2.array.set(sp.pos); geo.attributes.pos2.needsUpdate = true; });
+// Kapitel erst bauen, wenn es in Reichweite kommt (anderthalb Bildschirme vorher)
+const whenNear = (el, fn) => {
+  if (!el || !renderer) return; // ohne WebGL nichts rechnen
+  const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); fn(); } }, { rootMargin: '150% 0px' });
+  io.observe(el);
+};
+// sanftes Einblenden fertiger Bühnen (0 → 1 in ~0,9 s)
+const ramp = (k, dt) => Math.min(1, k + dt / 0.9);
 geo.setAttribute('pos3', new THREE.BufferAttribute(house.pos, 3));
 geo.setAttribute('kind3', new THREE.BufferAttribute(house.kind, 1));
 geo.setAttribute('pos4', new THREE.BufferAttribute(logo.pos, 3));
@@ -209,7 +234,7 @@ scene.add(points);
 
 // ---------- Layout je Form (Position/Skalierung) ----------
 function layout() {
-  const d = isDesktop(), a = innerWidth / innerHeight;
+  const d = isDesktop(), a = VW / VH;
   const hw = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)) * a; // halbe sichtbare Breite bei z=0
   const X = uniforms.uXf.value;
   if (d) {
@@ -225,12 +250,12 @@ function layout() {
     X[3].set(0, 2.5, 0, 0.42);         // 2B: wird beim Scrollen zum Emblem (siehe roofEmblem)
     X[4].set(0, 2.15, 0, 0.32);        // 3: tiefer und kleiner, frei von der Leiste
   }
-  uniforms.uPix.value = renderer ? renderer.getPixelRatio() * (innerHeight / 900) * (d ? 1 : 1.25) : 1;
+  uniforms.uPix.value = renderer ? renderer.getPixelRatio() * (VH / 900) * (d ? 1 : 1.25) : 1;
 }
 function resize() {
   if (isDesktop()) $$('.seg-card').forEach((c) => (c.style.opacity = ''));
-  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
-  if (renderer) renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect = VW / VH; camera.updateProjectionMatrix();
+  if (renderer) renderer.setSize(VW, VH, false);
   layout();
 }
 addEventListener('resize', resize); resize();
@@ -240,7 +265,7 @@ const hand = $('#hand');
 const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), hit = new THREE.Vector3();
 let lastPaint = null, touched = false;
 function paintAt(cx, cy) {
-  ndc.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1);
+  ndc.set(cx / VW * 2 - 1, -(cy / VH) * 2 + 1);
   raycaster.setFromCamera(ndc, camera);
   if (!raycaster.ray.intersectPlane(plane, hit)) return;
   const X = uniforms.uXf.value[0];
@@ -321,9 +346,9 @@ const words = $$('.word', statement);
 // groben Partikel. Knochen = gleichmäßig gesetzte Punkte auf dunklem Kern (fest, ruhig).
 // Nerven = Partikel, die wirklich fließen; Signale laufen vom Kopf durchs Rückenmark in die Wurzeln.
 const V3 = THREE.Vector3;
-const det = spineStipple(0, false);
+// Aufbau erst, wenn #achse in Reichweite kommt (A1); bis dahin det/bones = null, danach blendet der Scan ein (spineK)
+let det = null, SC = 1, CY = 0, spineK = 0;
 const N_GRAIN = isDesktop() ? 165000 : 46000, N_SLICE = isDesktop() ? 330000 : 85000;
-const SC = det.SC, CY = det.CY;
 const sU = {
   uTime: uniforms.uTime, uRot: uniforms.uSpineRot, uCut: uniforms.uCut, uXf: { value: uniforms.uXf.value[2] },
   uZone: { value: -10 }, uZoneAmt: { value: 0 }, uOn: { value: 0 }, uStip: { value: 1 }, uPix: uniforms.uPix,
@@ -355,8 +380,6 @@ const coreMat = new THREE.ShaderMaterial({
       #include <colorspace_fragment>
     }`,
 });
-const core = new THREE.Mesh(det.coreGeo, coreMat);
-core.frustumCulled = false;
 
 // 2) Knochen in zwei Darstellungen: „Schichten“ (CT-Schnittlinien) oder „Körnung“ (gestochene Punkte)
 const boneMat = new THREE.ShaderMaterial({
@@ -391,9 +414,8 @@ const boneMat = new THREE.ShaderMaterial({
     }`,
 });
 const STYLES = {};
-function boneStyle(name) {
+function boneStyle(name, d) { // d = det.makeGrain(N_GRAIN) bzw. det.makeSlices(…), vorab gerechnet
   if (STYLES[name]) return STYLES[name];
-  const d = name === 'grain' ? det.makeGrain(N_GRAIN) : det.makeSlices(N_SLICE, isDesktop() ? 0.024 : 0.032, 0.12);
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(d.pos, 3));
   g.setAttribute('normal', new THREE.BufferAttribute(d.nor, 3));
@@ -406,101 +428,113 @@ function boneStyle(name) {
   pts.frustumCulled = false;
   return (STYLES[name] = { pts, spacing: d.spacing, name });
 }
-let bones = boneStyle('slices');
+let bones = null;
 // Darstellung „Schichten“ (Entscheidung 1.11.2026; „Körnung“ bleibt nur als Code-Option)
 
 // 3) Nerven: Kurven als Textur (Zeile 0 Rückenmark, dann Wurzeln); Versorgungsbahn eigene Textur in Weltkoordinaten
-const ROWS = det.curves.length;
-const cData = new Float32Array(CURVE_W * ROWS * 4);
-det.curves.forEach((c, r) => c.pts.forEach((q, i) => cData.set([q[0], q[1], q[2], 1], (r * CURVE_W + i) * 4)));
-const curveTex = new THREE.DataTexture(cData, CURVE_W, ROWS, THREE.RGBAFormat, THREE.FloatType);
-curveTex.minFilter = curveTex.magFilter = THREE.NearestFilter; curveTex.needsUpdate = true;
 const periData = new Float32Array(CURVE_W * 4);
 const periTex = new THREE.DataTexture(periData, CURVE_W, 1, THREE.RGBAFormat, THREE.FloatType);
 periTex.minFilter = periTex.magFilter = THREE.NearestFilter; periTex.needsUpdate = true;
-sU.uCurves = { value: curveTex }; sU.uPeriTex = { value: periTex }; sU.uRows = { value: ROWS };
+function addNerves() {
+  const ROWS = det.curves.length;
+  const cData = new Float32Array(CURVE_W * ROWS * 4);
+  det.curves.forEach((c, r) => c.pts.forEach((q, i) => cData.set([q[0], q[1], q[2], 1], (r * CURVE_W + i) * 4)));
+  const curveTex = new THREE.DataTexture(cData, CURVE_W, ROWS, THREE.RGBAFormat, THREE.FloatType);
+  curveTex.minFilter = curveTex.magFilter = THREE.NearestFilter; curveTex.needsUpdate = true;
+  sU.uCurves = { value: curveTex }; sU.uPeriTex = { value: periTex }; sU.uRows = { value: ROWS };
 
-const desk = isDesktop();
-const nCord = desk ? 2600 : 1300, nRoot = desk ? 34 : 20, nPeri = desk ? 900 : 500;
-const nAll = nCord + (ROWS - 1) * nRoot + nPeri;
-const aRow = new Float32Array(nAll), aPhase = new Float32Array(nAll), aSpeed = new Float32Array(nAll), aKindN = new Float32Array(nAll), aZoneN = new Float32Array(nAll), aStart = new Float32Array(nAll), aOff = new Float32Array(nAll * 3);
-let q = 0;
-const push = (row, kind, zone, start, speed, off) => {
-  aRow[q] = row; aKindN[q] = kind; aZoneN[q] = zone; aStart[q] = start; aPhase[q] = Math.random(); aSpeed[q] = speed * (0.75 + Math.random() * 0.5);
-  const u = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.random()) * off;
-  aOff.set([Math.cos(u) * rr, (Math.random() - 0.5) * off * 0.6, Math.sin(u) * rr], q * 3); q++;
-};
-for (let i = 0; i < nCord; i++) push(0, 1, -1, 0, 0.055, 0.045);
-for (let r = 1; r < ROWS; r++) for (let i = 0; i < nRoot; i++) push(r, 2, det.curves[r].zone, det.curves[r].start, 0.22, 0.018);
-for (let i = 0; i < nPeri; i++) push(0, 3, -1, 0, 0.16, 0.05);
-const nGeo = new THREE.BufferGeometry();
-nGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(nAll * 3), 3));
-[['aRow', aRow], ['aPhase', aPhase], ['aSpeed', aSpeed], ['aKind', aKindN], ['aZone', aZoneN], ['aStart', aStart]].forEach(([k, v]) => nGeo.setAttribute(k, new THREE.BufferAttribute(v, 1)));
-nGeo.setAttribute('aOff', new THREE.BufferAttribute(aOff, 3));
-const nerveMat = new THREE.ShaderMaterial({
-  uniforms: sU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-  vertexShader: GLSL_COMMON + /* glsl */`
-    uniform sampler2D uCurves, uPeriTex; uniform float uRows;
-    attribute float aRow, aPhase, aSpeed, aKind, aZone, aStart; attribute vec3 aOff;
-    varying vec3 vCol; varying float vA;
-    vec3 curveAt(sampler2D tex, float row, float rows, float t){
-      float x = t * ${CURVE_W - 1}.; float i0 = floor(x);
-      vec3 a = texture2D(tex, vec2((i0 + .5) / ${CURVE_W}., (row + .5) / rows)).xyz;
-      vec3 b = texture2D(tex, vec2((min(i0 + 1., ${CURVE_W - 1}.) + .5) / ${CURVE_W}., (row + .5) / rows)).xyz;
-      return mix(a, b, x - i0);
-    }
-    // zwei Signale je Takt, die vom Kopf nach unten laufen
-    float packet(float d, float sharp){ return exp(-d * d * sharp) + step(0., d) * exp(-d * 7.) * .35; }
-    void main(){
-      float t = fract(aPhase + uTime * aSpeed);
-      float S1 = fract(uTime * .3), S2 = fract(uTime * .3 + .5);
-      vec3 p; float base, pk;
-      if (aKind < 1.5) {                         // Rückenmark
-        p = rotY(curveAt(uCurves, aRow, uRows, t) + aOff, uRot) * uXf.w + uXf.xyz;
-        pk = max(packet(S1 - t, 700.), packet(S2 - t, 700.));
-        base = .46;
-      } else if (aKind < 2.5) {                  // Nervenwurzel
-        p = rotY(curveAt(uCurves, aRow, uRows, t) + aOff, uRot) * uXf.w + uXf.xyz;
-        float on = (1. - step(.5, abs(aZone - uZone))) * uZoneAmt;
-        float r1 = (S1 - aStart) * 4., r2 = (S2 - aStart) * 4.;
-        pk = max(packet(r1 - t, 60.) * step(0., r1) * step(r1, 1.4), packet(r2 - t, 60.) * step(0., r2) * step(r2, 1.4));
-        pk *= mix(.28, 1.5, on);
-        base = .16 + on * .5;
-      } else {                                   // Versorgungsbahn (Weltkoordinaten)
-        p = curveAt(uPeriTex, 0., 1., t) + aOff * uXf.w * 4.;
-        float r1 = (S1 - uPeriStart) * 4. - 1., r2 = (S2 - uPeriStart) * 4. - 1.;
-        pk = max(packet(r1 * .55 - t, 40.) * step(0., r1), packet(r2 * .55 - t, 40.) * step(0., r2)) * uPeri;
-        base = .4 * uPeri;
+  const desk = isDesktop();
+  const nCord = desk ? 2600 : 1300, nRoot = desk ? 34 : 20, nPeri = desk ? 900 : 500;
+  const nAll = nCord + (ROWS - 1) * nRoot + nPeri;
+  const aRow = new Float32Array(nAll), aPhase = new Float32Array(nAll), aSpeed = new Float32Array(nAll), aKindN = new Float32Array(nAll), aZoneN = new Float32Array(nAll), aStart = new Float32Array(nAll), aOff = new Float32Array(nAll * 3);
+  let q = 0;
+  const push = (row, kind, zone, start, speed, off) => {
+    aRow[q] = row; aKindN[q] = kind; aZoneN[q] = zone; aStart[q] = start; aPhase[q] = Math.random(); aSpeed[q] = speed * (0.75 + Math.random() * 0.5);
+    const u = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.random()) * off;
+    aOff.set([Math.cos(u) * rr, (Math.random() - 0.5) * off * 0.6, Math.sin(u) * rr], q * 3); q++;
+  };
+  for (let i = 0; i < nCord; i++) push(0, 1, -1, 0, 0.055, 0.045);
+  for (let r = 1; r < ROWS; r++) for (let i = 0; i < nRoot; i++) push(r, 2, det.curves[r].zone, det.curves[r].start, 0.22, 0.018);
+  for (let i = 0; i < nPeri; i++) push(0, 3, -1, 0, 0.16, 0.05);
+  const nGeo = new THREE.BufferGeometry();
+  nGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(nAll * 3), 3));
+  [['aRow', aRow], ['aPhase', aPhase], ['aSpeed', aSpeed], ['aKind', aKindN], ['aZone', aZoneN], ['aStart', aStart]].forEach(([k, v]) => nGeo.setAttribute(k, new THREE.BufferAttribute(v, 1)));
+  nGeo.setAttribute('aOff', new THREE.BufferAttribute(aOff, 3));
+  const nerveMat = new THREE.ShaderMaterial({
+    uniforms: sU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: GLSL_COMMON + /* glsl */`
+      uniform sampler2D uCurves, uPeriTex; uniform float uRows;
+      attribute float aRow, aPhase, aSpeed, aKind, aZone, aStart; attribute vec3 aOff;
+      varying vec3 vCol; varying float vA;
+      vec3 curveAt(sampler2D tex, float row, float rows, float t){
+        float x = t * ${CURVE_W - 1}.; float i0 = floor(x);
+        vec3 a = texture2D(tex, vec2((i0 + .5) / ${CURVE_W}., (row + .5) / rows)).xyz;
+        vec3 b = texture2D(tex, vec2((min(i0 + 1., ${CURVE_W - 1}.) + .5) / ${CURVE_W}., (row + .5) / rows)).xyz;
+        return mix(a, b, x - i0);
       }
-      vec3 col = cBlue * base + cSignal * pk * 1.15;
-      float vis = step(uCut, p.y) * uOn;
-      vec4 mv = viewMatrix * vec4(p, 1.);
-      gl_Position = projectionMatrix * mv;
-      gl_PointSize = clamp(uPix * (1.05 + pk * 1.4) * 15. / -mv.z, 1., 7.);
-      vCol = col; vA = vis * clamp(base + pk, 0., 1.4);
-    }`,
-  fragmentShader: /* glsl */`
-    uniform float uGhost;
-    varying vec3 vCol; varying float vA;
-    void main(){
-      float d = length(gl_PointCoord - .5);
-      gl_FragColor = vec4(vCol, smoothstep(.5, .05, d) * vA * uGhost);
-      #include <colorspace_fragment>
-    }`,
-});
-nerveMat.uniforms = { ...sU, uGhost: { value: 1 } };
-const nerves = new THREE.Points(nGeo, nerveMat);
-nerves.frustumCulled = false;
-// zweiter Durchgang: Nerven schimmern gedämpft durch den Knochen (sonst verschwände das Rückenmark im Wirbelkanal)
-const ghostMat = nerveMat.clone();
-ghostMat.uniforms = { ...sU, uGhost: { value: 0.42 } }; ghostMat.depthTest = false;
-const nervesGhost = new THREE.Points(nGeo, ghostMat);
-nervesGhost.frustumCulled = false;
+      // zwei Signale je Takt, die vom Kopf nach unten laufen
+      float packet(float d, float sharp){ return exp(-d * d * sharp) + step(0., d) * exp(-d * 7.) * .35; }
+      void main(){
+        float t = fract(aPhase + uTime * aSpeed);
+        float S1 = fract(uTime * .3), S2 = fract(uTime * .3 + .5);
+        vec3 p; float base, pk;
+        if (aKind < 1.5) {                         // Rückenmark
+          p = rotY(curveAt(uCurves, aRow, uRows, t) + aOff, uRot) * uXf.w + uXf.xyz;
+          pk = max(packet(S1 - t, 700.), packet(S2 - t, 700.));
+          base = .46;
+        } else if (aKind < 2.5) {                  // Nervenwurzel
+          p = rotY(curveAt(uCurves, aRow, uRows, t) + aOff, uRot) * uXf.w + uXf.xyz;
+          float on = (1. - step(.5, abs(aZone - uZone))) * uZoneAmt;
+          float r1 = (S1 - aStart) * 4., r2 = (S2 - aStart) * 4.;
+          pk = max(packet(r1 - t, 60.) * step(0., r1) * step(r1, 1.4), packet(r2 - t, 60.) * step(0., r2) * step(r2, 1.4));
+          pk *= mix(.28, 1.5, on);
+          base = .16 + on * .5;
+        } else {                                   // Versorgungsbahn (Weltkoordinaten)
+          p = curveAt(uPeriTex, 0., 1., t) + aOff * uXf.w * 4.;
+          float r1 = (S1 - uPeriStart) * 4. - 1., r2 = (S2 - uPeriStart) * 4. - 1.;
+          pk = max(packet(r1 * .55 - t, 40.) * step(0., r1), packet(r2 * .55 - t, 40.) * step(0., r2)) * uPeri;
+          base = .4 * uPeri;
+        }
+        vec3 col = cBlue * base + cSignal * pk * 1.15;
+        float vis = step(uCut, p.y) * uOn;
+        vec4 mv = viewMatrix * vec4(p, 1.);
+        gl_Position = projectionMatrix * mv;
+        gl_PointSize = clamp(uPix * (1.05 + pk * 1.4) * 15. / -mv.z, 1., 7.);
+        vCol = col; vA = vis * clamp(base + pk, 0., 1.4);
+      }`,
+    fragmentShader: /* glsl */`
+      uniform float uGhost;
+      varying vec3 vCol; varying float vA;
+      void main(){
+        float d = length(gl_PointCoord - .5);
+        gl_FragColor = vec4(vCol, smoothstep(.5, .05, d) * vA * uGhost);
+        #include <colorspace_fragment>
+      }`,
+  });
+  nerveMat.uniforms = { ...sU, uGhost: { value: 1 } };
+  const nerves = new THREE.Points(nGeo, nerveMat);
+  nerves.frustumCulled = false;
+  // zweiter Durchgang: Nerven schimmern gedämpft durch den Knochen (sonst verschwände das Rückenmark im Wirbelkanal)
+  const ghostMat = nerveMat.clone();
+  ghostMat.uniforms = { ...sU, uGhost: { value: 0.42 } }; ghostMat.depthTest = false;
+  const nervesGhost = new THREE.Points(nGeo, ghostMat);
+  nervesGhost.frustumCulled = false;
+  spineGroup.add(nervesGhost, nerves);
+}
 
 const spineGroup = new THREE.Group();
-spineGroup.add(core, bones.pts, nervesGhost, nerves);
 spineGroup.visible = false;
 scene.add(spineGroup);
+whenNear($('#achse'), () => runSliced(spineStippleGen(0, false)).then((d) => {
+  det = d; SC = d.SC; CY = d.CY;
+  return runSliced(d.makeSlicesGen(N_SLICE, isDesktop() ? 0.024 : 0.032, 0.12));
+}).then((sl) => {
+  const core = new THREE.Mesh(det.coreGeo, coreMat);
+  core.frustumCulled = false;
+  bones = boneStyle('slices', sl);
+  spineGroup.add(core, bones.pts);
+  addNerves();
+}));
 
 // Versorgungsbahn: vom Wurzel-Ende des aktiven Abschnitts bis zum Zielgebiet, mit Beschriftung
 const PERI = {
@@ -541,7 +575,7 @@ function updatePeri(zoneKey) {
   sU.uPeriStart.value = start;
   // Beschriftung am sichtbaren Ende der Bahn
   curve.getPointAt(desk ? 0.72 : 0.6, _pv); _pv.project(camera);
-  const lx = Math.min((_pv.x * 0.5 + 0.5) * innerWidth, innerWidth - 16), ly = (-_pv.y * 0.5 + 0.5) * innerHeight;
+  const lx = Math.min((_pv.x * 0.5 + 0.5) * VW, VW - 16), ly = (-_pv.y * 0.5 + 0.5) * VH;
   periLabel.style.transform = `translate(${lx}px, ${ly}px) translate(-100%, -260%)`;
   periLabel.textContent = cfg.txt;
 }
@@ -637,7 +671,7 @@ const nlines = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 nlines.setAttribute('class', 'nlines'); nlines.setAttribute('aria-hidden', 'true');
 nlines.innerHTML = '<line/><line/><line/><line/>'; document.body.appendChild(nlines);
 const nl = [...nlines.querySelectorAll('line')];
-const toPx = (v) => { const q = v.clone().project(camera); return [(q.x * 0.5 + 0.5) * innerWidth, (-q.y * 0.5 + 0.5) * innerHeight]; };
+const toPx = (v) => { const q = v.clone().project(camera); return [(q.x * 0.5 + 0.5) * VW, (-q.y * 0.5 + 0.5) * VH]; };
 // Hindernisse auf dem Bildschirm: jeder sichtbare Wirbel als Rechteck (inkl. Fortsätze), Silhouette, Zielpunkt
 function spineRects() {
   const X = uniforms.uXf.value[2], rot = uniforms.uSpineRot.value, out = [];
@@ -669,7 +703,7 @@ function updateCallouts(zoneKey, fl, on) {
   });
   if (!show) { ncState.forEach((s) => { s.init = false; s.k = -1; }); return; }
   const now = performance.now(), ease = 1 - Math.exp(-Math.min(0.1, (now - ncT) / 1000) * 7); ncT = now;
-  const W = innerWidth, H = innerHeight, MINX = Math.min(600, W * 0.42); // Textspalte links frei halten
+  const W = VW, H = VH, MINX = Math.min(600, W * 0.42); // Textspalte links frei halten
   const spine = spineRects();
   // Silhouette-Rahmen (Arme hängen, daher schmal) und leuchtendes Ziel
   const [sx0, sy0] = toPx(sil.localToWorld(new V3(-BODY_W * 0.36 * BODY_SCALE, BODY_H / 2 * BODY_SCALE, 0)));
@@ -738,11 +772,11 @@ const PH = () => (isDesktop() ? { M0: 0.06, J0: 0.09, J1: 0.9, M1: 0.94 } : { M0
 segBtns.forEach((b) => b.addEventListener('click', () => {
   const i = +b.dataset.seg, ph = PH(), r = axis.getBoundingClientRect();
   const p = ph.J0 + (i / (STOPS.length - 1)) * (ph.J1 - ph.J0);
-  scrollToY(r.top + scrollY + p * (r.height - innerHeight) + 2);
+  scrollToY(r.top + scrollY + p * (r.height - VH) + 2);
 }));
 // Handy: Karten laufen untereinander durch; die Karte in der unteren Bildmitte bestimmt den Abschnitt
 function mobileCard() {
-  const vh = innerHeight;
+  const vh = VH;
   let best = mobSel, bd = 1e9;
   const rs = cards.map((c) => c.getBoundingClientRect());
   rs.forEach((r, i) => { const d = Math.abs(r.top - vh * 0.5); if (d < bd) { bd = d; best = i; } });
@@ -752,17 +786,19 @@ function mobileCard() {
 }
 dots.forEach((d) => d.addEventListener('click', () => {
   const c = cards[+d.dataset.seg];
-  scrollToY(c.getBoundingClientRect().top + scrollY - innerHeight * 0.5);
+  scrollToY(c.getBoundingClientRect().top + scrollY - VH * 0.5);
 }));
 
 let spineRot = -0.9;
 function updateAxis(dt) {
   const ph = PH(), desk = isDesktop();
   const r = axis.getBoundingClientRect();
-  const p = clamp(-r.top / Math.max(1, r.height - innerHeight));
-  const inSec = r.top < innerHeight && r.bottom > 0 && morphNow > 1.6 && morphNow < 2.4;
+  const p = clamp(-r.top / Math.max(1, r.height - VH));
+  const inSec = r.top < VH && r.bottom > 0 && morphNow > 1.6 && morphNow < 2.4;
+  // noch nicht fertig gerechnet: grobe Partikel bleiben, danach fahren Scan und Kamera sanft nach
+  spineK = bones ? ramp(spineK, dt) : 0;
   // Scan (0 = grobe Partikel, 1 = detaillierte Punktwolke)
-  const solid = !inSec || p <= 0 || p >= 1 ? 0 : p < ph.M1 ? smooth(0.005, ph.M0, p) : 1 - smooth(ph.M1, 0.995, p);
+  const solid = (!inSec || p <= 0 || p >= 1 ? 0 : p < ph.M1 ? smooth(0.005, ph.M0, p) : 1 - smooth(ph.M1, 0.995, p)) * spineK;
   const X = uniforms.uXf.value[2];
   const topY = X.y + 4.35 * X.w, botY = X.y - 4.35 * X.w;
   const cut = solid <= 0 ? 100 : THREE.MathUtils.lerp(topY + 0.05, botY - 0.05, solid);
@@ -771,10 +807,10 @@ function updateAxis(dt) {
   sU.uOn.value = solid > 0 ? 1 : 0;
   // Punktgröße so, dass die Knochenpunkte bei jeder Entfernung dicht an dicht liegen
   // Punktgröße: Körnung dicht an dicht, Schichten als feine Linie
-  bones.pts.material.uniforms.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * innerHeight * 0.5 / tanH * X.w * (bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);
+  if (bones) bones.pts.material.uniforms.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * VH * 0.5 / tanH * X.w * (bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);
 
   // Kamera: Übersicht ↔ Kamerafahrt
-  const w = inSec ? smooth(ph.M0, ph.J0, p) * (1 - smooth(ph.J1, ph.M1, p)) : 0;
+  const w = inSec ? smooth(ph.M0, ph.J0, p) * (1 - smooth(ph.J1, ph.M1, p)) * spineK : 0;
   let jPose = null, zoneIdx = active, localF = 0;
   if (w > 0) {
     if (desk) {
@@ -829,6 +865,66 @@ $$('.index li').forEach((li) => {
 const rules = $('#hausordnung'), laws = $$('#laws li'), door = $('#tuer');
 let lawOn = 0;
 
+// ---------- K1 „Die Tür geht auf“ (Vergleich, nur mit ?licht=1): Kapitel 05 wird hell ----------
+// Über die letzten 60 % der Hausordnung blendet die Seite von Dunkel in warmes Off-White (V10-Palette),
+// Bernstein bleibt, die Partikel weichen warmem Sonnenstaub. Der Übergang hängt allein am Scrollen
+// (keine Eigenbewegung); bei „Bewegung anhalten“ steht der Staub still, bei „reduzieren“ treibt er langsam.
+const licht = new URLSearchParams(location.search).get('licht') === '1';
+let lichtK = -1;
+const hexRGB = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const LICHT = { // [dunkel, hell, Text?] – Textfarben springen schnell in der Mitte um, damit nichts verschwimmt
+  '--ink': ['#0A161B', '#F7F5EF'], '--ink2': ['#10222A', '#EFEBE1'], '--ink3': ['#173039', '#E6E0D2'],
+  '--txt': ['#EDE8DC', '#1C3038', 1], '--dim': ['#B0BFC3', '#3E545C', 1], '--mute': ['#7F959C', '#566A71', 1], '--amber': ['#E09A35', '#9A570A', 1],
+};
+const LICHT_A = { // rgba: [r,g,b,a] dunkel → hell
+  '--line': [[237, 232, 220, 0.12], [28, 48, 56, 0.14]], '--nav-bg': [[10, 22, 27, 0.72], [247, 245, 239, 0.84]], '--menu-bg': [[10, 22, 27, 0.97], [247, 245, 239, 0.98]],
+  '--pill-bg': [[16, 34, 42, 0.55], [28, 48, 56, 0.06]], '--ghost-line': [[237, 232, 220, 0.3], [28, 48, 56, 0.38]], '--shadow': [[10, 22, 27, 0.9], [10, 22, 27, 0]],
+};
+const lerpN = (a, b, t) => a + (b - a) * t, _clear = new THREE.Color();
+function setLicht(k) {
+  if (Math.abs(k - lichtK) < 0.002) return;
+  lichtK = k;
+  const st = document.documentElement.style, kt = smooth(0.42, 0.58, k);
+  for (const [v, [a, b, txt]] of Object.entries(LICHT)) { const A = hexRGB(a), B = hexRGB(b), t = txt ? kt : k; st.setProperty(v, `rgb(${A.map((c, i) => Math.round(lerpN(c, B[i], t))).join(',')})`); }
+  for (const [v, [A, B]] of Object.entries(LICHT_A)) st.setProperty(v, `rgba(${[0, 1, 2].map((i) => Math.round(lerpN(A[i], B[i], v === '--shadow' ? k : kt))).join(',')},${lerpN(A[3], B[3], v === '--shadow' ? k : kt).toFixed(3)})`);
+  document.documentElement.classList.toggle('is-licht', kt > 0.5);
+  if (renderer) { const A = hexRGB(LICHT['--ink'][0]), B = hexRGB(LICHT['--ink'][1]); renderer.setClearColor(_clear.setRGB(...A.map((c, i) => lerpN(c, B[i], k) / 255), THREE.SRGBColorSpace), 1); }
+  dustU.uDust.value = k;
+}
+// Sonnenstaub: feine, warme Punkte, normal gemischt (auf Hell wäre additives Licht unsichtbar)
+const dustU = { uDust: { value: 0 }, uTime: uniforms.uTime, uPix: uniforms.uPix };
+let dust = null;
+if (licht) {
+  document.documentElement.classList.add('licht');
+  const nD = isDesktop() ? 1600 : 700, dp = new Float32Array(nD * 3), dr = new Float32Array(nD * 3);
+  for (let i = 0; i < nD; i++) { dp.set([(Math.random() - 0.5) * 20, (Math.random() - 0.5) * 11, (Math.random() - 0.5) * 4], i * 3); dr.set([Math.random(), Math.random(), Math.random()], i * 3); }
+  const dg = new THREE.BufferGeometry();
+  dg.setAttribute('position', new THREE.BufferAttribute(dp, 3)); dg.setAttribute('aR', new THREE.BufferAttribute(dr, 3));
+  dust = new THREE.Points(dg, new THREE.ShaderMaterial({
+    uniforms: dustU, transparent: true, depthWrite: false, depthTest: false,
+    vertexShader: /* glsl */`
+      attribute vec3 aR; uniform float uDust, uTime, uPix; varying float vA; varying float vW;
+      void main(){
+        vec3 p = position;
+        p.y = mod(p.y + 5.5 + uTime * (.05 + aR.x * .09), 11.) - 5.5;   // steigt langsam im Licht
+        p.x += sin(uTime * (.2 + aR.y * .3) + aR.z * 6.283) * .35;
+        vec4 mv = viewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
+        float tw = .55 + .45 * sin(uTime * (.6 + aR.z) + aR.x * 40.);   // funkelt sacht
+        gl_PointSize = uPix * (1.6 + aR.y * 3.) * 30. / -mv.z;
+        vA = uDust * (.25 + .55 * aR.z) * tw; vW = aR.x;
+      }`,
+    fragmentShader: /* glsl */`
+      varying float vA; varying float vW;
+      void main(){ float d = length(gl_PointCoord - .5); if (d > .5) discard;
+        vec3 col = mix(vec3(.8, .5, .12), vec3(.93, .68, .28), vW);
+        gl_FragColor = vec4(col, smoothstep(.5, .1, d) * vA);
+        #include <colorspace_fragment>
+      }`,
+  }));
+  dust.frustumCulled = false; dust.renderOrder = 6; dust.visible = false;
+  scene.add(dust);
+}
+
 // ---------- Kapitel → Formen ----------
 const chapters = $$('.chapter');
 const navLinks = $$('#chapters a'), chapNow = $('#chapNow');
@@ -843,11 +939,11 @@ chapNow.addEventListener('click', (e) => { e.stopPropagation(); setMenu(!topNav.
 navLinks.forEach((a) => a.addEventListener('click', () => setMenu(false)));
 document.addEventListener('click', (e) => { if (!e.target.closest('#chapters')) setMenu(false); });
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && topNav.classList.contains('menu-open')) { setMenu(false); chapNow.focus(); } });
-addEventListener('resize', () => { if (innerWidth > 1000) setMenu(false); });
+addEventListener('resize', () => { if (VW > 1000) setMenu(false); });
 let chapShown = -1;
 let morphNow = 0;
 function targetMorph() {
-  const vh = innerHeight;
+  const vh = VH;
   let m = 0;
   for (let i = 0; i < chapters.length; i++) {
     const r = chapters[i].getBoundingClientRect();
@@ -865,98 +961,102 @@ function targetMorph() {
 // ---------- Kapitel 04: Rundgang durch die Praxis (Punktwolke im Partikel-Haus) ----------
 const tourEl = $('#tour'), roomCards = $$('.room-card'), roomBtns = $$('.roomnav button'), roomDots = $$('.room-dots button');
 // Einrichtung „gestochen“: Scan-Linien (Wände, Boden, Kanten) leuchten, Möbel sind Körper mit Kern
-const prx = praxisScan(isDesktop() ? 85000 : 32000, isDesktop() ? 1 : 0.62);
+// Aufbau erst, wenn #dach in Reichweite kommt (A1); danach blenden Linien und Möbel ein (tU.uReady)
+let prx = null;
 const tU = {
   uTime: uniforms.uTime, uPix: uniforms.uPix, uRot: uniforms.uHouseRot, uXf: { value: uniforms.uXf.value[3] },
-  uCut: { value: -10 }, uOn: { value: 0 }, uRoom: { value: -1 }, uFade: { value: 1 }, uStip: { value: 1 },
+  uCut: { value: -10 }, uOn: { value: 0 }, uRoom: { value: -1 }, uFade: { value: 1 }, uStip: { value: 1 }, uReady: { value: 0 },
   cBone: uniforms.cBone, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue, cGreen: uniforms.cGreen, cPetrol: uniforms.cPetrol, cCore: { value: C('#0E1C22') },
 };
 const T_COMMON = /* glsl */`
   attribute float aKind, aRoom;
-  uniform float uTime, uPix, uRot, uCut, uOn, uRoom, uFade, uStip; uniform vec4 uXf;
+  uniform float uTime, uPix, uRot, uCut, uOn, uRoom, uFade, uStip, uReady; uniform vec4 uXf;
   uniform vec3 cBone, cAmber, cBlue, cGreen, cPetrol, cCore;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
   float roomGain(){ float act = 1. - step(.5, abs(aRoom - uRoom)); return uRoom < -.5 ? 1. : mix(.42, 1.2, act); }`;
-// 1) Scan-Linien: leuchtend, gleichmäßig (Wände, Boden, Kanten)
-const tourLines = new THREE.Points(prx.lines, new THREE.ShaderMaterial({
-  uniforms: tU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-  vertexShader: T_COMMON + /* glsl */`
-    varying vec3 vCol; varying float vA;
-    void main(){
-      vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
-      vec3 col = aKind < .5 ? cPetrol * .85 : aKind < 1.5 ? cBone * .42 : cBone * .85;
-      col *= roomGain();
-      float g = exp(-pow((position.y - uCut) * 14., 2.));
-      col = mix(col, cAmber * 1.4, g);
-      vec4 mv = viewMatrix * vec4(p, 1.);
-      gl_Position = projectionMatrix * mv;
-      float d = -mv.z, dn = d / uXf.w;
-      gl_PointSize = clamp(uPix * (aKind > 5.5 ? 1.35 : 1.1) * 9. / d, 1., 3.5) * (1. + g);
-      // nahe Wände und Kanten ausblenden (Schnittbild), sonst stehen sie als helle Streifen im Bild
-      float nearFade = aKind > .5 ? smoothstep(.7, 1.9, dn) : smoothstep(.2, .85, dn);
-      vA = step(position.y, uCut) * uOn * uFade * (aKind < .5 ? .5 : aKind < 1.5 ? .55 : .95) * nearFade;
-      vCol = col;
-    }`,
-  fragmentShader: /* glsl */`
-    varying vec3 vCol; varying float vA;
-    void main(){ float d = length(gl_PointCoord - .5); gl_FragColor = vec4(vCol, smoothstep(.5, .12, d) * vA);
-      #include <colorspace_fragment>
-    }`,
-}));
-// 2) Möbel: gestochene Punkte (deckend, beleuchtet) …
-const tourFurn = new THREE.Points(prx.furn, new THREE.ShaderMaterial({
-  uniforms: tU,
-  vertexShader: T_COMMON + /* glsl */`
-    varying vec3 vCol; varying float vVis;
-    void main(){
-      vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
-      vec3 n = normalize(rotY(normal, uRot));
-      vec3 V = normalize(cameraPosition - p);
-      float lam = max(dot(n, normalize(vec3(.4, .8, .5))), 0.), rim = pow(1. - abs(dot(n, V)), 3.);
-      vec3 base = aKind < 2.5 ? cBone : aKind < 3.5 ? cGreen : aKind < 4.5 ? cAmber : aKind < 5.5 ? mix(cPetrol * 1.7, cBlue, .3) : cBone;
-      vec3 col = base * (.24 + .76 * lam) + cBlue * rim * .12;
-      col *= roomGain() * (.25 + .75 * uFade);
-      float g = exp(-pow((position.y - uCut) * 14., 2.));
-      col = mix(col, cAmber * 1.4, g);
-      vec4 mv = viewMatrix * vec4(p, 1.);
-      gl_Position = projectionMatrix * mv;
-      float d = -mv.z, dn = d / uXf.w;
-      gl_PointSize = clamp(uStip / d, 1., 3.6) * (1. + g * .6);
-      // nah an der Kamera: Punkte lösen sich auf (zufällig, statt hart abzuschneiden)
-      float h = fract(sin(dot(position.xz, vec2(12.9898, 78.233)) + position.y * 37.7) * 43758.5453);
-      vVis = step(position.y, uCut) * uOn * step(h, smoothstep(.25, .8, dn));
-      vCol = col;
-    }`,
-  fragmentShader: /* glsl */`
-    varying vec3 vCol; varying float vVis;
-    void main(){ float d = length(gl_PointCoord - .5); if (vVis < .5 || d > .5) discard;
-      gl_FragColor = vec4(vCol * (1. - smoothstep(.2, .5, d) * .45), 1.);
-      #include <colorspace_fragment>
-    }`,
-}));
-// … 3) auf dunklem Kern (verdeckt Rückseiten, macht die Möbel zu Körpern)
-const tourCore = new THREE.Mesh(prx.core, new THREE.ShaderMaterial({
-  uniforms: tU,
-  vertexShader: T_COMMON + /* glsl */`
-    varying float vY, vD, vL;
-    void main(){
-      vec3 p = rotY(position - normal * .006, uRot) * uXf.w + uXf.xyz;
-      vL = max(dot(normalize(rotY(normal, uRot)), normalize(vec3(.4, .8, .5))), 0.);
-      vY = position.y;
-      vec4 mv = viewMatrix * vec4(p, 1.); vD = -mv.z / uXf.w;
-      gl_Position = projectionMatrix * mv;
-    }`,
-  fragmentShader: /* glsl */`
-    uniform float uCut, uOn; uniform vec3 cCore, cBone; varying float vY, vD, vL;
-    void main(){ if (vY > uCut || uOn < .5 || vD < .45) discard;
-      gl_FragColor = vec4(cCore + cBone * vL * .04, 1.);
-      #include <colorspace_fragment>
-    }`,
-}));
 const tourPts = new THREE.Group();
-[tourLines, tourFurn, tourCore].forEach((o) => { o.frustumCulled = false; tourPts.add(o); });
 tourPts.visible = false;
 scene.add(tourPts);
+function buildTour() {
+  // 1) Scan-Linien: leuchtend, gleichmäßig (Wände, Boden, Kanten)
+  const tourLines = new THREE.Points(prx.lines, new THREE.ShaderMaterial({
+    uniforms: tU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: T_COMMON + /* glsl */`
+      varying vec3 vCol; varying float vA;
+      void main(){
+        vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
+        vec3 col = aKind < .5 ? cPetrol * .85 : aKind < 1.5 ? cBone * .42 : cBone * .85;
+        col *= roomGain();
+        float g = exp(-pow((position.y - uCut) * 14., 2.));
+        col = mix(col, cAmber * 1.4, g);
+        vec4 mv = viewMatrix * vec4(p, 1.);
+        gl_Position = projectionMatrix * mv;
+        float d = -mv.z, dn = d / uXf.w;
+        gl_PointSize = clamp(uPix * (aKind > 5.5 ? 1.35 : 1.1) * 9. / d, 1., 3.5) * (1. + g);
+        // nahe Wände und Kanten ausblenden (Schnittbild), sonst stehen sie als helle Streifen im Bild
+        float nearFade = aKind > .5 ? smoothstep(.7, 1.9, dn) : smoothstep(.2, .85, dn);
+        vA = step(position.y, uCut) * uOn * uFade * (aKind < .5 ? .5 : aKind < 1.5 ? .55 : .95) * nearFade * uReady;
+        vCol = col;
+      }`,
+    fragmentShader: /* glsl */`
+      varying vec3 vCol; varying float vA;
+      void main(){ float d = length(gl_PointCoord - .5); gl_FragColor = vec4(vCol, smoothstep(.5, .12, d) * vA);
+        #include <colorspace_fragment>
+      }`,
+  }));
+  // 2) Möbel: gestochene Punkte (deckend, beleuchtet) …
+  const tourFurn = new THREE.Points(prx.furn, new THREE.ShaderMaterial({
+    uniforms: tU,
+    vertexShader: T_COMMON + /* glsl */`
+      varying vec3 vCol; varying float vVis;
+      void main(){
+        vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
+        vec3 n = normalize(rotY(normal, uRot));
+        vec3 V = normalize(cameraPosition - p);
+        float lam = max(dot(n, normalize(vec3(.4, .8, .5))), 0.), rim = pow(1. - abs(dot(n, V)), 3.);
+        vec3 base = aKind < 2.5 ? cBone : aKind < 3.5 ? cGreen : aKind < 4.5 ? cAmber : aKind < 5.5 ? mix(cPetrol * 1.7, cBlue, .3) : cBone;
+        vec3 col = base * (.24 + .76 * lam) + cBlue * rim * .12;
+        col *= roomGain() * (.25 + .75 * uFade) * uReady;
+        float g = exp(-pow((position.y - uCut) * 14., 2.));
+        col = mix(col, cAmber * 1.4, g);
+        vec4 mv = viewMatrix * vec4(p, 1.);
+        gl_Position = projectionMatrix * mv;
+        float d = -mv.z, dn = d / uXf.w;
+        gl_PointSize = clamp(uStip / d, 1., 3.6) * (1. + g * .6);
+        // nah an der Kamera: Punkte lösen sich auf (zufällig, statt hart abzuschneiden)
+        float h = fract(sin(dot(position.xz, vec2(12.9898, 78.233)) + position.y * 37.7) * 43758.5453);
+        vVis = step(position.y, uCut) * uOn * step(h, smoothstep(.25, .8, dn));
+        vCol = col;
+      }`,
+    fragmentShader: /* glsl */`
+      varying vec3 vCol; varying float vVis;
+      void main(){ float d = length(gl_PointCoord - .5); if (vVis < .5 || d > .5) discard;
+        gl_FragColor = vec4(vCol * (1. - smoothstep(.2, .5, d) * .45), 1.);
+        #include <colorspace_fragment>
+      }`,
+  }));
+  // … 3) auf dunklem Kern (verdeckt Rückseiten, macht die Möbel zu Körpern)
+  const tourCore = new THREE.Mesh(prx.core, new THREE.ShaderMaterial({
+    uniforms: tU,
+    vertexShader: T_COMMON + /* glsl */`
+      varying float vY, vD, vL;
+      void main(){
+        vec3 p = rotY(position - normal * .006, uRot) * uXf.w + uXf.xyz;
+        vL = max(dot(normalize(rotY(normal, uRot)), normalize(vec3(.4, .8, .5))), 0.);
+        vY = position.y;
+        vec4 mv = viewMatrix * vec4(p, 1.); vD = -mv.z / uXf.w;
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: /* glsl */`
+      uniform float uCut, uOn; uniform vec3 cCore, cBone; varying float vY, vD, vL;
+      void main(){ if (vY > uCut || uOn < .5 || vD < .45) discard;
+        gl_FragColor = vec4(cCore + cBone * vL * .04, 1.);
+        #include <colorspace_fragment>
+      }`,
+  }));
+  [tourLines, tourFurn, tourCore].forEach((o) => { o.frustumCulled = false; tourPts.add(o); });
+}
+whenNear($('#dach'), () => runSliced(praxisScanGen(isDesktop() ? 85000 : 32000, isDesktop() ? 1 : 0.62)).then((r) => { prx = r; buildTour(); }));
 
 // Raum-Beschriftungen im Raum
 // Schilder im Haus (Stil wie Design „Zuhause“): Nummer, Raum, darunter was dort wartet
@@ -1015,8 +1115,8 @@ function setRoom(i) {
 let tourIdx = -1, insideK = 0, viaEntry = 0, autoTour = false, autoT = 0;
 const tourPlay = $('#tourPlay'), tourProg = $('#tourProg');
 const TOUR_STEP = reduced ? 6.5 : 5, TOUR_BIRD = 3.5;
-function tourInView() { const r = tourEl.getBoundingClientRect(); return r.top < innerHeight * 0.5 && r.bottom > innerHeight * 0.5; }
-function bringTourIntoView() { const r = tourEl.getBoundingClientRect(); if (Math.abs(r.top) > 4 && !(r.top <= 0 && r.bottom >= innerHeight)) scrollToY(r.top + scrollY + 2); }
+function tourInView() { const r = tourEl.getBoundingClientRect(); return r.top < VH * 0.5 && r.bottom > VH * 0.5; }
+function bringTourIntoView() { const r = tourEl.getBoundingClientRect(); if (Math.abs(r.top) > 4 && !(r.top <= 0 && r.bottom >= VH)) scrollToY(r.top + scrollY + 2); }
 function setAuto(on) {
   autoTour = on; autoT = 0;
   tourEl.classList.toggle('auto', on);
@@ -1064,15 +1164,15 @@ function textColRight() {
 }
 function placeManuTag() {
   const w = toWorld(manuTagP); w.project(camera);
-  const sx = (w.x * 0.5 + 0.5) * innerWidth;
+  const sx = (w.x * 0.5 + 0.5) * VW;
   const vis = manuTagVis * (w.z < 1 && Math.abs(w.x) < 0.92 && Math.abs(w.y) < 0.85 && sx - manuTag.offsetWidth / 2 > textColRight() ? 1 : 0) * (1 - manuK);
   manuTag.style.opacity = vis.toFixed(2);
   manuTag.classList.toggle('on', vis > 0.3);
   manuTag.tabIndex = vis > 0.3 ? 0 : -1; // unsichtbar auch nicht per Tastatur erreichbar
-  if (vis > 0) manuTag.style.transform = `translate(${((w.x * 0.5 + 0.5) * innerWidth).toFixed(1)}px, ${((-w.y * 0.5 + 0.5) * innerHeight - 30).toFixed(1)}px) translate(-50%, -100%)`;
+  if (vis > 0) manuTag.style.transform = `translate(${((w.x * 0.5 + 0.5) * VW).toFixed(1)}px, ${((-w.y * 0.5 + 0.5) * VH - 30).toFixed(1)}px) translate(-50%, -100%)`;
 }
 // Haus mit gedrückter Maus drehen (PC, Röntgenblick)
-{ let down = null; addEventListener('pointerdown', (e) => { if (xray > 0.4 && e.pointerType === 'mouse' && e.clientX > innerWidth * 0.45 && !e.target.closest('a,button,.room-tag')) down = e.clientX; });
+{ let down = null; addEventListener('pointerdown', (e) => { if (xray > 0.4 && e.pointerType === 'mouse' && e.clientX > VW * 0.45 && !e.target.closest('a,button,.room-tag')) down = e.clientX; });
   addEventListener('pointermove', (e) => { if (down !== null) { dragRot += (e.clientX - down) * 0.006; down = e.clientX; } });
   addEventListener('pointerup', () => (down = null)); }
 function xrayPose() {
@@ -1081,7 +1181,7 @@ function xrayPose() {
 }
 function updateTour(dt) {
   manuTagVis = 0;
-  const r = tourEl.getBoundingClientRect(), vh = innerHeight, desk = isDesktop();
+  const r = tourEl.getBoundingClientRect(), vh = VH, desk = isDesktop();
   const near = r.top < vh && r.bottom > 0 && morphNow > 2.6 && morphNow < 3.4;
   if (tourIdx >= 0 && !tourInView()) goRoom(-1); // weggescrollt → wieder draußen
   // Rundgang-Film
@@ -1101,7 +1201,8 @@ function updateTour(dt) {
   tU.uCut.value = inside > 0.001 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
   tU.uOn.value = inside > 0.001 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0.001 || pv > 0;
   tU.uFade.value = inside > 0.001 ? Math.max(inside, pv * 0.55) : pv * 0.55;
-  tU.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * innerHeight * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * prx.spacing * uniforms.uXf.value[3].w * 0.62;
+  tU.uReady.value = prx ? ramp(tU.uReady.value, dt) : 0;
+  if (prx) tU.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * VH * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * prx.spacing * uniforms.uXf.value[3].w * 0.62;
   uniforms.uRoofLift.value += (Math.max(pv * 1.3, inside * 1.1) - uniforms.uRoofLift.value) * 0.08;
   tourHide = Math.min(1, inside * 1.4);
   // Hausdrehung festhalten, solange wir drinnen sind
@@ -1112,7 +1213,7 @@ function updateTour(dt) {
     tourWant = pv > 0.3 ? xrayPose() : null;
     if (pv > 0.3) { // Räume, Tür und Modell als anklickbare Schilder
       tU.uRoom.value = hoverRoom;
-      const place = (t, i, p, right) => { const w = toWorld(p); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * innerWidth}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(${right ? '-12%' : '-50%'}, -50%)`; };
+      const place = (t, i, p, right) => { const w = toWorld(p); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * VW}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(${right ? '-12%' : '-50%'}, -50%)`; };
       roomTags.forEach((t, i) => { t.el.classList.toggle('cta', i === 3); place(t, i, i === 3 ? manuCtaP : t.p.clone().setY(EYE + 0.2), i === 3); });
       extraTags.forEach((t) => place(t, -9, t.p));
     } else { tU.uRoom.value = -1; [...roomTags, ...extraTags].forEach((t) => { t.el.classList.remove('click'); t.el.style.opacity = 0; }); }
@@ -1132,11 +1233,11 @@ function updateTour(dt) {
   const colR = textColRight();
   roomTags.forEach((t, i) => {
     const w = toWorld(t.p); w.project(camera);
-    const sx = (w.x * 0.5 + 0.5) * innerWidth;
+    const sx = (w.x * 0.5 + 0.5) * VW;
     const vis = desk && inside > 0.9 && w.z < 1 && Math.abs(w.x) < 0.95 && Math.abs(w.y) < 0.9 && sx - t.el.offsetWidth / 2 > colR;
     t.el.style.opacity = vis ? (i === room ? 1 : 0.55) : 0;
     t.el.classList.toggle('on', i === room);
-    if (vis) t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * innerWidth}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(-50%, -50%)`;
+    if (vis) t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * VW}px, ${(-w.y * 0.5 + 0.5) * vh}px) translate(-50%, -50%)`;
   });
 }
 
@@ -1182,7 +1283,7 @@ const ixRows = $$('.index li').map((li) => {
 });
 function livingHeadlines() {
   if (reduced) return;
-  const vh = innerHeight;
+  const vh = VH;
   aTitle.style.setProperty('--mis', smooth(vh * 0.3, vh * 0.85, aTitle.getBoundingClientRect().top).toFixed(3));
   const dt2 = dTitle.getBoundingClientRect().top, k = 1 - smooth(vh * 0.45, vh * 0.92, dt2);
   roofline.style.strokeDashoffset = (1 - smooth(0.05, 0.75, k)).toFixed(3);
@@ -1196,7 +1297,7 @@ function livingHeadlines() {
 // ---------- Dach (Handy): Haus wird beim Scrollen zum kleinen Emblem oben rechts ----------
 const roofHead = $('#allTitle');
 function roofEmblem() {
-  const vh = innerHeight, a = innerWidth / vh;
+  const vh = VH, a = VW / vh;
   const hh = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)), hw = hh * a;
   const k = smooth(vh * 0.62, vh * 0.12, roofHead.getBoundingClientRect().top);
   const navW = (78 / vh) * 2 * hh; // Leistenhöhe in Welt-Einheiten
@@ -1209,7 +1310,9 @@ let emblemK = 0;
 // ---------- Manuthera (Kapitel 04, nach dem Rundgang): eigene Bühne, rendert nur, wenn sichtbar ----------
 const manuSec = $('#manuthera');
 const manuBtns = [...document.querySelectorAll('#manuModes button')], manuRead = $('#manuRead');
-const manu = manuSec ? initManu($('#glManu'), {
+// Aufbau erst, wenn #manuthera in Reichweite kommt (A1); die Bühne blendet ein, sobald sie fertig ist
+let manu = null;
+const manuUi = {
   transparent: true,
   isPaused: () => paused,
   onMode(i) {
@@ -1217,12 +1320,21 @@ const manu = manuSec ? initManu($('#glManu'), {
     manuRead.textContent = MANU_MODES[i].txt;
   },
   onAmount(a) { const b = manuBtns.find((x) => x.classList.contains('is-on')); if (b) b.querySelector('i').style.width = (a * 100).toFixed(1) + '%'; },
-}) : null;
-if (manu) manuBtns.forEach((b, i) => b.addEventListener('click', () => manu.select(i, true)));
-else if (manuRead) manuRead.textContent = MANU_MODES[0].txt;
+};
+if (manuRead) manuRead.textContent = MANU_MODES[0].txt;
+manuBtns.forEach((b, i) => b.addEventListener('click', () => { if (manu) manu.select(i, true); }));
+const glWait = (cv) => cv && cv.classList.add('gl-wait');
+const glReady = (cv) => cv && cv.classList.remove('gl-wait');
+if (manuSec) {
+  glWait($('#glManu'));
+  whenNear(manuSec, () => runSliced(initManuGen($('#glManu'), manuUi)).then((m) => { manu = m; if (!m) noGl(); glReady($('#glManu')); }));
+}
 // ---------- Leistungen: Partikel-Bühne mit Motiv je Leistung (Haus tritt hier zurück) ----------
 const servList = $('.roof-list'), servName = $('#servName');
-const serv = initServices($('#glServ'), { isPaused: () => paused, onShow: (i, name) => { if (servName) servName.textContent = name; } });
+// Aufbau erst, wenn „Alle Leistungen“ in Reichweite kommt (A1)
+let serv = null;
+glWait($('#glServ'));
+whenNear(roofHead, () => runSliced(initServicesGen($('#glServ'), { isPaused: () => paused, onShow: (i, name) => { if (servName) servName.textContent = name; } })).then((m) => { serv = m; if (!m) noGl(); glReady($('#glServ')); }));
 let servLock = -1e9, servAutoT = 0;
 const servItems = $$('#index li');
 servItems.forEach((li, i) => {
@@ -1234,7 +1346,7 @@ servItems.forEach((li, i) => {
 let listK = 0;
 function updateServices(dt) {
   if (!servList) return;
-  const r = servList.getBoundingClientRect(), vh = innerHeight;
+  const r = servList.getBoundingClientRect(), vh = VH;
   listK = smooth(0.1, 0.45, clamp((Math.min(r.bottom, vh) - Math.max(r.top, 0)) / vh));
   if (!serv || !serv.st.visible) return;
   if (!isDesktop()) { // Handy: Eintrag in Bildschirmmitte bestimmt das Motiv
@@ -1250,7 +1362,7 @@ function updateServices(dt) {
 let manuK = 0;
 function manuVisible() {
   if (!manuSec) return 0;
-  const r = manuSec.getBoundingClientRect(), vh = innerHeight;
+  const r = manuSec.getBoundingClientRect(), vh = VH;
   return smooth(0.15, 0.55, clamp((Math.min(r.bottom, vh) - Math.max(r.top, 0)) / vh));
 }
 
@@ -1288,7 +1400,7 @@ function tick() {
     cam.pos.lerp(want.pos, k); cam.target.lerp(want.target, k);
   }
   // Partikel abdunkeln, sobald Text darüber liegt (Kontakt immer; mobil auch hinter den Bewegungslinien)
-  const vh = innerHeight;
+  const vh = VH;
   const doorTop = door.getBoundingClientRect().top;
   let dim = isDesktop() ? smooth(vh * 0.75, vh * 0.25, doorTop) : smooth(vh * 1.3, vh * 0.8, doorTop);
   const dimMax = 1; // Kontakt: Partikel blenden ganz aus (Handy und PC)
@@ -1298,6 +1410,7 @@ function tick() {
   if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
   dim = Math.max(dim, tourHide, xray * 0.4); // im Rundgang/Röntgenblick tritt das äußere Partikel-Haus zurück
   dim = Math.max(dim, manuK, listK); // Manuthera-Bühne und Leistungen: Partikel-Hintergrund blendet ganz aus
+  if (licht && lichtK > 0) dim = Math.max(dim, lichtK); // K1: Partikel weichen dem Sonnenstaub
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
   uniforms.uSize.value = isDesktop() ? 1 : 1.1 - (morphNow > 2.5 && morphNow < 3.5 ? emblemK * 0.45 : 0);
   uniforms.uSpread.value = reduced ? 0 : isDesktop() ? 0.32 : 0.28;
@@ -1317,13 +1430,14 @@ function tick() {
 
   // Manifest
   const sr = statement.getBoundingClientRect();
-  const sp = clamp((innerHeight * 0.85 - sr.top) / (sr.height + innerHeight * 0.35));
+  const sp = clamp((VH * 0.85 - sr.top) / (sr.height + VH * 0.35));
   const lit = Math.floor(sp * words.length * 1.1);
   words.forEach((w, i) => w.classList.toggle('lit', reduced || i < lit));
 
   // Hausordnung
   const rr = rules.getBoundingClientRect();
-  const rp = clamp(-rr.top / Math.max(1, rr.height - innerHeight));
+  const rp = clamp(-rr.top / Math.max(1, rr.height - VH));
+  if (licht) { const k = smooth(0.4, 1, rp); setLicht(k); if (dust) dust.visible = k > 0.01; }
   const li = Math.min(laws.length - 1, Math.floor(rp * laws.length));
   if (li !== lawOn) { laws[lawOn].classList.remove('is-on'); laws[li].classList.add('is-on'); lawOn = li; }
 
@@ -1331,7 +1445,7 @@ function tick() {
   top.classList.toggle('scrolled', scrollY > 30);
   const ci = Math.round(clamp(morphNow, 0, 4));
   const rr2 = rules.getBoundingClientRect();
-  const chapKey = rr2.top < innerHeight * 0.5 && rr2.bottom > innerHeight * 0.5 ? 9 : ci;
+  const chapKey = rr2.top < VH * 0.5 && rr2.bottom > VH * 0.5 ? 9 : ci;
   // Leiste: 01–04, § Hausordnung (Eintrag 4), 05 Tür (Eintrag 5) – Kais Wunsch 2.11.: Hausordnung auch am PC in der Leiste
   const navIdx = chapKey === 9 ? 4 : ci >= 4 ? 5 : ci;
   navLinks.forEach((a, k) => a.classList.toggle('on', k === navIdx));
@@ -1351,7 +1465,7 @@ gsap.ticker.add(tick);
 // Stufe 2: Knopf-Gruppen werden beim ersten Hereinkommen einmal „gescannt“; Leistungen haben ein „+“.
 // Stufe 3: Bilder zum Anfassen zeigen nach kurzer Zeit einen Wisch-Hinweis, bis man sie berührt.
 // Alles ruht bei „Bewegung anhalten“ und „Bewegung reduzieren“.
-const inView = (el) => { if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth; };
+const inView = (el) => { if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.bottom > 0 && r.top < VH && r.right > 0 && r.left < VW; };
 {
   const beatBtns = [$('.hero .btn:not(.btn-ghost)'), $('.door .btn:not(.btn-ghost)'), $('.top .btn-small')].filter(Boolean);
   let lastBeat = performance.now(), beats = 0;
@@ -1394,22 +1508,23 @@ const t0Hints = performance.now();
 function updateHints(dt) {
   const now = performance.now(), desk = isDesktop();
   // Körper: bis zur ersten Berührung
-  const showBody = !touched && morphNow < 0.25 && now - t0Hints > 3500 && scrollY < innerHeight * 0.3;
+  const showBody = !touched && morphNow < 0.25 && now - t0Hints > 3500 && scrollY < VH * 0.3;
   hintBody.classList.toggle('on', showBody);
-  if (showBody) hintBody.style.transform = desk ? `translate(${innerWidth * 0.6}px, ${innerHeight * 0.6}px) translate(-50%,-50%)` : `translate(${innerWidth * 0.84}px, ${innerHeight * 0.24}px) translate(-50%,-50%)`; // neben der Figur, nicht auf den Partikeln
+  if (showBody) hintBody.style.transform = desk ? `translate(${VW * 0.6}px, ${VH * 0.6}px) translate(-50%,-50%)` : `translate(${VW * 0.84}px, ${VH * 0.24}px) translate(-50%,-50%)`; // neben der Figur, nicht auf den Partikeln
   // Haus: PC im Röntgenblick (ziehen), Handy vor dem Betreten (wischen/antippen)
   if (dragRot !== rotSeen || tourIdx >= 0) houseUsed = true;
   const houseReady = desk ? xray > 0.6 && tourIdx < 0 : tourInView() && tourIdx < 0 && morphNow > 2.7 && morphNow < 3.3;
   xrayT = houseReady ? xrayT + dt : 0;
   const showHouse = !houseUsed && xrayT > 3;
   hintHouse.classList.toggle('on', showHouse);
-  if (showHouse) hintHouse.style.transform = desk ? `translate(${innerWidth * 0.72}px, ${innerHeight * 0.84}px) translate(-50%,-50%)` : `translate(${innerWidth * 0.5}px, ${innerHeight * 0.36}px) translate(-50%,-50%)`;
+  if (showHouse) hintHouse.style.transform = desk ? `translate(${VW * 0.72}px, ${VH * 0.84}px) translate(-50%,-50%)` : `translate(${VW * 0.5}px, ${VH * 0.36}px) translate(-50%,-50%)`;
   // Manuthera-Liege
   if (hintManu) { manuT = manuK > 0.8 ? manuT + dt : 0; hintManu.classList.toggle('on', !manuUsed && manuT > 1.5); }
 }
 
 // Intro
-if (!reduced) {
+// (im ersten Frame, vor dem ersten Bild: gsap liest berechnete Stile – so nur eine Stil-Berechnung, A1)
+if (!reduced) requestAnimationFrame(() => {
   gsap.to(uniforms.uIntro, { value: 1, duration: 3.2, ease: 'expo.out', delay: 0.1 });
   gsap.from(['.hero .kicker', '.kinetic', '.hero-sub', '.hero .actions', '.meter', '.top'], { opacity: 0, y: 20, duration: 1.1, stagger: 0.06, ease: 'expo.out', delay: 0.2 });
-}
+});

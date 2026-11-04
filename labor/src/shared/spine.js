@@ -3,6 +3,7 @@
 // Lokales Koordinatensystem je Wirbel: y = kranial (oben), +z = ventral (vorne), -z = dorsal.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { runSync } from './slice.js';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const UP = V(0, 1, 0);
@@ -162,7 +163,9 @@ function discGeometry(R, t) {
 }
 
 // ---------- Aufbau der ganzen Säule ----------
-export function buildSpine(opts = {}) {
+// Als Generator (ein Wirbel je Zeitscheibe, A1 4.11.2026); buildSpine() rechnet am Stück.
+export const buildSpine = (opts = {}) => runSync(buildSpineGen(opts));
+export function* buildSpineGen(opts = {}) {
   const levels = buildLevels();
   let total = 0;
   levels.forEach(l => { l.s0 = total; total += l.h + l.disc; });
@@ -175,7 +178,9 @@ export function buildSpine(opts = {}) {
   const out = { group, levels, Ltot, curve, vertebrae: [], discs: [], canal: [] };
   const tmpM = new THREE.Matrix4();
 
-  levels.forEach((lv, i) => {
+  for (let i = 0; i < levels.length; i++) {
+    const lv = levels[i];
+    yield;
     const u = (lv.s0 + lv.h / 2) / Ltot;
     const p = curve.getPointAt(u), t = curve.getTangentAt(u).negate();
     const q = new THREE.Quaternion().setFromUnitVectors(UP, t);
@@ -199,7 +204,7 @@ export function buildSpine(opts = {}) {
       d.userData = { home: pd.clone(), afterId: lv.id, zone: zoneOf(levels[i + 1].id) };
       group.add(d); out.discs.push(d);
     }
-  });
+  }
   return out;
 }
 

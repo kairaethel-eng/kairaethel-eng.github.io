@@ -1,7 +1,8 @@
 // Zielformen für das Partikelfeld. Jede Funktion liefert N Punkte (x,y,z) um den Ursprung, Höhe ≈ 8.
 import * as THREE from 'three';
 import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler.js';
-import { buildSpine, rootCurves } from '../shared/spine.js';
+import { buildSpineGen, rootCurves } from '../shared/spine.js';
+import { runSync, every, poissonGrid, bounds } from '../shared/slice.js';
 
 const rand = Math.random;
 
@@ -58,17 +59,24 @@ function drawBody(ctx, s) {
 export function bodyPoints(N) {
   const S = 2, W = BODY_W * S, H = BODY_H * S;
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const ctx = cv.getContext('2d');
+  const ctx = cv.getContext('2d', { willReadFrequently: true });
   drawBody(ctx, S);
   const data = ctx.getImageData(0, 0, W, H).data;
-  const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H && data[(y * W + x) * 4 + 3] > 128;
+  // Maske und Zeilen-Spannweiten einmal vorab (A1: statt je Punkt nach links/rechts zu suchen)
+  const mask = new Uint8Array(W * H), runL = new Int16Array(W * H), runR = new Int16Array(W * H);
+  for (let i = 0; i < W * H; i++) mask[i] = data[i * 4 + 3] > 128 ? 1 : 0;
+  for (let y = 0; y < H; y++) {
+    const o = y * W;
+    for (let x = 0; x < W; x++) {
+      if (!mask[o + x]) continue;
+      let r = x; while (r + 1 < W && mask[o + r + 1]) r++;
+      for (let k = x; k <= r; k++) { runL[o + k] = x; runR[o + k] = r; }
+      x = r;
+    }
+  }
+  const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H && mask[y * W + x] === 1;
   // Zeilen-Spannweiten für Tiefe (runde Volumen)
-  const spanAt = (x, y) => {
-    let l = x, r = x;
-    while (inside(l - 1, y)) l--;
-    while (inside(r + 1, y)) r++;
-    return [l, r];
-  };
+  const spanAt = (x, y) => [runL[y * W + x], runR[y * W + x]];
   const pos = new Float32Array(N * 3), heat = new Float32Array(N);
   let i = 0, guard = 0;
   while (i < N && guard++ < N * 60) {
@@ -85,7 +93,7 @@ export function bodyPoints(N) {
     pos[i * 3 + 1] = (BODY_H / 2 - by) * BODY_SCALE;
     pos[i * 3 + 2] = (rand() < 0.5 ? -1 : 1) * depth * BODY_SCALE * (edge ? rand() : 0.7 + rand() * 0.3);
     let h = 0;
-    HOTSPOTS.forEach((p) => { const d = Math.hypot(bx - p.x, by - p.y) / p.r; h = Math.max(h, p.k * Math.exp(-d * d * 0.9)); });
+    for (let k = 0; k < HOTSPOTS.length; k++) { const p = HOTSPOTS[k], ex = bx - p.x, ey = by - p.y, d2 = (ex * ex + ey * ey) / (p.r * p.r); h = Math.max(h, p.k * Math.exp(-d2 * 0.9)); }
     heat[i] = h;
     i++;
   }
@@ -93,23 +101,31 @@ export function bodyPoints(N) {
 }
 
 // ---------- 2 · Wirbelsäule ----------
-export function spinePoints(N) {
-  const sp = buildSpine();
+// Eine Säule für Morph-Ziel und gestochene Darstellung (nur einmal bauen)
+let SPINE = null;
+function* spineOnce() { if (!SPINE) SPINE = yield* buildSpineGen(); return SPINE; }
+export const spinePoints = (N) => runSync(spinePointsGen(N));
+export function* spinePointsGen(N) {
+  const sp = yield* spineOnce();
   const geos = [];
   sp.group.updateMatrixWorld(true);
-  sp.vertebrae.concat(sp.discs).forEach((m) => {
+  for (const m of sp.vertebrae.concat(sp.discs)) {
     const g = m.geometry.clone().applyMatrix4(m.matrixWorld);
     geos.push(g.index ? g.toNonIndexed() : g);
-  });
+    yield;
+  }
   const merged = new THREE.BufferGeometry();
   let total = 0; geos.forEach((g) => (total += g.attributes.position.count));
   const arr = new Float32Array(total * 3);
   let o = 0; geos.forEach((g) => { arr.set(g.attributes.position.array, o); o += g.attributes.position.array.length; });
   merged.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+  yield;
   const sampler = new MeshSurfaceSampler(new THREE.Mesh(merged)).build();
+  yield;
   const pos = new Float32Array(N * 3), v = new THREE.Vector3();
   const sc = 8.2 / sp.Ltot, cy = sp.Ltot / 2;
   for (let i = 0; i < N; i++) {
+    if (!(i & 4095)) yield;
     sampler.sample(v);
     pos[i * 3] = v.x * sc; pos[i * 3 + 1] = (v.y - cy) * sc; pos[i * 3 + 2] = v.z * sc;
   }
@@ -190,8 +206,9 @@ export function logoPoints(N) {
 // Nerven: Kurven (Rückenmark + Wurzeln) als Stützpunkte, auf denen Partikel fließen.
 export const ZONES = ['c12', 'c34', 'c56', 'c7t1', 'th16', 'th712', 'l13', 'l45', 's1'];
 export const CURVE_W = 128;
-export function spineStipple(nTarget, makeGrainNow = true) {
-  const sp = buildSpine();
+export const spineStipple = (nTarget, makeGrainNow = true) => runSync(spineStippleGen(nTarget, makeGrainNow));
+export function* spineStippleGen(nTarget, makeGrainNow = true) {
+  const sp = yield* spineOnce();
   sp.group.updateMatrixWorld(true);
   const SC = 8.2 / sp.Ltot, CY = sp.Ltot / 2;
   const parts = [];
@@ -203,8 +220,8 @@ export function spineStipple(nTarget, makeGrainNow = true) {
     ng.setAttribute('color', new THREE.BufferAttribute(col, 3));
     parts.push(ng);
   };
-  sp.vertebrae.forEach((m) => tag(m, ZONES.indexOf(m.userData.zone), 0));
-  sp.discs.forEach((m) => tag(m, ZONES.indexOf(m.userData.zone), 1));
+  for (const m of sp.vertebrae) { tag(m, ZONES.indexOf(m.userData.zone), 0); yield; }
+  for (const m of sp.discs) { tag(m, ZONES.indexOf(m.userData.zone), 1); yield; }
   let total = 0; parts.forEach((g) => (total += g.attributes.position.count));
   const P = new Float32Array(total * 3), Nn = new Float32Array(total * 3), Cc = new Float32Array(total * 3);
   let o = 0;
@@ -213,43 +230,56 @@ export function spineStipple(nTarget, makeGrainNow = true) {
   merged.setAttribute('position', new THREE.BufferAttribute(P, 3));
   merged.setAttribute('normal', new THREE.BufferAttribute(Nn, 3));
   merged.setAttribute('color', new THREE.BufferAttribute(Cc, 3));
+  yield;
   // Oberfläche → gleichmäßiger Mindestabstand (Poisson-artig, Raster-Hash) – Stil „Körnung“
   let area = 0; const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
   for (let i = 0; i < P.length; i += 9) { a.fromArray(P, i); b.fromArray(P, i + 3); c.fromArray(P, i + 6); area += b.sub(a).cross(c.sub(a)).length() / 2; }
+  yield;
   const sampler = new MeshSurfaceSampler(new THREE.Mesh(merged)).build();
-  function makeGrain(n) {
-    const r = Math.sqrt(area / n) * 0.78, r2 = r * r, inv = 1 / r;
-    const grid = new Map();
-    const pos = [], nor = [], zone = [], kind = [];
-    const v = new THREE.Vector3(), nv = new THREE.Vector3(), col = new THREE.Color();
-    let tries = 0;
-    while (pos.length / 3 < n && tries++ < n * 5) {
-      sampler.sample(v, nv, col);
-      const gx = Math.floor(v.x * inv), gy = Math.floor(v.y * inv), gz = Math.floor(v.z * inv);
-      let ok = true;
-      for (let dx = -1; dx <= 1 && ok; dx++) for (let dy = -1; dy <= 1 && ok; dy++) for (let dz = -1; dz <= 1 && ok; dz++) {
-        const cell = grid.get((gx + dx) + ',' + (gy + dy) + ',' + (gz + dz));
-        if (cell) for (const j of cell) { const ex = pos[j] / SC - v.x, ey = pos[j + 1] / SC + CY - v.y, ez = pos[j + 2] / SC - v.z; if (ex * ex + ey * ey + ez * ez < r2) { ok = false; break; } }
-      }
-      if (!ok) continue;
-      const k = gx + ',' + gy + ',' + gz;
-      (grid.get(k) || grid.set(k, []).get(k)).push(pos.length);
-      pos.push(v.x * SC, (v.y - CY) * SC, v.z * SC); nor.push(nv.x, nv.y, nv.z); zone.push(col.r); kind.push(col.g);
-    }
-    return { pos: new Float32Array(pos), nor: new Float32Array(nor), zone: new Float32Array(zone), kind: new Float32Array(kind), count: pos.length / 3, spacing: r * SC };
-  }
-  // Stil „Schichten“: waagerechte Schnittlinien wie bei einem CT-Schichtbild
-  function makeSlices(n, step = 0.042, band = 0.16) {
+  yield;
+  // Raster mit Zahlen-Schlüsseln, Typed Arrays vorab (A1, 4.11.2026); als Generator für Zeitscheiben
+  const box = bounds(P);
+  function* makeGrainGen(n) {
+    const r = Math.sqrt(area / n) * 0.78, r2 = r * r;
+    const grid = poissonGrid(box.min, box.max, r, n);
     const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), zone = new Float32Array(n), kind = new Float32Array(n);
     const v = new THREE.Vector3(), nv = new THREE.Vector3(), col = new THREE.Color();
+    const tick = every(512);
+    let i = 0, tries = 0, miss = 0;
+    while (i < n && tries++ < n * 5 && miss < 400) {
+      if (tick()) yield;
+      sampler.sample(v, nv, col);
+      if (!grid.free(v.x, v.y, v.z, r2)) { miss++; continue; }
+      miss = 0;
+      grid.add(v.x, v.y, v.z);
+      pos[i * 3] = v.x * SC; pos[i * 3 + 1] = (v.y - CY) * SC; pos[i * 3 + 2] = v.z * SC;
+      nor[i * 3] = nv.x; nor[i * 3 + 1] = nv.y; nor[i * 3 + 2] = nv.z; zone[i] = col.r; kind[i] = col.g; i++;
+    }
+    return { pos: pos.slice(0, i * 3), nor: nor.slice(0, i * 3), zone: zone.slice(0, i), kind: kind.slice(0, i), count: i, spacing: r * SC };
+  }
+  // Stil „Schichten“: waagerechte Schnittlinien wie bei einem CT-Schichtbild
+  function* makeSlicesGen(n, step = 0.042, band = 0.16) {
+    const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), zone = new Float32Array(n), kind = new Float32Array(n);
+    // Abtastung wie MeshSurfaceSampler (Fläche gewichtet, baryzentrisch), aber zuerst nur die Höhe:
+    // ~88 % der Versuche fallen zwischen die Schnittebenen und werden ohne weitere Rechnung verworfen.
+    const dist = sampler.distribution, nF = dist.length, tot = dist[nF - 1];
+    const tick = every(4096);
     let i = 0, tries = 0;
     while (i < n && tries++ < n * 12) {
-      sampler.sample(v, nv, col);
-      const y = (v.y - CY) * SC, f = y / step - Math.floor(y / step);
+      if (tick()) yield;
+      const x = Math.random() * tot;
+      let lo = 0, hi = nF - 1;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (dist[mid] > x) hi = mid; else lo = mid + 1; }
+      let u = Math.random(), w = Math.random();
+      if (u + w > 1) { u = 1 - u; w = 1 - w; }
+      const t = 1 - u - w, a = lo * 9;
+      const y = (P[a + 1] * u + P[a + 4] * w + P[a + 7] * t - CY) * SC, f = y / step - Math.floor(y / step);
       if (Math.abs(f - 0.5) > band / 2) continue;
       const ys = (Math.floor(y / step) + 0.5) * step; // auf die Schnittebene legen → klare Linien
-      pos[i * 3] = v.x * SC; pos[i * 3 + 1] = ys + (y - ys) * 0.25; pos[i * 3 + 2] = v.z * SC;
-      nor[i * 3] = nv.x; nor[i * 3 + 1] = nv.y; nor[i * 3 + 2] = nv.z; zone[i] = col.r; kind[i] = col.g; i++;
+      pos[i * 3] = (P[a] * u + P[a + 3] * w + P[a + 6] * t) * SC; pos[i * 3 + 1] = ys + (y - ys) * 0.25; pos[i * 3 + 2] = (P[a + 2] * u + P[a + 5] * w + P[a + 8] * t) * SC;
+      const nx = Nn[a] * u + Nn[a + 3] * w + Nn[a + 6] * t, ny = Nn[a + 1] * u + Nn[a + 4] * w + Nn[a + 7] * t, nz = Nn[a + 2] * u + Nn[a + 5] * w + Nn[a + 8] * t, nl = Math.hypot(nx, ny, nz) || 1;
+      nor[i * 3] = nx / nl; nor[i * 3 + 1] = ny / nl; nor[i * 3 + 2] = nz / nl;
+      zone[i] = Cc[a] * u + Cc[a + 3] * w + Cc[a + 6] * t; kind[i] = Cc[a + 1] * u + Cc[a + 4] * w + Cc[a + 7] * t; i++;
     }
     return { pos, nor, zone, kind, count: i, spacing: step };
   }
@@ -259,6 +289,7 @@ export function spineStipple(nTarget, makeGrainNow = true) {
   const coreGeo = new THREE.BufferGeometry();
   coreGeo.setAttribute('position', new THREE.BufferAttribute(core, 3));
   coreGeo.setAttribute('normal', new THREE.BufferAttribute(Nn, 3));
+  yield;
   // Nervenkurven: Zeile 0 = Rückenmark, danach die Wurzeln
   const toShape = (p) => [p.x * SC, (p.y - CY) * SC, p.z * SC];
   const cordC = new THREE.CatmullRomCurve3(sp.canal, false, 'centripetal');
@@ -270,5 +301,6 @@ export function spineStipple(nTarget, makeGrainNow = true) {
     const pts = []; for (let i = 0; i < CURVE_W; i++) pts.push(toShape(rc.curve.getPoint(i / (CURVE_W - 1))));
     curves.push({ pts, zone: ZONES.indexOf(rc.zone), start: best / (CURVE_W - 1), kind: 2, side: rc.side, id: rc.id });
   });
-  return { grain: makeGrainNow ? makeGrain(nTarget) : null, makeGrain, makeSlices, coreGeo, curves, levels: sp.levels, SC, CY };
+  const makeGrain = (n) => runSync(makeGrainGen(n)), makeSlices = (...a) => runSync(makeSlicesGen(...a));
+  return { grain: makeGrainNow ? makeGrain(nTarget) : null, makeGrain, makeSlices, makeGrainGen, makeSlicesGen, coreGeo, curves, levels: sp.levels, SC, CY };
 }

@@ -4,7 +4,8 @@
 // Möbel als echte Körper mit gleichmäßig gesetzten Punkten (Mindestabstand) und dunklem Kern.
 // Später austauschbar gegen einen echten Scan (Punkte + optional Kern-Geometrie).
 import * as THREE from 'three';
-import { stipple, coreOf } from '../manu/stipple.js';
+import { stippleGen, coreOfGen } from '../manu/stipple.js';
+import { runSync } from '../shared/slice.js';
 
 const K = 0.0149;                       // Grundriss-Pixel → Form-Einheiten
 const M = 0.5;                          // Meter → Form-Einheiten
@@ -26,7 +27,9 @@ export function roomOf(px, py) {
 }
 // Art: 0 Boden-Raster, 1 Wand, 2 Möbel hell, 3 Pflanze, 4 Akzent (Bernstein), 5 Polster (Petrol), 6 Kante (hell)
 // Rückgabe: lines = leuchtende Scan-Linien (Art 0, 1, 6), furn = gestochene Möbelpunkte, core = Kern der Möbel
-export function praxisScan(nFurn, fine = 1) {
+// Als Generator (Zeitscheiben, A1 4.11.2026); praxisScan() rechnet am Stück.
+export const praxisScan = (nFurn, fine = 1) => runSync(praxisScanGen(nFurn, fine));
+export function* praxisScanGen(nFurn, fine = 1) {
   const rnd = Math.random;
   const L = { pos: [], nor: [], kind: [], room: [] };
   const lp = (x, y, z, nx, ny, nz, k) => { L.pos.push(x, y, z); L.nor.push(nx, ny, nz); L.kind.push(k); L.room.push(roomOf(x / K + 210, z / K + 140)); };
@@ -38,8 +41,11 @@ export function praxisScan(nFurn, fine = 1) {
   const DS = 0.022 / fine;
 
   // Boden: Raster aus gleichmäßig gepunkteten Linien
+  yield;
   for (let gx = -3.1; gx <= 3.1001; gx += 0.2) seg(gx, Y0, -2.1, gx, Y0, 2.2, DS * 1.5, 0);
+  yield;
   for (let gz = -2.08; gz <= 2.2001; gz += 0.2) seg(-3.12, Y0, gz, 3.12, Y0, gz, DS * 1.5, 0);
+  yield;
 
   // Wände (Grundriss V10): waagerechte Scan-Zeilen, Ober- und Unterkante als helle Linie
   const walls = [
@@ -50,14 +56,15 @@ export function praxisScan(nFurn, fine = 1) {
     [232, 94, 408, 94], [232, 178, 408, 178],
   ];
   const ROWS = Math.round(16 * fine);
-  walls.forEach(([x1, y1, x2, y2]) => {
+  for (const [x1, y1, x2, y2] of walls) {
     const [a, b] = P(x1, y1), [c, d] = P(x2, y2);
     for (let r = 1; r < ROWS; r++) seg(a, Y0 + (r / ROWS) * HW, b, c, Y0 + (r / ROWS) * HW, d, DS * 1.3, 1);
     seg(a, Y0 + HW, b, c, Y0 + HW, d, DS * 0.5, 6);
     seg(a, Y0 + 0.01, b, c, Y0 + 0.01, d, DS * 0.8, 6);
     // senkrechte Kanten an den Wandenden
     seg(a, Y0, b, a, Y0 + HW, b, DS * 0.6, 6); seg(c, Y0, d, c, Y0 + HW, d, DS * 0.6, 6);
-  });
+    yield;
+  }
 
   // Möbel als echte Körper
   const parts = [], flat = [];
@@ -144,18 +151,22 @@ export function praxisScan(nFurn, fine = 1) {
   // Flur: Läufer
   runner(199, 150, 0.7, 5.8, 4);
 
-  const st = stipple(parts, nFurn);
-  const core = coreOf(parts);
+  yield;
+  const st = yield* stippleGen(parts, nFurn);
+  const core = yield* coreOfGen(parts);
+  yield;
   const roomAttr = (g) => {
     const P3 = g.attributes.position.array, r = new Float32Array(P3.length / 3);
     for (let i = 0; i < r.length; i++) r[i] = roomOf(P3[i * 3] / K + 210, P3[i * 3 + 2] / K + 140);
     g.setAttribute('aRoom', new THREE.BufferAttribute(r, 1));
     return g;
   };
+  const furn = roomAttr(st.geo), coreG = roomAttr(core);
+  yield;
   const lg = new THREE.BufferGeometry();
   lg.setAttribute('position', new THREE.Float32BufferAttribute(L.pos, 3));
   lg.setAttribute('normal', new THREE.Float32BufferAttribute(L.nor, 3));
   lg.setAttribute('aKind', new THREE.Float32BufferAttribute(L.kind, 1));
   lg.setAttribute('aRoom', new THREE.Float32BufferAttribute(L.room, 1));
-  return { lines: lg, furn: roomAttr(st.geo), spacing: st.spacing, core: roomAttr(core), count: L.kind.length + st.count };
+  return { lines: lg, furn, spacing: st.spacing, core: coreG, count: L.kind.length + st.count };
 }

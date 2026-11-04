@@ -129,6 +129,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   const js = res.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
   let css = readFileSync(join(dir, 'style.css'), 'utf8');
   if (cfg.live) css = css.replace(/\/\*[\s\S]*?\*\//g, ''); // Live: Arbeitskommentare („Testseite 4 …“) raus
+  if (cfg.live) css = css.replace(/url\(assets\//g, 'url('); // Standbilder (ohne WebGL) liegen neben der Live-Seite
   let tpl = readFileSync(join(dir, cfg.page || 'page.html'), 'utf8');
   if (cfg.root) ROOT_LINKS.forEach(([re, to]) => { tpl = tpl.replace(re, to); });
   const [headPart, bodyPart] = tpl.split('<!--BODY-->');
@@ -140,7 +141,8 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   writeFileSync(join(root, cfg.out), full.replace(/\r\n?/g, '\n'));
   if (cfg.live === 'index.html') {
     // Bilder für Link-Vorschau und Home-Bildschirm (Quelle labor/assets/, erzeugt aus der Seite selbst)
-    for (const img of ['og.jpg', 'apple-touch-icon.png']) {
+    // + Standbilder für Browser ohne WebGL (A2): eigene Dateien, nicht eingebettet
+    for (const img of ['og.jpg', 'apple-touch-icon.png', 'still-hero.webp', 'still-achse.webp', 'still-dach.webp', 'still-manu.webp']) {
       const src = join(root, 'assets', img);
       if (existsSync(src)) copyFileSync(src, join(root, liveDir, img)); else console.warn(`⚠ fehlt: assets/${img}`);
     }

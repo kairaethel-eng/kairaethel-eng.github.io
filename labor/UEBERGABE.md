@@ -1,7 +1,23 @@
-# Übergabe – Stand 2.11.2026 (Livegang vorbereitet)
+# Übergabe – Stand 4.11.2026 (Stufe 2a; Livegang vorbereitet seit 2.11.)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
+
+## Stand 4.11.2026 abends – Stufe 2a umgesetzt (Go: A1, A2, K1)
+Commit auf Arbeitszweig `claude/hop-website-design-review-lwh3ps`, **noch nicht auf `main`** (Testadresse zeigt es erst danach). Messwerte und Details: `ENTSCHEIDUNGEN.md` → „Stufe 2a“.
+- **A1 Startzeit:** Kapitel-Bühnen werden erst bei Annäherung gebaut (Wirbelsäule, Praxis, Manuthera, Motive), in Zeitscheiben ≤ 8 ms; Raster mit Zahlen-Schlüsseln (Praxis 6× schneller); kein erzwungenes Layout mehr im Start-Skript. Sichtprüfung intern: Wirbelsäule, Haus, Manuthera, Motive unverändert.
+- **A2 ohne WebGL:** `html.no-gl`, Standbilder `assets/still-{hero,achse,dach,manu}.webp` (27–57 KB, Build kopiert nach `live/`), Satz „Die bewegte Ansicht braucht einen aktuellen Browser.“; geprüft mit `--disable-webgl` (390/1440), keine Konsolenfehler.
+- **K1 „Die Tür geht auf“:** nur mit `?licht=1` – Hausordnung (letzte 60 %) blendet in Off-White, Kapitel 05/Leiste/Fuß hell, Sonnenstaub. Ohne Parameter unverändert. **Kai vergleicht** (keine Entscheidung getroffen).
+- Mitgebaut (gemeinsame Module): `zuhause.html`, `manuthera.html`, `portrait.html` – ohne Fehler geprüft. Wurzel nicht angefasst.
+
+**Kai prüft (iPhone + PC, nach Veröffentlichung auf main)**
+1. Seite öffnen und sofort scrollen: reagiert sie gleich? Kapitel 03/04 und Manuthera-Liege erscheinen rechtzeitig (sanftes Einblenden)?
+2. iPhone mit Lockdown-Modus (oder Chrome ohne Hardwarebeschleunigung): Standbilder + Satz statt Partikel?
+3. `…/labor/live/?licht=1` gegen `…/labor/live/`: Übergang Hausordnung → Tür, Lesbarkeit Kontakt.
+
+**Offen**
+- [O] Direkter Sprung (Menü) zur Manuthera: Aufbau wartet hinter Wirbelsäule und Praxis (gedrosselt im Test ~8 s); auf echten Geräten am iPhone prüfen, sonst Variante B (Worker).
+- [B] Rest-Lang-Tasks kommen vom Browser selbst (HTML/Schriften parsen, erstes Layout): schon ohne JS 320 ms bei CPU ×4.
 
 ## Stand 4.11.2026 – offene Punkte (Kai arbeitet sie später ab)
 Erledigt 3./4.11. (Details `ENTSCHEIDUNGEN.md`): Stufe 1 aus `PLAN-Stufe1-2026-11-03.md` (axe target-size/color-contrast/region = 0 bei 320/390/768/1440), ärztlicher Hinweis „immer zuerst ärztlich abklären“ (alle Labor-Seiten), Spannung bis 0 mit „Entspannt.“ + ruhigem Atem, Wisch-Hinweis Manuthera erst nach echtem Wischen weg, Vergleichsseiten test-1–3 gelöscht (Git-Verlauf bis 54d7812). Kais Sichtprüfung 3.11.: Stufe 1 passt.
@@ -21,7 +37,7 @@ Erledigt 3./4.11. (Details `ENTSCHEIDUNGEN.md`): Stufe 1 aus `PLAN-Stufe1-2026-1
 **Hinweise**
 - „· schematisch“ fehlt am Handy seit Stufe 1 (doppelter Hinweis entfernt); passt zu „Labor-Hinweise vor Livegang entfernen“ (unten).
 - Nur **eine** Sitzung gleichzeitig an `labor/` arbeiten lassen (am 4.11. zweimal fremde Commits zusammengeführt).
-- Arbeitszweig `claude/hop-website-design-review-lwh3ps` = `main`; kann auf GitHub gelöscht werden.
+- Arbeitszweig `claude/hop-website-design-review-lwh3ps` ist seit Stufe 2a (4.11. abends) **vor** `main` – erst nach Kais Go auf `main` bringen, dann löschbar.
 - Skill `hop-praxis` aktualisiert (Standard-Hinweis, Stand 4.11.) – als `.skill`-Datei an Kai geliefert.
 
 ## Zweitmeinung 3.11. (Cloud-Session, Fable 5.1)

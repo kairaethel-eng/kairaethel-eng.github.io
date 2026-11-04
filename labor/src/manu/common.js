@@ -22,9 +22,15 @@ export const FRAG = /* glsl */`
     #include <colorspace_fragment>
   }`;
 
+// WebGL 2 vorab anfragen (A2): ohne Unterstützung gibt es null statt Fehlermeldungen von three.js in der Konsole
+export function glContext(canvas, alpha = false) {
+  try { return canvas.getContext('webgl2', { alpha, antialias: false, depth: true, stencil: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' }); } catch (e) { return null; }
+}
 export function stage(canvas, { fov = 30, onResize, transparent = false } = {}) {
   let renderer;
-  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: transparent, powerPreference: 'high-performance' }); }
+  const context = glContext(canvas, transparent);
+  if (!context) { canvas.classList.add('no-gl'); return null; }
+  try { renderer = new THREE.WebGLRenderer({ canvas, context, antialias: false, alpha: transparent, powerPreference: 'high-performance' }); }
   catch (e) { canvas.classList.add('no-gl'); return null; }
   renderer.setClearColor(COL.ink, transparent ? 0 : 1);
   const st = { renderer, canvas, scene: new THREE.Scene(), camera: new THREE.PerspectiveCamera(fov, 1, 0.1, 100), pix: 1, w: 0, h: 0, visible: false, aspect: 1 };

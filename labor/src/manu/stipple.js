@@ -3,6 +3,7 @@
 // Jedes Teil liegt in Ruhe-Weltkoordinaten vor; map() ordnet Punkte und Kern-Ecken den bewegten Segmenten zu.
 import * as THREE from 'three';
 import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler.js';
+import { runSync, every, poissonGrid, bounds } from '../shared/slice.js';
 
 const prep = (geo) => {
   const g = geo.index ? geo.toNonIndexed() : geo;
@@ -17,44 +18,52 @@ const area = (g) => {
 };
 
 // parts: { geo, kind, map(v, col) → { la, lb, a, b, w }, keep?(n, v), sample?: false, core?: false, dens?: Faktor }
-export function stipple(parts, n) {
-  const S = parts.filter((p) => p.sample !== false).map((p) => {
+// Als Generator (yield = darf pausieren, siehe shared/slice.js); stipple() rechnet am Stück.
+export const stipple = (parts, n) => runSync(stippleGen(parts, n));
+export function* stippleGen(parts, n) {
+  const S = [];
+  for (const p of parts) {
+    if (p.sample === false) continue;
     const g = prep(p.geo), A = area(g) * (p.dens || 1);
-    return { p, A, sampler: new MeshSurfaceSampler(new THREE.Mesh(g)).build() };
-  });
+    S.push({ p, A, sampler: new MeshSurfaceSampler(new THREE.Mesh(g)).build(), box: bounds(g.attributes.position.array) });
+    yield;
+  }
   const total = S.reduce((s, x) => s + x.A, 0);
-  const cum = []; let acc = 0; for (const s of S) { acc += s.A; cum.push(acc); }
+  const cum = new Float64Array(S.length); let acc = 0; S.forEach((s, i) => { acc += s.A; cum[i] = acc; });
   const r = Math.sqrt(total / n) * 0.78;
-  const grid = new Map(), RW = [];
-  const out = { P: [], P2: [], N: [], SA: [], SB: [], W: [], K: [] };
+  const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
+  S.forEach(({ box }) => { for (let c = 0; c < 3; c++) { min[c] = Math.min(min[c], box.min[c]); max[c] = Math.max(max[c], box.max[c]); } });
+  const grid = poissonGrid(min, max, r, n);
+  const out = { P: new Float32Array(n * 3), P2: new Float32Array(n * 3), N: new Float32Array(n * 3), SA: new Float32Array(n), SB: new Float32Array(n), W: new Float32Array(n), K: new Float32Array(n) };
   const v = new THREE.Vector3(), nv = new THREE.Vector3(), col = new THREE.Color();
-  let tries = 0, count = 0;
-  while (count < n && tries++ < n * 6) {
+  const tick = every(512);
+  let tries = 0, count = 0, miss = 0;
+  // Versuche begrenzen: insgesamt n·6, und Schluss, wenn die Fläche gesättigt ist (400 Fehlversuche in Folge)
+  while (count < n && tries++ < n * 6 && miss < 400) {
+    if (tick()) yield;
     const x = Math.random() * total; let i = 0; while (cum[i] < x) i++;
     const s = S[i];
     s.sampler.sample(v, nv, col);
     if (s.p.keep && !s.p.keep(nv, v)) continue;
-    const rr = r / Math.sqrt(s.p.dens || 1), inv = 1 / r, r2 = rr * rr;
-    const gx = Math.floor(v.x * inv), gy = Math.floor(v.y * inv), gz = Math.floor(v.z * inv);
-    let ok = true;
-    for (let dx = -1; dx <= 1 && ok; dx++) for (let dy = -1; dy <= 1 && ok; dy++) for (let dz = -1; dz <= 1 && ok; dz++) {
-      const cell = grid.get((gx + dx) + ',' + (gy + dy) + ',' + (gz + dz));
-      if (cell) for (const j of cell) { const ex = RW[j] - v.x, ey = RW[j + 1] - v.y, ez = RW[j + 2] - v.z; if (ex * ex + ey * ey + ez * ez < r2) { ok = false; break; } }
-    }
-    if (!ok) continue;
-    const key = gx + ',' + gy + ',' + gz;
-    (grid.get(key) || grid.set(key, []).get(key)).push(RW.length);
-    RW.push(v.x, v.y, v.z);
+    const rr = r / Math.sqrt(s.p.dens || 1);
+    if (!grid.free(v.x, v.y, v.z, rr * rr)) { miss++; continue; }
+    miss = 0;
+    grid.add(v.x, v.y, v.z);
     const m = s.p.map(v, col);
-    out.P.push(m.la.x, m.la.y, m.la.z); out.P2.push(m.lb.x, m.lb.y, m.lb.z); out.N.push(nv.x, nv.y, nv.z);
-    out.SA.push(m.a); out.SB.push(m.b); out.W.push(m.w); out.K.push(s.p.kind);
+    out.P[count * 3] = m.la.x; out.P[count * 3 + 1] = m.la.y; out.P[count * 3 + 2] = m.la.z;
+    out.P2[count * 3] = m.lb.x; out.P2[count * 3 + 1] = m.lb.y; out.P2[count * 3 + 2] = m.lb.z;
+    out.N[count * 3] = nv.x; out.N[count * 3 + 1] = nv.y; out.N[count * 3 + 2] = nv.z;
+    out.SA[count] = m.a; out.SB[count] = m.b; out.W[count] = m.w; out.K[count] = s.p.kind;
     count++;
   }
+  for (const k of ['P', 'P2', 'N']) out[k] = out[k].slice(0, count * 3);
+  for (const k of ['SA', 'SB', 'W', 'K']) out[k] = out[k].slice(0, count);
   return { geo: toGeo(out), count, spacing: r };
 }
 
-// Dunkler Kern aus denselben Teilen (alle Ecken über map() an die Segmente gebunden)
-export function coreOf(parts) {
+// Dunkler Kern aus denselben Teilen (alle Ecken über map() an die Segmente gebunden); coreOfGen: ein Teil je Zeitscheibe
+export const coreOf = (parts) => runSync(coreOfGen(parts));
+export function* coreOfGen(parts) {
   const out = { P: [], P2: [], N: [], SA: [], SB: [], W: [], K: [] };
   const v = new THREE.Vector3(), col = new THREE.Color();
   for (const p of parts) {
@@ -66,6 +75,7 @@ export function coreOf(parts) {
       out.P.push(m.la.x, m.la.y, m.la.z); out.P2.push(m.lb.x, m.lb.y, m.lb.z); out.N.push(N[i], N[i + 1], N[i + 2]);
       out.SA.push(m.a); out.SB.push(m.b); out.W.push(m.w); out.K.push(p.kind);
     }
+    yield;
   }
   return toGeo(out);
 }

@@ -3,6 +3,7 @@
 // Alles im Browser gerechnet, keine Bilder. Reihenfolge = Liste „Alle Leistungen“.
 import * as THREE from 'three';
 import { stage, FRAG, reduced, isDesktop, C } from '../manu/common.js';
+import { runSync } from '../shared/slice.js';
 
 const R = Math.random;
 // Bewegungsarten (im Shader): 0 ruhig · 1 Hände drücken · 2 Welle läuft nach außen · 3 Drehen (Atlas) · 4 Kiefer öffnet
@@ -61,12 +62,16 @@ export const MOTIFS = [
     T(5, box([0, -0.33, 0], [0.9, 0.22, 0.24]), 4, 0), T(4, box([0, -0.68, 0], [1.4, 0.04, 0.5]), 4, 0)] },
 ];
 
-export function initServices(canvas, ui = {}) {
+// Als Generator (ein Motiv je Zeitscheibe, A1 4.11.2026); initServices() baut am Stück.
+export const initServices = (canvas, ui = {}) => runSync(initServicesGen(canvas, ui));
+export function* initServicesGen(canvas, ui = {}) {
   const st = stage(canvas, { fov: 30, transparent: true });
   if (!st) return null;
   const N = isDesktop() ? 7000 : 4500;
   // alle Motive vorab: Position, Farbe, Bewegungsart, Phase
-  const sets = MOTIFS.map((m) => {
+  const sets = [];
+  for (const m of MOTIFS) {
+    yield;
     const parts = m.parts(), tot = parts.reduce((s, q) => s + q.w, 0);
     const pos = new Float32Array(N * 3), kind = new Float32Array(N), anim = new Float32Array(N * 2);
     let i = 0;
@@ -76,8 +81,8 @@ export function initServices(canvas, ui = {}) {
     });
     // Reihenfolge mischen, damit Teile beim Wechsel gleichmäßig wandern
     for (let a = N - 1; a > 0; a--) { const b = Math.floor(R() * (a + 1)); for (let c = 0; c < 3; c++) { const t = pos[a * 3 + c]; pos[a * 3 + c] = pos[b * 3 + c]; pos[b * 3 + c] = t; } let t = kind[a]; kind[a] = kind[b]; kind[b] = t; for (let c = 0; c < 2; c++) { t = anim[a * 2 + c]; anim[a * 2 + c] = anim[b * 2 + c]; anim[b * 2 + c] = t; } }
-    return { pos, kind, anim };
-  });
+    sets.push({ pos, kind, anim });
+  }
   const rnd = new Float32Array(N * 3); for (let i = 0; i < rnd.length; i++) rnd[i] = R();
   const g = new THREE.BufferGeometry();
   const A = new Float32Array(sets[0].pos), KA = new Float32Array(sets[0].kind);

@@ -108,3 +108,25 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **Gestochen (Go 31.10.):** A und B jetzt wie die Wirbelsäule in Kapitel 03: gleichmäßige Punkte (Mindestabstand), dunkler Kern verdeckt die Rückseite, Licht/Schatten, kein Flimmern, Scan beim Einblenden (`src/manu/stipple.js`). A: anatomische Figur in Bauchlage (blau) auf heller Liege, Wirbelsäule schimmert als Perlenkette durch. B: Wirbel, Bandscheiben, Kreuzbein als Körper; zwei Polster der Liege deutlich (Fuge öffnet sich beim Zug); Körper im Längsschnitt (Rücken- und Bauchlinie, zarte hintere Hälfte). C unverändert.
 - **Entscheidung (31.10.2026): A „Bühne“** – beschreibt die Liege am besten. B und C bleiben nur als Archiv auf der Vergleichsseite. Modell laut Kai: **Manuthera 242**. In Puls · Scan eingebaut (Go 31.10.), Quelle bleibt `src/manu/ideaA.js` (eine Quelle für beide Seiten).
 - Vorher offen gewesen: Kai wählt A/B/C (oder Kombination); welches Modell (Manuthera 241 oder 242) steht in der Praxis? Keine technischen Zahlen auf der Seite, solange das Modell nicht bestätigt ist.
+
+## Stufe 2a (Go 4.11.): A1, A2, K1
+Umgesetzt nach `PLAN-Livegang-2026-11-04.md` (A1 Variante A, kein Worker). Arbeitszweig, noch nicht `main`.
+
+**A1 Startzeit – Messung** (Playwright, Edge/Chromium-Kern, SwiftShader, CPU ×4, je 3 Läufe, Median; `test-4-puls-scan.html` vor/nach diesem Stand):
+
+| | vorher PC 1440×900 | nachher PC | vorher Handy 390×844 | nachher Handy |
+|---|---|---|---|---|
+| längster Task beim Start | 59 357 ms (41–82 s) | 1 062 ms (946–1 622) | 14 920 ms (13,2–15,4 s) | 601 ms (574–1 071) |
+| erste Scroll-Reaktion nach First Paint | 61 172 ms | 1 997 ms | 14 676 ms | 2 105 ms |
+| längster Task beim Durchscrollen | 555 ms | 171 ms | 161 ms | 125 ms |
+
+- Umbau: Wirbelsäule (Schichten), Praxis, Manuthera-Bühne, Leistungs-Motive erst bei Annäherung (rootMargin 150 %), gerechnet in Zeitscheiben ≤ 8 ms (`shared/slice.js`, `requestIdleCallback`, Fallback `setTimeout 0`), danach sanftes Einblenden. Morph-Ziel Wirbelsäule nach dem ersten Bild. Mindestabstands-Raster mit Zahlen-Schlüsseln + Typed Arrays (Praxis 2,8 s → 0,46 s, Körnung 5,8 s → 1,0 s ungedrosselt), Schichten ohne Fehlversuch-Rechnung (1,36 s → 0,54 s), Körper-Wolke ohne Suchschleifen (3×). Start ohne erzwungenes Layout (`innerWidth` → Media-Query-Größe, Lenis nach dem ersten Bild).
+- **Ziel (< 200 ms / < 1 s) im Messaufbau nicht erreicht** [B]: Die verbleibenden Lang-Tasks sind das erste Layout (~450 ms gedrosselt) und Schrift-Nachladen (~430 ms) – schon die Seite **ohne JavaScript** hat einen 320-ms-Task. Kein Rechen-Block > 250 ms mehr (größter Rest: WebGL-Kontext der Leistungs-Bühne ~190 ms). Auf echten Geräten (GPU statt SwiftShader) deutlich weniger [A] – Kai prüft am iPhone; Variante B (Worker) nur, wenn dort noch > 1 s Blockade.
+- [O] Direkter Sprung zur Manuthera (Menü): Aufbau wartet hinter Wirbelsäule und Praxis (gedrosselt ~8 s bis sichtbar).
+- Sichtprüfung intern (Screenshots vorher/nachher): Hero, Wirbelsäule, Haus, Manuthera, Motive gleich.
+
+**A2 ohne WebGL:** WebGL 2 wird vorab geprüft → `html.no-gl` (auch wenn eine Nebenbühne scheitert). Spannungsanzeige, Hand, Wisch-/Maus-Hinweise, Scroll-/Rundgang-Hinweise weg; je Kapitel ein Standbild (`assets/still-hero|achse|dach|manu.webp`, 27–57 KB, mit `tools/shot.cjs` gerendert, als CSS-Hintergrund → lädt nur ohne WebGL; Build kopiert nach `live/`). Satz im Hero: „Die bewegte Ansicht braucht einen aktuellen Browser.“ Geprüft mit `--disable-webgl` bei 390 und 1440: Bilder sichtbar, keine Konsolenfehler.
+
+**K1 „Die Tür geht auf“ (nur Vergleich, keine Entscheidung):** `?licht=1` → über die letzten 60 % der Hausordnung von Dunkel nach Off-White (`--bg #F7F5EF`, `--txt #1C3038`), Bernstein bleibt (Text dunkler `#9A570A` für Kontrast), Partikel weichen warmem Sonnenstaub, Leiste/Menü/Fuß passen sich an. Übergang hängt nur am Scrollen; „Bewegung anhalten“ friert den Staub ein, „reduzieren“ verlangsamt ihn. Ohne Parameter unverändert.
+
+**Prüfung:** `node build.mjs test-4`, `node build.mjs live` (LF). axe (target-size, color-contrast, region) bei 320/390/768/1440 auf `live/index.html` und `test-4-puls-scan.html`: 0 · 0 · 0, keine Konsolenfehler, kein Querscrollen. `?licht=1` auf Kapitel 05 + Leiste: 0. Mitgebaut (gemeinsame Module): `zuhause.html`, `manuthera.html`, `portrait.html` – fehlerfrei. Wurzel unverändert.

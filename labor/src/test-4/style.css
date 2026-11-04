@@ -316,6 +316,9 @@ main{position:relative;z-index:2}
 .manu-stage{position:relative;height:min(74vh,45rem);cursor:grab}
 .manu-stage:active{cursor:grabbing}
 .manu-stage canvas{display:block;width:100%;height:100%;touch-action:pan-y}
+/* Bühnen werden erst gebaut, wenn das Kapitel naht (A1), und blenden dann ein */
+.manu-stage canvas,.serv-stage canvas{transition:opacity .9s ease}
+canvas.gl-wait{opacity:0}
 .manu-hint{position:absolute;right:0;bottom:.375rem;font:500 .75rem/1 var(--sans);letter-spacing:.06em;color:var(--mute)}
 .room-more{display:inline-flex;align-items:center;gap:.625rem;margin-top:1rem;min-height:2.75rem;padding:0 1.125rem;border-radius:3px;background:var(--amber);color:#14110A;font:700 .75rem/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;text-decoration:none;animation:glow 2.6s ease-out infinite;transition:transform .3s var(--ease)}
 .room-more:hover{transform:translateY(-2px)}
@@ -502,3 +505,31 @@ html.paused .btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}
 .paused-note button{height:2.25rem;padding:0 1rem;border-radius:1.125rem;border:0;background:var(--amber);color:#14110A;font:700 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
 .paused-note.gone{opacity:0;transform:translate(-50%,1rem);pointer-events:none}
 @media (prefers-contrast:more){:root{--dim:#D9E1E3;--mute:#B9C6CA}#gl{opacity:.6}}
+
+/* Ohne WebGL (A2, Go 4.11.2026; z. B. iOS-Lockdown-Modus): je Kapitel ein Standbild statt Partikel,
+   Hinweise zum Anfassen und die Spannungsanzeige entfallen. Bilder laden nur in diesem Fall (CSS-Hintergrund). */
+.still,.nogl-note{display:none}
+html.no-gl #gl,html.no-gl .hand,html.no-gl .meter,html.no-gl .touch-hint,html.no-gl .hero-sub .only-fine,html.no-gl .hero-sub .only-touch,html.no-gl .axis-hint,html.no-gl .tour-kicker,html.no-gl .manu-hint,html.no-gl .manu-stage canvas,html.no-gl .serv-stage{display:none}
+html.no-gl .still{display:block;position:absolute;pointer-events:none;background:no-repeat center/contain}
+html.no-gl .nogl-note{display:block;margin:-1rem 0 2rem;font-size:.875rem;color:var(--dim)}
+html.no-gl .still-hero{background-image:url(assets/still-hero.webp);right:11vw;top:3rem;bottom:0;width:23vw}
+html.no-gl .still-achse{background-image:url(assets/still-achse.webp);right:18.5vw;top:4.4rem;bottom:0;width:15vw}
+html.no-gl .still-dach{background-image:url(assets/still-dach.webp);right:0;top:4rem;bottom:0;width:59vw;background-position:right center}
+html.no-gl .manu-stage{min-height:min(56vh,30rem)}
+html.no-gl .still-manu{background-image:url(assets/still-manu.webp);inset:0}
+@media (max-width:920px){
+  html.no-gl .still-hero,html.no-gl .still-achse,html.no-gl .still-dach{left:0;right:0;width:auto;top:4.5rem;bottom:auto;height:38svh;background-position:center}
+  /* Handy: Kapitel 03 scrollt als Liste → Bild bleibt oben stehen, Karten laufen darüber */
+  html.no-gl .still-achse{position:sticky;top:7rem;height:34svh;margin-bottom:-34svh}
+}
+
+/* K1 „Die Tür geht auf“ (Vergleich, nur mit ?licht=1): Farben mischt main.js über die Variablen, hier nur,
+   was sonst fest dunkel wäre (Leiste, Menü, Knopf-Ränder, Schatten unter Text) */
+html.licht .top.scrolled,html.licht .top.menu-open{background:var(--nav-bg)}
+html.licht .top.menu-open .chapters{background:var(--menu-bg)}
+html.licht .motion-btn{background:var(--pill-bg)}
+html.licht .btn-ghost{border-color:var(--ghost-line)}
+html.licht .btn:not(.btn-ghost){background:#E09A35;border-color:#E09A35}
+html.licht .laws,html.licht .door-inner{text-shadow:0 1px 2px var(--shadow),0 0 1.375rem var(--shadow)}
+html.licht.is-licht .top .brand svg{filter:drop-shadow(0 0 1px rgba(28,48,56,.25))}
+

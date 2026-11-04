@@ -4,7 +4,8 @@
 // Rotation. Schematisch, keine Herstellerzeichnung.
 import * as THREE from 'three';
 import { stage, FRAG, COL, C, reduced, dragYaw, ease, damp, isDesktop, smooth } from './common.js';
-import { stipple, coreOf, coreMaterial, stippleMaterial, stipSize, capsule, ellipsoid, box, DEFORM } from './stipple.js';
+import { stippleGen, coreOfGen, coreMaterial, stippleMaterial, stipSize, capsule, ellipsoid, box, DEFORM } from './stipple.js';
+import { runSync } from '../shared/slice.js';
 
 export const MODES = [
   { id: 'traktion', name: 'Traktion', txt: 'Sanfter Zug in Längsrichtung: Brust- und Beckenteil gleiten auseinander, die Wirbelsäule bekommt Raum.' },
@@ -16,7 +17,9 @@ export const MODES = [
 const PIV_U = -0.855, PIV_L = 0.0; // Gelenke zwischen den Liegeteilen (x)
 const FOV = 30, NSEG = 3;
 
-export function initA(canvas, ui) {
+// Als Generator (Zeitscheiben, A1 4.11.2026); initA() baut am Stück.
+export const initA = (canvas, ui) => runSync(initAGen(canvas, ui));
+export function* initAGen(canvas, ui) {
   const st = stage(canvas, { fov: FOV, transparent: !!(ui && ui.transparent) });
   if (!st) return null;
   const desk = isDesktop();
@@ -78,8 +81,10 @@ export function initA(canvas, ui) {
   }
 
   const N = desk ? 42000 : 19000;
-  const pts = stipple(parts, N);
-  const core = coreOf(parts);
+  yield;
+  const pts = yield* stippleGen(parts, N);
+  yield;
+  const core = yield* coreOfGen(parts);
 
   const M = [new THREE.Matrix4(), new THREE.Matrix4(), new THREE.Matrix4()];
   const U = {
