@@ -1,7 +1,12 @@
-# Übergabe – Stand 4.11.2026 (Stufe 2b; Livegang vorbereitet seit 2.11.)
+# Übergabe – Stand 5.11.2026 (Auftrag 1 + 2 erledigt; Stufe 2b; Livegang vorbereitet seit 2.11.)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
+
+## Stand 5.11.2026 – was noch aussteht (Kai)
+- Auftrag 1 (Handy Kap. 03 → 04) und Auftrag 2 (Ego-Rundgang) sind umgesetzt und auf `main`. **Offen von Kai:** erneuter iPhone-Test Kap. 03 → 04 · iPhone-Blick auf den Ego-Rundgang (Schild-Größe: `SIGN.width` in `src/ego/main.js`).
+- Weiter offen aus Stufe 2b (siehe unten): A6 Etiketten bestätigen · A8 rechtlich · A9 iPhone-Prüfung · Datenschutz: Google Workspace ergänzen · **Wurzel/Livegang nur nach Kais Go** (`LIVEGANG.md`).
+- Ideen, noch nicht beauftragt: Ego-Rundgang in die Hauptseite einbinden (derzeit eigene Testseite, Link nur auf der Labor-Übersicht) · Logo-Schild später gegen 3D-Scan tauschen (Gruppe `logoSign`).
 
 ## Stand 4.11.2026 abends – zwei Aufträge für neue Sessions (beide: Go Kai)
 Auf `main` liegt alles bis Commit „Rundgang aus Augenhöhe – Machbarkeitstest“. Neue Session: `git pull`, dann `labor/CLAUDE.md` + diesen Abschnitt lesen. Veröffentlichen wie immer: nur `labor/` auf `main`.
@@ -15,7 +20,7 @@ Auf `main` liegt alles bis Commit „Rundgang aus Augenhöhe – Machbarkeitstes
 6. Toter Bereich unten bis der Text von Kapitel 04 kommt. → Text näher heranrücken oder Haus füllt den Raum.
 Prüfen: 390×844, 390×664, 320×568 (iPhone-Safari-Leiste!), axe target-size/color-contrast/region = 0, keine Konsolenfehler. Kai gibt Erfolg per iPhone zurück.
 
-**Auftrag 2 · Ego-Rundgang: Tür, Logo, Barrierefreiheit (Sonnet)** – ✅ umgesetzt 4.11. (Details ENTSCHEIDUNGEN.md; offen: Kais Sicht auf PC/iPhone) – Quelle `src/ego/{main.js,style.css,page.html}`, Build `node build.mjs ego` → `rundgang-ego.html` (https://kairaethel-eng.github.io/labor/rundgang-ego.html). Kais Rückmeldung: Fahrt „super geil“, Handy-Ansicht gut, kein Schwindel.
+**Auftrag 2 · Ego-Rundgang: Tür, Logo, Barrierefreiheit (Sonnet)** – ✅ umgesetzt 4.11. (Details ENTSCHEIDUNGEN.md; Kai 5.11.: „passt alles super“, Logo-Schild enger + Rahmen nachgezogen, `main` = `47e24c1`) – Quelle `src/ego/{main.js,style.css,page.html}`, Build `node build.mjs ego` → `rundgang-ego.html` (https://kairaethel-eng.github.io/labor/rundgang-ego.html). Kais Rückmeldung: Fahrt „super geil“, Handy-Ansicht gut, kein Schwindel.
 1. Tür: Start ca. 1,5 m weiter zurück (STOPS[0].at y≈320 → ≈360), Tür ganz sichtbar, kurze Pause, dann Aufgehen.
 2. Logo-Schild **rechts neben der Tür** an der Außenwand, Augenhöhe: HOP-Kreise (Grün #7FAF45, Petrol #3C7189, Blau #3F86B5, Buchstaben H O P) als Punkt-/Linien-Umriss in eigener Gruppe (später gegen 3D-Scan austauschbar).
 3. Ältere/sehschwächere Besucher: Lesezeit im Autoplay nach Textlänge (ca. 6–8 s statt 4,2 s), Kartentext ≥ 18 px mit mehr Kontrast, Schalter „Ohne Fahrt“ (Sprung mit kurzem Überblenden; automatisch bei „Bewegung reduzieren“ – das gibt es schon). Tempo „Ruhig“ (−40 %) und „Größere Punkte“ nur bei Bedarf.
