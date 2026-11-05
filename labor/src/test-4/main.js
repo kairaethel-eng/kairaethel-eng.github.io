@@ -77,7 +77,9 @@ let renderer = null;
 const glCtx = glContext(canvas);
 if (glCtx) try { renderer = new THREE.WebGLRenderer({ canvas, context: glCtx, antialias: false, alpha: false, powerPreference: 'high-performance' }); } catch (e) { /* ohne WebGL bleibt die Seite lesbar */ }
 // Ohne WebGL (oder wenn eine Bühne scheitert): Standbilder statt Partikel, Hinweise weg (A2, CSS html.no-gl)
-const noGl = () => document.documentElement.classList.add('no-gl');
+const noGl = () => { document.documentElement.classList.add('no-gl'); document.documentElement.classList.remove('seg-rows'); };
+// Option A (Handy-Wirbelsäule mit Zeilen, 5.11.): nur hochkant mit WebGL; Handy quer oder ohne WebGL → Karte mit Volltext
+const segRows = () => document.documentElement.classList.toggle('seg-rows', !isDesktop() && !document.documentElement.classList.contains('no-gl') && MINH >= 500);
 if (!renderer) noGl();
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(35, VW / VH, 0.1, 100);
@@ -262,6 +264,7 @@ function layout() {
 function resize() {
   if (isDesktop()) [...$$('.seg-card'), ...$$('#achse .note')].forEach((c) => { c.style.opacity = ''; c.style.transform = ''; });
   MINH = VW !== GLW || isDesktop() ? VH : Math.min(MINH, VH);
+  segRows();
   if (isDesktop() || VW !== GLW || VH > GLH || VH < GLH * 0.7) GLH = VH;
   GLW = VW;
   camera.aspect = VW / GLH; camera.updateProjectionMatrix();
@@ -566,21 +569,29 @@ const _pv = new V3(), _ndc = new V3();
 function updatePeri(zoneKey) {
   const cfg = PERI[zoneKey];
   if (!cfg) return;
-  // rechte Wurzel des Abschnitts finden, deren Ende auf dem Bildschirm am weitesten rechts liegt
+  // Wurzel des Abschnitts finden, deren Ende auf dem Bildschirm am weitesten außen liegt (PC rechts, Handy links)
   const X = uniforms.uXf.value[2];
   const rot = uniforms.uSpineRot.value;
+  const desk = isDesktop(), rows = !desk && stickOn(), side = rows ? -1 : 1;
   let tip = null, tipX = -1e9, start = 0;
   det.curves.forEach((c) => {
     if (c.kind !== 2 || ZONES[c.zone] !== zoneKey) return;
     const e = c.pts[CURVE_W - 1];
     _pv.set(e[0], e[1], e[2]).applyAxisAngle(new V3(0, 1, 0), rot).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z));
     _ndc.copy(_pv).project(camera);
-    if (_ndc.x > tipX) { tipX = _ndc.x; tip = _pv.clone(); start = c.start; }
+    if (_ndc.x * side > tipX) { tipX = _ndc.x * side; tip = _pv.clone(); start = c.start; }
   });
   if (!tip) return;
   const tipNdc = tip.clone().project(camera);
-  const desk = isDesktop();
-  const end = desk ? silTarget(zoneKey) : new V3(1.1, cfg.m[1], tipNdc.z).unproject(camera);
+  let end;
+  if (desk) end = silTarget(zoneKey);
+  else if (!rows) end = new V3(1.1, cfg.m[1], tipNdc.z).unproject(camera); // Handy quer: wie vor Option A
+  else {
+    // Handy (Option A): Zeilen links gestapelt, „Austritt“ auf Höhe der Wurzel; die Bahn endet rechts neben „Ziel“
+    mobPlace((-tipNdc.y * 0.5 + 0.5) * GLH);
+    const ex = ML.x + ML.colW + 10, ey = ML.ys[3] + ML.hs[3] / 2;
+    end = new V3((ex / VW) * 2 - 1, 1 - (ey / GLH) * 2, tipNdc.z).unproject(camera);
+  }
   const endNdc = end.clone().project(camera);
   const mid = new V3(THREE.MathUtils.lerp(tipNdc.x, endNdc.x, 0.45), THREE.MathUtils.lerp(tipNdc.y, endNdc.y, 0.25) + 0.05, THREE.MathUtils.lerp(tipNdc.z, endNdc.z, 0.5)).unproject(camera);
   const curve = new THREE.CatmullRomCurve3([tip, tip.clone().lerp(mid, 0.4).add(new V3(0, 0.02, 0)), mid, end]);
@@ -619,9 +630,13 @@ function stopPose(i, fy = 0.3) { // fy: Höhe des Abschnitts im Bild (nur Handy;
   const c = new V3();
   s.ids.forEach((id) => { const lv = det.levels.find((l) => l.id === id); c.add(new V3(lv.center.x * SC, (lv.center.y - CY) * SC, lv.center.z * SC)); });
   c.divideScalar(s.ids.length).applyAxisAngle(new V3(0, 1, 0), rot).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z));
-  const d = s.d * SC * X.w * 0.86 * (desk ? 1 : 2.1);
-  return { ...frame(c, new V3(0, 0.12, 1), d, desk ? 0.56 : 0.5, desk ? 0.5 : fy), rot };
+  // Handy mit Zeilen (Option A): Abschnitt nach rechts, links ist die Spalte für die Zeilen
+  const st = stickOn(), d = s.d * SC * X.w * 0.86 * (desk ? 1 : st ? MOB_D : 2.1);
+  return { ...frame(c, new V3(0, 0.12, 1), d, desk ? 0.56 : st ? (VW > 600 ? 0.64 : 0.7) : 0.5, desk ? 0.5 : fy), rot };
 }
+const MOB_D = 2.3;
+// Handy-Ablauf mit stehender Karte und Zeilen (Klasse seg-rows, siehe segRows oben)
+const stickOn = () => document.documentElement.classList.contains('seg-rows');
 const OVERVIEW = { pos: new V3(0, 0, 13), target: new V3(0, 0, 0) };
 const lerpPose = (a, b, t) => ({ pos: a.pos.clone().lerp(b.pos, t), target: a.target.clone().lerp(b.target, t), rot: b.rot !== undefined && a.rot !== undefined ? THREE.MathUtils.lerp(a.rot, b.rot, t) : (b.rot ?? a.rot) });
 const cam = { pos: OVERVIEW.pos.clone(), target: OVERVIEW.target.clone() };
@@ -642,11 +657,67 @@ const NINFO = {
   c56: { exit: 'Austritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [36, 240] },
   th16: { exit: 'Austritt Th1–Th6', nerv: 'Interkostalnerven, obere Rippen', gef: 'Brustkorbwand · Zwischenrippen', ziel: 'Brustkorb', typ: 'Typisch: atemabhängiges Stechen, Schmerz zwischen den Schulterblättern', tgt: [80, 118] },
   l45: { exit: 'Austritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [76, 404] },
-  s1: { exit: 'Austritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [72, 412] },
+  s1: { exit: 'Austritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [72, 412], pre: 'Iliosakralgelenk (ISG): verbindet Becken und Wirbelsäule.' },
 };
 const NC_KEYS = ['exit', 'nerv', 'gef', 'ziel', 'typ'];
 const ncalls = NC_KEYS.map((k) => { const el = document.createElement('div'); el.className = 'ncall ncall-' + k; el.setAttribute('aria-hidden', 'true'); document.body.appendChild(el); return el; });
 let periCurve = null;
+
+// Handy (Option A, 5.11.): dieselben Zeilen wie am PC, links gestapelt, mit Linie zur Wirbelsäule/Bahn.
+// „Typisch“ kommt vollständig aus der Karte (kein Inhaltsverlust), steht über der Karte; die Karte selbst zeigt nur
+// Titel + Schlagworte, ihr Volltext bleibt für Vorleseprogramme (dl sr-only). Ohne WebGL bleibt die alte Karte.
+const ML = { key: null, w: 0, x: 16, colW: 160, hs: [0, 0, 0, 0, 0], ws: [0, 0, 0, 0, 0], ys: [0, 0, 0, 0], typY: 0 };
+function mobTexts(zoneKey) {
+  const info = NINFO[zoneKey], card = cards[STOPS.findIndex((s) => s.zone === zoneKey)];
+  const dd = card ? card.querySelectorAll('dd') : [];
+  const typ = dd[1] ? 'Typisch: ' + dd[1].textContent.trim() : info.typ;
+  return [info.exit, info.nerv, info.gef, info.ziel, info.pre ? info.pre + '\n' + typ : typ];
+}
+// nur bei Abschnitts- oder Breitenwechsel: Texte setzen und einmal messen
+function mobMeasure(zoneKey) {
+  const pad = VW < 360 ? 12 : 16;
+  ML.key = zoneKey; ML.w = VW; ML.x = pad; ML.colW = Math.round(Math.min(VW * 0.5, 288) - pad);
+  mobTexts(zoneKey).forEach((t, i) => {
+    const el = ncalls[i]; el.textContent = t;
+    el.style.maxWidth = i < 4 ? ML.colW + 'px' : '';
+    el.style.width = i < 4 ? '' : Math.min(VW - 2 * pad, 576) + 'px';
+  });
+  ncalls.forEach((el, i) => { ML.hs[i] = el.offsetHeight; ML.ws[i] = el.offsetWidth; });
+}
+addEventListener('resize', () => {
+  ML.key = null;
+  if (isDesktop()) ncalls.forEach((el) => { el.style.maxWidth = ''; el.style.width = ''; });
+});
+// Lage: „Typisch“ über der stehenden Karte, die vier Zeilen dazwischen; „Austritt“ möglichst auf Höhe der Wurzel
+function mobPlace(tipY) {
+  const hs = ML.hs, S = segS ? segS[mobSel] : MINH * 0.78;
+  ML.typY = S - hs[4] - 10;
+  const top = Math.max(dotsStuck, 64) + 12, bot = ML.typY - 12, sum = hs[0] + hs[1] + hs[2] + hs[3];
+  const g = clamp((bot - top - sum) / 3, 4, 12);
+  let y = Math.max(top, Math.min(tipY - hs[0] / 2, bot - sum - 3 * g));
+  for (let i = 0; i < 4; i++) { ML.ys[i] = y; y += hs[i] + g; }
+}
+// Zeilen erscheinen nacheinander, während die Karte steht (prog = gescrollte Strecke seit dem Anhalten, × Bildhöhe)
+const MTH = [0.02, 0.09, 0.16, 0.23, 0.31];
+let mlVisT = -1e9;
+function updateCalloutsMob(zoneKey, on, prog) {
+  const now = performance.now();
+  // Abschnitt gewechselt: alte Zeilen erst ausblenden lassen, dann Texte tauschen (sonst springt Text in der Blende)
+  if (zoneKey && ML.key !== zoneKey && now - mlVisT > 420) mobMeasure(zoneKey);
+  const show = !!(on && zoneKey && periCurve && ML.key === zoneKey);
+  ncalls.forEach((el, i) => {
+    const vis = show && prog > MTH[i];
+    if (vis) mlVisT = now;
+    el.style.opacity = vis ? 1 : 0;
+    if (i < 4) nl[i].style.opacity = vis ? 1 : 0;
+  });
+  if (!show) return;
+  ncalls.forEach((el, i) => { el.style.transform = `translate(${ML.x}px, ${(i < 4 ? ML.ys[i] : ML.typY).toFixed(1)}px)`; });
+  [0, 0.33, 0.66, 1].forEach((t, i) => {
+    const [ax, ay] = toPx(periCurve.getPointAt(t)), L = nl[i];
+    L.setAttribute('x1', ML.x + ML.ws[i]); L.setAttribute('y1', ML.ys[i] + ML.hs[i] / 2); L.setAttribute('x2', ax); L.setAttribute('y2', ay);
+  });
+}
 
 // Körper-Silhouette (zarte Partikel), an die Kamera gehängt, rechts im Bild; das Versorgungsgebiet glüht
 const silIdx = []; for (let i = 0; i < N; i += isDesktop() ? 6 : 9) silIdx.push(i);
@@ -804,23 +875,57 @@ addEventListener('resize', () => (dotsStuck = 0)); // neu messen (lazy: beim Sta
 // Karte: kommt von unten (Oberkante 98 → 85 % Bildhöhe), lesbar bis ~45 %, dann aus; hohe Karten erst, wenn ihr Ende im Bild war
 const cardIn = (r, vh) => smooth(vh * 0.98, vh * 0.85, r.top);
 const cardFade = (r, vh) => cardIn(r, vh) * Math.max(smooth(vh * 0.25, vh * 0.45, r.top), smooth(vh * 0.55, vh * 0.85, r.bottom));
+// Option A (5.11.): Karte klebt unten (CSS sticky, top = 100svh − Kartenhöhe), die nächste schiebt sich darüber.
+// Natürliche Lage (ohne Kleben) = Kartenstapel-Anfang + Höhen + Abstände der Karten davor.
+const segCardsEl = $('#segCards');
+let segHs = null, segMs = null, segS = null, mobProg = -1, mobStuck = false;
+function measureCards() {
+  segHs = cards.map((c) => { const h = c.offsetHeight; c.style.setProperty('--ch', h + 'px'); return h; });
+  segMs = cards.map((c) => parseFloat(getComputedStyle(c).marginBottom) || 0);
+  segS = cards.map((c) => parseFloat(getComputedStyle(c).top) || MINH * 0.78);
+}
+addEventListener('resize', () => (segHs = null));
+if (window.ResizeObserver) { const ro = new ResizeObserver(() => (segHs = null)); cards.forEach((c) => ro.observe(c)); }
+const natTop = (i) => { let y = segCardsEl.getBoundingClientRect().top; for (let j = 0; j < i; j++) y += segHs[j] + segMs[j]; return y; };
 function mobileCard(gate) {
   const vh = MINH; // stabil: Safaris Leiste verschiebt sonst beim Wischen alle Schwellen
   const rs = cards.map((c) => c.getBoundingClientRect());
   // aktiv ist die letzte Karte, deren Oberkante den Bildrand fast erreicht hat (die vorige ist dann schon ausgeblendet)
   let best = 0;
   rs.forEach((r, i) => { if (r.top < vh * 1.0) best = i; });
-  rs.forEach((r, i) => {
-    const a = cardFade(r, vh) * (i === best ? gate : 0.8);
-    cards[i].style.opacity = a.toFixed(3);
-    cards[i].style.transform = a > 0.999 ? '' : `translateY(${((1 - cardIn(r, vh)) * 1.5).toFixed(3)}rem)`;
-  });
+  if (stickOn()) {
+    if (!segHs) measureCards();
+    mobProg = (segS[best] - natTop(best)) / vh;
+    mobStuck = mobProg >= 0 && Math.abs(rs[best].top - segS[best]) < 2;
+    // Einblenden endet genau an der Halteposition (kurze Karten halten tiefer als 85 % Bildhöhe)
+    const cin = (r, i) => smooth(Math.min(vh, segS[i] + vh * 0.13), segS[i], r.top);
+    const out = (r) => Math.max(smooth(vh * 0.25, vh * 0.45, r.top), smooth(vh * 0.55, vh * 0.85, r.bottom)); // letzte Karte nach dem Loslassen
+    rs.forEach((r, i) => {
+      // aktive Karte: wie bisher erst nach der Kamerafahrt; die vorige steht darunter und weicht der nächsten
+      const k = i >= best ? cin(r, i) : 1; // auch für kommende Karten (gleiche Verschiebung, sonst Flackern an der Bildkante)
+      const a = i === best ? k * out(r) * gate : i === best - 1 ? out(r) * (1 - smooth(vh * 0.99, Math.min(vh * 0.9, segS[best] + 1), rs[best].top)) : 0;
+      cards[i].style.opacity = a.toFixed(3);
+      cards[i].style.transform = k > 0.999 ? '' : `translateY(${((1 - k) * 1.5).toFixed(3)}rem)`;
+    });
+  } else {
+    mobProg = -1; mobStuck = false;
+    rs.forEach((r, i) => {
+      const a = cardFade(r, vh) * (i === best ? gate : 0.8);
+      cards[i].style.opacity = a.toFixed(3);
+      cards[i].style.transform = a > 0.999 ? '' : `translateY(${((1 - cardIn(r, vh)) * 1.5).toFixed(3)}rem)`;
+    });
+  }
   if (axisNote) axisNote.style.opacity = cardFade(axisNote.getBoundingClientRect(), vh).toFixed(3);
   return best;
 }
 dots.forEach((d) => d.addEventListener('click', () => {
-  const c = cards[+d.dataset.seg];
-  scrollToY(c.getBoundingClientRect().top + scrollY - VH * 0.5);
+  const i = +d.dataset.seg;
+  if (stickOn()) { // so weit, dass die Karte steht und alle Zeilen da sind
+    if (!segHs) measureCards();
+    scrollToY(natTop(i) + scrollY - (segS[i] - MINH * (MTH[4] + 0.05)));
+    return;
+  }
+  scrollToY(cards[i].getBoundingClientRect().top + scrollY - VH * 0.5);
 }));
 
 let spineRot = -0.9;
@@ -907,15 +1012,17 @@ function updateAxis(dt) {
   const zone = w > 0.5 ? ZONES.indexOf(STOPS[zoneIdx].zone) : -10;
   if (zone !== sU.uZone.value) { sU.uZone.value = zone; sU.uZoneAmt.value = 0; sU.uPeri.value = 0; }
   sU.uZoneAmt.value += ((zone >= 0 ? 1 : 0) - sU.uZoneAmt.value) * 0.07;
-  const periOn = zone >= 0 && w > 0.9 ? 1 : 0;
+  // Handy mit Zeilen: Bahn erst, wenn die Zeilen des Abschnitts gemessen sind (sie endet am „Ziel“)
+  const stick = stickOn(), zKey = zone >= 0 ? STOPS[zoneIdx].zone : null;
+  const periOn = zone >= 0 && w > 0.9 && (!stick || ML.key === zKey) ? 1 : 0;
   sU.uPeri.value += (periOn - sU.uPeri.value) * 0.05;
-  if (zone >= 0) updatePeri(STOPS[zoneIdx].zone);
-  periLabel.style.opacity = (!desk && sU.uPeri.value > 0.6 && spineGroup.visible ? 1 : 0);
+  if (zone >= 0) updatePeri(zKey);
+  periLabel.style.opacity = (!desk && !stick && sU.uPeri.value > 0.6 && spineGroup.visible ? 1 : 0);
   // PC: Silhouette + Infos im Raum
   const silOn = desk && zone >= 0 ? sU.uPeri.value : 0;
   silU.uOn.value = silOn; sil.visible = silOn > 0.01;
-  if (desk) placeSilhouette();
-  updateCallouts(zone >= 0 ? STOPS[zoneIdx].zone : null, localF, silOn > 0.5);
+  if (desk) { placeSilhouette(); updateCallouts(zKey, localF, silOn > 0.5); }
+  else updateCalloutsMob(stick ? zKey : null, stick && mobStuck && gateK > 0.9 && sU.uPeri.value > 0.6 && spineGroup.visible, mobProg);
 }
 
 // (Nerven-Infos siehe oben)
