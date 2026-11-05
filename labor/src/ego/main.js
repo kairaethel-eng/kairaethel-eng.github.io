@@ -115,11 +115,11 @@ let stipSpacing = 0.02;
 
 // ---------- Logo-Schild rechts neben der Tür (Außenwand, Augenhöhe) ----------
 // Eigene Gruppe `logoSign`: später gegen einen 3D-Scan des echten Schilds austauschbar (Gruppe entfernen, Scan einsetzen).
-// Zeichnung = HOP-Logo in SVG-Koordinaten (viewBox 560×240, Kreise r 66 bei x 110/300/490, y 120), Breite 1,2 m.
+// Zeichnung = HOP-Logo in SVG-Koordinaten (Kreise r 66 bei x 140/300/460, y 120 – enger als im SVG, Go Kai 5.11.) auf dunkler Schildfläche mit Punkt-Rahmen (504×184 → 1,2 m breit).
 const SIGN = { px: 250, width: 0.6, out: 0.012 };       // Mitte in Grundriss-Pixel, Breite in Formeinheiten (1 Einheit = 2 m), Abstand vor der Wand
 SIGN.z = (272 - 140) * K + SIGN.out;
 function buildLogoSign() {
-  const s = SIGN.width / 512, ox = (SIGN.px - 210) * K, oy = EYE;
+  const s = SIGN.width / 504, ox = (SIGN.px - 210) * K, oy = EYE;
   const pos = [], col = [];
   let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
   const put = (x, y, c, k, dz = 0) => { pos.push(ox + (x - 300) * s, oy - (y - 120) * s, SIGN.z + dz); col.push(c.r * k, c.g * k, c.b * k); };
@@ -130,17 +130,27 @@ function buildLogoSign() {
     }
   };
   const bone = C('#EDE8DC');
-  [[110, '#7FAF45'], [300, '#3C7189'], [490, '#3F86B5']].forEach(([cx, hex]) => {
+  // Schildfläche (dunkel, dicht gepunktet) + Rahmen aus Punkten, abgerundete Ecken
+  const HW = 252, HH = 92, R = 20;
+  const inPlate = (x, y) => { const dx = Math.abs(x - 300) - (HW - R), dy = Math.abs(y - 120) - (HH - R); return Math.hypot(Math.max(dx, 0), Math.max(dy, 0)) + Math.min(Math.max(dx, dy), 0) <= R; };
+  fill(300 - HW, 300 + HW, 120 - HH, 120 + HH, 2.2, inPlate, C('#16333D'), 1, -0.003);
+  const frame = (hw, hh, r, k) => {
+    for (let x = -(hw - r); x <= hw - r; x += 1.8) { put(300 + x, 120 - hh, bone, k, 0.003); put(300 + x, 120 + hh, bone, k, 0.003); }
+    for (let y = -(hh - r); y <= hh - r; y += 1.8) { put(300 - hw, 120 + y, bone, k, 0.003); put(300 + hw, 120 + y, bone, k, 0.003); }
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (let a = 0; a <= Math.PI / 2; a += 1.8 / r) put(300 + sx * (hw - r + r * Math.cos(a)), 120 + sy * (hh - r + r * Math.sin(a)), bone, k, 0.003);
+  };
+  frame(HW - 6, HH - 6, R - 6, 0.9); frame(HW - 8.2, HH - 8.2, R - 8.2, 0.9);
+  [[140, '#7FAF45'], [300, '#3C7189'], [460, '#3F86B5']].forEach(([cx, hex]) => {
     const c = C(hex);
     fill(cx - 66, cx + 66, 54, 186, 3.3, (x, y) => (x - cx) ** 2 + (y - 120) ** 2 <= 63 ** 2, c, 0.8, 0);
     for (let a = 0; a < Math.PI * 2; a += 2 / 66) { put(cx + Math.cos(a) * 66, 120 + Math.sin(a) * 66, c, 1.2, 0.002); put(cx + Math.cos(a) * 64.6, 120 + Math.sin(a) * 64.6, c, 1.2, 0.002); }
   });
   // Buchstaben als gefüllte Striche (Archivo-ähnlich, Höhe 44)
   const G = 1.5, L = 0.004;
-  fill(90, 130, 98, 142, G, (x, y) => { const u = x - 110, v = y - 120; return (Math.abs(u) >= 12 && Math.abs(u) <= 20 && Math.abs(v) <= 22) || (Math.abs(u) <= 12 && Math.abs(v) <= 4); }, bone, 1, L);
+  fill(120, 160, 98, 142, G, (x, y) => { const u = x - 140, v = y - 120; return (Math.abs(u) >= 12 && Math.abs(u) <= 20 && Math.abs(v) <= 22) || (Math.abs(u) <= 12 && Math.abs(v) <= 4); }, bone, 1, L);
   fill(270, 330, 96, 144, G, (x, y) => { const u = x - 300, v = y - 120; return (u / 26) ** 2 + (v / 23) ** 2 <= 1 && (u / 18) ** 2 + (v / 15) ** 2 >= 1; }, bone, 1, L);
-  fill(468, 508, 98, 142, G, (x, y) => {
-    const u = x - 494, v = y - 120;                 // P, um 4 nach rechts gerückt (optische Mitte)
+  fill(438, 478, 98, 142, G, (x, y) => {
+    const u = x - 464, v = y - 120;                 // P, um 4 nach rechts gerückt (optische Mitte)
     return (u >= -18 && u <= -10 && Math.abs(v) <= 22) || (u >= -10 && u <= -4 && ((v >= -22 && v <= -14.5) || (v >= -1.5 && v <= 6)))
       || (u >= -4 && (u + 4) ** 2 + (v + 8) ** 2 <= 14 ** 2 && (u + 4) ** 2 + (v + 8) ** 2 >= 6.5 ** 2);
   }, bone, 1, L);
