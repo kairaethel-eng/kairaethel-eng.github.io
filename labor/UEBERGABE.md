@@ -44,6 +44,7 @@ Commit auf Arbeitszweig `claude/hop-website-design-review-lwh3ps`, **noch nicht 
 1. Seite öffnen und sofort scrollen: reagiert sie gleich? Kapitel 03/04 und Manuthera-Liege erscheinen rechtzeitig (sanftes Einblenden)?
 2. iPhone mit Lockdown-Modus (oder Chrome ohne Hardwarebeschleunigung): Standbilder + Satz statt Partikel?
 3. `…/labor/live/?licht=1` gegen `…/labor/live/`: Übergang Hausordnung → Tür, Lesbarkeit Kontakt.
+- **Ergebnis Kai 5.11.:** (1) reagiert sofort. (2) „bei den Übergängen erscheinen Partikel 1–4 und dann wieder zur Hausordnung“ – [A] im Lockdown-Modus läuft WebGL offenbar weiter, daher Partikel statt Standbilder; [O] mit Kai klären, ob er das so meinte, und Rückfall z. B. in Chrome ohne Hardwarebeschleunigung gegenprüfen. (3) hell abgelehnt → bleibt dunkel.
 
 **Offen**
 - [O] Direkter Sprung (Menü) zur Manuthera: Aufbau wartet hinter Wirbelsäule und Praxis (gedrosselt im Test ~8 s); auf echten Geräten am iPhone prüfen, sonst Variante B (Worker).
