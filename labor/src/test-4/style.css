@@ -402,9 +402,9 @@ canvas.gl-wait{opacity:0}
   html.seg-rows .seg-card dl,html.seg-rows .seg-card .seg-peri{position:absolute;width:1px;height:1px;margin:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   html.seg-rows .seg-card .chips{flex-basis:100%}
   html:not(.seg-rows):not(.seg-scan) .ncall,html:not(.seg-rows):not(.seg-scan) .nlines{display:none}
-  /* Scanner (6.11., html.seg-scan, Standard am Handy): Kapitel 03 ist eine Bühne (klebt 40svh), kein Kasten;
+  /* Scanner (6.11., html.seg-scan, Standard am Handy): Kapitel 03 ist eine Bühne (klebt 60svh), kein Kasten;
      Karten nur für Vorleseprogramme, Infos als Zeilen links, Scan-Linie + Griff rechts (main.js updateScan) */
-  html.seg-scan .axis{height:140svh}
+  html.seg-scan .axis{height:160svh}
   html.seg-scan .axis-sticky{position:sticky;top:0;height:100svh;overflow:hidden}
   html.seg-scan .axis-inner{height:100%;display:flex;flex-direction:column;padding-top:calc(env(safe-area-inset-top,0px) + 7.5rem);padding-bottom:1rem}
   html.seg-scan .axis-head{max-width:64%;transition:opacity .5s var(--ease)} /* links neben der Wirbelsäule */
@@ -412,7 +412,9 @@ canvas.gl-wait{opacity:0}
   html.seg-scan .axis-hint .only-scan{display:inline}
   html.seg-scan .seg-dots{position:absolute;top:calc(env(safe-area-inset-top,0px) + 4.625rem);left:50%;transform:translateX(-50%);margin:0}
   html.seg-scan .seg-cards{position:absolute;width:1px;height:1px;margin:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  html.seg-scan #achse .note{margin-top:auto;opacity:1}
+  html.seg-scan #achse .note{margin-top:auto;opacity:1;position:relative;z-index:0}
+  html.seg-scan #achse .note::before{content:"";position:absolute;z-index:-1;inset:-1.25rem -50vw -1rem;background:linear-gradient(rgba(10,22,27,0),rgba(10,22,27,.9) 1.25rem)} /* Nahansicht: Wirbelsäule läuft hinter dem Hinweis aus */
+  html.seg-scan .seg-dots{background:rgba(10,22,27,.9)}
   html.seg-scan .ncall-typ{white-space:pre-line}
   .ncall{white-space:normal;padding:.3125rem .625rem;font-size:.8125rem;line-height:1.35;border-radius:.625rem;background:rgba(10,22,27,.86);backdrop-filter:none;-webkit-backdrop-filter:none;transition:opacity .35s var(--ease)} /* ohne Weichzeichner: spart am iPhone Rechenzeit über der 3D-Szene */
   .ncall-exit{font-size:.75rem;letter-spacing:.12em}
@@ -531,8 +533,15 @@ canvas.gl-wait{opacity:0}
 .scan-hint{padding:.5rem .875rem;border-radius:1.25rem;background:rgba(10,22,27,.88);border:1px solid rgba(224,154,53,.45);font:600 .75rem/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--amber);white-space:nowrap;transition:opacity .4s}
 .scan-rail{position:fixed;right:0;z-index:4;display:none;touch-action:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 .scan-rail.on{display:block}
-.scan-chips{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s var(--ease);display:flex;flex-wrap:wrap;gap:.375rem}
-.scan-chips span{font:600 .75rem/1 var(--sans);padding:.375rem .5rem;border-radius:3px;border:1px solid rgba(224,154,53,.45);color:var(--txt);background:rgba(10,22,27,.86)}
+/* Karte unten in der Nahansicht (wie Option A): Abschnitt + Titel, darunter die Therapien */
+.scan-chips{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s var(--ease);padding:.75rem .875rem .875rem;border:1px solid rgba(224,154,53,.55);border-radius:.375rem;background:rgba(14,30,37,.95)}
+.scan-chips .sc-t{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:.625rem;margin:0}
+.scan-chips .sc-no{font:italic 400 1.625rem/1 var(--serif);color:var(--amber)}
+.scan-chips .sc-h{font:800 1.125rem/1.1 var(--disp);letter-spacing:-.02em;color:var(--txt)}
+.scan-chips .sc-c{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.625rem}
+.scan-chips .sc-c:empty{display:none}
+.scan-chips .sc-c span{font:600 .75rem/1 var(--sans);padding:.375rem .5rem;border-radius:3px;border:1px solid rgba(224,154,53,.35);color:var(--txt);background:rgba(224,154,53,.07)}
+@media (max-width:360px){.scan-chips{padding:.5625rem .75rem .6875rem}.scan-chips .sc-no{font-size:1.375rem}.scan-chips .sc-h{font-size:1rem}.scan-chips .sc-c span{padding:.3125rem .4375rem}}
 html.no-gl .scan,html.no-gl .scan-rail,html.no-gl .scan-chips{display:none}
 @media (prefers-reduced-motion:reduce){.scan-hint{transition:none}}
 
