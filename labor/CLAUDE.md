@@ -35,6 +35,7 @@ node build.mjs live                 # Livegang-Vorschau labor/live/ (ohne Labor-
 LIVE_ROOT=1 node build.mjs live     # Wurzel /index.html + Rechtsseiten für hopphysio.de – NUR nach Kais Go (siehe LIVEGANG.md)
 ```
 - Screenshots im Container: `node tools/shot.cjs <seite.html> <präfix> <d|m> '<selektor>|<offset>' …` (Anleitung im Kopf der Datei; `WAIT=7000` bei Kamerafahrten, `REDUCED=1` für „Bewegung reduzieren“). SwiftShader ist langsam (~5–9 fps) → Kamera hängt nach. Kai will **keine** Screenshots geschickt bekommen; nur intern prüfen.
+- Screenshots **lokal auf Kais PC** (kein Playwright installiert): `node tools/edgeshot.mjs <seite.html> <präfix> <BxH> '<selektor>|<offset>' …` – steuert das installierte Edge über das DevTools-Protokoll, keine Installation nötig; Bilder nach `%TEMP%\hop-shots`. Extras: `card:<i>|<p>` (Handy Kap. 03), `stay|<js>`, `JS='…'` (Zustand ausgeben), `DESK=1`, `NOGL=1`, `REDUCED=1` (Anleitung im Kopf der Datei). axe aus dem Netz nachladen ist lokal gesperrt → axe-Prüfung (`tools/audit.cjs`) in der Cloud.
 - Scroll-Offsets Kapitel 03 (PC, in Bildschirmhöhen ab `#achse`, Kapitel seit 1.11. 440vh): C1–C2 0.61 · C5–C6 1.12 · Th 1.85 · L4–L5 2.58 · S1 3.1.
 - „Bewegung anhalten“ wird als `hop-motion` im Browser gemerkt und gilt für **alle** Labor-Seiten; beim Laden im angehaltenen Zustand erscheint ein Hinweis mit „Fortsetzen“. Ziehen/Drehen funktioniert auch angehalten.
 - Vorschau (privat): Artifact https://claude.ai/artifact/1YU9DYm46ZHqoMJu78dfoM (älter; maßgeblich ist die Testadresse).
