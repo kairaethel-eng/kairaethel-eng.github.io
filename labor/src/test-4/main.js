@@ -77,9 +77,14 @@ let renderer = null;
 const glCtx = glContext(canvas);
 if (glCtx) try { renderer = new THREE.WebGLRenderer({ canvas, context: glCtx, antialias: false, alpha: false, powerPreference: 'high-performance' }); } catch (e) { /* ohne WebGL bleibt die Seite lesbar */ }
 // Ohne WebGL (oder wenn eine Bühne scheitert): Standbilder statt Partikel, Hinweise weg (A2, CSS html.no-gl)
-const noGl = () => { document.documentElement.classList.add('no-gl'); document.documentElement.classList.remove('seg-rows'); };
-// Option A (Handy-Wirbelsäule mit Zeilen, 5.11.): nur hochkant mit WebGL; Handy quer oder ohne WebGL → Karte mit Volltext
-const segRows = () => document.documentElement.classList.toggle('seg-rows', !isDesktop() && !document.documentElement.classList.contains('no-gl') && MINH >= 500);
+const noGl = () => { document.documentElement.classList.remove('seg-rows', 'seg-scan'); document.documentElement.classList.add('no-gl'); };
+// Handy-Wirbelsäule (nur hochkant mit WebGL; Handy quer oder ohne WebGL → Karte mit Volltext):
+// Standard seit 6.11. = Scanner (html.seg-scan, Kapitel 03 als Bühne); ?scan=0 = Option A vom 5.11. (html.seg-rows, Karte klebt unten)
+const scanQ = new URLSearchParams(location.search).get('scan');
+const segRows = () => {
+  const el = document.documentElement, ok = !isDesktop() && !el.classList.contains('no-gl') && MINH >= 500;
+  el.classList.toggle('seg-scan', ok && scanQ !== '0'); el.classList.toggle('seg-rows', ok && scanQ === '0');
+};
 if (!renderer) noGl();
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(35, VW / VH, 0.1, 100);
@@ -370,12 +375,12 @@ const N_GRAIN = isDesktop() ? 165000 : 46000, N_SLICE = isDesktop() ? 330000 : 8
 const sU = {
   uTime: uniforms.uTime, uRot: uniforms.uSpineRot, uCut: uniforms.uCut, uXf: { value: uniforms.uXf.value[2] },
   uZone: { value: -10 }, uZoneAmt: { value: 0 }, uOn: { value: 0 }, uStip: { value: 1 }, uPix: uniforms.uPix,
-  uPeri: { value: 0 }, uPeriStart: { value: 0 },
+  uPeri: { value: 0 }, uPeriStart: { value: 0 }, uScan: { value: 100 }, uScanAmt: { value: 0 }, // Scanner (Handy, 6.11.)
   cBone: { value: C('#F3EADA') }, cDisc: { value: C('#86AFC9') }, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue,
   cSignal: { value: C('#DDF1FF') }, cCore: { value: C('#0E1C22') },
 };
 const GLSL_COMMON = /* glsl */`
-  uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart; uniform vec4 uXf;
+  uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart, uScan, uScanAmt; uniform vec4 uXf;
   uniform vec3 cBone, cDisc, cAmber, cBlue, cSignal, cCore;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
   const vec3 LDIR = vec3(.48, .72, .5);`;
@@ -417,10 +422,12 @@ const boneMat = new THREE.ShaderMaterial({
       col = mix(col, cAmber * (.35 + .95 * lam), on * (aKind < .5 ? 1. : .4));
       float g = exp(-pow((p.y - uCut) * 9., 2.));
       col = mix(col, cAmber * 1.3, g);
+      float sc = exp(-pow((p.y - uScan) * 16., 2.)) * uScanAmt; // Scanner: Band unter der Scan-Linie leuchtet
+      col = mix(col, cAmber * 1.5 + vec3(.15), sc * .85);
       vCol = col; vVis = step(uCut, p.y) * uOn;
       vec4 mv = viewMatrix * vec4(p, 1.);
       gl_Position = projectionMatrix * mv;
-      gl_PointSize = clamp(uStip / -mv.z, 1., uMaxSize) * (1. + g * .8);
+      gl_PointSize = clamp(uStip / -mv.z, 1., uMaxSize) * (1. + g * .8 + sc * .7);
     }`,
   fragmentShader: /* glsl */`
     varying vec3 vCol; varying float vVis;
@@ -572,7 +579,7 @@ function updatePeri(zoneKey) {
   // Wurzel des Abschnitts finden, deren Ende auf dem Bildschirm am weitesten außen liegt (PC rechts, Handy links)
   const X = uniforms.uXf.value[2];
   const rot = uniforms.uSpineRot.value;
-  const desk = isDesktop(), rows = !desk && stickOn(), side = rows ? -1 : 1;
+  const desk = isDesktop(), rows = !desk && linesOn(), side = rows ? -1 : 1;
   let tip = null, tipX = -1e9, start = 0;
   det.curves.forEach((c) => {
     if (c.kind !== 2 || ZONES[c.zone] !== zoneKey) return;
@@ -587,9 +594,10 @@ function updatePeri(zoneKey) {
   if (desk) end = silTarget(zoneKey);
   else if (!rows) end = new V3(1.1, cfg.m[1], tipNdc.z).unproject(camera); // Handy quer: wie vor Option A
   else {
-    // Handy (Option A): Zeilen links gestapelt, „Austritt“ auf Höhe der Wurzel; die Bahn endet rechts neben „Ziel“
-    mobPlace((-tipNdc.y * 0.5 + 0.5) * GLH);
-    const ex = ML.x + ML.colW + 10, ey = ML.ys[3] + ML.hs[3] / 2;
+    // Handy (Option A/Scanner): Zeilen links gestapelt, „Austritt“ auf Höhe der Wurzel; die Bahn endet rechts neben „Ziel“
+    const sc = scanOn();
+    if (sc) mobPlaceScan((-tipNdc.y * 0.5 + 0.5) * GLH); else mobPlace((-tipNdc.y * 0.5 + 0.5) * GLH);
+    const ex = ML.x + (sc ? ML.ws[3] : ML.colW) + 10, ey = ML.ys[3] + ML.hs[3] / 2;
     end = new V3((ex / VW) * 2 - 1, 1 - (ey / GLH) * 2, tipNdc.z).unproject(camera);
   }
   const endNdc = end.clone().project(camera);
@@ -635,8 +643,10 @@ function stopPose(i, fy = 0.3) { // fy: Höhe des Abschnitts im Bild (nur Handy;
   return { ...frame(c, new V3(0, 0.12, 1), d, desk ? 0.56 : st ? (VW > 600 ? 0.64 : 0.7) : 0.5, desk ? 0.5 : fy), rot };
 }
 const MOB_D = 2.3;
-// Handy-Ablauf mit stehender Karte und Zeilen (Klasse seg-rows, siehe segRows oben)
+// Handy-Ablauf mit stehender Karte und Zeilen (Klasse seg-rows) bzw. Scanner (seg-scan), siehe segRows oben
 const stickOn = () => document.documentElement.classList.contains('seg-rows');
+const scanOn = () => document.documentElement.classList.contains('seg-scan');
+const linesOn = () => stickOn() || scanOn();
 const OVERVIEW = { pos: new V3(0, 0, 13), target: new V3(0, 0, 0) };
 const lerpPose = (a, b, t) => ({ pos: a.pos.clone().lerp(b.pos, t), target: a.target.clone().lerp(b.target, t), rot: b.rot !== undefined && a.rot !== undefined ? THREE.MathUtils.lerp(a.rot, b.rot, t) : (b.rot ?? a.rot) });
 const cam = { pos: OVERVIEW.pos.clone(), target: OVERVIEW.target.clone() };
@@ -666,23 +676,50 @@ let periCurve = null;
 // Handy (Option A, 5.11.): dieselben Zeilen wie am PC, links gestapelt, mit Linie zur Wirbelsäule/Bahn.
 // „Typisch“ kommt vollständig aus der Karte (kein Inhaltsverlust), steht über der Karte; die Karte selbst zeigt nur
 // Titel + Schlagworte, ihr Volltext bleibt für Vorleseprogramme (dl sr-only). Ohne WebGL bleibt die alte Karte.
-const ML = { key: null, w: 0, x: 16, colW: 160, hs: [0, 0, 0, 0, 0], ws: [0, 0, 0, 0, 0], ys: [0, 0, 0, 0], typY: 0 };
+const ML = { key: null, w: 0, x: 16, colW: 160, hs: [0, 0, 0, 0, 0], ws: [0, 0, 0, 0, 0], ys: [0, 0, 0, 0], typY: 0, chipsY: 0, chH: 0, wantCol: 160, scan: false };
 function mobTexts(zoneKey) {
   const info = NINFO[zoneKey], card = cards[STOPS.findIndex((s) => s.zone === zoneKey)];
   const dd = card ? card.querySelectorAll('dd') : [];
   const typ = dd[1] ? 'Typisch: ' + dd[1].textContent.trim() : info.typ;
   return [info.exit, info.nerv, info.gef, info.ziel, info.pre ? info.pre + '\n' + typ : typ];
 }
+// Scanner: Therapien als Bernstein-Schlagworte unter „Typisch“ (statt Karte)
+const chipsEl = document.createElement('div'); chipsEl.className = 'scan-chips'; chipsEl.setAttribute('aria-hidden', 'true'); document.body.appendChild(chipsEl);
 // nur bei Abschnitts- oder Breitenwechsel: Texte setzen und einmal messen
 function mobMeasure(zoneKey) {
-  const pad = VW < 360 ? 12 : 16;
-  ML.key = zoneKey; ML.w = VW; ML.x = pad; ML.colW = Math.round(Math.min(VW * 0.5, 288) - pad);
-  mobTexts(zoneKey).forEach((t, i) => {
+  const pad = VW < 360 ? 12 : 16, sc = scanOn();
+  const colW = sc ? Math.round(clamp(ML.wantCol || 0, 140, 320)) : Math.round(Math.min(VW * 0.5, 288) - pad);
+  // neuer Abschnitt oder andere Breite: erst mit Schlagwort-Kästchen versuchen
+  if (ML.key !== zoneKey || !sc || ML.w !== VW || Math.abs((ML.colW || 0) - colW) > 8) ML.compact = false;
+  ML.key = zoneKey; ML.w = VW; ML.x = pad; ML.scan = sc; ML.colW = colW;
+  const card = cards[STOPS.findIndex((s) => s.zone === zoneKey)], chipTxt = card ? [...card.querySelectorAll('.chips li')].map((li) => li.textContent) : [];
+  const texts = mobTexts(zoneKey);
+  if (sc && ML.compact) texts[4] += '\nTherapie: ' + chipTxt.join(' · '); // wenig Platz: Schlagworte als Textzeile
+  texts.forEach((t, i) => {
     const el = ncalls[i]; el.textContent = t;
-    el.style.maxWidth = i < 4 ? ML.colW + 'px' : '';
-    el.style.width = i < 4 ? '' : Math.min(VW - 2 * pad, 576) + 'px';
+    el.style.maxWidth = i < 4 || sc ? ML.colW + 'px' : '';
+    el.style.width = i < 4 ? '' : sc ? ML.colW + 'px' : Math.min(VW - 2 * pad, 576) + 'px';
   });
   ncalls.forEach((el, i) => { ML.hs[i] = el.offsetHeight; ML.ws[i] = el.offsetWidth; });
+  ML.chH = 0;
+  if (sc) {
+    chipsEl.replaceChildren(...(ML.compact ? [] : chipTxt).map((t) => { const s = document.createElement('span'); s.textContent = t; return s; }));
+    chipsEl.style.width = ML.colW + 'px'; ML.chH = ML.compact ? 0 : chipsEl.offsetHeight;
+  }
+}
+// Scanner: vier Zeilen ab Höhe der Wurzel, darunter „Typisch“ und die Schlagworte; alles in der Spalte links der Wirbelsäule
+// Unten an der Wirbelsäule (LWS, Becken) kommt „Typisch“ + Schlagworte über die vier Zeilen, damit diese an der Wurzel bleiben.
+function mobPlaceScan(tipY) {
+  const hs = ML.hs, top = SCAN.top, bot = SCAN.bot, sum = hs[0] + hs[1] + hs[2] + hs[3], tail = 16 + hs[4] + (ML.chH ? 10 + ML.chH : 0);
+  if (!ML.compact && ML.key && sum + 12 + tail > bot - top) { ML.compact = true; ML.remeasure = true; } // passt nicht → kompakt neu messen
+  const g = clamp((bot - top - sum - tail) / 3, 4, 10), a = sum + 3 * g, want = tipY - hs[0] / 2;
+  const yBelow = Math.max(top, Math.min(want, bot - a - tail)); // Block darunter
+  const yAbove = Math.max(top + tail, Math.min(want, bot - a)); // Block darüber
+  const above = Math.abs(yAbove - want) < Math.abs(yBelow - want) - 4;
+  let y = above ? yAbove : yBelow;
+  for (let i = 0; i < 4; i++) { ML.ys[i] = y; y += hs[i] + g; }
+  if (above) { ML.typY = ML.ys[0] - tail; ML.chipsY = ML.typY + hs[4] + 10; }
+  else { ML.typY = y - g + 16; ML.chipsY = ML.typY + hs[4] + 10; }
 }
 addEventListener('resize', () => {
   ML.key = null;
@@ -703,7 +740,9 @@ let mlVisT = -1e9;
 function updateCalloutsMob(zoneKey, on, prog) {
   const now = performance.now();
   // Abschnitt gewechselt: alte Zeilen erst ausblenden lassen, dann Texte tauschen (sonst springt Text in der Blende)
-  if (zoneKey && ML.key !== zoneKey && now - mlVisT > 420) mobMeasure(zoneKey);
+  const sc = scanOn(), stale = ML.key !== zoneKey || ML.scan !== sc || (sc && Math.abs(ML.colW - clamp(ML.wantCol || 0, 140, 320)) > 8);
+  if (zoneKey && stale && now - mlVisT > 420) mobMeasure(zoneKey);
+  else if (zoneKey && ML.remeasure && ML.key === zoneKey) { ML.remeasure = false; mobMeasure(zoneKey); } // kompakt (noch unsichtbar)
   const show = !!(on && zoneKey && periCurve && ML.key === zoneKey);
   ncalls.forEach((el, i) => {
     const vis = show && prog > MTH[i];
@@ -711,8 +750,10 @@ function updateCalloutsMob(zoneKey, on, prog) {
     el.style.opacity = vis ? 1 : 0;
     if (i < 4) nl[i].style.opacity = vis ? 1 : 0;
   });
+  chipsEl.style.opacity = sc && show && prog > MTH[4] + 0.06 ? 1 : 0;
   if (!show) return;
   ncalls.forEach((el, i) => { el.style.transform = `translate(${ML.x}px, ${(i < 4 ? ML.ys[i] : ML.typY).toFixed(1)}px)`; });
+  if (sc) chipsEl.style.transform = `translate(${ML.x}px, ${ML.chipsY.toFixed(1)}px)`;
   [0, 0.33, 0.66, 1].forEach((t, i) => {
     const [ax, ay] = toPx(periCurve.getPointAt(t)), L = nl[i];
     L.setAttribute('x1', ML.x + ML.ws[i]); L.setAttribute('y1', ML.ys[i] + ML.hs[i] / 2); L.setAttribute('x2', ax); L.setAttribute('y2', ay);
@@ -920,6 +961,12 @@ function mobileCard(gate) {
 }
 dots.forEach((d) => d.addEventListener('click', () => {
   const i = +d.dataset.seg;
+  if (scanOn()) { // Scanner: zum Abschnitt springen; steht die Bühne noch nicht, dorthin scrollen
+    SCAN.idx = i; SCAN.demo = 2; SCAN.touched = true;
+    const r = axis.getBoundingClientRect();
+    if (!(r.top <= 2 && r.bottom >= VH - 2)) scrollToY(r.top + scrollY + Math.max(0, r.height - VH) * 0.4);
+    return;
+  }
   if (stickOn()) { // so weit, dass die Karte steht und alle Zeilen da sind
     if (!segHs) measureCards();
     scrollToY(natTop(i) + scrollY - (segS[i] - MINH * (MTH[4] + 0.05)));
@@ -929,6 +976,135 @@ dots.forEach((d) => d.addEventListener('click', () => {
 }));
 
 let spineRot = -0.9;
+
+// ---------- Handy: Scanner (Kapitel 03 als Bühne, Kai 6.11.) ----------
+// Die ganze Wirbelsäule steht rechts im Bild, eine Bernstein-Scan-Linie liegt quer darüber. Rechts (Daumenbereich)
+// zieht man sie hoch und runter: der Wirbel unter der Linie leuchtet, sein Name läuft im Griff mit; an den fünf
+// Abschnitten rastet sie ein, dann fließt die Bahn und die Zeilen stehen links. Beim ersten Ankommen fährt der Scan
+// einmal von oben nach unten und bleibt bei C1 stehen. Die Seite scrollt normal weiter (nur die Leiste fängt Wischen).
+const SCAN = { idx: 0, y: -1, finger: 0, drag: false, demo: 0, demoT: 0, touched: false, seg: -1, segT: 0, top: 120, bot: 500, left: 0, right: 0, noteH: 0, cleared: false, tagTxt: '', tagW: 0 };
+const axisHead = $('#achse .axis-head');
+const scanUI = document.createElement('div'); scanUI.className = 'scan'; scanUI.setAttribute('aria-hidden', 'true');
+scanUI.innerHTML = '<div class="scan-track"></div>' + STOPS.map(() => '<i class="scan-tick"></i>').join('') + '<div class="scan-line"></div><div class="scan-thumb"></div><div class="scan-hint">↕ Ziehen</div>';
+document.body.appendChild(scanUI);
+const scanRail = document.createElement('div'); scanRail.className = 'scan-rail'; scanRail.setAttribute('aria-hidden', 'true'); document.body.appendChild(scanRail);
+const [sTrack, ...sRest] = scanUI.children, sTicks = sRest.slice(0, STOPS.length), [sLine, sThumb, sHint] = sRest.slice(STOPS.length);
+const segNames = cards.map((c) => ($('.seg-no', c) || c).textContent.trim());
+const levName = (id) => (id === 'S' ? 'Kreuzbein' : id === 'Co' ? 'Steißbein' : id);
+let levY = [], stopY = [];
+const nearestStop = (y) => { let b = 0; stopY.forEach((s, i) => { if (Math.abs(s - y) < Math.abs(stopY[b] - y)) b = i; }); return b; };
+scanRail.addEventListener('pointerdown', (e) => {
+  SCAN.drag = true; SCAN.touched = true; SCAN.demo = 2; SCAN.finger = e.clientY;
+  try { scanRail.setPointerCapture(e.pointerId); } catch (err) { /* ohne Capture geht es auch */ }
+  e.preventDefault();
+});
+scanRail.addEventListener('pointermove', (e) => { if (SCAN.drag) SCAN.finger = e.clientY; });
+const scanUp = () => { if (!SCAN.drag) return; SCAN.drag = false; if (stopY.length) SCAN.idx = nearestStop(SCAN.y); };
+scanRail.addEventListener('pointerup', scanUp); scanRail.addEventListener('pointercancel', scanUp);
+addEventListener('resize', () => (SCAN.noteH = 0));
+const _sv = new V3(), _Y = new V3(0, 1, 0);
+function screenToWorldY(py) { // Bildschirmhöhe → Welt-y auf der Ebene z = 0 (dort steht die Wirbelsäule)
+  _sv.set(0, 1 - (py / GLH) * 2, 0.5).unproject(camera);
+  const o = camera.position, dz = _sv.z - o.z;
+  return Math.abs(dz) < 1e-6 ? o.y : o.y + (_sv.y - o.y) * (-o.z / dz);
+}
+const easeIO = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+function updateScan(dt, r, inSec) {
+  const X = uniforms.uXf.value[2], near = r.top < VH * 1.6 && r.bottom > -VH * 0.6;
+  if (!SCAN.cleared) { cards.forEach((c) => { c.style.opacity = ''; c.style.transform = ''; }); if (axisNote) axisNote.style.opacity = ''; SCAN.cleared = true; }
+  if (near) {
+    if (!dotsStuck) measureDots();
+    if (!SCAN.noteH && axisNote) SCAN.noteH = axisNote.offsetHeight;
+    SCAN.top = (dotsStuck || 110) + 16; SCAN.bot = MINH - 16 - SCAN.noteH - 18;
+    // ganze Wirbelsäule zwischen Punkte-Leiste und Hinweis, rechter Rand an der Scan-Leiste
+    const tf = SCAN.top / GLH, bf = SCAN.bot / GLH, outK = smooth(VH * 0.95, VH * 0.45, r.bottom);
+    const s = ((bf - tf) * 8.197 * 0.95) / 8.7, ty = (0.5 - (tf + bf) / 2) * 8.197 + outK * 1.1;
+    const tx = det && SCAN.right ? X.x + (VW - 58 - SCAN.right) * (8.197 / GLH) : (0.22 * VW) * (8.197 / GLH);
+    const k = reduced ? 1 : 1 - Math.exp(-dt * 6);
+    X.set(X.x + (tx - X.x) * k, X.y + (ty - X.y) * k, 0, X.w + (s - X.w) * k);
+  }
+  // Aufbau beim Hereinkommen (Scan von oben), Auflösen nach oben beim Weiterscrollen
+  const solid = (inSec ? smooth(VH * 1.0, VH * 0.25, r.top) * (1 - smooth(VH * 0.95, VH * 0.45, r.bottom)) : 0) * spineK;
+  const topY = X.y + 4.35 * X.w, botY = X.y - 4.35 * X.w;
+  uniforms.uCut.value = solid <= 0 ? 100 : THREE.MathUtils.lerp(topY + 0.05, botY - 0.05, solid);
+  spineGroup.visible = solid > 0; sU.uOn.value = solid > 0 ? 1 : 0;
+  if (bones) bones.pts.material.uniforms.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * GLH * 0.5 / tanH * X.w * (bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);
+  // ruhige Schrägansicht (Wurzeln zeigen nach links), atmet leicht hin und her
+  const want = PROFILE + 0.5 + (paused || reduced ? 0 : Math.sin(uniforms.uTime.value * 0.35) * 0.1);
+  spineRot += (want + Math.PI * 2 * Math.round((spineRot - want) / (Math.PI * 2)) - spineRot) * (reduced ? 1 : 1 - Math.exp(-dt * 2.2));
+  uniforms.uSpineRot.value = spineRot;
+  axisWant = null;
+  sil.visible = false; silU.uOn.value = 0; periLabel.style.opacity = 0;
+
+  const eng = inSec && solid > 0.97 && r.top < VH * 0.12 && r.bottom > VH * 0.9; // Bühne steht
+  // Bildschirmlage der Wirbel und der fünf Abschnitte
+  if (det && near) {
+    const rects = spineRects(); // (nutzt dieselbe Projektion wie die PC-Schilder)
+    if (rects.length) { SCAN.left = Math.min(...rects.map((q) => q[0])); SCAN.right = Math.max(...rects.map((q) => q[2])); }
+    const ctr = (lv) => new V3(lv.center.x * SC, (lv.center.y - CY) * SC, lv.center.z * SC).applyAxisAngle(_Y, spineRot).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z));
+    levY = det.levels.map((lv) => toPx(ctr(lv))[1]);
+    stopY = STOPS.map((st) => st.ids.reduce((a, id) => a + levY[det.levels.findIndex((l) => l.id === id)], 0) / st.ids.length);
+    // Spalte bis an die Wirbelkörper (die Rechtecke enthalten die Querfortsätze; die dunklen Pillen dürfen sie streifen)
+    ML.wantCol = SCAN.left + (SCAN.right - SCAN.left) * 0.12 - (VW < 360 ? 12 : 16);
+  }
+  const ready = eng && stopY.length;
+  if (ready && SCAN.demo === 0) { if (reduced || paused) { SCAN.demo = 2; SCAN.idx = 0; } else { SCAN.demo = 1; SCAN.demoT = 0; } }
+  let y = SCAN.y;
+  if (stopY.length) {
+    const yMin = levY[0] - 6, yMax = levY[levY.length - 1] + 6;
+    if (SCAN.demo === 1 && ready) {
+      SCAN.demoT += dt; const t = SCAN.demoT;
+      if (t < 2.6) y = yMin + (yMax - yMin) * easeIO(t / 2.6);
+      else if (t < 3.6) y = yMax + (stopY[0] - yMax) * easeIO((t - 2.6) / 1.0);
+      else { SCAN.demo = 2; SCAN.idx = 0; y = stopY[0]; }
+    } else if (SCAN.drag) {
+      let f = clamp(SCAN.finger, yMin, yMax); const i = nearestStop(f), d = f - stopY[i];
+      if (Math.abs(d) < 24) f = stopY[i] + d * 0.3; // einrasten
+      y = f;
+    } else {
+      const w = stopY[SCAN.idx];
+      y = y < 0 || !eng ? w : y + (w - y) * (reduced ? 1 : 1 - Math.exp(-dt * 9));
+    }
+    SCAN.y = y;
+  }
+  const iN = stopY.length ? nearestStop(y) : 0;
+  const seg = ready && SCAN.demo === 2 && Math.abs(y - stopY[iN]) < 8 ? iN : -1;
+  if (seg !== SCAN.seg) { SCAN.seg = seg; SCAN.segT = performance.now(); }
+  if (seg >= 0) setActive(seg);
+  sU.uScan.value = y >= 0 ? screenToWorldY(y) : 100;
+  sU.uScanAmt.value += ((ready ? 1 : 0) - sU.uScanAmt.value) * Math.min(1, dt * 6);
+
+  // Abschnitt: Hervorhebung, Bahn, Zeilen
+  const zone = seg >= 0 ? ZONES.indexOf(STOPS[seg].zone) : -10, zKey = seg >= 0 ? STOPS[seg].zone : null;
+  if (zone !== sU.uZone.value) { sU.uZone.value = zone; sU.uZoneAmt.value = 0; sU.uPeri.value = 0; }
+  sU.uZoneAmt.value += ((zone >= 0 ? 1 : 0) - sU.uZoneAmt.value) * 0.07;
+  sU.uPeri.value += ((zKey && ML.key === zKey ? 1 : 0) - sU.uPeri.value) * 0.05;
+  if (zKey && det) updatePeri(zKey);
+  updateCalloutsMob(zKey, ready && seg >= 0 && sU.uPeri.value > 0.5, (performance.now() - SCAN.segT) / 1000);
+
+  // Überschrift weicht, sobald gescannt wird; Hinweis geht beim Weiterscrollen mit (nicht über dem Haus stehen lassen)
+  if (axisHead) axisHead.style.opacity = ready && SCAN.demo === 2 ? 0 : '';
+  if (axisNote) axisNote.style.opacity = (1 - smooth(VH * 0.98, VH * 0.62, r.bottom)).toFixed(3);
+  scanUI.classList.toggle('on', !!ready);
+  scanRail.classList.toggle('on', !!ready && SCAN.demo === 2);
+  if (!ready || y < 0) return;
+  const yMin = levY[0] - 6, yMax = levY[levY.length - 1] + 6, tx = VW - 30;
+  sTrack.style.transform = `translate(${tx}px, ${yMin.toFixed(1)}px)`; sTrack.style.height = (yMax - yMin).toFixed(1) + 'px';
+  sTicks.forEach((el, i) => { el.style.transform = `translate(${tx - 5}px, ${stopY[i].toFixed(1)}px)`; el.classList.toggle('is-on', i === seg); });
+  const txt = seg >= 0 ? segNames[seg] : levName(det.levels[levY.reduce((b, v, i) => (Math.abs(v - y) < Math.abs(levY[b] - y) ? i : b), 0)].id);
+  if (txt !== SCAN.tagTxt) { sThumb.textContent = txt; SCAN.tagTxt = txt; SCAN.tagW = sThumb.offsetWidth; }
+  const thX = Math.min(tx - SCAN.tagW / 2, VW - 8 - SCAN.tagW);
+  sThumb.style.transform = `translate(${thX.toFixed(1)}px, ${(y - 14).toFixed(1)}px)`;
+  sThumb.classList.toggle('is-on', seg >= 0);
+  const lx = SCAN.left - 10;
+  sLine.style.transform = `translate(${lx.toFixed(1)}px, ${y.toFixed(1)}px)`; sLine.style.width = Math.max(0, thX - lx).toFixed(1) + 'px';
+  sHint.style.opacity = !SCAN.touched && SCAN.demo === 2 ? 1 : 0;
+  if (!SCAN.hintW) SCAN.hintW = sHint.offsetWidth;
+  sHint.style.transform = `translate(${(VW - 8 - SCAN.hintW).toFixed(1)}px, ${(y + 24).toFixed(1)}px)`; // unter dem Griff
+  const rl = (SCAN.left + SCAN.right) / 2;
+  scanRail.style.left = rl.toFixed(0) + 'px'; scanRail.style.top = (yMin - 28).toFixed(0) + 'px'; scanRail.style.height = (yMax - yMin + 56).toFixed(0) + 'px';
+}
+
 function updateAxis(dt) {
   const ph = PH(), desk = isDesktop();
   const r = axis.getBoundingClientRect();
@@ -936,6 +1112,9 @@ function updateAxis(dt) {
   const inSec = r.top < VH && r.bottom > 0 && morphNow > 1.6 && morphNow < 2.4;
   // noch nicht fertig gerechnet: grobe Partikel bleiben, danach fahren Scan und Kamera sanft nach
   spineK = bones ? ramp(spineK, dt) : 0;
+  if (!desk && scanOn()) { updateScan(dt, r, inSec); return; } // Handy: Scanner (6.11.)
+  scanUI.classList.remove('on'); scanRail.classList.remove('on'); chipsEl.style.opacity = 0; sU.uScanAmt.value = 0;
+  if (SCAN.cleared) { SCAN.cleared = false; if (axisHead) axisHead.style.opacity = ''; }
   const X = uniforms.uXf.value[2];
   let mob = null;
   if (!desk && r.top < VH * 2 && r.bottom > -VH) {
