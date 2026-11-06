@@ -483,7 +483,7 @@ canvas.gl-wait{opacity:0}
   .hero{padding-top:5.75rem;justify-content:flex-start}
   .hero-inner{display:flex;flex-direction:column}
   .hero-inner>.kicker{order:0}.hero-inner>.kinetic{order:1;margin-bottom:.5rem}
-  .hero-stage{display:block;order:2;height:max(15rem,calc(100svh - 19rem));touch-action:none;-webkit-tap-highlight-color:transparent}
+  .hero-stage{display:block;order:2;height:max(15rem,calc(100svh - 19rem));touch-action:pan-y;-webkit-tap-highlight-color:transparent}
   .hero-inner>.meter{order:3;margin-top:.25rem}
   .hero-more{display:inline-flex;order:4;align-self:center;align-items:center;gap:.375rem;min-height:2.75rem;padding:0 1rem;font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);text-decoration:none}
   .hero-more svg{width:1rem;height:1rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -530,8 +530,14 @@ canvas.gl-wait{opacity:0}
 .scan-line{height:1px;background:linear-gradient(90deg,rgba(224,154,53,0),var(--amber) 22%);box-shadow:0 0 .5rem 1px rgba(224,154,53,.5)}
 .scan-thumb{min-width:2.75rem;height:1.75rem;padding:0 .5625rem;border-radius:.875rem;border:1px solid rgba(224,154,53,.7);background:rgba(10,22,27,.92);display:flex;align-items:center;justify-content:center;white-space:nowrap;font:600 .75rem/1 var(--sans);letter-spacing:.05em;color:var(--txt);box-shadow:0 0 .875rem rgba(224,154,53,.3);transition:border-color .3s,color .3s,box-shadow .3s}
 .scan-thumb.is-on{border-color:var(--amber);color:var(--amber);box-shadow:0 0 1.25rem rgba(224,154,53,.55)}
-.scan-hint{padding:.5rem .875rem;border-radius:1.25rem;background:rgba(10,22,27,.88);border:1px solid rgba(224,154,53,.45);font:600 .75rem/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--amber);white-space:nowrap;transition:opacity .4s}
-.scan-rail{position:fixed;right:0;z-index:4;display:none;touch-action:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+.scan-hint{display:flex;align-items:center;gap:.5rem;padding:.375rem .5rem .375rem .875rem;border-radius:1.25rem;background:rgba(10,22,27,.88);border:1px solid rgba(224,154,53,.45);font:600 .75rem/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--amber);white-space:nowrap;opacity:0;transition:opacity .4s}
+.scan-hint.on{opacity:1}
+/* Wischhilfe senkrecht: gleiche Spur wie die übrigen Hinweise, nur gedreht */
+.scan-hint .th-track{width:1.5rem;height:2.75rem}
+.scan-hint .th-track::before{left:50%;right:auto;top:0;bottom:0;width:1px;height:auto;background:linear-gradient(rgba(224,154,53,0),rgba(224,154,53,.65),rgba(224,154,53,0))}
+.scan-hint .th-dot{width:1rem;height:1rem;margin:-.5rem 0 0 -.5rem;animation-name:thSwayV}
+@keyframes thSwayV{0%,100%{transform:translateY(-.875rem)}50%{transform:translateY(.875rem)}}
+.scan-rail{position:fixed;right:0;z-index:2;display:none;touch-action:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;border-radius:.875rem 0 0 .875rem;border:1px solid rgba(224,154,53,.22);border-right:0;background:linear-gradient(90deg,rgba(224,154,53,.02),rgba(224,154,53,.08))} /* sichtbarer Ziehstreifen */
 .scan-rail.on{display:block}
 /* Karte unten in der Nahansicht (wie Option A): Abschnitt + Titel, darunter die Therapien */
 .scan-chips{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s var(--ease);padding:.75rem .875rem .875rem;border:1px solid rgba(224,154,53,.55);border-radius:.375rem;background:rgba(14,30,37,.95)}
@@ -543,7 +549,7 @@ canvas.gl-wait{opacity:0}
 .scan-chips .sc-c span{font:600 .75rem/1 var(--sans);padding:.375rem .5rem;border-radius:3px;border:1px solid rgba(224,154,53,.35);color:var(--txt);background:rgba(224,154,53,.07)}
 @media (max-width:360px){.scan-chips{padding:.5625rem .75rem .6875rem}.scan-chips .sc-no{font-size:1.375rem}.scan-chips .sc-h{font-size:1rem}.scan-chips .sc-c span{padding:.3125rem .4375rem}}
 html.no-gl .scan,html.no-gl .scan-rail,html.no-gl .scan-chips{display:none}
-@media (prefers-reduced-motion:reduce){.scan-hint{transition:none}}
+@media (prefers-reduced-motion:reduce){.scan-hint{transition:none}.scan-hint .th-dot{animation:none;transform:none}}
 
 /* Option A, schmale Handys (320–360 px): Karte und Zeilen kompakter, damit alle Zeilen zwischen Leiste und Karte passen */
 @media (max-width:360px){
@@ -586,7 +592,10 @@ html.paused .btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}
 .touch-hint{position:fixed;z-index:6;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:.5rem;pointer-events:none;opacity:0;transition:opacity .6s;font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--amber);white-space:nowrap;text-shadow:0 0 .75rem rgba(10,22,27,.95),0 0 .25rem rgba(10,22,27,.95)}
 .touch-hint.on{opacity:1}
 .touch-hint.in-stage{position:absolute;left:50%;top:auto;bottom:16%;transform:translateX(-50%)}
-.touch-hint.th-pill>span:last-child{padding:.5rem .875rem;border-radius:1.25rem;background:rgba(10,22,27,.86);border:1px solid rgba(224,154,53,.4);text-shadow:none} /* Handy: Hinweis über dem Haus lesbar */
+.touch-hint.th-pill{flex-direction:row;gap:.375rem;padding:.375rem .875rem .375rem .375rem;border-radius:1.25rem;background:rgba(10,22,27,.88);border:1px solid rgba(224,154,53,.45);letter-spacing:.12em;text-shadow:none} /* Touch: ganze Wischhilfe als dunkle Pille (wie Kap. 03), lesbar über den Partikeln */
+.touch-hint.th-pill .th-track{width:4rem}
+.touch-hint.th-pill .th-dot{width:1rem;height:1rem;margin:-.5rem 0 0 -.5rem;animation-name:thSwayS}
+@keyframes thSwayS{0%,100%{transform:translateX(-1.25rem)}50%{transform:translateX(1.25rem)}}
 .th-track{position:relative;display:block;width:4.75rem;height:1.5rem}
 .th-track::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:linear-gradient(90deg,rgba(224,154,53,0),rgba(224,154,53,.65),rgba(224,154,53,0))}
 .th-dot{position:absolute;top:50%;left:50%;width:1.25rem;height:1.25rem;margin:-.625rem 0 0 -.625rem;border-radius:50%;border:1.5px solid var(--amber);background:rgba(224,154,53,.2);box-shadow:0 0 1rem rgba(224,154,53,.5);animation:thSway 1.9s ease-in-out infinite}

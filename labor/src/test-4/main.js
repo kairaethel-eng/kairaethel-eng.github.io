@@ -983,23 +983,26 @@ let spineRot = -0.9;
 // zieht man sie hoch und runter: der Wirbel unter der Linie leuchtet, sein Name läuft im Griff mit; an den fünf
 // Abschnitten rastet sie ein, dann fließt die Bahn und die Zeilen stehen links. Beim ersten Ankommen fährt der Scan
 // einmal von oben nach unten und bleibt bei C1 stehen. Die Seite scrollt normal weiter (nur die Leiste fängt Wischen).
-const SCAN = { idx: 0, y: -1, finger: 0, drag: false, demo: 0, demoT: 0, touched: false, seg: -1, segT: 0, top: 120, bot: 500, left: 0, right: 0, cleared: false, tagTxt: '', tagW: 0 };
+const SCAN = { idx: 0, y: -1, finger: 0, drag: false, demo: 0, demoT: 0, touched: false, seg: -1, segT: 0, top: 120, bot: 500, left: 0, right: 0, cleared: false, tagTxt: '', tagW: 0, grab: 0 };
 const axisHead = $('#achse .axis-head');
 const scanUI = document.createElement('div'); scanUI.className = 'scan'; scanUI.setAttribute('aria-hidden', 'true');
-scanUI.innerHTML = '<div class="scan-track"></div>' + STOPS.map(() => '<i class="scan-tick"></i>').join('') + '<div class="scan-line"></div><div class="scan-thumb"></div><div class="scan-hint">↕ Ziehen</div>';
+scanUI.innerHTML = '<div class="scan-track"></div>' + STOPS.map(() => '<i class="scan-tick"></i>').join('') + '<div class="scan-line"></div><div class="scan-thumb"></div><div class="scan-hint"><span>Hier ziehen</span><span class="th-track"><i class="th-dot"></i></span></div>';
 document.body.appendChild(scanUI);
 const scanRail = document.createElement('div'); scanRail.className = 'scan-rail'; scanRail.setAttribute('aria-hidden', 'true'); document.body.appendChild(scanRail);
 const [sTrack, ...sRest] = scanUI.children, sTicks = sRest.slice(0, STOPS.length), [sLine, sThumb, sHint] = sRest.slice(STOPS.length);
 const segNames = cards.map((c) => ($('.seg-no', c) || c).textContent.trim());
 const levName = (id) => (id === 'S' ? 'Kreuzbein' : id === 'Co' ? 'Steißbein' : id);
 let levY = [], stopY = [];
+const RAIL_W = 68; // Breite des Ziehstreifens rechts (px)
 const nearestStop = (y) => { let b = 0; stopY.forEach((s, i) => { if (Math.abs(s - y) < Math.abs(stopY[b] - y)) b = i; }); return b; };
+// Ziehen relativ (Wischhilfe 6.11.): die Linie bewegt sich um so viel wie der Finger, egal wo er aufsetzt – kein Sprung,
+// auch nicht in der Nahansicht, in der der Griff woanders steht als in der Übersicht
 scanRail.addEventListener('pointerdown', (e) => {
-  SCAN.drag = true; SCAN.touched = true; SCAN.demo = 2; SCAN.finger = e.clientY;
+  SCAN.drag = true; SCAN.touched = true; SCAN.demo = 2; SCAN.grab = (SCAN.y >= 0 ? SCAN.y : e.clientY) - e.clientY; SCAN.finger = e.clientY + SCAN.grab;
   try { scanRail.setPointerCapture(e.pointerId); } catch (err) { /* ohne Capture geht es auch */ }
   e.preventDefault();
 });
-scanRail.addEventListener('pointermove', (e) => { if (SCAN.drag) SCAN.finger = e.clientY; });
+scanRail.addEventListener('pointermove', (e) => { if (SCAN.drag) SCAN.finger = e.clientY + SCAN.grab; });
 const scanUp = () => { if (!SCAN.drag) return; SCAN.drag = false; if (stopY.length) SCAN.idx = nearestStop(SCAN.y); };
 scanRail.addEventListener('pointerup', scanUp); scanRail.addEventListener('pointercancel', scanUp);
 const _sv = new V3(), _Y = new V3(0, 1, 0);
@@ -1135,11 +1138,12 @@ function updateScan(dt, r, inSec) {
   const lx = SCAN.left - 10;
   sLine.style.transform = `translate(${lx.toFixed(1)}px, ${yd.toFixed(1)}px)`; sLine.style.width = Math.max(0, thX - lx).toFixed(1) + 'px';
   sLine.style.opacity = (1 - zoomE).toFixed(3); // Linie gehört zur Übersicht
-  sHint.style.opacity = !SCAN.touched && SCAN.demo === 2 ? 1 : 0;
-  if (!SCAN.hintW) SCAN.hintW = sHint.offsetWidth;
-  sHint.style.transform = `translate(${(VW - 8 - SCAN.hintW).toFixed(1)}px, ${(yd + 24).toFixed(1)}px)`; // unter dem Griff
-  const rl = (SCAN.left + SCAN.right) / 2;
-  scanRail.style.left = rl.toFixed(0) + 'px'; scanRail.style.top = (yMin - 28).toFixed(0) + 'px'; scanRail.style.height = (yMax - yMin + 56).toFixed(0) + 'px';
+  // Wischhilfe: Finger zieht auf und ab, links neben dem Ziehstreifen über dem Griff – bis zur ersten Berührung
+  sHint.classList.toggle('on', !SCAN.touched && SCAN.demo === 2);
+  if (!SCAN.hintW) { SCAN.hintW = sHint.offsetWidth; SCAN.hintH = sHint.offsetHeight; }
+  sHint.style.transform = `translate(${(VW - RAIL_W - 8 - SCAN.hintW).toFixed(1)}px, ${(yd - 18 - SCAN.hintH).toFixed(1)}px)`;
+  // Ziehstreifen = sichtbare Fläche am rechten Rand (nur dort wird gezogen, links scrollt die Seite)
+  scanRail.style.left = (VW - RAIL_W).toFixed(0) + 'px'; scanRail.style.top = (yMin - 28).toFixed(0) + 'px'; scanRail.style.height = (yMax - yMin + 56).toFixed(0) + 'px';
 }
 
 function updateAxis(dt) {
@@ -1917,10 +1921,14 @@ const mkHint = (txt, parent) => {
   h.innerHTML = `<span class="th-track"><i class="th-dot"></i></span><span>${txt}</span>`;
   (parent || document.body).appendChild(h); return h;
 };
-const hintBody = mkHint(finePointer ? 'Maus über den Körper' : 'Streichen');
+// Wischhilfe (Kai 6.11.): ein Baustein überall – Finger mit Spur zeigt die echte Richtung an der echten Stelle,
+// bis zur ersten richtigen Benutzung; auf Touch-Geräten als dunkle Pille (lesbar über den Partikeln).
+// Senkrecht wischen scrollt überall (auch über der Figur); bedient wird seitlich, durch Antippen oder am Ziehstreifen (Kap. 03).
+const hintBody = mkHint(finePointer ? 'Maus über den Körper' : 'Seitlich streichen');
 const hintHouse = mkHint(isDesktop() ? 'Ziehen zum Drehen' : 'Wischen oder Raum antippen');
-if (!isDesktop()) hintHouse.classList.add('th-pill'); // Handy: dunkle Pille, damit der Hinweis über dem Haus lesbar bleibt
 const hintManu = manuSec ? mkHint(finePointer ? 'Ziehen zum Drehen' : 'Seitlich wischen', $('.manu-stage')) : null;
+if (!finePointer) [hintBody, hintHouse, hintManu].forEach((h) => h && h.classList.add('th-pill'));
+else if (!isDesktop()) hintHouse.classList.add('th-pill');
 let houseUsed = false, manuUsed = false, xrayT = 0, manuT = 0, rotSeen = dragRot;
 // Hinweis gilt erst als erledigt, wenn wirklich seitlich gewischt/gezogen wurde (nicht schon beim Antippen oder Scrollen)
 { let mx = null, my = 0; const gm = $('#glManu');
@@ -1934,7 +1942,7 @@ function updateHints(dt) {
   // Körper: bis zur ersten Berührung
   const showBody = !touched && morphNow < 0.25 && now - t0Hints > 3500 && scrollY < VH * 0.3;
   hintBody.classList.toggle('on', showBody);
-  if (showBody) hintBody.style.transform = desk ? `translate(${VW * 0.6}px, ${VH * 0.6}px) translate(-50%,-50%)` : `translate(${VW * 0.84}px, ${heroFit ? heroFit.top + (heroFit.bot - heroFit.top) * 0.3 - scrollY : VH * 0.24}px) translate(-50%,-50%)`; // neben der Figur, nicht auf den Partikeln
+  if (showBody) hintBody.style.transform = desk ? `translate(${VW * 0.6}px, ${VH * 0.6}px) translate(-50%,-50%)` : `translate(${VW - 12}px, ${heroFit ? heroFit.top + (heroFit.bot - heroFit.top) * 0.3 - scrollY : VH * 0.24}px) translate(-100%,-50%)`; // rechts neben der Figur (Pille bleibt im Bild)
   // Haus: PC im Röntgenblick (ziehen), Handy vor dem Betreten (wischen/antippen)
   if (dragRot !== rotSeen || tourIdx >= 0) houseUsed = true;
   // Handy: sobald die Praxis-Ansicht steht (nicht erst, wenn der Rundgang halb im Bild ist), nach ~1 s
