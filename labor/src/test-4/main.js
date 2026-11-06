@@ -683,7 +683,7 @@ function mobTexts(zoneKey) {
   const typ = dd[1] ? 'Typisch: ' + dd[1].textContent.trim() : info.typ;
   return [info.exit, info.nerv, info.gef, info.ziel, info.pre ? info.pre + '\n' + typ : typ];
 }
-// Scanner (Nahansicht 6.11.): unten eine Karte mit Abschnitt, Titel und Therapien (wie Option A), „Typisch“ darüber
+// Scanner (Kai 6.11. spät): Karte oben als Überschrift – Abschnitt + Titel, „Typisch“, Therapien; die vier Zeilen links daneben
 const chipsEl = document.createElement('div'); chipsEl.className = 'scan-chips'; chipsEl.setAttribute('aria-hidden', 'true'); document.body.appendChild(chipsEl);
 // nur bei Abschnitts- oder Breitenwechsel: Texte setzen und einmal messen
 function mobMeasure(zoneKey) {
@@ -694,7 +694,7 @@ function mobMeasure(zoneKey) {
   ML.key = zoneKey; ML.w = VW; ML.x = pad; ML.scan = sc; ML.colW = colW;
   const card = cards[STOPS.findIndex((s) => s.zone === zoneKey)], chipTxt = card ? [...card.querySelectorAll('.chips li')].map((li) => li.textContent) : [];
   const texts = mobTexts(zoneKey);
-  if (sc && ML.compact) texts[4] += '\nTherapie: ' + chipTxt.join(' · '); // wenig Platz: Schlagworte als Textzeile
+  if (sc && ML.compact) texts[4] += '\nTherapie: ' + chipTxt.join(' · '); // wenig Platz: Schlagworte als Textzeile (Stufe 1)
   texts.forEach((t, i) => {
     const el = ncalls[i]; el.textContent = t;
     el.style.maxWidth = i < 4 ? ML.colW + 'px' : '';
@@ -707,19 +707,22 @@ function mobMeasure(zoneKey) {
     head.className = 'sc-t'; no.className = 'sc-no'; no.textContent = card ? ($('.seg-no', card) || card).textContent.trim() : '';
     h.className = 'sc-h'; h.textContent = card && $('h3', card) ? $('h3', card).textContent.trim() : ''; head.append(no, h);
     list.className = 'sc-c'; list.replaceChildren(...(ML.compact ? [] : chipTxt).map((t) => { const s = document.createElement('span'); s.textContent = t; return s; }));
-    chipsEl.replaceChildren(head, list);
-    chipsEl.style.width = Math.min(VW - 2 * pad, 576) + 'px'; ML.chH = ML.compact > 1 ? 0 : chipsEl.offsetHeight; // Stufe 2: ohne Karte (Name steht im Griff)
+    const typ = document.createElement('p'); typ.className = 'sc-typ'; typ.textContent = texts[4];
+    chipsEl.replaceChildren(head, typ, list);
+    chipsEl.classList.toggle('sc-small', ML.compact > 1); // Stufe 2: kleinere Schrift
+    chipsEl.style.width = Math.min(VW - pad - RAIL_W - 8, 576) + 'px'; ML.chH = chipsEl.offsetHeight; // Ziehstreifen bleibt frei
   }
 }
-// Scanner mit Nahansicht (Kai 6.11.): Aufbau wie Option A von unten – Karte (Abschnitt, Titel, Therapien) über dem
-// ärztlichen Hinweis, „Typisch“ darüber, darüber die vier Zeilen; die Kamera legt die Wurzel des Abschnitts auf „Austritt“.
-// Reicht der Platz nicht (z. B. iPhone SE), Therapien als Textzeile in „Typisch“, Karte nur mit Titel.
+// Scanner (Kai 6.11. spät): Karte oben unter der Kopfleiste, darunter links die vier Zeilen; die Kamera legt die Wurzel
+// des Abschnitts auf „Austritt“, die Wirbelsäule darunter bleibt frei. Reicht der Platz nicht: Stufe 1 Therapien als
+// Textzeile, Stufe 2 kleinere Schrift in der Karte.
 function mobPlaceScan() {
-  const hs = ML.hs, top = SCAN.top, bot = SCAN.bot, sum = hs[0] + hs[1] + hs[2] + hs[3], tail = 12 + hs[4] + 10 + ML.chH;
-  if ((ML.compact || 0) < 2 && ML.key && !ML.remeasure && sum + 12 + tail > bot - top) { ML.compact = (ML.compact || 0) + 1; ML.remeasure = true; } // passt nicht → kompakter neu messen
-  const g = clamp((bot - top - sum - tail) / 3, 4, 10);
-  ML.chipsY = bot - ML.chH; ML.typY = ML.chipsY - 10 - hs[4];
-  let y = Math.max(top, ML.typY - 12 - sum - 3 * g);
+  const hs = ML.hs, sum = hs[0] + hs[1] + hs[2] + hs[3];
+  ML.chipsY = SCAN.cardTop; ML.typY = -999;
+  const top = ML.chipsY + ML.chH + 16, room = SCAN.bot - top;
+  if ((ML.compact || 0) < 2 && ML.key && !ML.remeasure && sum + 3 * 6 > room) { ML.compact = (ML.compact || 0) + 1; ML.remeasure = true; } // passt nicht → kompakter neu messen
+  const g = clamp((room - sum) / 3, 4, 10);
+  let y = top;
   for (let i = 0; i < 4; i++) { ML.ys[i] = y; y += hs[i] + g; }
 }
 addEventListener('resize', () => {
@@ -748,12 +751,12 @@ function updateCalloutsMob(zoneKey, on, prog, opt = null) {
   const show = !!(on && zoneKey && periCurve && ML.key === zoneKey);
   const th = opt ? opt.th : MTH, dur = opt && opt.slow && !show ? '.9s' : '';
   ncalls.forEach((el, i) => {
-    const vis = show && prog > th[i];
+    const vis = show && prog > th[i] && !(sc && i === 4); // Scanner: „Typisch“ steht in der Karte
     if (vis) mlVisT = now;
     el.style.opacity = vis ? 1 : 0; el.style.transitionDuration = dur;
     if (i < 4) nl[i].style.opacity = vis && (!opt || opt.lines) ? 1 : 0;
   });
-  chipsEl.style.opacity = sc && show && ML.compact < 2 && prog > (opt ? opt.chip : MTH[4] + 0.06) ? 1 : 0; chipsEl.style.transitionDuration = dur;
+  chipsEl.style.opacity = sc && show && prog > (opt ? opt.chip : MTH[4] + 0.06) ? 1 : 0; chipsEl.style.transitionDuration = dur;
   if (!show) return;
   ncalls.forEach((el, i) => { el.style.transform = `translate(${ML.x}px, ${(i < 4 ? ML.ys[i] : ML.typY).toFixed(1)}px)`; });
   if (sc) chipsEl.style.transform = `translate(${ML.x}px, ${ML.chipsY.toFixed(1)}px)`;
@@ -986,26 +989,48 @@ let spineRot = -0.9;
 // Abschnitten rastet sie ein, dann fließt die Bahn und die Zeilen stehen links. Beim ersten Ankommen fährt der Scan
 // einmal von oben nach unten und bleibt bei C1 stehen. Die Seite scrollt normal weiter (nur die Leiste fängt Wischen).
 const SCAN = { idx: 0, y: -1, finger: 0, drag: false, demo: 0, demoT: 0, touched: false, seg: -1, segT: 0, top: 120, bot: 500, left: 0, right: 0, cleared: false, tagTxt: '', tagW: 0, grab: 0 };
-const axisHead = $('#achse .axis-head');
+const axisHead = $('#achse .axis-head'), axSticky = $('#achse .axis-sticky'), topBar = $('.top');
 const scanUI = document.createElement('div'); scanUI.className = 'scan'; scanUI.setAttribute('aria-hidden', 'true');
-scanUI.innerHTML = '<div class="scan-track"></div>' + STOPS.map(() => '<i class="scan-tick"></i>').join('') + '<div class="scan-line"></div><div class="scan-thumb"></div><div class="scan-hint"><span>Hier ziehen</span><span class="th-track"><i class="th-dot"></i></span></div>';
+// Griff zum Anfassen (Kai 6.11. spät, „kindlicher“): runder Knopf mit Rillen und ▲▼ in einer Rinne, Name daneben;
+// eine gezeichnete Hand zieht ihn vor, bis man ihn selbst benutzt
+const HAND_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 11V10a2 2 0 0 0-4 0M14 10V9a2 2 0 0 0-4 0v1M10 9.5V4a2 2 0 0 0-4 0v10M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-6-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>';
+scanUI.innerHTML = '<div class="scan-track"></div>' + STOPS.map(() => '<i class="scan-tick"></i>').join('') +
+  '<div class="scan-line"></div><div class="scan-tag"></div><div class="scan-thumb"><i class="sk-up"></i><i class="sk-grip"></i><i class="sk-dn"></i></div>' +
+  `<div class="scan-coach"><i class="sc-ghost"></i>${HAND_SVG}</div>`;
 document.body.appendChild(scanUI);
-const scanRail = document.createElement('div'); scanRail.className = 'scan-rail'; scanRail.setAttribute('aria-hidden', 'true'); document.body.appendChild(scanRail);
-const [sTrack, ...sRest] = scanUI.children, sTicks = sRest.slice(0, STOPS.length), [sLine, sThumb, sHint] = sRest.slice(STOPS.length);
+// Ziehstreifen = Aufzug: Haltestellen zum Antippen (echte Knöpfe, ersetzen die Punkte-Leiste), Ziehen am Griff
+const scanRail = document.createElement('div'); scanRail.className = 'scan-rail'; scanRail.setAttribute('role', 'group'); scanRail.setAttribute('aria-label', 'Abschnitt wählen'); document.body.appendChild(scanRail);
+const [sTrack, ...sRest] = scanUI.children, sTicks = sRest.slice(0, STOPS.length), [sLine, sTag, sThumb, sCoach] = sRest.slice(STOPS.length);
 const segNames = cards.map((c) => ($('.seg-no', c) || c).textContent.trim());
+const stopBtns = segNames.map((n, i) => {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'scan-stop'; b.textContent = n.match(/^[A-Za-z]+\d?/)[0].replace(/^Th\d$/, 'Th');
+  b.setAttribute('aria-label', 'Abschnitt ' + n); scanRail.appendChild(b);
+  b.addEventListener('click', () => { SCAN.idx = i; SCAN.demo = 2; SCAN.touched = true; });
+  return b;
+});
 const levName = (id) => (id === 'S' ? 'Kreuzbein' : id === 'Co' ? 'Steißbein' : id);
 let levY = [], stopY = [];
-const RAIL_W = 68; // Breite des Ziehstreifens rechts (px)
+const RAIL_W = 88; // Breite des Ziehstreifens rechts (px): links Haltestellen, rechts Rinne mit Griff
 const nearestStop = (y) => { let b = 0; stopY.forEach((s, i) => { if (Math.abs(s - y) < Math.abs(stopY[b] - y)) b = i; }); return b; };
-// Ziehen relativ (Wischhilfe 6.11.): die Linie bewegt sich um so viel wie der Finger, egal wo er aufsetzt – kein Sprung,
-// auch nicht in der Nahansicht, in der der Griff woanders steht als in der Übersicht
+// Antippen = zur nächsten Haltestelle; Ziehen erst ab 6 px Bewegung (sonst zoomt ein Tippen kurz heraus) und relativ:
+// die Linie bewegt sich um so viel wie der Finger, egal wo er aufsetzt – kein Sprung
+let press = null;
 scanRail.addEventListener('pointerdown', (e) => {
-  SCAN.drag = true; SCAN.touched = true; SCAN.demo = 2; SCAN.grab = (SCAN.y >= 0 ? SCAN.y : e.clientY) - e.clientY; SCAN.finger = e.clientY + SCAN.grab;
+  press = { y: e.clientY }; SCAN.touched = true;
   try { scanRail.setPointerCapture(e.pointerId); } catch (err) { /* ohne Capture geht es auch */ }
   e.preventDefault();
 });
-scanRail.addEventListener('pointermove', (e) => { if (SCAN.drag) SCAN.finger = e.clientY + SCAN.grab; });
-const scanUp = () => { if (!SCAN.drag) return; SCAN.drag = false; if (stopY.length) SCAN.idx = nearestStop(SCAN.y); };
+scanRail.addEventListener('pointermove', (e) => {
+  if (!press) return;
+  if (!SCAN.drag && Math.abs(e.clientY - press.y) > 6) { SCAN.drag = true; SCAN.demo = 2; SCAN.grab = (SCAN.y >= 0 ? SCAN.y : e.clientY) - e.clientY; }
+  if (SCAN.drag) SCAN.finger = e.clientY + SCAN.grab;
+});
+const scanUp = (e) => {
+  if (!press) return;
+  if (SCAN.drag) { SCAN.drag = false; if (stopY.length) SCAN.idx = nearestStop(SCAN.y); }
+  else if (e.type === 'pointerup' && stopY.length) { SCAN.idx = nearestStop(press.y); SCAN.demo = 2; } // getippt
+  press = null;
+};
 scanRail.addEventListener('pointerup', scanUp); scanRail.addEventListener('pointercancel', scanUp);
 const _sv = new V3(), _Y = new V3(0, 1, 0);
 function screenToWorldY(py) { // Bildschirmhöhe → Welt-y auf der Ebene z = 0 (dort steht die Wirbelsäule)
@@ -1024,50 +1049,31 @@ function screenToWorld(px, py, z, out) { // Bildschirmpunkt → Welt auf der Ebe
 // Übersicht (OV), damit der Finger dieselbe Strecke behält. Größe je Abschnitt ≈ Kameraabstände der Option A.
 const OV = { x: 0, y: 0, z: 0, w: 0.3, init: false }, ZM = { k: 0, idx: 0 }, _zw = new V3(), _zc = new V3();
 const ZOOM = [3.4, 2.6, 2.15, 2.25, 2.15];
-// Vergleich für Kai (6.11.): Einblenden der Texte im Scanner. ?txt=a: Karte + „Typisch“ sofort beim Einrasten, die vier
-// Zeilen nacheinander während des Heranfahrens · ?txt=b: wie a, beim Ziehen bleiben die Texte kurz stehen und blenden ruhig
-// aus · ?txt=c: wie b, dazu beim Ziehen eine Vorschau neben dem Griff (Abschnitt + typische Beschwerden). Ohne = bisher.
-const TXT = ['a', 'b', 'c'].includes(new URLSearchParams(location.search).get('txt')) ? new URLSearchParams(location.search).get('txt') : null;
+// Einblenden im Scanner (Kai 6.11., Variante b): Karte sofort beim Einrasten, die vier Zeilen nacheinander während des
+// Heranfahrens; beim Ziehen bleiben die Texte kurz stehen und blenden ruhig aus.
 const TX = { zone: null, t0: 0, last: 0 };
-const TX_OPT = { th: [0.3, 0.55, 0.8, 1.05, 0.05], chip: 0.05, lines: true, slow: false };
-const scanPrev = document.createElement('div'); scanPrev.className = 'scan-prev'; scanPrev.setAttribute('aria-hidden', 'true');
-if (TXT === 'c') document.body.appendChild(scanPrev);
-let prevZone = null, prevW = 0, prevH = 0;
-function scanTexts(zKey, settle, dt) {
-  const now = performance.now(), hold = TXT === 'a' ? 0 : TXT === 'b' ? 650 : 350;
+const TX_OPT = { th: [0.3, 0.55, 0.8, 1.05, 0.05], chip: 0.05, lines: true, slow: true };
+function scanTexts(zKey, settle) {
+  const now = performance.now();
   if (settle && zKey) { if (TX.zone !== zKey) { TX.zone = zKey; TX.t0 = now; } TX.last = now; }
-  const held = !settle && TX.zone && now - TX.last < hold; // b/c: nach dem Loslassen der Stelle kurz stehen lassen
+  const held = !settle && TX.zone && now - TX.last < 650;
   if (!settle && !held) TX.zone = null;
-  const on = !!TX.zone && (settle || held);
-  updateCalloutsMob(TX.zone, on, (now - TX.t0) / 1000, { ...TX_OPT, lines: settle, slow: TXT !== 'a' });
-  if (TXT !== 'c') return;
-  // Vorschau beim Ziehen: nächster Abschnitt mit typischen Beschwerden, links neben dem Ziehstreifen auf Höhe des Griffs
-  const show = SCAN.drag && stopY.length && SCAN.y >= 0;
-  scanPrev.classList.toggle('on', !!show);
-  if (!show) return;
-  const i = nearestStop(SCAN.y), z = STOPS[i].zone;
-  if (z !== prevZone) {
-    prevZone = z;
-    scanPrev.innerHTML = `<b>${segNames[i]}</b><span>${NINFO[z].typ.replace(/^Typisch:\s*/, '')}</span>`;
-    scanPrev.style.width = Math.min(220, VW - RAIL_W - 24) + 'px'; prevW = scanPrev.offsetWidth; prevH = scanPrev.offsetHeight;
-  }
-  const yd = toPx(_zw.set(0, ((screenToWorldY(SCAN.y) - OV.y) / OV.w) * uniforms.uXf.value[2].w + uniforms.uXf.value[2].y, 0))[1];
-  const py = clamp(yd - prevH / 2, SCAN.top, Math.max(SCAN.top, SCAN.bot - prevH));
-  scanPrev.style.transform = `translate(${(VW - RAIL_W - 8 - prevW).toFixed(1)}px, ${py.toFixed(1)}px)`;
+  updateCalloutsMob(TX.zone, !!TX.zone && (settle || held), (now - TX.t0) / 1000, { ...TX_OPT, lines: settle });
 }
 const lvLocal = (lv, out) => out.set(lv.center.x * SC, (lv.center.y - CY) * SC, lv.center.z * SC).applyAxisAngle(_Y, spineRot);
 function updateScan(dt, r, inSec) {
   const X = uniforms.uXf.value[2], near = r.top < VH * 1.6 && r.bottom > -VH * 0.6;
   if (!SCAN.cleared) { cards.forEach((c) => { c.style.opacity = ''; c.style.transform = ''; }); if (axisNote) axisNote.style.opacity = ''; SCAN.cleared = true; }
   if (near) {
-    // Bühne aus der echten Lage von Punkte-Leiste und Hinweis: löst sich die Bühne beim Weiterscrollen, gehen
-    // Wirbelsäule, Zeilen und Griff mit ihr nach oben (Kai 6.11.: in Chrome lief der Hinweis in die Zeilen)
-    const db = dotsBox ? dotsBox.getBoundingClientRect() : null, nb = axisNote ? axisNote.getBoundingClientRect() : null;
-    SCAN.top = (db && db.height ? db.bottom : 110) + 16; SCAN.bot = (nb && nb.height ? nb.top : MINH - 80) - 18;
+    // Bühne aus der echten Lage von Kopfleiste, Bühne und Hinweis: löst sich die Bühne beim Weiterscrollen, gehen
+    // Wirbelsäule, Karte, Zeilen und Griff mit ihr nach oben (Kai 6.11.: in Chrome lief der Hinweis in die Zeilen)
+    const nb = axisNote ? axisNote.getBoundingClientRect() : null, lift = axSticky ? Math.min(0, axSticky.getBoundingClientRect().top) : 0;
+    const hb = topBar ? topBar.getBoundingClientRect().bottom : 70;
+    SCAN.cardTop = hb + 10 + lift; SCAN.top = hb + 16 + lift; SCAN.bot = (nb && nb.height ? nb.top : MINH - 60) - 12;
     const tf = SCAN.top / GLH, bf = SCAN.bot / GLH;
     OV.w = ((bf - tf) * 8.197 * 0.95) / 8.7; OV.y = (0.5 - (tf + bf) / 2) * 8.197;
-    // ganze Wirbelsäule zwischen Punkte-Leiste und Hinweis, rechter Rand an der Scan-Leiste
-    const tx = det && SCAN.right ? OV.x + (VW - 58 - SCAN.right) * (8.197 / GLH) : (0.22 * VW) * (8.197 / GLH);
+    // ganze Wirbelsäule zwischen Kopfleiste und Hinweis, rechter Rand am Ziehstreifen
+    const tx = det && SCAN.right ? OV.x + (VW - RAIL_W - 6 - SCAN.right) * (8.197 / GLH) : (0.22 * VW) * (8.197 / GLH);
     OV.x = OV.init ? OV.x + (tx - OV.x) * (reduced ? 1 : 1 - Math.exp(-dt * 6)) : tx; OV.init = true;
   }
   // ruhige Schrägansicht (Wurzeln zeigen nach links), atmet leicht hin und her
@@ -1126,7 +1132,8 @@ function updateScan(dt, r, inSec) {
       zw = OV.w * ZOOM[ZM.idx];
       if (ML.key === st.zone && ML.hs[0]) mobPlaceScan();
       const py = ML.key === st.zone && ML.hs[0] ? ML.ys[0] + ML.hs[0] / 2 : SCAN.top + (SCAN.bot - SCAN.top) * 0.4;
-      screenToWorld((VW > 600 ? 0.64 : 0.7) * VW, py, _zc.z * zw, _zw);
+      // Abschnitt mittig zwischen Zeilen-Spalte und Ziehstreifen
+      screenToWorld(Math.max(VW * 0.55, (ML.x + ML.colW + VW - RAIL_W) / 2 + 6), py, _zc.z * zw, _zw);
       zx = _zw.x - _zc.x * zw; zy = _zw.y - _zc.y * zw;
     }
     const e = ZM.k * ZM.k * (3 - 2 * ZM.k);
@@ -1146,10 +1153,9 @@ function updateScan(dt, r, inSec) {
   const zone = seg >= 0 ? ZONES.indexOf(STOPS[seg].zone) : -10, zKey = seg >= 0 ? STOPS[seg].zone : null;
   if (zone !== sU.uZone.value) { sU.uZone.value = zone; sU.uZoneAmt.value = 0; sU.uPeri.value = 0; }
   sU.uZoneAmt.value += ((zone >= 0 ? 1 : 0) - sU.uZoneAmt.value) * 0.07;
-  sU.uPeri.value += ((zKey && ML.key === zKey && ZM.k > (TXT ? 0.4 : 0.85) ? 1 : 0) - sU.uPeri.value) * 0.05;
+  sU.uPeri.value += ((zKey && ML.key === zKey && ZM.k > 0.4 ? 1 : 0) - sU.uPeri.value) * 0.05;
   if (zKey && det) updatePeri(zKey);
-  if (!TXT) updateCalloutsMob(zKey, ready && seg >= 0 && ZM.k > 0.85 && sU.uPeri.value > 0.5, (performance.now() - SCAN.segT) / 1000);
-  else scanTexts(zKey, settle, dt);
+  scanTexts(zKey, settle);
 
   // Überschrift weicht, sobald gescannt wird; Hinweis geht beim Weiterscrollen mit (nicht über dem Haus stehen lassen)
   if (axisHead) axisHead.style.opacity = ready && SCAN.demo === 2 ? 0 : '';
@@ -1157,27 +1163,25 @@ function updateScan(dt, r, inSec) {
   scanUI.classList.toggle('on', !!ready);
   scanRail.classList.toggle('on', !!ready && SCAN.demo === 2);
   if (!ready || y < 0) return;
-  // Anzeige folgt dem 3D-Bild: Lage in der Übersicht → Wirbelsäulen-Einheiten → aktuelle Lage (in der Nahansicht steht
-  // der Griff am herangeholten Abschnitt, Leiste und Marken der Übersicht treten zurück)
-  const toY = (yo) => toPx(_zw.set(0, ((screenToWorldY(yo) - OV.y) / OV.w) * X.w + X.y, 0))[1];
-  const yMin = levY[0] - 6, yMax = levY[levY.length - 1] + 6, tx = VW - 30, yd = toY(y), dMin = toY(yMin), dMax = toY(yMax);
-  sTrack.style.transform = `translate(${tx}px, ${dMin.toFixed(1)}px)`; sTrack.style.height = (dMax - dMin).toFixed(1) + 'px';
-  sTrack.style.opacity = (1 - zoomE).toFixed(3);
-  sTicks.forEach((el, i) => { el.style.transform = `translate(${tx - 5}px, ${toY(stopY[i]).toFixed(1)}px)`; el.classList.toggle('is-on', i === seg); el.style.opacity = i === seg ? '' : (1 - zoomE).toFixed(3); });
+  // Aufzug rechts: Rinne, Haltestellen und Griff bleiben fest (Übersicht), auch in der Nahansicht – der Griff zeigt,
+  // wo man steht; die Scan-Linie über der Wirbelsäule gehört zur Übersicht und tritt in der Nahansicht zurück
+  const yMin = levY[0] - 6, yMax = levY[levY.length - 1] + 6, tx = VW - 26, rTop = yMin - 28;
+  sTrack.style.transform = `translate(${tx - 3}px, ${yMin.toFixed(1)}px)`; sTrack.style.height = (yMax - yMin).toFixed(1) + 'px';
+  sTicks.forEach((el, i) => { el.style.transform = `translate(${tx - 10}px, ${stopY[i].toFixed(1)}px)`; el.classList.toggle('is-on', i === seg); });
+  stopBtns.forEach((b, i) => { b.style.top = (stopY[i] - rTop).toFixed(1) + 'px'; b.classList.toggle('is-on', i === seg); });
+  sThumb.style.transform = `translate(${tx}px, ${y.toFixed(1)}px)`; sThumb.classList.toggle('is-on', seg >= 0); sThumb.classList.toggle('is-drag', SCAN.drag);
+  // Name links neben dem Griff, solange die Karte nicht steht (Ziehen, Vorführen)
   const txt = seg >= 0 ? segNames[seg] : levName(det.levels[levY.reduce((b, v, i) => (Math.abs(v - y) < Math.abs(levY[b] - y) ? i : b), 0)].id);
-  if (txt !== SCAN.tagTxt) { sThumb.textContent = txt; SCAN.tagTxt = txt; SCAN.tagW = sThumb.offsetWidth; }
-  const thX = Math.min(tx - SCAN.tagW / 2, VW - 8 - SCAN.tagW);
-  sThumb.style.transform = `translate(${thX.toFixed(1)}px, ${(yd - 14).toFixed(1)}px)`;
-  sThumb.classList.toggle('is-on', seg >= 0);
+  if (txt !== SCAN.tagTxt) { sTag.textContent = txt; SCAN.tagTxt = txt; SCAN.tagW = sTag.offsetWidth; }
+  sTag.style.transform = `translate(${(VW - RAIL_W - 6 - SCAN.tagW).toFixed(1)}px, ${(y - 14).toFixed(1)}px)`;
+  sTag.style.opacity = zoomE < 0.3 ? 1 : 0;
   const lx = SCAN.left - 10;
-  sLine.style.transform = `translate(${lx.toFixed(1)}px, ${yd.toFixed(1)}px)`; sLine.style.width = Math.max(0, thX - lx).toFixed(1) + 'px';
-  sLine.style.opacity = (1 - zoomE).toFixed(3); // Linie gehört zur Übersicht
-  // Wischhilfe: Finger zieht auf und ab, links neben dem Ziehstreifen über dem Griff – bis zur ersten Berührung
-  sHint.classList.toggle('on', !SCAN.touched && SCAN.demo === 2);
-  if (!SCAN.hintW) { SCAN.hintW = sHint.offsetWidth; SCAN.hintH = sHint.offsetHeight; }
-  sHint.style.transform = `translate(${(VW - RAIL_W - 8 - SCAN.hintW).toFixed(1)}px, ${(yd - 18 - SCAN.hintH).toFixed(1)}px)`;
-  // Ziehstreifen = sichtbare Fläche am rechten Rand (nur dort wird gezogen, links scrollt die Seite)
-  scanRail.style.left = (VW - RAIL_W).toFixed(0) + 'px'; scanRail.style.top = (yMin - 28).toFixed(0) + 'px'; scanRail.style.height = (yMax - yMin + 56).toFixed(0) + 'px';
+  sLine.style.transform = `translate(${lx.toFixed(1)}px, ${y.toFixed(1)}px)`; sLine.style.width = Math.max(0, VW - RAIL_W - 6 - (zoomE < 0.3 ? SCAN.tagW + 4 : 0) - lx).toFixed(1) + 'px';
+  sLine.style.opacity = (1 - zoomE).toFixed(3);
+  // Wischhilfe: eine Hand zieht den Griff vor, bis man ihn selbst benutzt (Text steht im Kapitel-Hinweis)
+  sCoach.classList.toggle('on', !SCAN.touched && SCAN.demo === 2);
+  sCoach.style.transform = `translate(${tx}px, ${y.toFixed(1)}px)`;
+  scanRail.style.left = (VW - RAIL_W).toFixed(0) + 'px'; scanRail.style.top = rTop.toFixed(0) + 'px'; scanRail.style.height = (yMax - yMin + 56).toFixed(0) + 'px';
 }
 
 function updateAxis(dt) {

@@ -406,15 +406,14 @@ canvas.gl-wait{opacity:0}
      Karten nur für Vorleseprogramme, Infos als Zeilen links, Scan-Linie + Griff rechts (main.js updateScan) */
   html.seg-scan .axis{height:160svh}
   html.seg-scan .axis-sticky{position:sticky;top:0;height:100svh;overflow:hidden}
-  html.seg-scan .axis-inner{height:100%;display:flex;flex-direction:column;padding-top:calc(env(safe-area-inset-top,0px) + 7.5rem);padding-bottom:1rem}
+  html.seg-scan .axis-inner{height:100%;display:flex;flex-direction:column;padding-top:calc(env(safe-area-inset-top,0px) + 6rem);padding-bottom:calc(env(safe-area-inset-bottom,0px) + .375rem)}
   html.seg-scan .axis-head{max-width:64%;transition:opacity .5s var(--ease)} /* links neben der Wirbelsäule */
   html.seg-scan .axis-hint .only-mob{display:none}
   html.seg-scan .axis-hint .only-scan{display:inline}
-  html.seg-scan .seg-dots{position:absolute;top:calc(env(safe-area-inset-top,0px) + 4.625rem);left:50%;transform:translateX(-50%);margin:0}
+  html.seg-scan .seg-dots{display:none} /* Kai 6.11. spät: Haltestellen am Ziehstreifen ersetzen die Punkte-Leiste */
   html.seg-scan .seg-cards{position:absolute;width:1px;height:1px;margin:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  html.seg-scan #achse .note{margin-top:auto;opacity:1;position:relative;z-index:0}
+  html.seg-scan #achse .note{margin-top:auto;opacity:1;position:relative;z-index:0;font-size:.6875rem;line-height:1.4} /* ganz unten, kleiner (Kai 6.11. spät) */
   html.seg-scan #achse .note::before{content:"";position:absolute;z-index:-1;inset:-1.25rem -50vw -1rem;background:linear-gradient(rgba(10,22,27,0),rgba(10,22,27,.9) 1.25rem)} /* Nahansicht: Wirbelsäule läuft hinter dem Hinweis aus */
-  html.seg-scan .seg-dots{background:rgba(10,22,27,.9)}
   html.seg-scan .ncall-typ{white-space:pre-line}
   .ncall{white-space:normal;padding:.3125rem .625rem;font-size:.8125rem;line-height:1.35;border-radius:.625rem;background:rgba(10,22,27,.86);backdrop-filter:none;-webkit-backdrop-filter:none;transition:opacity .35s var(--ease)} /* ohne Weichzeichner: spart am iPhone Rechenzeit über der 3D-Szene */
   .ncall-exit{font-size:.75rem;letter-spacing:.12em}
@@ -524,36 +523,45 @@ canvas.gl-wait{opacity:0}
 .scan{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .45s var(--ease)}
 .scan.on{opacity:1}
 .scan>*{position:absolute;left:0;top:0}
-.scan-track{width:1px;background:linear-gradient(rgba(207,232,250,0),rgba(207,232,250,.3) 8%,rgba(207,232,250,.3) 92%,rgba(207,232,250,0))}
-.scan-tick{width:.6875rem;height:1px;background:var(--amber);opacity:.55;transition:opacity .3s,width .3s}
+.scan-track{width:6px;border-radius:3px;background:rgba(207,232,250,.08);box-shadow:inset 0 0 0 1px rgba(207,232,250,.16)} /* Rinne */
+.scan-tick{width:.375rem;height:1px;background:var(--amber);opacity:.55;transition:opacity .3s}
 .scan-tick.is-on{opacity:1}
 .scan-line{height:1px;background:linear-gradient(90deg,rgba(224,154,53,0),var(--amber) 22%);box-shadow:0 0 .5rem 1px rgba(224,154,53,.5)}
-.scan-thumb{min-width:2.75rem;height:1.75rem;padding:0 .5625rem;border-radius:.875rem;border:1px solid rgba(224,154,53,.7);background:rgba(10,22,27,.92);display:flex;align-items:center;justify-content:center;white-space:nowrap;font:600 .75rem/1 var(--sans);letter-spacing:.05em;color:var(--txt);box-shadow:0 0 .875rem rgba(224,154,53,.3);transition:border-color .3s,color .3s,box-shadow .3s}
-.scan-thumb.is-on{border-color:var(--amber);color:var(--amber);box-shadow:0 0 1.25rem rgba(224,154,53,.55)}
-.scan-hint{display:flex;align-items:center;gap:.5rem;padding:.375rem .5rem .375rem .875rem;border-radius:1.25rem;background:rgba(10,22,27,.88);border:1px solid rgba(224,154,53,.45);font:600 .75rem/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--amber);white-space:nowrap;opacity:0;transition:opacity .4s}
-.scan-hint.on{opacity:1}
-/* Wischhilfe senkrecht: gleiche Spur wie die übrigen Hinweise, nur gedreht */
-.scan-hint .th-track{width:1.5rem;height:2.75rem}
-.scan-hint .th-track::before{left:50%;right:auto;top:0;bottom:0;width:1px;height:auto;background:linear-gradient(rgba(224,154,53,0),rgba(224,154,53,.65),rgba(224,154,53,0))}
-.scan-hint .th-dot{width:1rem;height:1rem;margin:-.5rem 0 0 -.5rem;animation-name:thSwayV}
-@keyframes thSwayV{0%,100%{transform:translateY(-.875rem)}50%{transform:translateY(.875rem)}}
-.scan-rail{position:fixed;right:0;z-index:2;display:none;touch-action:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;border-radius:.875rem 0 0 .875rem;border:1px solid rgba(224,154,53,.22);border-right:0;background:linear-gradient(90deg,rgba(224,154,53,.02),rgba(224,154,53,.08))} /* sichtbarer Ziehstreifen */
+/* Griff (Kai 6.11. spät, „kindlicher“): runder Knopf mit Rillen und ▲▼ – sieht anfassbar aus */
+.scan-thumb{width:2.5rem;height:2.5rem;margin:-1.25rem 0 0 -1.25rem;border-radius:50%;border:2px solid var(--amber);background:radial-gradient(circle at 38% 30%,#24363C,#0E1C22 70%);box-shadow:0 0 1rem rgba(224,154,53,.45),0 .25rem .75rem rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1875rem;transition:box-shadow .3s,background .3s}
+.scan-thumb.is-drag{background:radial-gradient(circle at 38% 30%,#4A3A1E,#2A2010 70%);box-shadow:0 0 1.5rem rgba(224,154,53,.75),0 .25rem .75rem rgba(0,0,0,.5)}
+.scan-thumb .sk-up,.scan-thumb .sk-dn{width:0;height:0;border-left:.25rem solid transparent;border-right:.25rem solid transparent}
+.scan-thumb .sk-up{border-bottom:.3125rem solid var(--amber)}
+.scan-thumb .sk-dn{border-top:.3125rem solid var(--amber)}
+.scan-thumb .sk-grip{width:.875rem;height:1px;background:#F3EADA;box-shadow:0 -3px 0 #F3EADA,0 3px 0 #F3EADA;margin:3px 0}
+.scan-tag{height:1.75rem;padding:0 .5625rem;border-radius:.875rem;border:1px solid rgba(224,154,53,.7);background:rgba(10,22,27,.92);display:flex;align-items:center;white-space:nowrap;font:600 .75rem/1 var(--sans);letter-spacing:.05em;color:var(--amber);transition:opacity .3s}
+/* Hand zieht den Griff vor (bis zur ersten Berührung) */
+.scan-coach{width:0;height:0;opacity:0;transition:opacity .4s}
+.scan-coach.on{opacity:1}
+.scan-coach>*{position:absolute;animation:coach 2.8s ease-in-out infinite}
+.scan-coach .sc-ghost{left:-1.25rem;top:-1.25rem;width:2.5rem;height:2.5rem;border-radius:50%;border:2px dashed rgba(224,154,53,.85);background:rgba(224,154,53,.12)}
+.scan-coach svg{left:-.8125rem;top:-.25rem;width:2.5rem;height:2.5rem;fill:rgba(10,22,27,.9);stroke:#F3EADA;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 .125rem .375rem rgba(0,0,0,.6))}
+@keyframes coach{0%{transform:translateY(0);opacity:0}12%{transform:translateY(0) scale(1);opacity:1}22%{transform:translateY(0) scale(.9)}58%{transform:translateY(3.25rem) scale(.9);opacity:1}70%{transform:translateY(3.25rem) scale(1);opacity:1}86%,100%{transform:translateY(3.25rem);opacity:0}}
+/* Ziehstreifen = Aufzug: Haltestellen links (Knöpfe), Rinne + Griff rechts; nur hier wird gezogen, links scrollt die Seite */
+.scan-rail{position:fixed;right:0;z-index:2;display:none;touch-action:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;border-radius:.875rem 0 0 .875rem;border:1px solid rgba(224,154,53,.22);border-right:0;background:linear-gradient(90deg,rgba(10,22,27,.55),rgba(224,154,53,.08))}
 .scan-rail.on{display:block}
-/* Karte unten in der Nahansicht (wie Option A): Abschnitt + Titel, darunter die Therapien */
+.scan-stop{position:absolute;left:.25rem;width:2.125rem;height:1.75rem;margin-top:-.875rem;padding:0;border:0;border-radius:.875rem;background:transparent;color:#A8BABF;font:600 .6875rem/1 var(--sans);letter-spacing:.04em;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .3s,background .3s}
+.scan-stop.is-on{color:var(--amber);background:rgba(224,154,53,.14)}
+.scan-stop:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+/* Karte oben als Überschrift (Kai 6.11. spät): Abschnitt + Titel, „Typisch“, Therapien */
 .scan-chips{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s var(--ease);padding:.75rem .875rem .875rem;border:1px solid rgba(224,154,53,.55);border-radius:.375rem;background:rgba(14,30,37,.95)}
 .scan-chips .sc-t{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:.625rem;margin:0}
 .scan-chips .sc-no{font:italic 400 1.625rem/1 var(--serif);color:var(--amber)}
 .scan-chips .sc-h{font:800 1.125rem/1.1 var(--disp);letter-spacing:-.02em;color:var(--txt)}
+.scan-chips .sc-typ{margin:.5rem 0 0;font:500 .8125rem/1.45 var(--sans);color:#C2D0D4;white-space:pre-line}
 .scan-chips .sc-c{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.625rem}
 .scan-chips .sc-c:empty{display:none}
 .scan-chips .sc-c span{font:600 .75rem/1 var(--sans);padding:.375rem .5rem;border-radius:3px;border:1px solid rgba(224,154,53,.35);color:var(--txt);background:rgba(224,154,53,.07)}
+.scan-chips.sc-small{padding:.5rem .75rem .625rem}
+.scan-chips.sc-small .sc-no{font-size:1.25rem}.scan-chips.sc-small .sc-h{font-size:.9375rem}.scan-chips.sc-small .sc-typ{font-size:.75rem;line-height:1.4;margin-top:.375rem}
 @media (max-width:360px){.scan-chips{padding:.5625rem .75rem .6875rem}.scan-chips .sc-no{font-size:1.375rem}.scan-chips .sc-h{font-size:1rem}.scan-chips .sc-c span{padding:.3125rem .4375rem}}
-/* Vergleich ?txt=c: Vorschau beim Ziehen neben dem Griff */
-.scan-prev{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .25s var(--ease);padding:.5rem .75rem .5625rem;border-radius:.5rem;border:1px solid rgba(224,154,53,.55);background:rgba(10,22,27,.94);box-shadow:0 .375rem 1.25rem rgba(4,10,13,.5);font:500 .8125rem/1.4 var(--sans);color:#C2D0D4}
-.scan-prev.on{opacity:1}
-.scan-prev b{display:block;margin-bottom:.125rem;font:italic 400 1.125rem/1.2 var(--serif);color:var(--amber)}
-html.no-gl .scan,html.no-gl .scan-rail,html.no-gl .scan-chips,html.no-gl .scan-prev{display:none}
-@media (prefers-reduced-motion:reduce){.scan-hint{transition:none}.scan-hint .th-dot{animation:none;transform:none}}
+html.no-gl .scan,html.no-gl .scan-rail,html.no-gl .scan-chips{display:none}
+@media (prefers-reduced-motion:reduce){.scan-coach{transition:none}.scan-coach>*{animation:none;opacity:1}}
 
 /* Option A, schmale Handys (320–360 px): Karte und Zeilen kompakter, damit alle Zeilen zwischen Leiste und Karte passen */
 @media (max-width:360px){
