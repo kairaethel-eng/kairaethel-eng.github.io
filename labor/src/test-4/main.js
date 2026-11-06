@@ -738,20 +738,22 @@ function mobPlace(tipY) {
 // Zeilen erscheinen nacheinander, während die Karte steht (prog = gescrollte Strecke seit dem Anhalten, × Bildhöhe)
 const MTH = [0.02, 0.09, 0.16, 0.23, 0.31];
 let mlVisT = -1e9;
-function updateCalloutsMob(zoneKey, on, prog) {
+// opt (Scanner-Varianten ?txt=a|b|c): th = Schwellen je Zeile (Sekunden), chip = Schwelle Karte, lines = Hinweislinien, slow = ruhig ausblenden
+function updateCalloutsMob(zoneKey, on, prog, opt = null) {
   const now = performance.now();
   // Abschnitt gewechselt: alte Zeilen erst ausblenden lassen, dann Texte tauschen (sonst springt Text in der Blende)
   const sc = scanOn(), stale = ML.key !== zoneKey || ML.scan !== sc;
   if (zoneKey && stale && now - mlVisT > 420) mobMeasure(zoneKey);
   else if (zoneKey && ML.remeasure && ML.key === zoneKey) { ML.remeasure = false; mobMeasure(zoneKey); } // kompakt (noch unsichtbar)
   const show = !!(on && zoneKey && periCurve && ML.key === zoneKey);
+  const th = opt ? opt.th : MTH, dur = opt && opt.slow && !show ? '.9s' : '';
   ncalls.forEach((el, i) => {
-    const vis = show && prog > MTH[i];
+    const vis = show && prog > th[i];
     if (vis) mlVisT = now;
-    el.style.opacity = vis ? 1 : 0;
-    if (i < 4) nl[i].style.opacity = vis ? 1 : 0;
+    el.style.opacity = vis ? 1 : 0; el.style.transitionDuration = dur;
+    if (i < 4) nl[i].style.opacity = vis && (!opt || opt.lines) ? 1 : 0;
   });
-  chipsEl.style.opacity = sc && show && ML.compact < 2 && prog > MTH[4] + 0.06 ? 1 : 0;
+  chipsEl.style.opacity = sc && show && ML.compact < 2 && prog > (opt ? opt.chip : MTH[4] + 0.06) ? 1 : 0; chipsEl.style.transitionDuration = dur;
   if (!show) return;
   ncalls.forEach((el, i) => { el.style.transform = `translate(${ML.x}px, ${(i < 4 ? ML.ys[i] : ML.typY).toFixed(1)}px)`; });
   if (sc) chipsEl.style.transform = `translate(${ML.x}px, ${ML.chipsY.toFixed(1)}px)`;
@@ -1022,6 +1024,37 @@ function screenToWorld(px, py, z, out) { // Bildschirmpunkt → Welt auf der Ebe
 // Übersicht (OV), damit der Finger dieselbe Strecke behält. Größe je Abschnitt ≈ Kameraabstände der Option A.
 const OV = { x: 0, y: 0, z: 0, w: 0.3, init: false }, ZM = { k: 0, idx: 0 }, _zw = new V3(), _zc = new V3();
 const ZOOM = [3.4, 2.6, 2.15, 2.25, 2.15];
+// Vergleich für Kai (6.11.): Einblenden der Texte im Scanner. ?txt=a: Karte + „Typisch“ sofort beim Einrasten, die vier
+// Zeilen nacheinander während des Heranfahrens · ?txt=b: wie a, beim Ziehen bleiben die Texte kurz stehen und blenden ruhig
+// aus · ?txt=c: wie b, dazu beim Ziehen eine Vorschau neben dem Griff (Abschnitt + typische Beschwerden). Ohne = bisher.
+const TXT = ['a', 'b', 'c'].includes(new URLSearchParams(location.search).get('txt')) ? new URLSearchParams(location.search).get('txt') : null;
+const TX = { zone: null, t0: 0, last: 0 };
+const TX_OPT = { th: [0.3, 0.55, 0.8, 1.05, 0.05], chip: 0.05, lines: true, slow: false };
+const scanPrev = document.createElement('div'); scanPrev.className = 'scan-prev'; scanPrev.setAttribute('aria-hidden', 'true');
+if (TXT === 'c') document.body.appendChild(scanPrev);
+let prevZone = null, prevW = 0, prevH = 0;
+function scanTexts(zKey, settle, dt) {
+  const now = performance.now(), hold = TXT === 'a' ? 0 : TXT === 'b' ? 650 : 350;
+  if (settle && zKey) { if (TX.zone !== zKey) { TX.zone = zKey; TX.t0 = now; } TX.last = now; }
+  const held = !settle && TX.zone && now - TX.last < hold; // b/c: nach dem Loslassen der Stelle kurz stehen lassen
+  if (!settle && !held) TX.zone = null;
+  const on = !!TX.zone && (settle || held);
+  updateCalloutsMob(TX.zone, on, (now - TX.t0) / 1000, { ...TX_OPT, lines: settle, slow: TXT !== 'a' });
+  if (TXT !== 'c') return;
+  // Vorschau beim Ziehen: nächster Abschnitt mit typischen Beschwerden, links neben dem Ziehstreifen auf Höhe des Griffs
+  const show = SCAN.drag && stopY.length && SCAN.y >= 0;
+  scanPrev.classList.toggle('on', !!show);
+  if (!show) return;
+  const i = nearestStop(SCAN.y), z = STOPS[i].zone;
+  if (z !== prevZone) {
+    prevZone = z;
+    scanPrev.innerHTML = `<b>${segNames[i]}</b><span>${NINFO[z].typ.replace(/^Typisch:\s*/, '')}</span>`;
+    scanPrev.style.width = Math.min(220, VW - RAIL_W - 24) + 'px'; prevW = scanPrev.offsetWidth; prevH = scanPrev.offsetHeight;
+  }
+  const yd = toPx(_zw.set(0, ((screenToWorldY(SCAN.y) - OV.y) / OV.w) * uniforms.uXf.value[2].w + uniforms.uXf.value[2].y, 0))[1];
+  const py = clamp(yd - prevH / 2, SCAN.top, Math.max(SCAN.top, SCAN.bot - prevH));
+  scanPrev.style.transform = `translate(${(VW - RAIL_W - 8 - prevW).toFixed(1)}px, ${py.toFixed(1)}px)`;
+}
 const lvLocal = (lv, out) => out.set(lv.center.x * SC, (lv.center.y - CY) * SC, lv.center.z * SC).applyAxisAngle(_Y, spineRot);
 function updateScan(dt, r, inSec) {
   const X = uniforms.uXf.value[2], near = r.top < VH * 1.6 && r.bottom > -VH * 0.6;
@@ -1080,8 +1113,8 @@ function updateScan(dt, r, inSec) {
 
   // Nahansicht: heran, sobald die Linie an einem Abschnitt steht; beim Ziehen/Wechseln zügig zurück (Bühne nicht
   // im Bild: Zustand halten, damit beim Weiterscrollen nichts mehr zoomt)
+  const settle = ready && seg >= 0 && !SCAN.drag;
   if (ready) {
-    const settle = seg >= 0 && !SCAN.drag;
     if (settle) ZM.idx = seg;
     ZM.k = reduced ? (settle ? 1 : 0) : ZM.k + ((settle ? 1 : 0) - ZM.k) * (1 - Math.exp(-dt * (settle ? 2.6 : 7)));
   }
@@ -1113,9 +1146,10 @@ function updateScan(dt, r, inSec) {
   const zone = seg >= 0 ? ZONES.indexOf(STOPS[seg].zone) : -10, zKey = seg >= 0 ? STOPS[seg].zone : null;
   if (zone !== sU.uZone.value) { sU.uZone.value = zone; sU.uZoneAmt.value = 0; sU.uPeri.value = 0; }
   sU.uZoneAmt.value += ((zone >= 0 ? 1 : 0) - sU.uZoneAmt.value) * 0.07;
-  sU.uPeri.value += ((zKey && ML.key === zKey && ZM.k > 0.85 ? 1 : 0) - sU.uPeri.value) * 0.05;
+  sU.uPeri.value += ((zKey && ML.key === zKey && ZM.k > (TXT ? 0.4 : 0.85) ? 1 : 0) - sU.uPeri.value) * 0.05;
   if (zKey && det) updatePeri(zKey);
-  updateCalloutsMob(zKey, ready && seg >= 0 && ZM.k > 0.85 && sU.uPeri.value > 0.5, (performance.now() - SCAN.segT) / 1000);
+  if (!TXT) updateCalloutsMob(zKey, ready && seg >= 0 && ZM.k > 0.85 && sU.uPeri.value > 0.5, (performance.now() - SCAN.segT) / 1000);
+  else scanTexts(zKey, settle, dt);
 
   // Überschrift weicht, sobald gescannt wird; Hinweis geht beim Weiterscrollen mit (nicht über dem Haus stehen lassen)
   if (axisHead) axisHead.style.opacity = ready && SCAN.demo === 2 ? 0 : '';
