@@ -277,10 +277,52 @@ export function* spineStippleGen(nTarget, makeGrainNow = true) {
     }
     return { pos: pos.slice(0, i * 3), nor: nor.slice(0, i * 3), zone: zone.slice(0, i), kind: kind.slice(0, i), count: i, spacing: r * SC };
   }
-  // Stil „Schichten“: waagerechte Schnittlinien wie bei einem CT-Schichtbild
+  // Mittellinie als Tabelle nach Bogenlänge (Formkoordinaten y/z, Tangente nach oben) – für die gekippten Schnittebenen (7.11. spät)
+  const NT = 1024, cyT = new Float32Array(NT), czT = new Float32Array(NT), tyT = new Float32Array(NT), tzT = new Float32Array(NT);
+  const LC = sp.curve.getLength() * SC;
+  for (let j = 0; j < NT; j++) {
+    const u = j / (NT - 1), q = sp.curve.getPointAt(u), tg = sp.curve.getTangentAt(u).negate();
+    cyT[j] = (q.y - CY) * SC; czT[j] = q.z * SC; tyT[j] = tg.y; tzT[j] = tg.z;
+  }
+  yield;
+  // Lage entlang der Achse: s (Bogenlänge von oben) so, dass der Punkt in der Ebene senkrecht zur Tangente bei s liegt.
+  // Rückgabe A = −s (wächst nach oben wie y) und die Tangente dort (axT) – drei Schritte genügen (Krümmung klein gegen Abstand).
+  const axT = [0, 1];
+  const axial = (y, z) => {
+    let sv = cyT[0] - y, ty = 1, tz = 0;
+    for (let it = 0; it < 3; it++) {
+      const fj = Math.min(NT - 1.001, Math.max(0, sv / LC * (NT - 1))), j = fj | 0, w = fj - j;
+      const cy = cyT[j] + (cyT[j + 1] - cyT[j]) * w, cz = czT[j] + (czT[j + 1] - czT[j]) * w;
+      ty = tyT[j] + (tyT[j + 1] - tyT[j]) * w; tz = tzT[j] + (tzT[j + 1] - tzT[j]) * w;
+      const tl = Math.hypot(ty, tz); ty /= tl; tz /= tl;
+      sv -= (y - cy) * ty + (z - cz) * tz; // außerhalb der Enden: lineare Fortsetzung
+    }
+    axT[0] = ty; axT[1] = tz;
+    return -sv;
+  };
+  // Schnelltest für die vielen verworfenen Versuche: A vorab im Raster (y/z, bilinear; Fehler ≪ Schichtband), genau nur für Treffer
+  // (Raster erst beim ersten makeSlicesGen, die Körnung braucht es nicht)
+  const GY = 512, GZ = 128;
+  const gy0 = (box.min[1] - CY) * SC - 0.05, gy1 = (box.max[1] - CY) * SC + 0.05, gz0 = box.min[2] * SC - 0.05, gz1 = box.max[2] * SC + 0.05;
+  const gdy = (gy1 - gy0) / (GY - 1), gdz = (gz1 - gz0) / (GZ - 1);
+  let AG = null;
+  function* axialGrid() {
+    if (AG) return;
+    const g = new Float32Array(GY * GZ);
+    for (let r = 0; r < GY; r++) { for (let c = 0; c < GZ; c++) g[r * GZ + c] = axial(gy0 + r * gdy, gz0 + c * gdz); if (!(r & 63)) yield; }
+    AG = g;
+  }
+  const axialFast = (y, z) => {
+    const fy = Math.min(GY - 1.001, Math.max(0, (y - gy0) / gdy)), fz = Math.min(GZ - 1.001, Math.max(0, (z - gz0) / gdz));
+    const r = fy | 0, c = fz | 0, wy = fy - r, wz = fz - c, k = r * GZ + c;
+    const a0 = AG[k] + (AG[k + 1] - AG[k]) * wz, a1 = AG[k + GZ] + (AG[k + GZ + 1] - AG[k + GZ]) * wz;
+    return a0 + (a1 - a0) * wy;
+  };
+  // Stil „Schichten“: Schnittlinien wie bei einem CT-Schichtbild – seit 7.11. spät senkrecht zur Mittellinie (kippen mit Lordose/Kyphose)
   // diff (Handy, 7.11.2026): Deckplatten als dichtes Band, Bandscheiben gekörnt statt geschnitten, Fortsätze lichter;
   // gleiche Punktzahl, nur anders verteilt. edge[i] = Kante (siehe tag) für den Shader.
   function* makeSlicesGen(n, step = 0.042, band = 0.16, diff = false) {
+    yield* axialGrid();
     const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), zone = new Float32Array(n), kind = new Float32Array(n), edge = new Float32Array(n);
     // Abtastung wie MeshSurfaceSampler (Fläche gewichtet, baryzentrisch), aber zuerst nur die Höhe:
     // ~88 % der Versuche fallen zwischen die Schnittebenen und werden ohne weitere Rechnung verworfen.
@@ -295,7 +337,9 @@ export function* spineStippleGen(nTarget, makeGrainNow = true) {
       let u = Math.random(), w = Math.random();
       if (u + w > 1) { u = 1 - u; w = 1 - w; }
       const t = 1 - u - w, a = lo * 9;
-      const y = (P[a + 1] * u + P[a + 4] * w + P[a + 7] * t - CY) * SC, f = y / step - Math.floor(y / step);
+      const y = (P[a + 1] * u + P[a + 4] * w + P[a + 7] * t - CY) * SC, z = (P[a + 2] * u + P[a + 5] * w + P[a + 8] * t) * SC;
+      let A = axialFast(y, z);
+      const f = A / step - Math.floor(A / step);
       const k = Cc[a + 1] * u + Cc[a + 4] * w + Cc[a + 7] * t, e = Cc[a + 2] * u + Cc[a + 5] * w + Cc[a + 8] * t;
       let free = false; // frei = nicht auf eine Schnittebene gelegt
       if (diff && e < -1.5) continue; // verdeckte Deckfläche
@@ -305,8 +349,10 @@ export function* spineStippleGen(nTarget, makeGrainNow = true) {
         if (Math.abs(f - 0.5) > band / 2) continue;
         if (diff && e < 0 && Math.random() > DIFF.proc) continue; // Fortsätze lichter
       }
-      const ys = free ? y : (Math.floor(y / step) + 0.5) * step; // auf die Schnittebene legen → klare Linien
-      pos[i * 3] = (P[a] * u + P[a + 3] * w + P[a + 6] * t) * SC; pos[i * 3 + 1] = ys + (y - ys) * 0.25; pos[i * 3 + 2] = (P[a + 2] * u + P[a + 5] * w + P[a + 8] * t) * SC;
+      // auf die Schnittebene legen → klare Linien: entlang der Achsen-Tangente zu 75 % zur Ebenenmitte schieben
+      if (!free) A = axial(y, z); // genau (setzt auch axT)
+      const sh = free ? 0 : ((Math.floor(A / step) + 0.5) * step - A) * 0.75;
+      pos[i * 3] = (P[a] * u + P[a + 3] * w + P[a + 6] * t) * SC; pos[i * 3 + 1] = y + axT[0] * sh; pos[i * 3 + 2] = z + axT[1] * sh;
       edge[i] = e;
       const nx = Nn[a] * u + Nn[a + 3] * w + Nn[a + 6] * t, ny = Nn[a + 1] * u + Nn[a + 4] * w + Nn[a + 7] * t, nz = Nn[a + 2] * u + Nn[a + 5] * w + Nn[a + 8] * t, nl = Math.hypot(nx, ny, nz) || 1;
       nor[i * 3] = nx / nl; nor[i * 3 + 1] = ny / nl; nor[i * 3 + 2] = nz / nl;
