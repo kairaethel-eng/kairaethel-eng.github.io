@@ -715,3 +715,57 @@ html.sheet-open{overflow:hidden}
 @media (max-width:400px){.sheet-alt .btn{flex:1 1 100%}}
 @media (prefers-reduced-motion:reduce){.sheet[open]{animation:none}}
 html.paused .sheet[open]{animation:none}
+/* Rundgang aus Augenhöhe (Kapitel 04, Go Kai 7.11. „1B+ 2a/a 3a 4 ja“): Knopf neben „Rundgang starten“ + Vollbild-Dialog
+   (eigene WebGL-Bühne, Fahrt aus src/ego/tour.js; Aufbau wie die Testseite rundgang-ego.html) */
+.t-ego{display:inline-flex;align-items:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:1.375rem;border:1px solid var(--amber);background:rgba(10,22,27,.55);color:var(--txt);font:700 .75rem/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .3s,transform .3s var(--ease)}
+.t-ego:hover{background:rgba(224,154,53,.16);transform:translateY(-1px)}
+.t-ego svg{width:1.125rem;height:1.125rem;fill:none;stroke:var(--amber);stroke-width:1.8;stroke-linejoin:round}
+.tour.in .t-ego,html.no-gl .t-ego,.t-ego[hidden]{display:none}
+@media (min-width:921px){.tour:not(.in) .tour-ctrl{grid-column:1/-1}} /* PC: Knopf rechts neben ‹ Rundgang starten › (Zeile darf in die freie Fläche unter dem Haus) */
+@media (max-width:920px){
+  .tour-ctrl .tour-prog{order:5}
+  .tour-ctrl .t-ego{order:6;margin-top:.25rem} /* Handy: eigene Zeile unter ‹ Rundgang starten › */
+  .tour:not(.in) .t-exit{display:none} /* unsichtbar belegte er sonst eine eigene Zeile (Lücke über dem Augenhöhe-Knopf) */
+}
+@media (max-width:359px){ /* 320 px: ‹ › brechen sonst um und schieben den Augenhöhe-Knopf aus dem Bild; Räume bleiben über Punkte/Wischen erreichbar */
+  .tour:not(.in) .tour-ctrl .t-btn{display:none}
+}
+html.ego-open{overflow:hidden}
+.ego{--e-ink:#0A161B;--e-txt:#EDE8DC;--e-dim:#B0BFC3;--e-line:rgba(237,232,220,.14);position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:var(--e-ink);color:var(--e-txt);overflow:hidden;touch-action:pinch-zoom;overscroll-behavior:contain}
+.ego[open]{animation:egoIn .35s ease-out}
+.ego::backdrop{background:var(--e-ink)}
+@keyframes egoIn{from{opacity:0}to{opacity:1}}
+.ego-gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.ego-gl:active{cursor:grabbing}
+.ego-veil{position:absolute;inset:0;background:var(--e-ink);opacity:0;pointer-events:none;transition:opacity .2s}
+.ego-veil.on{opacity:1}
+.ego-ui{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+.ego-ui>*{pointer-events:auto}
+.ego-bar{margin-bottom:auto;display:flex;align-items:center;gap:1rem;padding:.875rem max(1.25rem,3vw)}
+.ego-back{appearance:none;border:1px solid var(--e-line);border-radius:1.375rem;background:rgba(16,34,42,.82);color:var(--e-txt);font:600 .8125rem/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;min-height:2.75rem;padding:0 1rem;cursor:pointer;white-space:nowrap}
+.ego-back:hover{border-color:var(--amber)}
+.ego-tag{margin:0 0 0 auto;font:600 .75rem/1.2 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--amber);text-align:right}
+.ego-loading{position:absolute;left:0;right:0;top:45%;text-align:center;color:var(--e-dim);margin:0;pointer-events:none}
+.ego-cap{margin:0 max(1.25rem,3vw);max-width:34rem;padding:1rem 1.25rem;border-radius:.375rem;background:rgba(10,22,27,.88);-webkit-backdrop-filter:blur(.5rem);backdrop-filter:blur(.5rem);border:1px solid var(--e-line);transition:opacity .5s,visibility 0s;pointer-events:none}
+.ego-cap.hide{opacity:0;visibility:hidden;transition:opacity .5s,visibility 0s .5s}
+.ego-kicker{margin:0 0 .5rem;font:600 .875rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--e-txt)}
+.ego-kicker i{font:italic 400 1.25rem/1 var(--serif);letter-spacing:0;color:var(--amber);text-transform:none;margin-right:.25rem}
+.ego-cap h3{margin:0 0 .5rem;font:800 clamp(1.375rem,3.4vw,2rem)/1.05 var(--disp);letter-spacing:-.02em;color:var(--e-txt)}
+.ego-text{margin:0;font-size:1.125rem;line-height:1.5;color:var(--e-txt)}
+.ego-contact{pointer-events:auto;display:inline-flex;align-items:center;gap:.375rem;min-height:2.75rem;margin-top:.5rem;color:var(--amber);font:700 .8125rem/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;text-decoration:none}
+.ego-contact[hidden]{display:none}
+.ego-contact:hover{text-decoration:underline;text-underline-offset:.25em}
+.ego-ctl{display:flex;justify-content:center;align-items:center;gap:.75rem;padding:.875rem 1rem .5rem}
+.ego-ctl button{min-height:3rem;min-width:3rem;border-radius:1.5rem;border:1px solid var(--e-line);background:rgba(16,34,42,.7);color:var(--e-txt);font:700 1.25rem/1 var(--sans);cursor:pointer}
+.ego-ctl button:disabled{opacity:.45;cursor:default}
+.ego-ctl .go{padding:0 1.5rem;border-radius:3px;background:var(--amber);border-color:var(--amber);color:#14110A;font:700 .8125rem/1 var(--sans);letter-spacing:.15em;text-transform:uppercase}
+.ego-opts{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem;padding:0 1rem 1.25rem}
+.ego-opts button{min-height:2.75rem;padding:0 .875rem;border-radius:1.375rem;border:1px solid var(--e-line);background:rgba(16,34,42,.82);color:var(--e-dim);font:600 .875rem/1 var(--sans);cursor:pointer}
+.ego-opts button[aria-pressed=true]{background:var(--e-txt);border-color:var(--e-txt);color:#14110A}
+.ego-opts button:disabled{opacity:.75;cursor:default}
+.ego button:focus-visible,.ego a:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+.ego-hint{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 4.25rem);text-align:center;margin:0;font-size:.875rem;letter-spacing:.04em;color:var(--e-dim);pointer-events:none;transition:opacity .6s}
+.ego-hint.gone{opacity:0}
+@media (prefers-reduced-motion:reduce){.ego[open]{animation-duration:.12s}.ego-veil{transition-duration:.12s}}
+@media (max-width:700px){.ego-cap{margin:0 1rem;padding:.75rem 1rem}.ego-opts button{padding:0 .625rem}.ego-bar{padding:.75rem 1rem}.ego-ctl{gap:.5rem}.ego-ctl .go{padding:0 .875rem;letter-spacing:.08em;white-space:nowrap}}
+@media (max-width:359px){.ego-ctl{gap:.375rem}.ego-ctl button{min-width:2.75rem;min-height:2.75rem}.ego-ctl .go{min-height:3rem;padding:0 .5rem;letter-spacing:.02em;font-size:.75rem}} /* 320 px: Startknopf passt in die Zeile */

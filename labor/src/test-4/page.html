@@ -136,6 +136,7 @@
             <button type="button" class="t-btn" id="tourPrev" aria-label="Vorheriger Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
             <button type="button" class="t-play" id="tourPlay" aria-pressed="false"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><span>Rundgang starten</span></button>
             <button type="button" class="t-btn" id="tourNext" aria-label="Nächster Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+            <button type="button" class="t-ego" id="egoOpen" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg><span>Rundgang aus Augenhöhe</span></button>
             <button type="button" class="t-exit" id="tourExit">Übersicht</button>
             <div class="tour-prog" aria-hidden="true"><i id="tourProg"></i></div>
           </div>
@@ -299,6 +300,35 @@
       <p class="sheet-wait" aria-hidden="true">Kalender wird geladen …</p>
     </div>
     <p class="sheet-foot"><a href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener">Kalender in neuem Fenster öffnen</a></p>
+  </div>
+</dialog>
+<!-- Rundgang aus Augenhöhe (Kapitel 04, Go Kai 7.11. „1B+ 2a/a 3a 4 ja“): eigene Vollbild-Bühne als Dialog, Quelle src/ego/tour.js -->
+<dialog class="ego" id="ego" aria-labelledby="egoLabel">
+  <canvas class="ego-gl" id="egoGl" aria-hidden="true"></canvas>
+  <div class="ego-veil" id="egoVeil" aria-hidden="true"></div>
+  <div class="ego-ui">
+    <div class="ego-bar">
+      <button type="button" class="ego-back" id="egoClose"><span aria-hidden="true">‹</span> Übersicht</button>
+      <h2 class="ego-tag" id="egoLabel">Rundgang aus Augenhöhe</h2>
+    </div>
+    <p class="ego-loading" id="egoLoading" role="status" hidden>Praxis wird aufgebaut …</p>
+    <section class="ego-cap" id="egoCap" aria-live="polite">
+      <p class="ego-kicker"><i id="egoNo">00</i> <span id="egoKick">Tür</span></p>
+      <h3 id="egoTitle">Die Tür</h3>
+      <p class="ego-text" id="egoText"></p>
+      <a class="ego-contact" id="egoContact" href="#tuer" hidden>Termin &amp; Kontakt <span aria-hidden="true">→</span></a>
+    </section>
+    <div class="ego-ctl" role="group" aria-label="Rundgang steuern">
+      <button type="button" id="egoPrev" aria-label="Zurück">‹</button>
+      <button type="button" id="egoPlay" class="go" autofocus>▶ Rundgang starten</button>
+      <button type="button" id="egoNext" aria-label="Weiter">›</button>
+    </div>
+    <div class="ego-opts" role="group" aria-label="Darstellung">
+      <button type="button" id="egoStill" aria-pressed="false">Ohne Fahrt</button>
+      <button type="button" id="egoCalm" aria-pressed="false">Ruhig</button>
+      <button type="button" id="egoBig" aria-pressed="false">Größere Punkte</button>
+    </div>
+    <p class="ego-hint" id="egoHint">Ziehen = umschauen</p>
   </div>
 </dialog>
 <!--JS-->

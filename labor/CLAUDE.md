@@ -22,6 +22,7 @@ Kurzfassung für neue Chats, damit der alte Verlauf nicht geladen werden muss.
 - `shapes.js` – Punktwolken (Körper, Wirbelsäule, Haus, Logo) + `spineStipple` (Knochen „Schichten“/„Körnung“, Nervenkurven).
 - `services.js` – Leistungs-Motive (eine Partikel-Bühne, Motive prozedural, Reihenfolge = Liste „Alle Leistungen“).
 - `praxis.js` – Praxis-Innenraum (`praxisScan`: Scan-Linien + gestochene Möbel mit Kern, Wirbelsäulen-Modell `SPINE_AT` in Behandlung 1). Rundgang ohne Scrollen: `goRoom`, `tourIdx`, `xrayPose` in `main.js`.
+- Rundgang aus Augenhöhe (Kapitel 04, Knopf `#egoOpen`): Vollbild-`<dialog id="ego">` mit eigener WebGL-Bühne, Fahrt aus `../ego/tour.js` (`createEgo`, gemeinsam mit der Testseite `rundgang-ego.html`); in `main.js` `ego`, `egoOpen` (Seite rendert dann nicht), `egoZoom` (Anflug zur Tür, B+), `buildPrx()`/`prxP` (Praxis-Punktwolke einmal, auch für den Dialog).
 - Manuthera-Bühne (Kapitel 04, `#manuthera`): kommt aus `../manu/ideaA.js` (+ `common.js`, `stipple.js`), eigene WebGL-Bühne; in `main.js` `manu`, `manuVisible()` blendet Hintergrund und Röntgenblick aus.
 - `../shared/spine.js` – prozedurale Wirbelsäule (C1–Co), Zonen, Nervenwurzeln.
 - `page.html`, `style.css` – Inhalt/Gestaltung. Desktop-Grenze 920 px.
