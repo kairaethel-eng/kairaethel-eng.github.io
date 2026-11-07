@@ -5,6 +5,10 @@
 
 ## ▶ Nächster Chat: hier weitermachen (Stand 7.11.2026 spät)
 
+### ✅ Online-Terminkalender als Blatt (Option C, Go Kai 7.11. spät)
+„Termin“ (Leiste), „Termin buchen“ (Start) und „Online-Termin buchen“ (Kap. 05) öffnen ein Blatt (PC rechts, Handy von unten); Optica-Kalender lädt erst nach „Kalender laden“, Datenschutz § 4 neu. Details `ENTSCHEIDUNGEN.md` → „Online-Terminkalender als Blatt“.
+- **Offen von Kai:** Online-Termine in Optica Viva freischalten (Kalender meldet „keine Onlinetermine“) · welche Terminarten online · AV-Vertrag/Anbieter prüfen · iPhone-Test (Blatt, Kalender scrollen, Zurück) · Übergangsseite (Wurzel) bekommt Link/Blatt nur mit eigenem Go.
+
 ### ✅ Chat A · Scanner am PC – umgesetzt (Go Kai „1A 2A 3A, 4 ja“, 7.11. spät)
 Kapitel 03 am PC ist eine stehende Bühne (160svh): Aufzug ganz rechts (Griff ziehen, Haltestelle anklicken, Mausrad über dem Aufzug, Pfeiltasten), Silhouette vor dem Aufzug nur in der Nahansicht, Karte links bleibt, Schilder frei platziert, `segnav` als zweite Bedienung; Aufzug liegt in `#achse` (Tab direkt nach `segnav`), `aria-current`, roving tabindex. Alte Fahrt mit `?scan=0`. Details `ENTSCHEIDUNGEN.md` → „Scanner am PC – Hybrid“.
 - Geprüft (Chromium/SwiftShader, intern): 1440×900 + 2560×1440 (Klick, Rad, Tasten, Ziehen, segnav, Seite scrollt außerhalb und an den Enden, Tab-Reihenfolge, Übergang Kap. 04), „Bewegung reduzieren“, `?scan=0`; Handy 390×844 Vergleichsbild vorher/nachher gleich. axe (d, dr, xl, m): nur der bekannte Kontrast-Treffer Kap. 02 (unbeleuchtete Wörter); keine Konsolenfehler. `tools/audit.cjs`-Offsets für Kap. 03 PC angepasst.

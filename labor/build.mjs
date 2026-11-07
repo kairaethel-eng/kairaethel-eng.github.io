@@ -26,7 +26,7 @@ const PAGES = {
   'ego': { out: 'rundgang-ego.html' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
-  'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true },
+  'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true, noTermin: true }, // Übergangsseite hat kein Termin-Blatt
   'start-imp': { out: '../impressum.html', dir: 'recht', page: 'impressum.html', root: true },
   // Livegang: Puls · Scan als Startseite + Rechtsseiten, ohne Labor-Reste, mit Favicon, Link-Vorschau, Praxisdaten
   'live': { out: `${liveDir}/index.html`, dir: 'test-4', live: 'index.html' },
@@ -34,7 +34,7 @@ const PAGES = {
   'live-ds': { out: `${liveDir}/datenschutz.html`, dir: 'recht', page: 'datenschutz.html', root: true, live: 'datenschutz.html' },
 };
 // Rechtsseiten in der Wurzel: Labor-Hinweis weg, Links zeigen auf die Startadresse statt ins Labor
-const ROOT_LINKS = [[/<div class="labnote"[\s\S]*?<\/div>\r?\n?/g, ''], [/href="test-4-puls-scan\.html"/g, 'href="index.html"'], [/href="recht-impressum\.html"/g, 'href="impressum.html"'], [/href="recht-datenschutz\.html"/g, 'href="datenschutz.html"'], [/>Zur Startseite</g, '>Zur Startseite<']];
+const ROOT_LINKS = [[/<div class="labnote"[\s\S]*?<\/div>\r?\n?/g, ''], [/href="test-4-puls-scan\.html"/g, 'href="index.html"'], [/href="recht-impressum\.html"/g, 'href="impressum.html"'], [/href="recht-datenschutz\.html(#[^"]*)?"/g, 'href="datenschutz.html$1"'], [/>Zur Startseite</g, '>Zur Startseite<']];
 
 // ---- Livegang: Kopf- und Textersetzungen ----------------------------------------------------
 const LIVE_TITLE = {
@@ -96,7 +96,7 @@ function liveBody(body) {
     .replace(/ · schematisch<\/p>/, '</p>')
     .replace(/[ \t]*<span class="lab">[^<]*<\/span>\r?\n?/, '')
     .replace(/href="recht-impressum\.html"/g, 'href="impressum.html"')
-    .replace(/href="recht-datenschutz\.html"/g, 'href="datenschutz.html"');
+    .replace(/href="recht-datenschutz\.html(#[^"]*)?"/g, 'href="datenschutz.html$1"');
 }
 // -------------------------------------------------------------------------------------------
 
@@ -133,6 +133,9 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   if (cfg.live) css = css.replace(/url\(assets\//g, 'url('); // Standbilder (ohne WebGL) liegen neben der Live-Seite
   let tpl = readFileSync(join(dir, cfg.page || 'page.html'), 'utf8');
   if (cfg.root) ROOT_LINKS.forEach(([re, to]) => { tpl = tpl.replace(re, to); });
+  // Datenschutz § 4 Online-Terminbuchung (<!--TERMIN-->…): ohne Termin-Blatt heraus, folgende §§ eins zurück
+  if (cfg.noTermin) tpl = tpl.replace(/[ \t]*<!--TERMIN-->[\s\S]*?<!--\/TERMIN-->\r?\n?/g, '').replace(/<i>§ ([5-9])<\/i>/g, (m, n) => `<i>§ ${n - 1}</i>`);
+  else tpl = tpl.replace(/<!--\/?TERMIN-->/g, '');
   const [headPart, bodyPart] = tpl.split('<!--BODY-->');
   let head = headPart.replace('/*FONTS*/', () => (cfg.fonts ? FONTS[cfg.fonts]() : fontsCss)).replace('/*CSS*/', () => css);
   let body = bodyPart.replace('<!--JS-->', () => `<script>${js}</script>`);

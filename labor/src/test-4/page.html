@@ -23,7 +23,7 @@
   </ol>
   <button type="button" class="chap-now" id="chapNow" aria-expanded="false" aria-controls="chapters" aria-label="Kapitel wählen"></button>
   <button type="button" class="motion-btn" id="motionBtn" aria-pressed="false" aria-label="Bewegung anhalten" title="Bewegung anhalten"><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bewegung</span></button>
-  <a class="btn btn-small" href="#tuer">Termin</a>
+  <a class="btn btn-small" href="#tuer" data-termin aria-haspopup="dialog">Termin</a>
 </nav>
 
 <main>
@@ -37,7 +37,7 @@
       <p class="hero-sub" id="heroSub">Physiotherapie in Schorndorf mit Kompetenz und Herz. <span class="only-fine">Fahren Sie mit der Maus über den Körper und lösen Sie die Verspannungen.</span><span class="only-touch">Streichen Sie seitlich über den Körper und lösen Sie die Verspannungen.</span></p>
       <p class="nogl-note">Die bewegte Ansicht braucht einen aktuellen Browser.</p>
       <div class="actions">
-        <a class="btn" href="#tuer">Termin anfragen</a>
+        <a class="btn" href="#tuer" data-termin aria-haspopup="dialog">Termin buchen</a>
         <a class="btn btn-ghost" href="#achse">Zur Wirbelsäule</a>
       </div>
       <div class="meter" aria-hidden="true"><span>Spannung</span><div class="meter-bar"><i id="tension"></i></div><b id="tensionVal">100</b></div>
@@ -247,9 +247,10 @@
       <div>
         <p class="kicker"><i>05</i> Tür</p>
         <h2 id="t-title">Der erste<br><em>Schritt.</em></h2>
-        <p class="lead">Schreiben Sie mir eine E-Mail oder sprechen Sie auf den Anrufbeantworter. Ich melde mich mit einem Terminvorschlag.</p>
+        <p class="lead">Buchen Sie Ihren Termin direkt online. Oder schreiben Sie mir eine E-Mail bzw. sprechen Sie auf den Anrufbeantworter, dann melde ich mich mit einem Terminvorschlag.</p>
         <div class="actions">
-          <a class="btn" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage&amp;body=Guten%20Tag%20Herr%20Raethel%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20einen%20Termin%20anfragen.%0D%0A%0D%0AName%3A%0D%0AR%C3%BCckrufnummer%3A%0D%0AWunschzeiten%3A%0D%0A%C3%84rztliche%20Verordnung%20vorhanden%20%28ja%2Fnein%29%3A%0D%0A%0D%0AMeine%20Beschwerde%20schildere%20ich%20Ihnen%20bitte%20erst%20im%20Gespr%C3%A4ch%2C%20nicht%20per%20E-Mail.%0D%0A%0D%0AVielen%20Dank">Termin anfragen</a>
+          <a class="btn" href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener" data-termin aria-haspopup="dialog">Online-Termin buchen</a>
+          <a class="btn btn-ghost" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage&amp;body=Guten%20Tag%20Herr%20Raethel%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20einen%20Termin%20anfragen.%0D%0A%0D%0AName%3A%0D%0AR%C3%BCckrufnummer%3A%0D%0AWunschzeiten%3A%0D%0A%C3%84rztliche%20Verordnung%20vorhanden%20%28ja%2Fnein%29%3A%0D%0A%0D%0AMeine%20Beschwerde%20schildere%20ich%20Ihnen%20bitte%20erst%20im%20Gespr%C3%A4ch%2C%20nicht%20per%20E-Mail.%0D%0A%0D%0AVielen%20Dank">Per E-Mail anfragen</a>
           <a class="btn btn-ghost" href="tel:+4971819931470">07181 9931470</a>
           <button type="button" class="btn btn-ghost" id="copyMail" hidden>E-Mail-Adresse kopieren</button>
         </div>
@@ -274,4 +275,30 @@
     </footer>
   </section>
 </main>
+<!-- Termin-Blatt (Option C, Go Kai 7.11.): Online-Kalender von Optica Viva, lädt erst nach Klick auf „Kalender laden“ -->
+<dialog class="sheet" id="terminSheet" aria-labelledby="ts-title">
+  <div class="sheet-in">
+    <div class="sheet-head">
+      <p class="kicker"><i>05</i> Tür · Termin</p>
+      <h2 id="ts-title">Termin <em>buchen.</em></h2>
+      <button type="button" class="sheet-x" id="tsClose" aria-label="Schließen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sheet-pre" id="tsPre">
+      <p class="sheet-lead">Wählen Sie Ihren Termin direkt im Kalender meiner Praxis.</p>
+      <button type="button" class="btn" id="tsLoad">Kalender laden</button>
+      <p class="sheet-note">Der Kalender gehört zu meiner Praxissoftware Optica Viva und wird erst nach Ihrem Klick geladen. Mit „Kalender laden“ stimmen Sie zu, dass dabei Daten an Optica und zum Schutz vor Missbrauch an Google (reCAPTCHA) übertragen werden. <a href="recht-datenschutz.html#termin">Mehr dazu im Datenschutz</a></p>
+      <p class="sheet-note">Der Kalender fragt nur nach Ihren Kontaktdaten. Ihre Beschwerden besprechen wir persönlich.</p>
+      <div class="sheet-alt">
+        <p class="sheet-alt-h">Lieber ohne Online-Kalender?</p>
+        <a class="btn btn-ghost" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage&amp;body=Guten%20Tag%20Herr%20Raethel%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20einen%20Termin%20anfragen.%0D%0A%0D%0AName%3A%0D%0AR%C3%BCckrufnummer%3A%0D%0AWunschzeiten%3A%0D%0A%C3%84rztliche%20Verordnung%20vorhanden%20%28ja%2Fnein%29%3A%0D%0A%0D%0AMeine%20Beschwerde%20schildere%20ich%20Ihnen%20bitte%20erst%20im%20Gespr%C3%A4ch%2C%20nicht%20per%20E-Mail.%0D%0A%0D%0AVielen%20Dank">Per E-Mail anfragen</a>
+        <a class="btn btn-ghost" href="tel:+4971819931470">07181 9931470</a>
+        <p class="sheet-note">Mo–Fr 8:30–19:30 Uhr · Telefon: nur Anrufbeantworter, ich rufe zurück.<span class="dd-open" id="tsOpen" hidden></span></p>
+      </div>
+    </div>
+    <div class="sheet-frame" id="tsFrame" data-src="https://termine.opticaviva.de/b/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" hidden>
+      <p class="sheet-wait" aria-hidden="true">Kalender wird geladen …</p>
+    </div>
+    <p class="sheet-foot"><a href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener">Kalender in neuem Fenster öffnen</a></p>
+  </div>
+</dialog>
 <!--JS-->

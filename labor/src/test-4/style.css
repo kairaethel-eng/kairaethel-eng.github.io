@@ -674,3 +674,44 @@ html.licht .btn:not(.btn-ghost){background:#E09A35;border-color:#E09A35}
 html.licht .laws,html.licht .door-inner{text-shadow:0 1px 2px var(--shadow),0 0 1.375rem var(--shadow)}
 html.licht.is-licht .top .brand svg{filter:drop-shadow(0 0 1px rgba(28,48,56,.25))}
 
+
+/* Termin-Blatt (Option C, Go Kai 7.11.2026): PC von rechts, Handy von unten; Optica-Kalender lädt erst nach Klick */
+html.sheet-open{overflow:hidden}
+.sheet{position:fixed;inset:0 0 0 auto;margin:0;padding:0;width:min(40rem,100vw);height:100%;max-width:none;max-height:none;border:0;border-left:1px solid var(--line);background:var(--ink2);color:var(--txt);overscroll-behavior:contain;box-shadow:-2rem 0 4rem -1rem rgba(0,0,0,.5)}
+.sheet::backdrop{background:rgba(5,12,15,.62)}
+.sheet[open]{animation:sheetIn .55s var(--ease)}
+@keyframes sheetIn{from{transform:translateX(100%)}}
+.sheet [hidden]{display:none!important}
+.sheet-in{box-sizing:border-box;display:flex;flex-direction:column;height:100%;overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 1.75rem) max(var(--gut-r),2.25rem) calc(env(safe-area-inset-bottom,0px) + 1rem) 2.25rem}
+.sheet-head{position:relative;padding-right:3.75rem;margin-bottom:1.75rem}
+.sheet-head .kicker{margin-bottom:1rem}
+.sheet-head h2{font-size:clamp(2.25rem,4vw,3.5rem)}
+.sheet.has-frame .sheet-head{margin-bottom:1rem}
+.sheet.has-frame .sheet-head h2{font-size:clamp(1.75rem,3vw,2.5rem)}
+.sheet-x{position:absolute;top:-.375rem;right:-.375rem;width:3rem;height:3rem;display:grid;place-items:center;padding:0;border-radius:50%;border:1px solid rgba(237,232,220,.3);background:transparent;color:var(--txt);cursor:pointer;transition:border-color .3s}
+.sheet-x:hover{border-color:var(--txt)}
+.sheet-x svg{width:1.25rem;height:1.25rem;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round}
+.sheet-pre{display:flex;flex-direction:column;align-items:flex-start;gap:1.125rem}
+.sheet-lead{font-size:1.125rem;color:var(--dim);max-width:40ch}
+.sheet-note{font-size:.875rem;color:var(--mute);max-width:48ch}
+.sheet-note a,.sheet-foot a{color:var(--dim);text-decoration:underline;text-decoration-color:rgba(224,154,53,.55);text-underline-offset:.2em;text-decoration-thickness:1px}
+.sheet-note a:hover,.sheet-foot a:hover{color:var(--amber)}
+.sheet-alt{display:flex;flex-wrap:wrap;gap:.75rem;width:100%;margin-top:.875rem;padding-top:1.375rem;border-top:1px solid var(--line)}
+.sheet-alt-h{width:100%;font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.sheet-alt .sheet-note{width:100%;margin-top:.25rem}
+.sheet-frame{position:relative;flex:1;min-height:24rem;border-radius:.5rem;overflow:hidden;background:#fff}
+.sheet-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;opacity:0;transition:opacity .4s}
+.sheet-frame.loaded iframe{opacity:1}
+.sheet-wait{position:absolute;inset:0;display:grid;place-items:center;font-size:.9375rem;color:#44474E}
+.sheet-foot{margin-top:.875rem;font-size:.875rem;color:var(--mute)}
+@media (max-width:920px){
+  .sheet{inset:auto 0 0 0;width:100%;height:calc(100% - max(2.5rem,env(safe-area-inset-top,0px) + 1rem));border-left:0;border-top:1px solid var(--line);border-radius:1rem 1rem 0 0;box-shadow:0 -2rem 4rem -1rem rgba(0,0,0,.5)}
+  .sheet[open]{animation-name:sheetUp}
+  .sheet-in{padding:1.5rem var(--gut-r) calc(env(safe-area-inset-bottom,0px) + .75rem) var(--gut)}
+  .sheet-head{margin-bottom:1.25rem}
+  .sheet-frame{min-height:20rem}
+}
+@keyframes sheetUp{from{transform:translateY(100%)}}
+@media (max-width:400px){.sheet-alt .btn{flex:1 1 100%}}
+@media (prefers-reduced-motion:reduce){.sheet[open]{animation:none}}
+html.paused .sheet[open]{animation:none}

@@ -56,6 +56,7 @@ const isDesktop = () => VW > 920;
 
 // ---------- Scrollen ----------
 let lenis = null;
+let sheetOpen = false; // Termin-Blatt offen (Lenis steht, Handy rendert nicht)
 if (!reduced) {
   // ruhiges Scrollen: Mausrad langsamer, weiches Nachgleiten (Scrollbalken bleibt direkt).
   // Erst nach dem ersten Bild anlegen: Lenis misst die Seite, das erzwänge sonst ein zweites Layout im Start-Task (A1).
@@ -66,7 +67,7 @@ if (!reduced) {
   gsap.ticker.lagSmoothing(0);
 }
 const scrollToY = (y) => (lenis ? lenis.scrollTo(y, { duration: 1.8 }) : scrollTo({ top: y }));
-$$('a[href^="#"]:not(.skip)').forEach((a) => a.addEventListener('click', (e) => { // .skip: Browser-Sprung, damit der Fokus mitgeht (Durchsicht 7.11.)
+$$('a[href^="#"]:not(.skip):not([data-termin])').forEach((a) => a.addEventListener('click', (e) => { // .skip: Browser-Sprung, damit der Fokus mitgeht (Durchsicht 7.11.)
   const t = $(a.getAttribute('href')); if (!t) return;
   e.preventDefault(); scrollToY(t.getBoundingClientRect().top + scrollY);
 }));
@@ -2060,6 +2061,7 @@ setInterval(() => {
 function tick() {
   lastTick = performance.now();
   frameN++;
+  if (sheetOpen && !isDesktop()) return; // Handy: Termin-Blatt deckt die Szene ab → nicht rendern (Akku)
   if (!viaWatchdog && !isDesktop() && performance.now() - lastInput > 1500 && frameN % 2) return;
   timer.update();
   const dt = Math.min(timer.getDelta(), 0.05);
@@ -2247,7 +2249,8 @@ if (!reduced) requestAnimationFrame(() => {
       catch (e) { selectAddr(); say('Adresse markiert – bitte selbst kopieren'); }
     });
   }
-  const openEl = document.getElementById('openNow');
+  const openEls = ['openNow', 'tsOpen'].map((id) => document.getElementById(id)).filter(Boolean); // Kapitel 05 + Termin-Blatt
+  const openEl = openEls.length ? { set hidden(v) { openEls.forEach((e) => (e.hidden = v)); }, set textContent(t) { openEls.forEach((e) => (e.textContent = t)); } } : null;
   if (openEl) {
     // Feiertage Baden-Württemberg 2026/2027 (feste Liste)
     const HOL = new Set(['2026-01-01', '2026-01-06', '2026-04-03', '2026-04-06', '2026-05-01', '2026-05-14', '2026-05-25', '2026-06-04', '2026-10-03', '2026-11-01', '2026-12-25', '2026-12-26',
@@ -2274,6 +2277,47 @@ if (!reduced) requestAnimationFrame(() => {
       } catch (e) { openEl.hidden = true; }
     };
     upd(); setInterval(upd, 60000);
+  }
+}
+
+// Termin-Blatt (Option C, Go Kai 7.11.2026): „Termin“-Knöpfe öffnen ein Blatt (PC rechts, Handy von unten).
+// Der Optica-Kalender (iframe) lädt erst nach „Kalender laden“ – vorher keine Verbindung zu Optica/Google (Datenschutz § 4).
+// Ohne JS bzw. ohne <dialog>: Leiste/Startbereich springen zu Kapitel 05, der Knopf dort öffnet Optica in neuem Fenster.
+{
+  const dlg = document.getElementById('terminSheet');
+  if (dlg && typeof dlg.showModal === 'function') {
+    const pre = document.getElementById('tsPre'), box = document.getElementById('tsFrame'), load = document.getElementById('tsLoad'), xBtn = document.getElementById('tsClose');
+    let opener = null, frame = null;
+    const open = (e) => {
+      e.preventDefault();
+      if (dlg.open) return;
+      opener = e.currentTarget;
+      document.documentElement.classList.add('sheet-open');
+      lenis?.stop();
+      sheetOpen = true;
+      dlg.showModal();
+      (frame ? xBtn : load).focus();
+    };
+    const close = () => { if (dlg.open) dlg.close(); };
+    dlg.addEventListener('close', () => {
+      document.documentElement.classList.remove('sheet-open');
+      lenis?.start();
+      sheetOpen = false;
+      opener?.focus({ preventScroll: true });
+    });
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); }); // Klick auf den abgedunkelten Rand
+    xBtn.addEventListener('click', close);
+    load.addEventListener('click', () => {
+      frame = document.createElement('iframe');
+      frame.title = 'Online-Terminkalender HOP (Optica Viva)';
+      frame.src = box.dataset.src;
+      frame.addEventListener('load', () => box.classList.add('loaded'), { once: true });
+      box.appendChild(frame);
+      pre.hidden = true; box.hidden = false;
+      dlg.classList.add('has-frame');
+      xBtn.focus();
+    });
+    $$('[data-termin]').forEach((a) => a.addEventListener('click', open));
   }
 }
 

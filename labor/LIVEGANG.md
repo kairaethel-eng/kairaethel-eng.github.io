@@ -21,6 +21,7 @@ Rückweg: Diese Werte sind die Sicherung. Werden A und CNAME www wieder darauf g
 - Beim Live-Build automatisch: Titel „HOP – Home of Physiotherapy · Kai Raethel, Schorndorf“, Beschreibung, Canonical, Favicon (SVG in der Datei), `apple-touch-icon.png` (180 px), Link-Vorschau (Open Graph, `og.jpg` 1200×630, 66 KB), strukturierte Praxisdaten (schema.org `Physiotherapy`: Name, Adresse, Telefon, E-Mail, Zeiten Mo–Fr 8:30–19:30), `theme-color`. Entfernt: „Testseite 4“, „Schematischer Grundriss …“, „· schematisch“, Labor-Hinweis, Artifact-Meta, CSS-Arbeitskommentare. Links Impressum/Datenschutz auf die Wurzel.
 - Bilder liegen in `labor/assets/og.jpg` und `labor/assets/apple-touch-icon.png` (aus der Seite selbst mit deren Schriften erzeugt) und werden beim Build kopiert.
 - Keine externen Abrufe, keine Cookies, keine Drittskripte → Datenschutztext passt zu GitHub Pages; kein Cookie-Banner.
+- Ausnahme seit 7.11.: Termin-Blatt lädt den Optica-Kalender (iframe, mit Google reCAPTCHA und Optica-Cookie) **erst nach Klick** auf „Kalender laden“ (Einwilligung, Datenschutz § 4) → weiterhin kein Cookie-Banner nötig [A, Fachperson prüft]. Vor dem Livegang: Online-Termine in Viva freigeschaltet? Die Übergangsseite (`start-ds`) baut § 4 heraus.
 
 ## Reihenfolge bis zum Livegang
 1. **Kai prüft die Vorschau** (iPhone + PC): https://kairaethel-eng.github.io/labor/live/ – gesammelt melden, dann Go für Feinschliff.
