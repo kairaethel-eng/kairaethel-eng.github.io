@@ -709,7 +709,7 @@ html.sheet-open{overflow:hidden}
   .sheet[open]{animation-name:sheetUp}
   .sheet-in{padding:1.5rem var(--gut-r) calc(env(safe-area-inset-bottom,0px) + .75rem) var(--gut)}
   .sheet-head{margin-bottom:1.25rem}
-  .sheet-frame{min-height:20rem}
+  .sheet-frame{min-height:20rem;margin:0 calc(-1 * var(--gut-r)) 0 calc(-1 * var(--gut));border-radius:0} /* volle Breite: Optica-Wochenansicht passt sonst nicht (So. abgeschnitten) */
 }
 @keyframes sheetUp{from{transform:translateY(100%)}}
 @media (max-width:400px){.sheet-alt .btn{flex:1 1 100%}}
