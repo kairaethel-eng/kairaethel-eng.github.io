@@ -1,4 +1,4 @@
-# Übergabe – Stand 7.11.2026 spät (Scanner am PC + Rundgang aus Augenhöhe in Kap. 04 umgesetzt; offen: Kais Tests, Nebenthemen, siehe ▶)
+# Übergabe – Stand 7.11.2026 spät (Scanner am PC + Rundgang aus Augenhöhe in Kap. 04 + Nebenthemen 1–3 umgesetzt; offen: Kais Tests, siehe ▶)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
@@ -6,6 +6,35 @@
 ## ▶ Nächster Chat: hier weitermachen (Stand 7.11.2026 spät)
 
 > **Zuerst Kai fragen:** Wie war der iPhone-Test „Rundgang aus Augenhöhe“ (Kap. 04)? Am PC sagt Kai „super“ (7.11. spät). Abfragen: Anflug zur Tür, Tempo der Fahrt, Zurück-Wischgeste in Safari schließt den Rundgang, Knopfzeile lesbar, Aufbau beim ersten Klick, Seite scrollt beim Wischen auf den Knöpfen nicht mit. Rückmeldung = kein Auftrag → je Punkt Optionen, Go abwarten.
+
+### ⏱ Messung Livegang-Vorschau `labor/live/` auf Kais PC (7.11. spät, Stand `0a42a6f`, nur Messung, Code unverändert)
+Aufbau: lokaler Node-Server (127.0.0.1), Chrome 1440×900 bzw. Handy 390×844 (DPR 3, Touch) mit CPU-Drossel 4×, Messung per DevTools-Protokoll (PerformanceObserver für LCP/CLS/Long Tasks/Event-Timing, Bildrate per rAF), Lighthouse 12 lokal (`--only-categories` alle vier). Keine Telemetrie, keine externen Seiten. Das Plugin `chrome-devtools-mcp` wurde **nicht** installiert (`/plugin install` geht nur im Terminal-Claude von Kai) – gleiche Werte stattdessen direkt über das Protokoll. **Wichtig [B]:** Headless-Chrome rendert WebGL per Software (SwiftShader, kein Grafikchip) → Bildraten und Interaktionszeiten unten sind **Untergrenzen**, auf Kais echter Grafikkarte/iPhone deutlich besser; Ladewerte (LCP, CLS, Lighthouse) sind aussagekräftiger.
+
+| Messwert | PC 1440×900 | Handy 390×844, CPU 4× |
+|---|---|---|
+| Lighthouse Performance | 66 | 47 |
+| Lighthouse Accessibility | 96 | 96 |
+| Lighthouse Best Practices | 100 | 100 |
+| Lighthouse SEO | 63 (nur `noindex`: „is-crawlable“, gewollt) | 63 (dto.) |
+| FCP / LCP (Lighthouse) | 1,1 s / 1,1 s (Element `h1#heroTitle`) | 6,6 s / 6,8 s (Element `p.kicker`) |
+| LCP (eigener Lauf, ohne Drossel-Simulation) | 1,9 s (`p.hero-sub`) | 2,7 s (`p.kicker`) |
+| CLS | 0 | 0 (0,004 nach Durchscrollen) |
+| TBT (Lighthouse) | 900 ms | 520 ms |
+| Long Tasks im Lauf (>50 ms) / längster | 10 / 676 ms | 106 / 1192 ms (direkt nach Start) |
+| Speed Index / Interactive | 1,6 s / 2,2 s | 6,6 s / 9,7 s |
+| Hauptthread-Arbeit gesamt | 2,6 s | 10,9 s |
+| Bildrate im Stand (Hero, Partikel) | ≈ 22 B/s (SwiftShader) | ≈ 17 B/s |
+| Bildrate beim Durchscrollen (8076 bzw. 9542 px) | ≈ 16,5 B/s, längster Frame 650 ms | ≈ 32 B/s, längster Frame 250 ms |
+| Längste Interaktion (INP-Näherung, Klicks auf Knöpfe) | ≈ 656 ms | ≈ 560 ms |
+| Seitengröße (HTML, unkomprimiert lokal) | 1,0 MB, 0 Nachladeaufrufe | dto. |
+| Unused JS (Lighthouse) | ≈ 335 KiB | ≈ 329 KiB |
+
+**Die drei größten Bremsen**
+1. **[B] Startarbeit im Hauptthread:** 1 MB Inline-Seite (three.js + Szene) wird beim Laden komplett ausgewertet; am Handy 4× drosselt das zu LCP 6,8 s, TBT 520 ms, Interactive 9,7 s und einem 1,2-s-Long-Task kurz nach dem Start. Hebel: three.js beschneiden/nur genutzte Teile bündeln (Lighthouse: ≈ 330 KiB ungenutzt), Szene-Init noch später starten (erst nach erstem Bild, `requestIdleCallback`), Text zuerst malen.
+2. **[B] Durchgehende Partikel-Last beim Scrollen/im Stand:** Long Tasks (359–676 ms) während Scrollen und Kapitelwechseln (z. B. bei 16 s, 18 s, 21 s im PC-Lauf) und TBT 900 ms am PC – vermutlich Aufbau der Punktwolken pro Kapitel (`whenNear`, Scheiben ≤ 8 ms reichen offenbar nicht überall) plus Weiterfahrt der Kamera. Hebel: Long Tasks im Trace pro Kapitel zuordnen (nächster Schritt, Chrome-Trace mit Aufrufstapel), Aufbau in kleinere Scheiben/Web Worker, Teilchenzahl am Handy senken.
+3. **[A] Forced Reflows, DOM-Größe, ungenutztes CSS:** Lighthouse meldet „forced reflow“ (Layout-Lesen in der Animationsschleife), zu großes DOM (am Handy Note 0) und ≈ 50 % ungenutztes CSS. Hebel: Layout-Messungen cachen (`VW`/`VH` wie beim Start), CSS je Kapitel trennen. [O] Auf echtem iPhone/PC mit Grafikchip nachmessen, bevor umgebaut wird – SwiftShader überzeichnet die GPU-Seite.
+
+Randbefunde: Lighthouse „Textkomprimierung“ ist ein Artefakt des lokalen Servers (GitHub Pages liefert gzip) [A]; Accessibility 96: `color-contrast` (eine Stelle) und am Handy `label-content-name-mismatch` (aria-label „Spannung lösen.“ weicht vom sichtbaren Titeltext ab) – klein, **Go abwarten**. Rohdaten lagen im Scratchpad (nicht im Repo). Keine Codeänderung vorgenommen.
 
 ### 🔎 Prüfung Livegang-Vorschau `labor/live/` (7.11. spät, nur Prüfung, nichts geändert) – **Go je Punkt abwarten**
 Geprüft (Stand `b05ecf4`, also vor Kais Entfernung der alten PC-Kamerafahrt `20f7f62`; Zeilen unten auf den Stand danach angepasst, die Befunde betreffen diesen Teil nicht): `live/index.html`, `impressum.html`, `datenschutz.html` (Chromium/SwiftShader, 320/390/768/1440; `tools/audit.cjs` d, m, s, t; Termin-Blatt PC + Handy; Rechtsseiten Handy). **Stand:** `live/` ist byte-identisch zu einem frischen Build der Quellen (`node build.mjs live`, `npm ci`) [B]; 0 Konsolenfehler; kein Querscrollen; **0 externe Anfragen** vor „Kalender laden“, kein iframe [B]. Durchlauf 1 = Skill `website-design:web-review` (UXKIN-Vergleich nicht verbunden, Proxy 403 – ohne Vergleichsseiten). Durchlauf 2 = `/security-review`: der Skill lief nicht (er arbeitet am Branch-Diff, hier kein Diff) → gleiche Methode von Hand über `labor/src`, `build.mjs`, `live/` (Netzaufrufe, Senken, Eingaben, mailto/vCard, Termin-Blatt). Durchlauf 3 = Plugin „Design“ **nicht aktiv** → axe (320/390/768/1440) + eigene Kritik nach `hop-praxis` (dunkel, Bernstein, Fraunces/Hanken, ruhige Hierarchie). Bekannte Punkte (Offen/Tote Reste/Braucht Kai) nicht erneut gemeldet.
@@ -54,10 +83,12 @@ Knopf „Rundgang aus Augenhöhe“ neben „Rundgang starten“ (PC gleiche Zei
 - Geprüft (Chromium/SwiftShader, intern): 1440×900, 1440×900 „Bewegung reduzieren“, 2560×1440, 390×844, 375×667, 320×568 – Öffnen, Fahrt, Pfeiltasten, Esc, Zurück-Taste, Kontakt-Link, Mausrad scrollt die Seite nicht, Fokus zurück auf den Knopf, Klick-Rundgang unverändert, Haus-Lage Handy gegenüber vorher ±4 px; axe im offenen Dialog 0 Verstöße, ganze Seite (d, m) nur der bekannte Kontrast-Treffer Kap. 02; keine Konsolenfehler. Testseite `rundgang-ego.html` nutzt denselben Baustein (Bild gleich wie vorher).
 - **Kai 7.11. spät: PC „super“.** **Offen von Kai:** iPhone-Test (Anflug zur Tür, Tempo, Zurück-Wischgeste in Safari, Lesbarkeit der Knopfzeile). [O] iOS: zweiter WebGL-Kontext beim ersten Klick (kurzer Moment Aufbau), Seite darunter darf beim Wischen auf den Knöpfen nicht mitscrollen.
 
-### Nebenthemen Kai 7.11. spät (noch kein Go – im nächsten Chat erörtern)
-1. **Bandscheiben in Rot.** Ist [B]: Bandscheiben `cDiscD` = Blau #4FA8D6 (`main.js` Shader-Uniform), im aktiven Abschnitt heller. Optionen: (a) dezentes Rot-Orange nur im aktiven Abschnitt (passt zu Bernstein), (b) alle Bandscheiben rot (Kontrast zum Knochenweiß stark, wirkt „entzündet“), (c) Rot als Farbe b nur für die Fuge. Empfehlung (a), Farbe mit Kai per Screenshot abstimmen (z. B. #E0583C).
-2. **Schichten entlang der Wirbelachse statt bildschirmparallel.** Ist [B]: `makeSlicesGen` (`shapes.js`) schneidet die Wirbelsäule in waagerechte Ebenen (y-Schichten), unabhängig von Lordose/Kyphose – an Hals und Lende kippen die Wirbel, die Schichten nicht. Optionen: (a) je Wirbel in seinem lokalen Rahmen schneiden (Wirbelachse aus `spine.js` `levels`, Schichten senkrecht dazu) – aufwändiger, sauberste Lösung; (b) Schichtebene kontinuierlich entlang der Mittellinie kippen (Tangente der Spine-Kurve) – mittel; (c) so lassen. Empfehlung (b) als Versuch mit Vorher/Nachher-Bild, Opus.
-3. **Hände bei „Manuelle Therapie“ schöner und genauer.** Ist [B]: Motiv in `services.js` prozedural (Handflächen + Finger aus einfachen Körpern). Optionen: (a) Hände aus einem freien Hand-Mesh (CC0, z. B. aus three.js-Beispielen/Sketchfab-CC0) als Punktwolke stippeln (`manu/stipple.js`) – genau, Lizenz prüfen, Dateigröße; (b) prozedural verfeinern (Fingerglieder gebogen, Daumen abgewinkelt, Handrücken gewölbt, Griff um ein Gelenk) – mittel, bleibt „eine Datei“; (c) Foto-Silhouette von Kais Händen als Punktquelle (2D, Tiefe gefälscht). Empfehlung (b), Vergleich per Screenshot.
+### ✅ Nebenthemen Kai 7.11. spät – umgesetzt (Go Kai, je Empfehlung)
+1. **Bandscheiben rot-orange (a):** Standard = blau, im aktiven Abschnitt **#E0583C** (weich über die Abschnitts-Hervorhebung). Vergleich: `…/test-4-puls-scan.html?disc=alle` (alle Bandscheiben rot-orange, aktiv heller) · `?disc=blau` (bisher). Code: `DISC_MODE`, `uDiscMode`, `cDiscA` (`main.js`, `uDiff`-Zweig).
+2. **Schichten entlang der Mittellinie (b):** Schnittebenen stehen senkrecht zur Tangente der Spine-Kurve (`sp.curve` aus `shared/spine.js`) – kippen mit HWS-Lordose, BWS-Kyphose, LWS-Lordose und Kreuzbein. Gleiche Punktzahl (PC 330 000 / Handy 85 000), Zeichnen unverändert; Aufbau in Zeitscheiben Handy gleich schnell, PC ~+20 % (≈ +0,2 s im Leerlauf). Code: `axial`, `axialGrid`/`axialFast` (`shapes.js`, `makeSlicesGen`).
+3. **Hände „Manuelle Therapie“ (b, prozedural):** zwei Hände umgreifen ein Kniegelenk (Bein quer): Handrücken gewölbt mit Knöcheln und Sehnen, Handfläche quer hohl, Finger aus drei Gliedern, die sich um das Bein legen, Daumen abgewinkelt zum Gelenkspalt (bernsteinfarbener Ring); Bewegung 13 = beide Seiten ziehen sanft auseinander. Code: `gripHand`, `gripLimb`, `tube`, `GRIP` (`services.js`); alte `hand()` bleibt für „Osteopathische Ansätze“.
+- Geprüft (Chromium/SwiftShader, intern, Vorher/Nachher): PC 1440 (Übersicht, C1, L4, `?disc=alle`, `?disc=blau`), 2560 (Th1, Motiv), Handy 390 (Übersicht, C1, L4, Motiv); `live/` mitgebaut und geladen, `zuhause.html` neu gebaut (nutzt `shapes.js`); keine Konsolenfehler. axe nicht gelaufen (nur Canvas-Inhalt geändert).
+- **Kai 7.11. spät (PC): „Linien super, Bandscheiben gut, so soll es bleiben; Hände viel besser.“** → Standard (rot-orange nur im aktiven Abschnitt) bleibt. Vergleichs-Adressen `?disc=alle`/`?disc=blau` können raus (kleiner Aufräum-Schritt, Go abwarten). Offen: iPhone-Blick auf die Hände (Motiv dort kleiner).
 
 ### Aufgabe 7 · Durchsicht 7.11. – Ergebnis (Bericht im Chat, Kai hat die Reihenfolge freigegeben)
 - **Behoben (Go):** Skip-Link, `noGl()` nur Haupt-Renderer, Intro bei „angehalten“, Listenrolle `manuthera.html`, Standbilder neu, 6A Hinweis-Pillen am PC, 3C Haus-Umrisse, Wurzel-Datenschutz neu gebaut, Doku + Skill `hop-praxis` (Datei an Kai). Details `ENTSCHEIDUNGEN.md` → „Durchsicht 7.11.“.

@@ -376,18 +376,21 @@ const words = $$('.word', statement);
 const V3 = THREE.Vector3;
 // Aufbau erst, wenn #achse in Reichweite kommt (A1); bis dahin det/bones = null, danach blendet der Scan ein (spineK)
 let det = null, SC = 1, CY = 0, spineK = 0;
+// Bandscheiben-Farbe (Kai 7.11. spät): Standard = blau, im aktiven Abschnitt rot-orange; Vergleich ?disc=alle (alle rot-orange), ?disc=blau (bisher)
+const discQ = new URLSearchParams(location.search).get('disc'), DISC_MODE = discQ === 'alle' ? 1 : discQ === 'blau' ? 2 : 0;
 const N_GRAIN = isDesktop() ? 165000 : 46000, N_SLICE = isDesktop() ? 330000 : 85000;
 const sU = {
   uTime: uniforms.uTime, uRot: uniforms.uSpineRot, uCut: uniforms.uCut, uXf: { value: uniforms.uXf.value[2] },
   uZone: { value: -10 }, uZoneAmt: { value: 0 }, uOn: { value: 0 }, uStip: { value: 1 }, uPix: uniforms.uPix,
   uPeri: { value: 0 }, uPeriStart: { value: 0 }, uScan: { value: 100 }, uScanAmt: { value: 0 }, // Scanner (Handy, 6.11.)
   uDiff: { value: 0 }, uFine: { value: 0 }, // Handy 7.11.: Wirbelsäule differenziert, Nerv fein (PC vorgemerkt)
+  uDiscMode: { value: DISC_MODE }, cDiscA: { value: C('#E0583C') }, // Bandscheiben (7.11. spät): 0 aktiv rot-orange · 1 alle · 2 alt blau
   cBone: { value: C('#F3EADA') }, cDisc: { value: C('#86AFC9') }, cDiscD: { value: C('#4FA8D6') }, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue,
   cSignal: { value: C('#DDF1FF') }, cCore: { value: C('#0E1C22') },
 };
 const GLSL_COMMON = /* glsl */`
-  uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart, uScan, uScanAmt, uDiff, uFine; uniform vec4 uXf;
-  uniform vec3 cBone, cDisc, cDiscD, cAmber, cBlue, cSignal, cCore;
+  uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart, uScan, uScanAmt, uDiff, uFine, uDiscMode; uniform vec4 uXf;
+  uniform vec3 cBone, cDisc, cDiscD, cDiscA, cAmber, cBlue, cSignal, cCore;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
   const vec3 LDIR = vec3(.48, .72, .5);`;
 
@@ -432,7 +435,9 @@ const boneMat = new THREE.ShaderMaterial({
         float sil = pow(1. - max(dot(n, V), 0.), 1.6);
         if (aKind > .5) {
           float fuge = smoothstep(.62, .92, aEdge);
-          col = cDiscD * (.5 + .5 * lam) * (1. - fuge * .78) + cBlue * sil * .22;
+          // rot-orange: Modus 1 alle, Modus 0 nur im aktiven Abschnitt (weich über uZoneAmt)
+          float red = uDiscMode > 1.5 ? 0. : uDiscMode > .5 ? 1. : on;
+          col = mix(cDiscD, cDiscA, red) * (.5 + .5 * lam) * (1. - fuge * .78) + cBlue * sil * .22 * (1. - red * .7);
           sz = .9;
         } else {
           float plate = aEdge < 0. ? 0. : smoothstep(.74, .9, aEdge);
@@ -442,7 +447,7 @@ const boneMat = new THREE.ShaderMaterial({
           if (aEdge < 0.) col *= .78;
         }
       }
-      if (uDiff > .5 && aKind > .5) col *= 1. + on * .5; // Handy: Bandscheibe bleibt blau, im Abschnitt heller
+      if (uDiff > .5 && aKind > .5) col *= 1. + on * (uDiscMode < .5 ? .25 : .5); // Bandscheibe: im Abschnitt heller (Standard: rot-orange statt blau)
       else col = mix(col, cAmber * (.35 + .95 * lam), on * (aKind < .5 ? 1. : .4));
       float g = exp(-pow((p.y - uCut) * 9., 2.));
       col = mix(col, cAmber * 1.3, g);
