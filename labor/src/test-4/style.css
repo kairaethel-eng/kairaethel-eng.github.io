@@ -27,6 +27,8 @@ em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--amber)
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .wrap{width:100%;max-width:90rem;margin:0 auto;padding-left:max(var(--gut),5vw);padding-right:max(var(--gut-r),5vw)}
 .kicker{display:flex;align-items:baseline;gap:.75rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:1.625rem}
+.kicker .ks{white-space:nowrap}
+@media (max-width:30rem){.hero .kicker .kd{display:none}.hero .kicker .ks{display:block;margin-top:.5rem}}
 .kicker i{font:italic 400 1.25rem/1 var(--serif);letter-spacing:0;text-transform:none;color:var(--amber)}
 .lead{font-size:clamp(1.0625rem,1.35vw,1.25rem);color:var(--dim);max-width:44ch}
 .small{font-size:.875rem;color:var(--mute);max-width:52ch}
@@ -476,7 +478,7 @@ canvas.gl-wait{opacity:0}
   .tour-inner .note{margin-top:1.375rem;font-size:.75rem}
   .room-tag{display:none} /* Handy: Räume über Punkte und Karten, das kleine Haus wäre mit Schildern zu voll */
   .roof-head{padding-right:2.5rem}
-  .door{background:linear-gradient(rgba(10,22,27,0),var(--ink) 13.75rem);padding-top:10.625rem}
+  .door{background:linear-gradient(rgba(10,22,27,0),var(--ink) 8rem);padding-top:5.5rem}
   .rules-sticky{align-items:flex-end;padding-bottom:9svh}
   .law-prog{margin-top:1.5rem;max-width:16rem}
   .laws{min-height:40svh}

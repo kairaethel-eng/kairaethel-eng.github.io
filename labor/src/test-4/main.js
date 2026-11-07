@@ -2309,9 +2309,17 @@ if (!reduced) requestAnimationFrame(() => {
   const openEls = ['openNow', 'tsOpen'].map((id) => document.getElementById(id)).filter(Boolean); // Kapitel 05 + Termin-Blatt
   const openEl = openEls.length ? { set hidden(v) { openEls.forEach((e) => (e.hidden = v)); }, set textContent(t) { openEls.forEach((e) => (e.textContent = t)); } } : null;
   if (openEl) {
-    // Feiertage Baden-Württemberg 2026/2027 (feste Liste)
-    const HOL = new Set(['2026-01-01', '2026-01-06', '2026-04-03', '2026-04-06', '2026-05-01', '2026-05-14', '2026-05-25', '2026-06-04', '2026-10-03', '2026-11-01', '2026-12-25', '2026-12-26',
-      '2027-01-01', '2027-01-06', '2027-03-26', '2027-03-29', '2027-05-01', '2027-05-06', '2027-05-17', '2027-05-27', '2027-10-03', '2027-11-01', '2027-12-25', '2027-12-26']);
+    // Feiertage Baden-Württemberg, je Jahr berechnet (Ostern nach Gauß/„anonymer gregorianischer Algorithmus“) – Prüfung 7.11. K2
+    const HOLY = {};
+    const holidays = (y) => {
+      if (HOLY[y]) return HOLY[y];
+      const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+      const easter = Date.UTC(y, month - 1, day), key = (t) => new Date(t).toISOString().slice(0, 10), fix = (mo, da) => key(Date.UTC(y, mo - 1, da));
+      return (HOLY[y] = new Set([fix(1, 1), fix(1, 6), key(easter - 2 * 864e5), key(easter + 864e5), fix(5, 1), key(easter + 39 * 864e5), key(easter + 50 * 864e5), key(easter + 60 * 864e5), fix(10, 3), fix(11, 1), fix(12, 25), fix(12, 26)]));
+    };
+    const HOL = { has: (k) => holidays(+k.slice(0, 4)).has(k) };
     const DAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
     const OPEN = 8 * 60 + 30, CLOSE = 19 * 60 + 30;
     const upd = () => {

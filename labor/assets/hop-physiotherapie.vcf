@@ -1,8 +1,9 @@
 BEGIN:VCARD
 VERSION:3.0
-N:;;;;
+N:HOP – Home of Physiotherapy;;;;
 FN:HOP – Home of Physiotherapy
 ORG:HOP – Home of Physiotherapy;Kai Raethel
+X-ABShowAs:COMPANY
 TITLE:Physiotherapie
 TEL;TYPE=WORK,VOICE:+49 7181 9931470
 EMAIL;TYPE=INTERNET,WORK:kontakt@hopphysio.de
