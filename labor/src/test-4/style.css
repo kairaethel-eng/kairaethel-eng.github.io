@@ -624,6 +624,12 @@ html.paused .btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}
 .th-dot{position:absolute;top:50%;left:50%;width:1.25rem;height:1.25rem;margin:-.625rem 0 0 -.625rem;border-radius:50%;border:1.5px solid var(--amber);background:rgba(224,154,53,.2);box-shadow:0 0 1rem rgba(224,154,53,.5);animation:thSway 1.9s ease-in-out infinite}
 @keyframes thSway{0%,100%{transform:translateX(-1.5rem)}50%{transform:translateX(1.5rem)}}
 @media (prefers-reduced-motion:reduce){.th-dot{animation:none;transform:none}}
+/* 6A (Go Kai 7.11.): PC-Hinweise als Pille mit Maus-Symbol, das wie der Finger hin und her fährt */
+.th-dot.th-mouse{width:1.125rem;height:1.5rem;margin:-.75rem 0 0 -.5625rem;border:0;border-radius:0;background:none;box-shadow:none}
+.th-dot.th-mouse svg{display:block;width:100%;height:100%;fill:rgba(224,154,53,.18);stroke:var(--amber);stroke-width:1.6;stroke-linejoin:round;filter:drop-shadow(0 0 .375rem rgba(224,154,53,.55))}
+.th-dot.th-mouse .th-wheel{fill:var(--amber);stroke:none;animation:thWheel 1.9s ease-in-out infinite}
+@keyframes thWheel{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+@media (prefers-reduced-motion:reduce){.th-dot.th-mouse .th-wheel{animation:none}}
 
 /* Hinweis: Bewegung angehalten */
 .paused-note{position:fixed;z-index:40;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 1.25rem);transform:translateX(-50%);display:flex;align-items:center;gap:.875rem;padding:.625rem .75rem .625rem 1.125rem;border-radius:1.5rem;background:rgba(16,34,42,.95);border:1px solid rgba(224,154,53,.55);color:var(--txt);font:500 .875rem/1.2 var(--sans);box-shadow:0 .75rem 2.5rem rgba(0,0,0,.4);transition:opacity .5s,transform .5s}
@@ -642,6 +648,10 @@ html.no-gl .still-achse{background-image:url(assets/still-achse.webp);right:18.5
 html.no-gl .still-dach{background-image:url(assets/still-dach.webp);right:0;top:4rem;bottom:0;width:59vw;background-position:right center}
 html.no-gl .manu-stage{min-height:min(56vh,30rem)}
 html.no-gl .still-manu{background-image:url(assets/still-manu.webp);inset:0}
+/* Nur eine Nebenbühne ohne WebGL (Durchsicht 7.11.): Manuthera zeigt ihr Standbild, Leistungs-Bühne blendet aus – Hauptseite bleibt bewegt */
+html.no-gl-manu .manu-stage{min-height:min(56vh,30rem)}
+html.no-gl-manu .still-manu{display:block;position:absolute;pointer-events:none;background:url(assets/still-manu.webp) no-repeat center/contain;inset:0}
+html.no-gl-manu #glManu,html.no-gl-manu .manu-hint,html.no-gl-serv .serv-stage{display:none}
 @media (max-width:920px){
   html.no-gl .still-hero,html.no-gl .still-achse,html.no-gl .still-dach{left:0;right:0;width:auto;top:4.5rem;bottom:auto;height:38svh;background-position:center}
   /* Handy: Kapitel 03 scrollt als Liste → Bild bleibt oben stehen, Karten laufen darüber */

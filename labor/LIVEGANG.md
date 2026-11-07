@@ -24,7 +24,7 @@ Rückweg: Diese Werte sind die Sicherung. Werden A und CNAME www wieder darauf g
 
 ## Reihenfolge bis zum Livegang
 1. **Kai prüft die Vorschau** (iPhone + PC): https://kairaethel-eng.github.io/labor/live/ – gesammelt melden, dann Go für Feinschliff.
-2. **Rechtsangaben von Kai:** Behörde laut Erlaubnisurkunde, Berufshaftpflicht (Versicherer, Sitz), E-Mail-Anbieter = Google Workspace (laut MX) → Datenschutz „E-Mail über Google Workspace (Google Ireland Ltd.)“ ergänzen [A], Anrufbeantworter-Anbieter [O]. Fachperson liest gegen.
+2. **Rechtsangaben von Kai:** Behörde laut Erlaubnisurkunde, Berufshaftpflicht (Versicherer, Sitz), E-Mail-Anbieter Google Workspace und Anrufbeantworter Telekom SprachBox stehen seit 2.11. im Datenschutz (Wurzel am 7.11. neu gebaut) [B]. Fachperson liest gegen.
 3. **Inhalte:** Leistungsliste (11), Räume ↔ Therapien, Porträt, Körperkarte/Einblicke aus V10 ja/nein, Hausordnung in der PC-Leiste ja/nein.
 4. **Go Wurzel:** `LIVE_ROOT=1 node build.mjs live` → Commit mit Wurzeldateien + `og.jpg`, `apple-touch-icon.png` auf `main`. Übergangsseite ist damit abgelöst.
 5. **GitHub – Domain absichern (Kai klickt, ich diktiere)** [B, GitHub-Doku 2.11.2026]

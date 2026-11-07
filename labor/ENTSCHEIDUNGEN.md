@@ -1,6 +1,6 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 1.11.2026 · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`).
+Stand: 7.11.2026 · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/`.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
 ## Richtung
@@ -16,7 +16,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 | 2B Dach | Partikel-Haus wird beim Scrollen zum Emblem oben rechts, Liste lässt rechts Platz | umgesetzt | vermutlich nicht nötig (Haus steht rechts neben der Liste) – prüfen |
 | 3 Logo / Kontakt | HOP-Kreise tiefer und kleiner, blenden vor letztem Paragrafen/Kontakt aus, weicher Übergang statt harter Kante | umgesetzt | umgesetzt: Partikel blenden beim Kontakt ganz aus (vorher lagen die Kreise hinter den Kontaktdaten) |
 | 4A Wirbelsäule bedienen | Karten laufen beim normalen Scrollen untereinander durch, Fortschritt „C1 ● ○ ○ ○ ○ S1“ | umgesetzt | bleibt Scroll-Kamerafahrt mit Abschnitts-Knöpfen |
-| Kapitelanzeige | Leiste zeigt aktuelles Kapitel, während der Hausordnung „§ Hausordnung“ | umgesetzt | **prüfen:** PC-Navigation kennt „Hausordnung“ nicht |
+| Kapitelanzeige | Leiste zeigt aktuelles Kapitel, während der Hausordnung „§ Hausordnung“ | umgesetzt | umgesetzt (2.11.: §-Eintrag in der PC-Leiste) |
 | Wirbelsäule 1A | Knochen „gestochen“: gleichmäßige Punkte, dunkler Kern verdeckt die Rückseite, Licht/Schatten, kein Flimmern | umgesetzt | umgesetzt |
 | Nerven 2A | Partikel fließen wirklich; Signale laufen vom Kopf durchs Rückenmark in die Wurzeln; aktiver Abschnitt feuert stärker; Nerven schimmern gedämpft durch den Knochen | umgesetzt | umgesetzt |
 | Nerven 2B | Versorgungsbahn des aktiven Abschnitts bis zum Zielgebiet mit Beschriftung (z. B. „Armaußenseite · Daumen“) | umgesetzt | umgesetzt |
@@ -63,7 +63,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - Für die echte Seite: Favicon, Link-Vorschau (Open Graph), Praxis-Angaben für Google (strukturierte Daten), Seitentitel/Beschreibung final.
 - Vor Livegang entfernen: Hinweis „Schematischer Grundriss …“, „· schematisch“, „Testseite 4“ in der Fußzeile.
 - Rechtlich (Fachperson): Fußzeile verlinkt die neuen Rechtsseiten (`recht-*.html`); dort und im Wurzel-Impressum stehen noch „[Bitte ergänzen]“ (Behörde laut Urkunde, Berufshaftpflicht) – **öffentlich sichtbar**, Angaben von Kai nötig. „Osteopathische Ansätze“ bleibt (Kai, 1.11.) – Fachperson prüft mit.
-- Kapitelleiste PC: während der Hausordnung ist „05 Tür“ markiert (Handy zeigt „§ Hausordnung“) – Kai entscheidet, ob eigener Eintrag.
+- ~~Kapitelleiste PC: während der Hausordnung ist „05 Tür“ markiert~~ Erledigt 2.11. (§-Eintrag in der PC-Leiste).
 - Übergangsseite (Wurzel) bei 320 px: Knopftext „Termin per E-Mail anfragen“ bricht zweizeilig um – Kosmetik, Wurzel nur nach Go.
 - Live-Wix-Seite hopphysio.de (1.11. geprüft): Banner „Telefon funktioniert noch nicht“, Tippfehler „Atomsphäre“, 15/19 Bilder ohne Alt-Text, Telefon dort ohne „nur Anrufbeantworter“ → Aussagen widersprechen der neuen Seite.
 
@@ -72,8 +72,8 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - Nur Ordner `labor/` darf ohne neues Go auf `main`; die Wurzel (`index.html`, Impressum, Datenschutz = Übergangsseite seit 1.11.) nur nach ausdrücklichem Go. Alle Seiten `noindex`.
 
 ## Offen für die echte Website
-- Inhalte aus V10 übernehmen: Körperkarte „Wo tut's weh?“, Porträt Kai, Einblicke, ggf. Rundgang (Idee: Partikel-Grundriss).
-- „12 Therapieformen“ (V10) vs. 11 aufgeführte Leistungen klären.
+- Inhalte aus V10 übernehmen: nur Porträt Kai und Einblicke (Kai 2.11.: Körperkarte weg), im Haus unterbringen.
+- ~~„12 Therapieformen“ (V10) vs. 11 aufgeführte Leistungen klären.~~ Erledigt 2.11.: 12 Einträge (Thermische Behandlung + Reizstrom getrennt, Manuthera Highlight).
 - Grundriss aus V10 ist schematisch – echte Raumaufteilung? Später echter 3D-Scan der Praxis (Handy-App, Export als PLY) → als Punktwolke im gleichen Stil einsetzbar (`src/test-4/praxis.js` liefert dieselbe Datenform).
 - Zuordnung Therapien → Räume im Rundgang ist eine Annahme (B1: MT, CMD, Atlas-Axis, Osteopathie, Schmerz, Fango/Reizstrom, Stoßwelle · B2: Manuthera, MT · Training: KG, Sport, Schlingentisch) – Kai prüft.
 - Flüssigkeit auf echten Handys messen (Testumgebung ohne Grafikkarte).
@@ -110,7 +110,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - Vorher offen gewesen: Kai wählt A/B/C (oder Kombination); welches Modell (Manuthera 241 oder 242) steht in der Praxis? Keine technischen Zahlen auf der Seite, solange das Modell nicht bestätigt ist.
 
 ## Stufe 2a (Go 4.11.): A1, A2, K1
-Umgesetzt nach `PLAN-Livegang-2026-11-04.md` (A1 Variante A, kein Worker). Arbeitszweig, noch nicht `main`.
+Umgesetzt nach `PLAN-Livegang-2026-11-04.md` (A1 Variante A, kein Worker). Seit 4.11. abends auf `main`.
 
 **A1 Startzeit – Messung** (Playwright, Edge/Chromium-Kern, SwiftShader, CPU ×4, je 3 Läufe, Median; `test-4-puls-scan.html` vor/nach diesem Stand):
 
@@ -188,3 +188,6 @@ Arbeitszweig → `labor/` auf `main`. Wurzel unberührt.
 **PC nachgezogen (Kai 7.11. „passt im Moment so alles, nun am PC die relevanten Sachen“) – ✅ umgesetzt:** (a) **Th7–Th12** ist jetzt überall die 6. Station (`STOPS` hat 6 Einträge, `SSTOPS = STOPS`; Karte normal `data-seg="3"`, Abschnitts-Knopf „Th7–12 · Bauch“, Punkt in der Handy-Leiste von Option A); Kapitel 03 am PC 530vh statt 440vh (je Station gleicher Scrollweg wie vorher); Zielpunkt auf der Silhouette Flanke auf Nabelhöhe (`tgt` [86, 195]). (b) **Nerv fein ab Wirbel + Andockringe** auch am PC (`uFine` = 1, 1600 Bahn-/60 Wurzelpunkte, Kurve ab `ROOT_I`, `rootOk` Th10; Ringe in `updateCallouts`). (c) **Wirbelsäule differenziert** auch am PC (`uDiff` = 1, `makeSlicesGen(…, true)`, 330 000 Punkte wie bisher). (d) **Hausordnung automatisch** auch am PC (Abschnitt 1 Bildschirm statt 420vh, Puls-Striche sichtbar, Klick auf Text/Strich; `?licht=1` rechnet jetzt mit dem Durchlauf durchs Bild). Nicht übertragen, weil am PC nicht nötig: Hinweis an den Fensterrand (keine Browserleisten), schmale Karte (PC-Layout anders), Kap.-04-Überschrift oben (Text steht am PC links neben dem Haus). Segnav-Ziffern etwas kleiner (1.0625rem), damit sechs Knöpfe in die Spalte passen.
 
 **Ego-Rundgang, Logo-Schild Feinschliff (Kai 5.11., Go „1A 2B“):** Kreise enger (Mittenabstand 160 statt 190 SVG-Einheiten) auf dunkler, dicht gepunkteter Schildfläche (#16333D) mit doppeltem Punkt-Rahmen in Knochenweiß, abgerundete Ecken; Schild 504×184 Einheiten = 1,2 m breit, Rest unverändert. Wunsch Kai sonst: „ansonsten top“.
+
+**Durchsicht 7.11. (Aufgabe 7, Go Kai „Reihenfolge ja“) – ✅ umgesetzt:** Bericht in `UEBERGABE.md` (▶). Kleine Fehler behoben: (1) Skip-Link „Zum Inhalt“ wurde vom Abfänger für `#`-Links geschluckt → ausgenommen, Browser-Sprung mit Fokus. (2) `noGl()` kippte die ganze Seite auf Standbilder, wenn nur die Manuthera- oder Leistungs-Bühne scheiterte → jetzt `html.no-gl-manu` (Standbild nur dort) bzw. `html.no-gl-serv` (Bühne aus), Hauptseite bleibt bewegt. (3) Intro-Einflug lief trotz „Bewegung angehalten“ → bei `paused` steht die Figur sofort. (4) `manuthera.html`: `role="group"` auf `<ul>` entfernt (axe „listitem“). (5) Standbilder ohne WebGL neu gerendert (Stand 7.11.: differenzierte Wirbelsäule, Haus, Liege, Figur; 32–72 KB). **6A Hinweise am PC:** dieselbe dunkle Pille wie am Handy, Maus-Symbol mit laufendem Rad statt Finger (Figur, Haus, Manuthera). **3C Haus-Partikel:** Möbel mit hellem Umriss und dunklerer Fläche (wie Wirbelsäule `uDiff`), Wandzeilen zurück, Kanten vor – vorsichtiger erster Schritt, Kai prüft. Geprüft (Chromium/SwiftShader): Hauptseite 1440/390, `live/`, `manuthera.html`, Wurzel-Datenschutz – keine Konsolenfehler, kein Querscrollen; Skip-Link (Tab + Enter → `#start`), `no-gl-manu/serv`-CSS, angehaltener Start. **Wurzel (Go Kai 7.11.):** `/datenschutz.html` neu gebaut (Google Workspace + SprachBox in § 3, seit 2.11. nur in der Quelle). Nicht behoben (bewusst): Scanner-Aufzug per Tab erst nach der Fußzeile (kommt mit dem PC-Scanner), Tablet-Drehung über 920 px (Punktzahlen bleiben vom Start), tote Reste (Option A `?scan=0`, K1 `?licht=1`, `periLabel`, Körnung) – Kai entscheidet, ob sie raus sollen.
+**Kai 7.11. spät – bestätigt am PC:** Hausordnung automatisch, Nerv fein, Wirbelsäule differenziert (vorher Browser-Zwischenspeicher). Offen: Scanner am PC (2B), Ego-Rundgang + Haus (3A), je eigener Opus-Chat (Prompts in `UEBERGABE.md`). **Nebenthemen Kai 7.11. (noch kein Go):** Bandscheiben in Rot; Schichten entlang der Wirbelachse statt bildschirmparallel; Hände bei „Manuelle Therapie“ schöner und genauer.

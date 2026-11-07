@@ -66,7 +66,7 @@ if (!reduced) {
   gsap.ticker.lagSmoothing(0);
 }
 const scrollToY = (y) => (lenis ? lenis.scrollTo(y, { duration: 1.8 }) : scrollTo({ top: y }));
-$$('a[href^="#"]').forEach((a) => a.addEventListener('click', (e) => {
+$$('a[href^="#"]:not(.skip)').forEach((a) => a.addEventListener('click', (e) => { // .skip: Browser-Sprung, damit der Fokus mitgeht (Durchsicht 7.11.)
   const t = $(a.getAttribute('href')); if (!t) return;
   e.preventDefault(); scrollToY(t.getBoundingClientRect().top + scrollY);
 }));
@@ -1543,14 +1543,14 @@ function buildTour() {
       varying vec3 vCol; varying float vA;
       void main(){
         vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
-        vec3 col = aKind < .5 ? cPetrol * .85 : aKind < 1.5 ? cBone * .42 : cBone * .85;
+        vec3 col = aKind < .5 ? cPetrol * .85 : aKind < 1.5 ? cBone * .34 : cBone * 1.05; // 3C 7.11.: Wandzeilen zurück, Kanten vor
         col *= roomGain();
         float g = exp(-pow((position.y - uCut) * 14., 2.));
         col = mix(col, cAmber * 1.4, g);
         vec4 mv = viewMatrix * vec4(p, 1.);
         gl_Position = projectionMatrix * mv;
         float d = -mv.z, dn = d / uXf.w;
-        gl_PointSize = clamp(uPix * (aKind > 5.5 ? 1.35 : 1.1) * 9. / d, 1., 3.5) * (1. + g);
+        gl_PointSize = clamp(uPix * (aKind > 5.5 ? 1.5 : aKind > .5 ? 1. : 1.1) * 9. / d, 1., 3.5) * (1. + g);
         // nahe Wände und Kanten ausblenden (Schnittbild), sonst stehen sie als helle Streifen im Bild
         float nearFade = aKind > .5 ? smoothstep(.7, 1.9, dn) : smoothstep(.2, .85, dn);
         vA = step(position.y, uCut) * uOn * uFade * (aKind < .5 ? .5 : aKind < 1.5 ? .55 : .95) * nearFade * uReady;
@@ -1573,7 +1573,7 @@ function buildTour() {
         vec3 V = normalize(cameraPosition - p);
         float lam = max(dot(n, normalize(vec3(.4, .8, .5))), 0.), rim = pow(1. - abs(dot(n, V)), 3.);
         vec3 base = aKind < 2.5 ? cBone : aKind < 3.5 ? cGreen : aKind < 4.5 ? cAmber : aKind < 5.5 ? mix(cPetrol * 1.7, cBlue, .3) : cBone;
-        vec3 col = base * (.24 + .76 * lam) + cBlue * rim * .12;
+        vec3 col = base * (.16 + .64 * lam) + base * rim * 1.1 + cBlue * rim * .1; // 3C 7.11.: Umriss heller als die Fläche (differenziert)
         col *= roomGain() * (.25 + .75 * uFade) * uReady * uDim; // uDim: Handy vor dem Betreten gedämpft
         float g = exp(-pow((position.y - uCut) * 14., 2.));
         col = mix(col, cAmber * 1.4, g);
@@ -1914,14 +1914,14 @@ const glWait = (cv) => cv && cv.classList.add('gl-wait');
 const glReady = (cv) => cv && cv.classList.remove('gl-wait');
 if (manuSec) {
   glWait($('#glManu'));
-  whenNear(manuSec, () => runSliced(initManuGen($('#glManu'), manuUi)).then((m) => { manu = m; if (!m) noGl(); glReady($('#glManu')); }));
+  whenNear(manuSec, () => runSliced(initManuGen($('#glManu'), manuUi)).then((m) => { manu = m; if (!m) document.documentElement.classList.add('no-gl-manu'); glReady($('#glManu')); }));
 }
 // ---------- Leistungen: Partikel-Bühne mit Motiv je Leistung (Haus tritt hier zurück) ----------
 const servList = $('.roof-list'), servName = $('#servName');
 // Aufbau erst, wenn „Alle Leistungen“ in Reichweite kommt (A1)
 let serv = null;
 glWait($('#glServ'));
-whenNear(roofHead, () => runSliced(initServicesGen($('#glServ'), { isPaused: () => paused, onShow: (i, name) => { if (servName) servName.textContent = name; } })).then((m) => { serv = m; if (!m) noGl(); glReady($('#glServ')); }));
+whenNear(roofHead, () => runSliced(initServicesGen($('#glServ'), { isPaused: () => paused, onShow: (i, name) => { if (servName) servName.textContent = name; } })).then((m) => { serv = m; if (!m) document.documentElement.classList.add('no-gl-serv'); glReady($('#glServ')); }));
 let servLock = -1e9, servAutoT = 0;
 const servItems = $$('#index li');
 servItems.forEach((li, i) => {
@@ -2097,7 +2097,8 @@ const inView = (el) => { if (!el) return false; const r = el.getBoundingClientRe
 }
 const mkHint = (txt, parent) => {
   const h = document.createElement('div'); h.className = 'touch-hint' + (parent ? ' in-stage' : ''); h.setAttribute('aria-hidden', 'true');
-  h.innerHTML = `<span class="th-track"><i class="th-dot"></i></span><span>${txt}</span>`;
+  const MOUSE = '<svg viewBox="0 0 24 32" aria-hidden="true"><rect x="2" y="2" width="20" height="28" rx="10"/><path d="M12 2v10M2 12h20"/><rect class="th-wheel" x="10.5" y="5" width="3" height="5" rx="1.5"/></svg>';
+  h.innerHTML = `<span class="th-track"><i class="th-dot${finePointer ? ' th-mouse' : ''}">${finePointer ? MOUSE : ''}</i></span><span>${txt}</span>`; // PC (6A, 7.11.): Maus statt Finger
   (parent || document.body).appendChild(h); return h;
 };
 // Wischhilfe (Kai 6.11.): ein Baustein überall – Finger mit Spur zeigt die echte Richtung an der echten Stelle,
@@ -2106,8 +2107,7 @@ const mkHint = (txt, parent) => {
 const hintBody = mkHint(finePointer ? 'Maus über den Körper' : 'Seitlich streichen');
 const hintHouse = mkHint(isDesktop() ? 'Ziehen zum Drehen' : 'Wischen oder Raum antippen');
 const hintManu = manuSec ? mkHint(finePointer ? 'Ziehen zum Drehen' : 'Seitlich wischen', $('.manu-stage')) : null;
-if (!finePointer) [hintBody, hintHouse, hintManu].forEach((h) => h && h.classList.add('th-pill'));
-else if (!isDesktop()) hintHouse.classList.add('th-pill');
+[hintBody, hintHouse, hintManu].forEach((h) => h && h.classList.add('th-pill')); // 6A (7.11.): auch am PC dunkle Pille (vorher nur Touch)
 let houseUsed = false, manuUsed = false, xrayT = 0, manuT = 0, rotSeen = dragRot;
 // Hinweis gilt erst als erledigt, wenn wirklich seitlich gewischt/gezogen wurde (nicht schon beim Antippen oder Scrollen)
 { let mx = null, my = 0; const gm = $('#glManu');
@@ -2136,8 +2136,9 @@ function updateHints(dt) {
 
 // Intro
 // (im ersten Frame, vor dem ersten Bild: gsap liest berechnete Stile – so nur eine Stil-Berechnung, A1)
+if (paused) uniforms.uIntro.value = 1; // angehalten: kein Einflug (Durchsicht 7.11.)
 if (!reduced) requestAnimationFrame(() => {
-  gsap.to(uniforms.uIntro, { value: 1, duration: 3.2, ease: 'expo.out', delay: 0.1 });
+  if (!paused) gsap.to(uniforms.uIntro, { value: 1, duration: 3.2, ease: 'expo.out', delay: 0.1 });
   gsap.from(['.hero .kicker', '.kinetic', '.hero-sub', '.hero .actions', '.meter', '.top'], { opacity: 0, y: 20, duration: 1.1, stagger: 0.06, ease: 'expo.out', delay: 0.2 });
 });
 
