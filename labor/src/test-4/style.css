@@ -445,6 +445,7 @@ canvas.gl-wait{opacity:0}
   .tour-inner .roof-intro{order:1}
   .tour:not(.in) .roof-intro{margin-top:0} /* Kai 7.11. (2A): Überschrift oben, Haus darunter, Knöpfe unten */
   .tour:not(.in) .tour-kicker{margin-top:auto}
+  .tour:not(.in) .tour-inner{padding-top:calc(env(safe-area-inset-top,0px) + 5.75rem)} /* „04 Dach“ frei von der Kopfleiste */
   .tour-kicker{order:2}
   .room-dots{order:3}
   .tour-ctrl{order:4}

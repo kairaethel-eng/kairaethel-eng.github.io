@@ -1129,8 +1129,8 @@ function screenToWorld(px, py, z, out) { // Bildschirmpunkt → Welt auf der Ebe
 // Nahansicht (Kai 6.11.): steht die Linie an einem Abschnitt, fährt die Wirbelsäule heran (wie Option A); beim Ziehen,
 // Vorführen und Antippen eines anderen Abschnitts zurück zur Übersicht. Griff, Leiste und Einrasten rechnen immer mit der
 // Übersicht (OV), damit der Finger dieselbe Strecke behält. Größe je Abschnitt ≈ Kameraabstände der Option A.
-const OV = { x: 0, y: 0, z: 0, w: 0.3, init: false }, ZM = { k: 0, idx: 0 }, _zw = new V3(), _zc = new V3();
-const ZOOM = [3.4, 2.6, 2.15, 2.15, 2.25, 2.15]; // je Haltestelle (SSTOPS)
+const OV = { x: 0, y: 0, z: 0, w: 0.3, init: false }, ZM = { k: 0, idx: 0 }, _zw = new V3(), _zc = new V3(), _zc2 = new V3(), _sv2 = new V3();
+const ZOOM = [3.4, 2.6, 2.15, 1.85, 2.25, 2.15]; // je Haltestelle (SSTOPS)
 // Einblenden im Scanner (Kai 6.11., Variante b): Karte sofort beim Einrasten, die vier Zeilen nacheinander während des
 // Heranfahrens; beim Ziehen bleiben die Texte kurz stehen und blenden ruhig aus.
 const TX = { zone: null, t0: 0, last: 0 };
@@ -1224,6 +1224,15 @@ function updateScan(dt, r, inSec) {
       // Abschnitt mittig zwischen Zeilen-Spalte und Ziehstreifen
       screenToWorld(Math.max(VW * 0.55, (ML.x + ML.colW + VW - RAIL_W) / 2 + 6), py, _zc.z * zw, _zw);
       zx = _zw.x - _zc.x * zw; zy = _zw.y - _zc.y * zw;
+      // Kai 7.11.: Wirbelkörper des Abschnitts rechts neben den Zeilen (sonst liegt der Nerv auf dem Knochen),
+      // höchstens bis vor den Ziehstreifen
+      if (ML.key === st.zone && ML.hs[0]) {
+        const ppw = GLH / 8.197, rowR = ML.x + Math.max(ML.ws[0], ML.ws[1], ML.ws[2], ML.ws[3]) + 12;
+        let left = 1e9, right = -1e9;
+        st.ids.forEach((id) => { const lv = det.levels.find((l) => l.id === id), cx = toPx(lvLocal(lv, _zc2).multiplyScalar(zw).add(_sv2.set(zx, zy, 0)))[0], h = lv.R * SC * zw * 1.15 * ppw; left = Math.min(left, cx - h); right = Math.max(right, cx + h); });
+        const need = clamp(rowR - left, 0, Math.max(0, VW - RAIL_W * 0.6 - right));
+        zx += need / ppw;
+      }
       // Wurzelende (links außen) bei voller Nahansicht → Bildschirmhöhe für die Zeilen (mobPlaceScan)
       let tb = null, tc = null;
       det.curves.forEach((c) => { if (c.kind !== 2 || ZONES[c.zone] !== st.zone || !rootOk(c, st.zone)) return; const e = c.pts[CURVE_W - 1]; _pv.set(e[0], e[1], e[2]).applyAxisAngle(_Y, spineRot); if (!tb || _pv.x < tb.x) { tb = _pv.clone(); tc = c; } });
@@ -1725,7 +1734,7 @@ function placeManuTag() {
   addEventListener('pointerup', () => (down = null)); }
 function xrayPose() {
   const X = uniforms.uXf.value[3], desk = isDesktop();
-  return frame(toWorld(new V3(0, -1.75, 0.1)), new V3(0.18, 0.62, 1), (desk ? 20 : 17) * X.w, desk ? 0.69 : 0.5, desk ? 0.56 : roofFy());
+  return frame(toWorld(new V3(0, -1.75, 0.1)), new V3(0.18, 0.62, 1), (desk ? 20 : ROOF_D) * X.w, desk ? 0.69 : 0.5, desk ? 0.56 : roofFy());
 }
 // Handy (Kai 7.11., 2A): Überschrift oben, Knöpfe unten – das Haus steht in der freien Fläche dazwischen. Gerechnet in der
 // Lage „Bühne steht“ (relativ zur Bühnen-Oberkante), damit das Haus beim Hereinscrollen nicht mitwandert.
@@ -1740,6 +1749,7 @@ function roofFy() {
   }
   return roofFyV;
 }
+const ROOF_D = 25; // Handy: Abstand so, dass das ganze Haus unter der Überschrift steht (vorher 17 = Räume groß)
 const ROOF_FY_OFF = 0.1; // Bezugspunkt liegt im unteren Teil des Hauses → etwas tiefer, damit das Dach frei bleibt
 // Handy: nach dem Rundgang (bis die Manuthera-Bühne vorbei ist) kein Haus/Röntgenblick mehr – 0 … 1
 function houseGone() {
