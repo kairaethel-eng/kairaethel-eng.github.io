@@ -132,14 +132,14 @@ main{position:relative;z-index:2}
 .sign b{display:block;margin-top:.625rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;font-style:normal;color:var(--txt)}
 
 /* Achse: Partikel-Wirbelsäule materialisiert sich zur 3D-Wirbelsäule, Kamerafahrt */
-.axis{height:440vh}
+.axis{height:530vh} /* 6 Stationen (Th7–Th12 seit 7.11.), je Station so viel Scrollweg wie vorher */
 .axis-sticky{position:sticky;top:0;height:100svh;overflow:hidden}
 .axis-inner{height:100%;display:grid;grid-template-columns:minmax(0,31.25rem) 1fr;grid-template-rows:auto auto 1fr auto;column-gap:2.5rem;padding-top:6.5rem;padding-bottom:1.75rem}
 .axis-head{grid-column:1}
 .axis-head h2{font-size:clamp(2.125rem,3.6vw,3.625rem);margin-bottom:.875rem}
 .axis-hint{font-size:.9375rem;color:var(--dim);max-width:42ch}
 .only-mob{display:none}
-.segnav{grid-column:1;grid-row:2;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.375rem;margin-top:1.625rem}
+.segnav{grid-column:1;grid-row:2;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.375rem;margin-top:1.625rem}
 .segnav button{appearance:none;background:rgba(16,34,42,.5);border:1px solid var(--line);border-radius:3px;color:var(--dim);padding:.75rem .5rem .625rem;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:.375rem;text-align:left;transition:border-color .3s,background .3s,color .3s}
 .segnav b{white-space:nowrap;font:italic 400 1.1875rem/1 var(--serif);color:var(--mute);transition:color .3s}
 .segnav span{font:600 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase}
@@ -267,15 +267,19 @@ main{position:relative;z-index:2}
 @media (min-width:921px){.seg-card dl{position:absolute;width:1px;height:1px;margin:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.seg-card h3{margin-bottom:1.125rem}}
 
 /* Hausordnung */
-.rules{height:420vh}
-.rules-sticky{position:sticky;top:0;height:100svh;display:flex;align-items:center}
+.rules{height:auto} /* Kai 7.11.: kein Scrollweg mehr, die Paragraphen wechseln von selbst (main.js LAW) */
+.rules-sticky{position:relative;height:100svh;display:flex;align-items:center}
 .laws{list-style:none;margin:0;padding:0;position:relative;min-height:46vh}
 .laws li{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;opacity:0;transform:translateY(2.5rem);filter:blur(.625rem);transition:opacity .7s var(--ease),transform .9s var(--ease),filter .7s}
 .laws li.is-on{opacity:1;transform:none;filter:none}
 .laws b{font:italic 400 clamp(3.75rem,9vw,9.375rem)/1 var(--serif);color:var(--amber);margin-bottom:.625rem}
 .laws span{font-family:var(--disp);font-weight:800;font-size:clamp(2.5rem,7.4vw,7.75rem);line-height:.95;letter-spacing:-.04em;max-width:11ch}
 .laws small{margin-top:1.5rem;font-size:clamp(1.0625rem,1.5vw,1.375rem);color:var(--dim)}
-.law-prog{display:none} /* nur Handy (Kai 7.11.), PC vorgemerkt */
+.laws{cursor:pointer}
+.law-prog{display:flex;gap:.375rem;margin-top:1.75rem;max-width:20rem} /* Puls-Striche: füllen sich, antippen = dorthin (7.11.) */
+.law-prog button{appearance:none;flex:1;height:1.75rem;padding:0;border:0;background:none;cursor:pointer;display:flex;align-items:center}
+.law-prog i{display:block;width:100%;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--amber) calc(var(--p,0) * 100%),rgba(237,232,220,.18) 0);transition:background-color .3s}
+.law-prog button:hover i{box-shadow:0 0 0 1px rgba(237,232,220,.25)}
 
 /* Tür */
 .door{padding-top:9.375rem}
@@ -473,12 +477,8 @@ canvas.gl-wait{opacity:0}
   .room-tag{display:none} /* Handy: Räume über Punkte und Karten, das kleine Haus wäre mit Schildern zu voll */
   .roof-head{padding-right:2.5rem}
   .door{background:linear-gradient(rgba(10,22,27,0),var(--ink) 13.75rem);padding-top:10.625rem}
-  .rules{height:auto} /* Kai 7.11.: kein Scrollweg mehr, die Paragraphen wechseln von selbst (main.js LAW) */
-  .rules-sticky{position:relative;align-items:flex-end;padding-bottom:9svh}
-  .laws{cursor:pointer}
-  .law-prog{display:flex;gap:.375rem;margin-top:1.5rem;max-width:16rem}
-  .law-prog button{appearance:none;flex:1;height:1.75rem;padding:0;border:0;background:none;cursor:pointer;display:flex;align-items:center}
-  .law-prog i{display:block;width:100%;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--amber) calc(var(--p,0) * 100%),rgba(237,232,220,.18) 0)}
+  .rules-sticky{align-items:flex-end;padding-bottom:9svh}
+  .law-prog{margin-top:1.5rem;max-width:16rem}
   .laws{min-height:40svh}
   .laws b{font-size:3.5rem}
   .laws span{font-size:clamp(2.125rem,10vw,3rem)}
@@ -572,7 +572,6 @@ canvas.gl-wait{opacity:0}
 .scan-chips.sc-small .sc-no{font-size:1.25rem}.scan-chips.sc-small .sc-h{font-size:.9375rem}.scan-chips.sc-small .sc-typ{font-size:.75rem;line-height:1.4;margin-top:.375rem}
 @media (max-width:360px){.scan-chips{padding:.5625rem .75rem .6875rem}.scan-chips .sc-no{font-size:1.375rem}.scan-chips .sc-h{font-size:1rem}.scan-chips .sc-c span{padding:.3125rem .4375rem}}
 html.no-gl .scan,html.no-gl .scan-rail,html.no-gl .scan-chips{display:none}
-html:not(.seg-scan) .seg-card.seg-x{display:none!important} /* Th7–Th12 nur im Scanner (Kai 7.11.), PC vorgemerkt */
 @media (prefers-reduced-motion:reduce){.scan-coach{transition:none}.scan-coach>*{animation:none;opacity:1}}
 
 /* Option A, schmale Handys (320–360 px): Karte und Zeilen kompakter, damit alle Zeilen zwischen Leiste und Karte passen */

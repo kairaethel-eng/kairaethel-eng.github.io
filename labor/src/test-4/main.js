@@ -489,8 +489,8 @@ function addNerves() {
   sU.uCurves = { value: curveTex }; sU.uPeriTex = { value: periTex }; sU.uRows = { value: ROWS };
 
   const desk = isDesktop();
-  sU.uFine.value = desk ? 0 : 1; // Handy (7.11.): Versorgungsbahn als schmaler Nerv mit vielen schnellen Impulsen
-  const nCord = desk ? 2600 : 1300, nRoot = desk ? 34 : 40, nPeri = desk ? 900 : 1100; // Handy 7.11.: Wurzeln dichter (S1-Wurzel bis zum Nerv sichtbar)
+  sU.uFine.value = 1; // 7.11. (Handy, dann PC): Versorgungsbahn als schmaler Nerv mit vielen schnellen Impulsen
+  const nCord = desk ? 2600 : 1300, nRoot = desk ? 60 : 40, nPeri = desk ? 1600 : 1100; // Handy 7.11.: Wurzeln dichter (S1-Wurzel bis zum Nerv sichtbar)
   const nAll = nCord + (ROWS - 1) * nRoot + nPeri;
   const aRow = new Float32Array(nAll), aPhase = new Float32Array(nAll), aSpeed = new Float32Array(nAll), aKindN = new Float32Array(nAll), aZoneN = new Float32Array(nAll), aStart = new Float32Array(nAll), aOff = new Float32Array(nAll * 3);
   let q = 0;
@@ -581,8 +581,8 @@ spineGroup.visible = false;
 scene.add(spineGroup);
 whenNear($('#achse'), () => runSliced(spineStippleGen(0, false)).then((d) => {
   det = d; SC = d.SC; CY = d.CY;
-  sU.uDiff.value = isDesktop() ? 0 : 1; // Handy: differenziert (7.11.); PC vorgemerkt
-  return runSliced(d.makeSlicesGen(N_SLICE, isDesktop() ? 0.024 : 0.032, 0.12, !isDesktop()));
+  sU.uDiff.value = 1; // differenziert (Handy 7.11., PC 7.11.)
+  return runSliced(d.makeSlicesGen(N_SLICE, isDesktop() ? 0.024 : 0.032, 0.12, true));
 }).then((sl) => {
   const core = new THREE.Mesh(det.coreGeo, coreMat);
   core.frustumCulled = false;
@@ -613,7 +613,7 @@ function updatePeri(zoneKey) {
   const desk = isDesktop(), rows = !desk && linesOn(), side = rows ? -1 : 1;
   let tip = null, tipX = -1e9, start = 0, tipC = null;
   det.curves.forEach((c) => {
-    if (c.kind !== 2 || ZONES[c.zone] !== zoneKey || (rows && scanOn() && !rootOk(c, zoneKey))) return;
+    if (c.kind !== 2 || ZONES[c.zone] !== zoneKey || ((desk || (rows && scanOn())) && !rootOk(c, zoneKey))) return;
     const e = c.pts[CURVE_W - 1];
     _pv.set(e[0], e[1], e[2]).applyAxisAngle(new V3(0, 1, 0), rot).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z));
     _ndc.copy(_pv).project(camera);
@@ -639,7 +639,7 @@ function updatePeri(zoneKey) {
   // Scanner (Kai 7.11., 1A): der Nerv beginnt am Wirbel (Austritt aus dem Wirbelkanal), läuft entlang der Wurzel
   // und weiter nach außen – ein durchgehender Strang; sonst wie bisher ab dem Wurzelende
   const wrl = (q) => new V3(q[0], q[1], q[2]).applyAxisAngle(_Y, rot).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z));
-  const curve = rows && scanOn() && tipC
+  const curve = (desk || (rows && scanOn())) && tipC
     ? new THREE.CatmullRomCurve3([...ROOT_I.map((k) => wrl(tipC.pts[k])), mid, end])
     : new THREE.CatmullRomCurve3([tip, tip.clone().lerp(mid, 0.4).add(new V3(0, 0.02, 0)), mid, end]);
   for (let i = 0; i < CURVE_W; i++) { curve.getPointAt(i / (CURVE_W - 1), _pv); periData.set([_pv.x, _pv.y, _pv.z, 1], i * 4); }
@@ -668,11 +668,12 @@ const STOPS = [
   { zone: 'c12', ids: ['C1', 'C2'], d: 5.6, az: 0.5 },
   { zone: 'c56', ids: ['C5', 'C6'], d: 6.2, az: -0.38 },
   { zone: 'th16', ids: ['Th2', 'Th3', 'Th4', 'Th5'], d: 7.6, az: 0.55 },
+  { zone: 'th712', ids: ['Th8', 'Th9', 'Th10', 'Th11'], d: 7.6, az: -0.5, root: 'Th10' }, // Kai 7.11. (Handy, dann PC)
   { zone: 'l45', ids: ['L4', 'L5'], d: 7.2, az: -0.45 },
   { zone: 's1', ids: ['L5', 'S'], d: 7.6, az: 0.75 },
 ];
-// Scanner (Handy, Kai 7.11. 3A): zusätzlich Th7–Th12 als 6. Haltestelle; PC und Option A bleiben bei STOPS (vorgemerkt)
-const SSTOPS = [...STOPS.slice(0, 3), { zone: 'th712', ids: ['Th8', 'Th9', 'Th10', 'Th11'], d: 7.6, az: -0.5, root: 'Th10' }, ...STOPS.slice(3)];
+// Scanner-Haltestellen = Stationen (seit 7.11. überall sechs, mit Th7–Th12)
+const SSTOPS = STOPS;
 const SLAB = ['C1', 'C5', 'Th1', 'Th7', 'L4', 'S1'];
 // Scanner: Wurzel für den Nerv – fest (root, z. B. Th10 = Nabelhöhe) oder die am weitesten links außen
 const rootOk = (c, zone) => { const st = SSTOPS.find((q) => q.zone === zone); return !st || !st.root || c.id === st.root; };
@@ -708,9 +709,8 @@ let axisWant = null;
 
 // Bedienung: Desktop = Scrollen + Abschnitts-Knöpfe, Handy = Karten wischen
 const axis = $('#achse');
-const segBtns = $$('.segnav button'), cards = $$('.seg-card:not(.seg-x)'), dots = $$('.seg-dots button');
-const xCards = $$('.seg-card.seg-x'); // nur Scanner (Handy): Th7–Th12
-const cardOf = (zone) => cards[STOPS.findIndex((s) => s.zone === zone)] || xCards.find((c) => c.dataset.zone === zone);
+const segBtns = $$('.segnav button'), cards = $$('.seg-card'), dots = $$('.seg-dots button');
+const cardOf = (zone) => cards[STOPS.findIndex((s) => s.zone === zone)];
 let active = 0, mobSel = 0;
 function setActive(i) {
   if (i === active) return;
@@ -721,7 +721,7 @@ function setActive(i) {
 const NINFO = {
   c12: { exit: 'Austritt C1–C2', nerv: 'Nn. suboccipitales · N. occipitalis major', gef: 'Tiefe Nackenmuskulatur', ziel: 'Hinterkopf', typ: 'Typisch: Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen', tgt: [84, 30] },
   c56: { exit: 'Austritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [36, 240] },
-  th712: { exit: 'Austritt Th7–Th12', nerv: 'Untere Interkostalnerven · Bauchwand', gef: 'Gefühl: Rippenbogen, Bauchwand', ziel: 'bis zur Nabelhöhe (Th10)', typ: 'Typisch: gürtelförmiger Schmerz am Rippenbogen, Steifigkeit am Übergang zur LWS', tgt: [86, 190] },
+  th712: { exit: 'Austritt Th7–Th12', nerv: 'Untere Interkostalnerven · Bauchwand', gef: 'Gefühl: Rippenbogen, Bauchwand', ziel: 'bis zur Nabelhöhe (Th10)', typ: 'Typisch: gürtelförmiger Schmerz am Rippenbogen, Steifigkeit am Übergang zur LWS', tgt: [84, 168] },
   th16: { exit: 'Austritt Th1–Th6', nerv: 'Interkostalnerven, obere Rippen', gef: 'Brustkorbwand · Zwischenrippen', ziel: 'Brustkorb', typ: 'Typisch: atemabhängiges Stechen, Schmerz zwischen den Schulterblättern', tgt: [80, 118] },
   l45: { exit: 'Austritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [76, 404] },
   s1: { exit: 'Austritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [72, 412], pre: 'Iliosakralgelenk (ISG): verbindet Becken und Wirbelsäule.' },
@@ -905,7 +905,7 @@ function updateCallouts(zoneKey, fl, on) {
   ncalls.forEach((el, i) => {
     const vis = show && fl > steps[i] && fl < 0.97;
     el.style.opacity = vis ? 1 : 0;
-    if (i < 4) { nl[i].style.opacity = vis ? 1 : 0; nring[i].style.opacity = 0; } // Andockringe nur am Handy (PC vorgemerkt)
+    if (i < 4) nl[i].style.opacity = nring[i].style.opacity = vis ? 1 : 0; // Andockringe (Handy + PC, 7.11.)
   });
   if (!show) { ncState.forEach((s) => { s.init = false; s.k = -1; }); return; }
   const now = performance.now(), ease = 1 - Math.exp(-Math.min(0.1, (now - ncT) / 1000) * 7); ncT = now;
@@ -970,7 +970,10 @@ function updateCallouts(zoneKey, fl, on) {
     segs.push([bx, by, ax, ay]);
     // Linie vom nächsten Randpunkt der Beschriftung zum Andockpunkt
     const px = Math.min(Math.max(ax, st.x), st.x + w), py = Math.min(Math.max(ay, st.y), st.y + h);
-    const L = nl[i]; L.setAttribute('x1', px); L.setAttribute('y1', py); L.setAttribute('x2', ax); L.setAttribute('y2', ay);
+    // Linie endet am Rand des Andockrings, der Ring sitzt genau auf dem Nerv (7.11.)
+    const dl = Math.hypot(ax - px, ay - py) || 1, k = Math.max(0, 1 - 5 / dl);
+    const L = nl[i]; L.setAttribute('x1', px); L.setAttribute('y1', py); L.setAttribute('x2', px + (ax - px) * k); L.setAttribute('y2', py + (ay - py) * k);
+    nring[i].setAttribute('cx', ax); nring[i].setAttribute('cy', ay);
   }
 }
 
@@ -1041,7 +1044,7 @@ function mobileCard(gate) {
 dots.forEach((d) => d.addEventListener('click', () => {
   const i = +d.dataset.seg;
   if (scanOn()) { // Scanner: zum Abschnitt springen; steht die Bühne noch nicht, dorthin scrollen
-    SCAN.idx = Math.max(0, SSTOPS.findIndex((st) => st.zone === STOPS[i].zone)); SCAN.demo = 2; SCAN.touched = true;
+    SCAN.idx = i; SCAN.demo = 2; SCAN.touched = true;
     const r = axis.getBoundingClientRect();
     if (!(r.top <= 2 && r.bottom >= VH - 2)) scrollToY(r.top + scrollY + Math.max(0, r.height - VH) * 0.4);
     return;
@@ -1204,7 +1207,7 @@ function updateScan(dt, r, inSec) {
   const iN = stopY.length ? nearestStop(y) : 0;
   const seg = ready && SCAN.demo === 2 && Math.abs(y - stopY[iN]) < 8 ? iN : -1;
   if (seg !== SCAN.seg) { SCAN.seg = seg; SCAN.segT = performance.now(); }
-  if (seg >= 0) setActive(STOPS.findIndex((st) => st.zone === SSTOPS[seg].zone)); // Th7–Th12: keine Karte aktiv
+  if (seg >= 0) setActive(seg);
 
   // Nahansicht: heran, sobald die Linie an einem Abschnitt steht; beim Ziehen/Wechseln zügig zurück (Bühne nicht
   // im Bild: Zustand halten, damit beim Weiterscrollen nichts mehr zoomt)
@@ -1409,12 +1412,12 @@ const rules = $('#hausordnung'), laws = $$('#laws li'), door = $('#tuer');
 let lawOn = 0;
 // Hausordnung am Handy (Kai 7.11.): die Paragraphen wechseln von selbst, solange der Abschnitt im Bild steht – kein
 // langer Scrollweg mehr. Lesezeit nach Textlänge (~5 s), Leiste wie ein Puls (füllt sich), antippen = dorthin bzw. weiter;
-// bei „Bewegung anhalten“ steht der Wechsel (WCAG 2.2.2), beim erneuten Hereinscrollen beginnt es bei §1. PC: vorgemerkt.
+// bei „Bewegung anhalten“ steht der Wechsel (WCAG 2.2.2), beim erneuten Hereinscrollen beginnt es bei §1. PC seit 7.11. ebenso.
 const lawBtns = $$('#lawProg button'), lawDur = laws.map((li) => 2600 + 45 * li.textContent.trim().length);
 const LAW = { t: 0, vis: false, last: 0 };
 function setLaw(i) { if (i === lawOn) return; laws[lawOn].classList.remove('is-on'); laws[i].classList.add('is-on'); lawOn = i; }
 lawBtns.forEach((b, i) => b.addEventListener('click', () => { setLaw(i); LAW.t = 0; }));
-$('#laws').addEventListener('click', () => { if (!isDesktop()) { setLaw((lawOn + 1) % laws.length); LAW.t = 0; } });
+$('#laws').addEventListener('click', () => { setLaw((lawOn + 1) % laws.length); LAW.t = 0; });
 
 // ---------- K1 „Die Tür geht auf“ (nur mit ?licht=1; Standard dunkel seit 4.11. abends): Kapitel 05 wird hell ----------
 // Über die letzten 60 % der Hausordnung blendet die Seite von Dunkel in warmes Off-White (V10-Palette),
@@ -2026,10 +2029,9 @@ function tick() {
 
   // Hausordnung
   const rr = rules.getBoundingClientRect();
-  const rp = clamp(-rr.top / Math.max(1, rr.height - VH));
+  const rp = clamp((VH - rr.top) / (rr.height + VH)); // Durchlauf durchs Bild (Abschnitt seit 7.11. nur 1 Bildschirm hoch)
   if (licht) { const k = smooth(0.4, 1, rp); setLicht(k); if (dust) dust.visible = k > 0.01; }
-  if (isDesktop()) setLaw(Math.min(laws.length - 1, Math.floor(rp * laws.length)));
-  else {
+  { // Handy + PC (7.11.): automatisch
     const now = performance.now(), step = Math.min(250, now - (LAW.last || now)), vis = rr.top < VH * 0.55 && rr.bottom > VH * 0.45;
     LAW.last = now;
     if (vis && !LAW.vis) { setLaw(0); LAW.t = 0; } // neu hereingescrollt → bei §1 beginnen

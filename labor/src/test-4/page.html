@@ -65,10 +65,11 @@
           <button type="button" data-seg="0" class="is-on"><b>C1–C2</b><span>Kopf</span></button>
           <button type="button" data-seg="1"><b>C5–C6</b><span>HWS</span></button>
           <button type="button" data-seg="2"><b>Th1–6</b><span>BWS</span></button>
-          <button type="button" data-seg="3"><b>L4–L5</b><span>LWS</span></button>
-          <button type="button" data-seg="4"><b>S1</b><span>Becken</span></button>
+          <button type="button" data-seg="3"><b>Th7–12</b><span>Bauch</span></button>
+          <button type="button" data-seg="4"><b>L4–L5</b><span>LWS</span></button>
+          <button type="button" data-seg="5"><b>S1</b><span>Becken</span></button>
         </div>
-        <div class="seg-dots" role="group" aria-label="Abschnitt wählen"><span>C1</span><button type="button" data-seg="0" aria-label="Abschnitt C1–C2" class="is-on"></button><button type="button" data-seg="1" aria-label="Abschnitt C5–C6"></button><button type="button" data-seg="2" aria-label="Abschnitt Th1–Th6"></button><button type="button" data-seg="3" aria-label="Abschnitt L4–L5"></button><button type="button" data-seg="4" aria-label="Abschnitt S1 · ISG"></button><span>S1</span></div>
+        <div class="seg-dots" role="group" aria-label="Abschnitt wählen"><span>C1</span><button type="button" data-seg="0" aria-label="Abschnitt C1–C2" class="is-on"></button><button type="button" data-seg="1" aria-label="Abschnitt C5–C6"></button><button type="button" data-seg="2" aria-label="Abschnitt Th1–Th6"></button><button type="button" data-seg="3" aria-label="Abschnitt Th7–Th12"></button><button type="button" data-seg="4" aria-label="Abschnitt L4–L5"></button><button type="button" data-seg="5" aria-label="Abschnitt S1 · ISG"></button><span>S1</span></div>
         <div class="seg-cards" id="segCards" aria-live="polite">
           <article class="seg-card is-on" data-seg="0">
             <p class="seg-no">C1–C2</p>
@@ -91,21 +92,21 @@
             <p class="seg-peri">Versorgung: Brustkorb · Zwischenrippen</p>
             <ul class="chips"><li>Manuelle Therapie</li><li>Lojer Manuthera</li><li>Fango</li></ul>
           </article>
-          <article class="seg-card seg-x" data-zone="th712"><!-- nur Scanner (Handy, Kai 7.11.); PC vorgemerkt -->
+          <article class="seg-card" data-seg="3"><!-- Th7–Th12: Kai 7.11. (Handy, dann PC) -->
             <p class="seg-no">Th7–Th12</p>
             <h3>Untere Brustwirbelsäule</h3>
             <dl><dt>Nerven</dt><dd>Untere Zwischenrippennerven und Nerven der Bauchwand. Th10 versorgt die Haut etwa auf Nabelhöhe.</dd><dt>Typisch</dt><dd>Gürtelförmig ausstrahlender Schmerz am Rippenbogen, Steifigkeit am Übergang zur Lendenwirbelsäule (Th12/L1).</dd></dl>
             <p class="seg-peri">Versorgung: Rippenbogen · Bauchwand</p>
             <ul class="chips"><li>Manuelle Therapie</li><li>Krankengymnastik</li><li>Fango</li></ul>
           </article>
-          <article class="seg-card" data-seg="3">
+          <article class="seg-card" data-seg="4">
             <p class="seg-no">L4–L5</p>
             <h3>Lendenwirbelsäule</h3>
             <dl><dt>Nerven</dt><dd>Wurzeln Richtung N. ischiadicus. L5 hebt den Fuß, Gefühl am Schienbein bis zur Großzehe.</dd><dt>Typisch</dt><dd>Bandscheiben-Region: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche.</dd></dl>
             <p class="seg-peri">Versorgung: Schienbein · Großzehe</p>
             <ul class="chips"><li>Schlingentisch</li><li>Schmerztherapie</li><li>Krankengymnastik</li></ul>
           </article>
-          <article class="seg-card" data-seg="4">
+          <article class="seg-card" data-seg="5">
             <p class="seg-no">S1 · ISG</p>
             <h3>Kreuzbein &amp; Becken</h3>
             <dl><dt>Nerven</dt><dd>S1-Wurzel für Wade, Fußaußenrand und Achillessehnenreflex. Das Iliosakralgelenk verbindet Becken und Wirbelsäule.</dd><dt>Typisch</dt><dd>Ausstrahlung über die Beinrückseite bis zur Ferse, tiefsitzender einseitiger Kreuzschmerz.</dd></dl>
