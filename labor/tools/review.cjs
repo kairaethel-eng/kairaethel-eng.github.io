@@ -33,7 +33,7 @@ const STATES = [
   { id: 'ego', ...click('#egoOpen'), slow: 1.5, after: 'Escape' },
   { id: 'manuthera', ...scroll('#manuthera'), slow: 1 },
   { id: 'leistungen', ...scroll('#allTitle', -0.3), serv: true },
-  { id: 'hausordnung', ...scroll('#hausordnung', 0.2) },
+  { id: 'hausordnung', ...scroll('#hausordnung') },
   { id: 'tuer', ...scroll('#tuer') },
   { id: 'termin', ...click('#tuer [data-termin]'), after: 'Escape' },
   { id: 'fuss', go: 'bottom|0' },
@@ -49,13 +49,29 @@ function measure() {
     for (let a = e; a; a = a.parentElement) if (parseFloat(getComputedStyle(a).opacity) < 0.15) return false;
     return true;
   };
+  // sichtbarer Ausschnitt: mit allen Vorfahren schneiden, die abschneiden (overflow/clip) – z. B. Volltext nur für Vorleseprogramme
+  const clipRect = (e) => {
+    const b = e.getBoundingClientRect(); let r = { left: b.left, top: b.top, right: b.right, bottom: b.bottom };
+    for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) {
+      const cs = getComputedStyle(a);
+      if (cs.overflowX === 'visible' && cs.overflowY === 'visible' && cs.clip === 'auto' && cs.clipPath === 'none') continue;
+      const q = a.getBoundingClientRect();
+      r = { left: Math.max(r.left, q.left), top: Math.max(r.top, q.top), right: Math.min(r.right, q.right), bottom: Math.min(r.bottom, q.bottom) };
+    }
+    r.width = r.right - r.left; r.height = r.bottom - r.top; return r;
+  };
+  // Verdeckt: offener modaler Dialog → nur sein Inhalt zählt; feste Kopfleiste → Inhalt darunter zählt nicht (normales Scrollen)
+  const modal = [...document.querySelectorAll('dialog[open]')].find((d) => d.matches(':modal'));
+  const bar = document.querySelector('nav.top'), barB = bar && getComputedStyle(bar).position === 'fixed' ? bar.getBoundingClientRect().bottom : 0;
   const els = [...document.querySelectorAll('body *')].filter((e) => {
     if (['SCRIPT', 'STYLE', 'CANVAS', 'SVG', 'svg', 'path'].includes(e.tagName)) return false;
     if (![...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) return false;
-    const r = e.getBoundingClientRect();
+    if (modal && !modal.contains(e)) return false;
+    const r = clipRect(e);
     if (r.width <= 1 || r.height <= 1 || r.bottom < 0 || r.top > vh) return false; // nur im Bild, sr-only raus
+    if (!modal && bar && !bar.contains(e) && r.top < barB - 2) return false;
     return seen(e);
-  }).map((e) => ({ e, r: e.getBoundingClientRect() }));
+  }).map((e) => ({ e, r: clipRect(e) }));
   for (const { e, r } of els) {
     if (r.right > vw + 1 || r.left < -1) out.offX.push(`${label(e)} [${Math.round(r.left)}…${Math.round(r.right)}]`);
     const fs = parseFloat(getComputedStyle(e).fontSize); if (fs < 11) out.tiny.push(`${label(e)} ${fs}px`);
@@ -120,8 +136,9 @@ function measure() {
     // Kontaktbogen (Bilder mit Namen in einem Raster)
     const imgs = rep.states.map((s) => s.file).concat(rep.states.flatMap((s) => (s.serv || []).map((x) => x.split(' ')[0])));
     const sp = await b.newPage({ viewport: { width: 1800, height: 1000 } });
-    await sp.setContent(`<body style="margin:0;background:#111;color:#ddd;font:13px sans-serif;display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding:6px">${imgs.map((f) => `<figure style="margin:0"><img src="file://${path.join(OUT, f)}" style="width:100%;display:block"><figcaption>${f}</figcaption></figure>`).join('')}</body>`);
-    await sp.waitForTimeout(800);
+    const sheetHtml = path.join(OUT, `sheet-${mode}.html`); // als Datei neben den Bildern (von about:blank lädt Chromium keine file://-Bilder)
+    fs.writeFileSync(sheetHtml, `<!doctype html><meta charset="utf-8"><body style="margin:0;background:#111;color:#ddd;font:13px sans-serif;display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding:6px">${imgs.map((f) => `<figure style="margin:0"><img src="${f}" style="width:100%;display:block"><figcaption>${f}</figcaption></figure>`).join('')}</body>`);
+    await sp.goto('file://' + sheetHtml, { waitUntil: 'load' });
     await sp.screenshot({ path: path.join(OUT, `sheet-${mode}.png`), fullPage: true });
     await sp.close();
   }
