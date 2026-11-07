@@ -28,8 +28,6 @@ const STATES = [
   { id: 'achse', ...scroll('#achse', 0.3), slow: 2 },
   ...['C1', 'C5', 'Th1', 'Th7', 'L4', 'S1'].map((n, i) => ({ id: 'achse-' + n, ...click('.scan-stop', i), slow: 1 })),
   { id: 'dach', ...scroll('#dach'), slow: 1 },
-  { id: 'rundgang', ...click('#tourNext'), slow: 1 },
-  { id: 'rundgang-aus', ...click('#tourExit') },
   { id: 'ego', ...click('#egoOpen'), slow: 1.5, after: 'Escape' },
   { id: 'manuthera', ...scroll('#manuthera'), slow: 1 },
   { id: 'leistungen', ...scroll('#allTitle', -0.3), serv: true },
@@ -38,7 +36,7 @@ const STATES = [
   { id: 'termin', ...click('#tuer [data-termin]'), after: 'Escape' },
   { id: 'fuss', go: 'bottom|0' },
 ];
-const SKIP = { s: ['achse-C5', 'achse-Th1', 'achse-Th7', 'ego', 'rundgang-aus'], dr: ['achse-C5', 'achse-Th1', 'achse-Th7', 'achse-S1'] };
+const SKIP = { s: ['achse-C5', 'achse-Th1', 'achse-Th7', 'ego'], dr: ['achse-C5', 'achse-Th1', 'achse-Th7', 'achse-S1'] };
 
 // Messungen im Browser (je Zustand)
 function measure() {
