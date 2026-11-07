@@ -4,7 +4,7 @@
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
 
 ## ▶ Nächster Chat: hier weitermachen (Stand 7.11.2026 spät – PC an das Handy angleichen)
-Start-Prompt: „Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md` (Abschnitt ▶ → „Aufgaben PC“), `labor/ENTSCHEIDUNGEN.md` (Einträge vom 7.11.). Dann zu meinen 6 PC-Aufgaben je Punkt Ursache, Optionen, Empfehlung – Go abwarten.“
+Start-Prompt: „Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md` (Abschnitt ▶ → „Aufgaben PC“), `labor/ENTSCHEIDUNGEN.md` (Einträge vom 7.11.). Dann zuerst Aufgabe 7 (gründliche Durchsicht des ganzen Verlaufs nach offenen Aufgaben und Fehlern) als Bericht, danach zu meinen 6 PC-Aufgaben je Punkt Ursache, Optionen, Empfehlung – Go abwarten.“
 
 ### Aufgaben PC (Kai 7.11. spät, noch **kein Go** – erst erörtern)
 Kai nach PC-Blick: „irgendwie fehlt mir noch viel von dem, was wir am Handy umgesetzt haben.“ Befunde von Claude (noch nicht mit Kai besprochen):
@@ -14,6 +14,11 @@ Kai nach PC-Blick: „irgendwie fehlt mir noch viel von dem, was wir am Handy um
 4. **Wirbelsegmente: Verfeinerung der Partikel (Abgrenzung) am PC fehlt.** Ist [B]: seit Commit 3cc91d8 (7.11.) ist `uDiff` = 1 auch am PC (330 000 Punkte, Schnitt 0,024). [O] Zuerst prüfen: Browser-Zwischenspeicher (GitHub Pages bis ~10 min, Strg+F5) – sonst am PC Anteile `DIFF`/Punktgröße eigens abstimmen (Kanten heller, Bandscheiben-Körnung gröber).
 5. **Hausordnung am PC automatisieren.** Ist [B]: seit 3cc91d8 auch am PC automatisch (Puls-Striche, Klick). [O] wie 4: erst Strg+F5 prüfen; falls doch alt → Fehler suchen.
 6. **Alle optischen Hilfen der ganzen Seite vom Handy auf den PC übertragen.** Ansatz: erst Liste der Handy-Hilfen erstellen (Wisch-/Hinweis-Pillen `.th-pill`, Hand am Griff `sCoach`, Puls-Striche, Andockringe, Haltestellen, Hinweis „Wischen oder Raum antippen“, Kapitel-Hinweise …) und je Hilfe PC-Gegenstück vorschlagen (Maus/Tastatur statt Wischen).
+7. **Gründliche Durchsicht des ganzen Verlaufs (Kai 7.11. spät): wo noch Aufgaben entstehen können bzw. offen sind, und wo Fehler sein könnten.** Vorgehen (Bericht, nichts ändern ohne Go):
+   - **Git-Log** komplett (`git log --stat` ab Beginn von Puls · Scan, ~31.10.2026): je Commit prüfen, ob Angekündigtes umgesetzt, später zurückgenommen oder halb liegen geblieben ist (z. B. Varianten-Parameter, `?scan=0`/Option A, `?licht=1`, Vergleichsseiten, Wurzel/Livegang).
+   - **Doku** `UEBERGABE.md`, `ENTSCHEIDUNGEN.md`, `LIVEGANG.md`, `CLAUDE.md`, `labor/PLAN-*`, `PRUEFBERICHT-*`, `PRUEFUNG-*`: alle „offen“, [O], „⚠ prüfen“, „Kai prüft“, „vorgemerkt“, „noch kein Go“ sammeln, Erledigtes abhaken, Widersprüche zwischen den Dateien und zum Code benennen.
+   - **Code** `src/test-4` (+ `shared`, `manu`, `ego`, `zuhause`): Fehlersuche (z. B. Code-Review mit `/code-review`): tote Zweige (z. B. `seg-rows`/Option A, alte `TXT`-Reste, `SSTOPS = STOPS`-Alias, `periLabel`), null-Zugriffe vor dem Lazy-Aufbau (`det`/`bones`/`prx`), Resize Handy↔PC (Werte nur beim Laden gesetzt: `uDiff`, `uFine`, `N_SLICE`, Punktzahlen), Barrierefreiheit (axe via `tools/audit.cjs` in der Cloud, Tastatur für Scanner/Hausordnung), Konsolenfehler auf allen Labor-Seiten, Leistung am iPhone (Punktzahlen, Shader-Zweige).
+   - **Ergebnis:** eine Liste „offen / erledigt / Fehler-Verdacht“ mit Priorität und Empfehlung; danach Go von Kai je Punkt.
 
 ### Am 7.11. umgesetzt (alles auf `main`)
 **7.11. PC nachgezogen (Kai: „passt im Moment so alles, nun am PC die relevanten Sachen“) – ✅ umgesetzt:** Th7–Th12 überall 6. Station (PC Kapitel 03 530vh) · Nerv fein ab Wirbel + Andockringe · Wirbelsäule differenziert · Hausordnung automatisch. Details `ENTSCHEIDUNGEN.md` → „PC nachgezogen“. **Offen von Kai:** PC-Test (Chrome, auch 2560×1440).
