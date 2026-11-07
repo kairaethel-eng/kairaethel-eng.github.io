@@ -589,6 +589,18 @@ function addNerves() {
 const spineGroup = new THREE.Group();
 spineGroup.visible = false;
 scene.add(spineGroup);
+// Shader vorwärmen (Messung 7.11.): versteckte Gruppen kompilieren sonst erst beim ersten Zeigen → Ruckler beim Kapitelwechsel.
+// Kurz sichtbar schalten, compile() reicht die Programme nur an den Treiber (paralleles Linken), sofort zurück – kein Bild dazwischen.
+function warmShaders() {
+  if (!renderer) return;
+  const run = () => {
+    const hid = [spineGroup, tourPts].filter((o) => !o.visible);
+    hid.forEach((o) => { o.visible = true; });
+    try { renderer.compile(scene, camera); } catch (e) { /* egal */ }
+    hid.forEach((o) => { o.visible = false; });
+  };
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 1500 }); else setTimeout(run, 300);
+}
 whenNear($('#achse'), () => runSliced(spineStippleGen(0, false)).then((d) => {
   det = d; SC = d.SC; CY = d.CY;
   sU.uDiff.value = 1; // differenziert (Handy 7.11., PC 7.11.)
@@ -599,6 +611,7 @@ whenNear($('#achse'), () => runSliced(spineStippleGen(0, false)).then((d) => {
   bones = boneStyle('slices', sl);
   spineGroup.add(core, bones.pts);
   addNerves();
+  warmShaders();
 }));
 
 // Versorgungsbahn: vom Wurzel-Ende des aktiven Abschnitts bis zum Zielgebiet, mit Beschriftung
@@ -1582,11 +1595,17 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape' && topNav.classList.
 addEventListener('resize', () => { if (VW > 1000) setMenu(false); });
 let chapShown = -1;
 let morphNow = 0;
+let chapTop = null;
+const chapDirty = () => { chapTop = null; };
+addEventListener('resize', chapDirty); addEventListener('load', chapDirty);
+if (window.ResizeObserver) new ResizeObserver(chapDirty).observe(document.body);
 function targetMorph() {
   const vh = VH;
   let m = 0;
+  if (!chapTop) chapTop = chapters.map((c) => c.getBoundingClientRect().top + scrollY);
+  const sy = scrollY;
   for (let i = 0; i < chapters.length; i++) {
-    const r = chapters[i].getBoundingClientRect();
+    const r = { top: chapTop[i] - sy };
     const s = +chapters[i].dataset.stage;
     const prev = i ? +chapters[i - 1].dataset.stage : 0;
     // Übergang, während das Kapitel von unten hereinkommt
@@ -1702,7 +1721,7 @@ function buildTour() {
 }
 // einmal rechnen; der Rundgang aus Augenhöhe (Dialog) nutzt dieselbe Punktwolke (prxP)
 let prxP = null;
-const buildPrx = () => prxP || (prxP = runSliced(praxisScanGen(isDesktop() ? 85000 : 32000, isDesktop() ? 1 : 0.62)).then((r) => { prx = r; buildTour(); return r; }));
+const buildPrx = () => prxP || (prxP = runSliced(praxisScanGen(isDesktop() ? 85000 : 32000, isDesktop() ? 1 : 0.62)).then((r) => { prx = r; buildTour(); warmShaders(); return r; }));
 whenNear($('#dach'), buildPrx);
 
 // Raum-Beschriftungen im Raum
