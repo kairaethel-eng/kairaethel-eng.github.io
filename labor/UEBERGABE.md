@@ -1,4 +1,4 @@
-# Übergabe – Stand 7.11.2026 spät (Scanner am PC + Rundgang aus Augenhöhe in Kap. 04 + Nebenthemen 1–3 umgesetzt; offen: Kais Tests, siehe ▶)
+# Übergabe – Stand 7.11.2026 spät (Diagnose Hero-Rauschen iPhone: Optionen A–C warten auf Go; Scanner am PC + Rundgang aus Augenhöhe umgesetzt; offen: Kais Tests, siehe ▶)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
@@ -6,6 +6,30 @@
 ## ▶ Nächster Chat: hier weitermachen (Stand 7.11.2026 spät)
 
 > **Zuerst Kai fragen:** Wie war der iPhone-Test „Rundgang aus Augenhöhe“ (Kap. 04)? Am PC sagt Kai „super“ (7.11. spät). Abfragen: Anflug zur Tür, Tempo der Fahrt, Zurück-Wischgeste in Safari schließt den Rundgang, Knopfzeile lesbar, Aufbau beim ersten Klick, Seite scrollt beim Wischen auf den Knöpfen nicht mit. Rückmeldung = kein Auftrag → je Punkt Optionen, Go abwarten.
+
+### 🩺 Diagnose „Hero ruckelt/rauscht am iPhone seit `bcca71e`“ (7.11. spät) – **Optionen A–C: Go abwarten**
+**Messung [B]** (Container: Chromium headless, Handy 390×844, DPR 3, Touch, CPU 4×, Steuerung über DevTools-Protokoll; gezählt werden echte Zeichen-Bilder je rAF, nicht nur rAF; je 5 Läufe abwechselnd „mit“/„ohne“ die beiden Änderungen, Build per Worktree). **Einschränkung [B]:** im Container gibt es keinen Grafikchip → WebGL läuft immer per SwiftShader; „echte GPU“ geht nur auf Kais PC. Darum zählt hier der **Vergleich**, nicht die absolute Bildrate.
+| | ohne bcca71e | mit bcca71e |
+|---|---|---|
+| Stand Hero 8 s: Bilder/s (Spanne) | 14,5 (13,6–15,3) | 15,4 (12,8–17,3) |
+| Stand: Bildabstand Median / längster | 67 ms / 100–117 ms | 67 ms / 83–133 ms |
+| Scrollen 6000 px in 8 s: Bilder/s | 19,0 (17,8–20,5) | 17,6 (15,7–19,9) |
+| Scrollen: längster Bildabstand | 333–400 ms | 317–417 ms |
+→ Kein Unterschied über die Streuung hinaus. **`chapTop`** ist sauber: `ResizeObserver` am `body` feuerte in den Messfenstern 0×, Kapitel-Oberkanten bei Scroll 0/1500/4000/8000 identisch (Cache stimmt). **`warmShaders()`** hatte am Handy eine Nebenwirkung: die Wirbelsäule wird schon im Hero gebaut (`whenNear` 150 %, `#achse` 2,35 Bildhöhen entfernt) → 4 Shader-Programme werden **10,6 s nach dem Laden im Hero** übersetzt (vorher erst in Kapitel 03 beim Scrollen). Chrome linkt parallel (≤ 5 ms); iPhone (WebKit/Metal) übersetzt evtl. blockierend [O, ohne Gerät nicht messbar] → möglicher **einmaliger** Haker, während man die Figur ansieht.
+**Fazit:** `bcca71e` erklärt das **dauernde** Rauschen nicht [B], höchstens einen einmaligen Haker im Hero [A]. **Entschärft (umgesetzt):** `warmShaders()` nur noch am PC (`isDesktop()`; der Gewinn 184 → 84–100 ms war nur am PC gemessen) – Handy verhält sich dabei wieder wie vor `bcca71e`; geprüft: Handy kein Übersetzen im Hero mehr, PC wärmt weiter vor (Wirbelsäule/Praxis), keine Konsolenfehler 390/1440. `chapTop` bleibt. `live/` und `test-4-puls-scan.html` neu gebaut.
+
+**Ursache des Rauschens [B, aus dem Code + Rechnung]:**
+1. **Shader Figur (Form 0):** Spannungspunkte zittern mit `jitter(.012 + tension·.11, 6 + tension·10)` = drei unabhängige Sinus je Achse mit Zufallsphase je Teilchen, bei voller Spannung 3,3 / 4,3 / 2,8 Hz (x/y/z). Am Handy 390×844 (Figur 540 px, Maßstab 0,67) sind das **±7,5 CSS-px** (≈ ±23 Gerätepixel). Höchstgeschwindigkeit ≈ 205 px/s → Sprung je Bild ≈ 3,4 px bei 60 B/s, **≈ 6,8 px bei 30 B/s**, ≈ 14 px bei 15 B/s. Nachbarpunkte springen mit zufälliger Phase → ab etwa Punktgröße je Bild sieht das Auge kein Wandern, sondern Flimmern = „Rauschen“. (Pochen von Größe/Farbe: 0,54 Hz, ruhig, unbeteiligt.)
+2. **Akkuregel Handy** (`tick`: `frameN % 2`, seit 4.11. unverändert): > 1,5 s ohne Scroll/Touch nur jedes 2. Bild → iPhone **30 B/s**, im Stromsparmodus (Safari drosselt rAF auf 30 Hz) **15 B/s** – genau dann, wenn man im Hero die Figur ansieht. Beim Berühren/Scrollen sofort 60 B/s.
+3. **dt-Abhängigkeit:** Bewegung hängt nur an `uTime += dt·CALM` → Tempo bildratenunabhängig, **aber** `dt` ist auf 0,05 s gekappt: unter 20 B/s (Stromsparmodus + Akkuregel) läuft die Zeit nur ≈ 75 % und stockend. (`uAlpha += …·0.1` ist bildratenabhängig, betrifft nur das Abdunkeln.)
+4. **Watchdog** (`setInterval` 33 ms): zeichnet nur, wenn rAF ≥ 120 ms ausfällt; gemessen **1 Bild in 14 s** (beim Start, während eines Long Task) [B] → **nicht beteiligt**. Ruhemodus (`CALM` 0,45) macht das Zittern nur langsamer, nicht kleiner.
+
+**Optionen (Go Kai):**
+- **A** Akkuregel im Hero aus: volle Bildrate, solange die Figur sichtbar ist (`morphNow < 0.6`); Sprünge halbieren sich, Bild sonst gleich; etwas mehr Akku nur im Hero. Klein, Sonnet.
+- **B** Zittern beruhigen: Frequenz der Spannungspunkte senken (`6 + 10·t` → etwa `2 + 3·t`, ≈ 1 Hz) und Ausschlag etwa halbieren → Punkte „wabern/pochen“ flüssig statt zu zittern; Bild ändert sich (Verspannung wirkt weniger nervös). Klein, Sonnet.
+- **C** = A + B + `dt`-Kappung 0,05 → 0,1 (Zeit läuft auch bei 15 B/s richtig).
+- **Empfehlung: C.** Ursache Nr. 1 rauscht bei jeder Bildrate; A allein halbiert nur die Sprünge. Werte von B am iPhone mit Kai feinstellen.
+- **Kai-Test ohne Messwerkzeug (unterscheidet A von B):** Finger auf den **Titel** legen und leicht seitlich hin und her bewegen (Seite scrollt nicht, Figur wird nicht berührt → volle Bildrate). Wird die Figur dabei deutlich ruhiger → A hilft viel; bleibt sie gleich unruhig → B nötig. Stromsparmodus (gelbe Batterie) macht es sichtbar schlimmer.
 
 ### ⏱ Messung Livegang-Vorschau `labor/live/` auf Kais PC (7.11. spät, Stand `0a42a6f`, nur Messung, Code unverändert)
 Aufbau: lokaler Node-Server (127.0.0.1), Chrome 1440×900 bzw. Handy 390×844 (DPR 3, Touch) mit CPU-Drossel 4×, Messung per DevTools-Protokoll (PerformanceObserver für LCP/CLS/Long Tasks/Event-Timing, Bildrate per rAF), Lighthouse 12 lokal (`--only-categories` alle vier). Keine Telemetrie, keine externen Seiten. Das Plugin `chrome-devtools-mcp` wurde **nicht** installiert (`/plugin install` geht nur im Terminal-Claude von Kai) – gleiche Werte stattdessen direkt über das Protokoll. **Wichtig [B]:** Headless-Chrome rendert WebGL per Software (SwiftShader, kein Grafikchip) → Bildraten und Interaktionszeiten unten sind **Untergrenzen**, auf Kais echter Grafikkarte/iPhone deutlich besser; Ladewerte (LCP, CLS, Lighthouse) sind aussagekräftiger.

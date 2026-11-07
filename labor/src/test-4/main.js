@@ -591,8 +591,10 @@ spineGroup.visible = false;
 scene.add(spineGroup);
 // Shader vorwärmen (Messung 7.11.): versteckte Gruppen kompilieren sonst erst beim ersten Zeigen → Ruckler beim Kapitelwechsel.
 // Kurz sichtbar schalten, compile() reicht die Programme nur an den Treiber (paralleles Linken), sofort zurück – kein Bild dazwischen.
+// Nur PC (Diagnose 7.11. spät): am Handy wird die Wirbelsäule schon im Hero gebaut (whenNear 150 %) → das Vorwärmen
+// verlegte das Shader-Übersetzen in den Hero (iPhone/Metal: ein Haker, während man die Figur ansieht). Gewinn war nur am PC gemessen.
 function warmShaders() {
-  if (!renderer) return;
+  if (!renderer || !isDesktop()) return;
   const run = () => {
     const hid = [spineGroup, tourPts].filter((o) => !o.visible);
     hid.forEach((o) => { o.visible = true; });
