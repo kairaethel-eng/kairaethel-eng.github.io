@@ -86,9 +86,9 @@ const scanQ = new URLSearchParams(location.search).get('scan');
 const segRows = () => {
   const el = document.documentElement, ok = !isDesktop() && !el.classList.contains('no-gl') && MINH >= 500;
   el.classList.toggle('seg-scan', ok && scanQ !== '0'); el.classList.toggle('seg-rows', ok && scanQ === '0');
-  // PC (Kai 7.11., 2B · 1A 2A 3A): Hybrid-Scanner – stehende Bühne mit Aufzug rechts, Silhouette + Schilder bleiben;
-  // ?scan=0 = alte Scroll-Kamerafahrt (530vh) zum Vergleich
-  el.classList.toggle('seg-pc', isDesktop() && !el.classList.contains('no-gl') && scanQ !== '0');
+  // PC (Kai 7.11., 2B · 1A 2A 3A): Hybrid-Scanner – stehende Bühne mit Aufzug rechts, Silhouette + Schilder bleiben
+  // (alte Scroll-Kamerafahrt am PC entfernt, Kai 7.11. spät); ohne WebGL: Karte wechselt per segnav
+  el.classList.toggle('seg-pc', isDesktop() && !el.classList.contains('no-gl'));
 };
 if (!renderer) noGl();
 const scene = new THREE.Scene();
@@ -694,13 +694,13 @@ function frame(T, dir, d, fx, fy) {
   return { pos: pos.add(shift), target: T.clone().add(shift) };
 }
 function stopPose(i, fy = 0.3) { // fy: Höhe des Abschnitts im Bild (nur Handy; 0.3 = Standard)
-  const s = STOPS[i], rot = PROFILE + s.az, X = uniforms.uXf.value[2], desk = isDesktop();
+  const s = STOPS[i], rot = PROFILE + s.az, X = uniforms.uXf.value[2]; // nur Handy (PC: Scanner)
   const c = new V3();
   s.ids.forEach((id) => { const lv = det.levels.find((l) => l.id === id); c.add(new V3(lv.center.x * SC, (lv.center.y - CY) * SC, lv.center.z * SC)); });
   c.divideScalar(s.ids.length).applyAxisAngle(new V3(0, 1, 0), rot).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z));
   // Handy mit Zeilen (Option A): Abschnitt nach rechts, links ist die Spalte für die Zeilen
-  const st = stickOn(), d = s.d * SC * X.w * 0.86 * (desk ? 1 : st ? MOB_D : 2.1);
-  return { ...frame(c, new V3(0, 0.12, 1), d, desk ? 0.56 : st ? (VW > 600 ? 0.64 : 0.7) : 0.5, desk ? 0.5 : fy), rot };
+  const st = stickOn(), d = s.d * SC * X.w * 0.86 * (st ? MOB_D : 2.1);
+  return { ...frame(c, new V3(0, 0.12, 1), d, st ? (VW > 600 ? 0.64 : 0.7) : 0.5, fy), rot };
 }
 const MOB_D = 2.3;
 // Handy-Ablauf mit stehender Karte und Zeilen (Klasse seg-rows) bzw. Scanner (seg-scan), siehe segRows oben
@@ -985,9 +985,9 @@ function updateCallouts(zoneKey, fl, on) {
   }
 }
 
-const PH = () => (isDesktop() ? { M0: 0.06, J0: 0.09, J1: 0.9, M1: 0.94 } : { M0: 0.1, J0: 0.13, J1: 0.9, M1: 0.93 });
+const PH = () => ({ M0: 0.1, J0: 0.13, J1: 0.9, M1: 0.93 }); // Handy quer/Tablet ohne Scanner (PC: Scanner)
 segBtns.forEach((b) => b.addEventListener('click', () => {
-  if (isDesktop() && pcScan()) { scanGo(+b.dataset.seg, true); return; } // PC-Scanner: zweite Bedienung neben dem Aufzug
+  if (isDesktop()) { if (pcScan()) scanGo(+b.dataset.seg, true); else setActive(+b.dataset.seg); return; } // PC-Scanner: zweite Bedienung neben dem Aufzug; ohne WebGL: Karte direkt
   const i = +b.dataset.seg, ph = PH(), r = axis.getBoundingClientRect();
   const p = ph.J0 + (i / (STOPS.length - 1)) * (ph.J1 - ph.J0);
   scrollToY(r.top + scrollY + p * (r.height - VH) + 2);
@@ -1397,9 +1397,10 @@ function updateAxis(dt) {
   if (desk ? pcScan() : scanOn()) { updateScan(dt, r, inSec); return; } // Handy: Scanner (6.11.), PC: Hybrid-Scanner (7.11.)
   scanUI.classList.remove('on'); scanRail.classList.remove('on'); chipsEl.style.opacity = 0; sU.uScanAmt.value = 0;
   if (SCAN.cleared) { SCAN.cleared = false; if (axisHead) axisHead.style.opacity = ''; if (axisNote) axisNote.style.transform = ''; NOTE.shift = 0; }
+  if (desk) { axisWant = null; spineGroup.visible = false; sil.visible = false; return; } // PC ohne WebGL: Karte per segnav, keine Fahrt
   const X = uniforms.uXf.value[2];
   let mob = null;
-  if (!desk && r.top < VH * 2 && r.bottom > -VH) {
+  if (r.top < VH * 2 && r.bottom > -VH) {
     if (!dotsStuck) measureDots();
     const vh = MINH, c0 = cards[0].getBoundingClientRect().top, nt = axisNote ? axisNote.getBoundingClientRect().top : r.bottom;
     mob = {
@@ -1430,10 +1431,10 @@ function updateAxis(dt) {
 
   // Kamera: Übersicht ↔ Kamerafahrt
   const w = !inSec ? 0 : (mob ? mob.wIn * (1 - mob.endK) : smooth(ph.M0, ph.J0, p) * (1 - smooth(ph.J1, ph.M1, p))) * spineK;
-  let jPose = null, zoneIdx = active, localF = 0;
+  let jPose = null, zoneIdx = active;
   // Handy: Karten-Deckkraft immer nachführen, solange das Kapitel in der Nähe ist – sonst bleibt beim
   // Hinausscrollen eine Karte halb sichtbar stehen (Kamerafahrt endet vorher, w = 0)
-  if (!desk && r.top < VH * 2 && r.bottom > -VH) {
+  if (r.top < VH * 2 && r.bottom > -VH) {
     // Karte erst zeigen, wenn die Kamera am Abschnitt steht (ohne Kamerafahrt, z. B. ohne WebGL: sofort)
     if (axisWant && w > 0.01) {
       const err = cam.pos.distanceTo(axisWant.pos) / Math.max(0.01, axisWant.pos.distanceTo(axisWant.target));
@@ -1446,19 +1447,9 @@ function updateAxis(dt) {
     if (sel !== mobSel) { mobSel = sel; camArrive = 0; if (w > 0.01) gateK = 0; }
   }
   if (w > 0) {
-    if (desk) {
-      const x = clamp((p - ph.J0) / (ph.J1 - ph.J0)) * (STOPS.length - 1);
-      const i = Math.min(Math.floor(x), STOPS.length - 2), f = x - i;
-      jPose = lerpPose(stopPose(i), stopPose(i + 1), smooth(0.1, 0.9, f));
-      jPose.rot += x * 0.14; // langsames Kreisen: jede Raste bewegt etwas
-      zoneIdx = Math.min(STOPS.length - 1, Math.round(x));
-      localF = zoneIdx === 0 ? x * 1.8 : zoneIdx === STOPS.length - 1 ? (x - zoneIdx + 0.5) * 1.8 : x - zoneIdx + 0.5;
-      setActive(zoneIdx);
-    } else {
-      // Abschnitt über der Kartenoberkante halten: rutscht die Karte beim Lesen nach oben, wandert er mit
-      const ct = cards[mobSel].getBoundingClientRect().top / GLH, top = clamp(dotsStuck / GLH, 0.08, 0.3);
-      setActive(mobSel); jPose = stopPose(mobSel, clamp((top + ct) / 2, top + 0.04, 0.3)); zoneIdx = mobSel;
-    }
+    // Abschnitt über der Kartenoberkante halten: rutscht die Karte beim Lesen nach oben, wandert er mit
+    const ct = cards[mobSel].getBoundingClientRect().top / GLH, top = clamp(dotsStuck / GLH, 0.08, 0.3);
+    setActive(mobSel); jPose = stopPose(mobSel, clamp((top + ct) / 2, top + 0.04, 0.3)); zoneIdx = mobSel;
   }
   axisWant = jPose && w > 0 ? lerpPose({ ...OVERVIEW, rot: jPose.rot }, jPose, w) : null;
 
@@ -1478,12 +1469,9 @@ function updateAxis(dt) {
   const periOn = zone >= 0 && w > 0.9 && (!stick || ML.key === zKey) ? 1 : 0;
   sU.uPeri.value += (periOn - sU.uPeri.value) * 0.05;
   if (zone >= 0) updatePeri(zKey);
-  periLabel.style.opacity = (!desk && !stick && sU.uPeri.value > 0.6 && spineGroup.visible ? 1 : 0);
-  // PC: Silhouette + Infos im Raum
-  const silOn = desk && zone >= 0 ? sU.uPeri.value : 0;
-  silU.uOn.value = silOn; sil.visible = silOn > 0.01;
-  if (desk) { placeSilhouette(); updateCallouts(zKey, localF, silOn > 0.5); }
-  else updateCalloutsMob(stick ? zKey : null, stick && mobStuck && gateK > 0.9 && sU.uPeri.value > 0.6 && spineGroup.visible, mobProg);
+  periLabel.style.opacity = (!stick && sU.uPeri.value > 0.6 && spineGroup.visible ? 1 : 0);
+  silU.uOn.value = 0; sil.visible = false; // Silhouette nur im PC-Scanner
+  updateCalloutsMob(stick ? zKey : null, stick && mobStuck && gateK > 0.9 && sU.uPeri.value > 0.6 && spineGroup.visible, mobProg);
 }
 
 // (Nerven-Infos siehe oben)

@@ -132,18 +132,13 @@ main{position:relative;z-index:2}
 .sign b{display:block;margin-top:.625rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;font-style:normal;color:var(--txt)}
 
 /* Achse: Partikel-Wirbelsäule materialisiert sich zur 3D-Wirbelsäule, Kamerafahrt */
-.axis{height:530vh} /* 6 Stationen (Th7–Th12 seit 7.11.), je Station so viel Scrollweg wie vorher */
+.axis{height:160svh} /* PC: Scanner-Bühne klebt 60svh (Kai 7.11. spät, alte Kamerafahrt 530vh entfernt) */
 .axis-sticky{position:sticky;top:0;height:100svh;overflow:hidden}
 .axis-inner{height:100%;display:grid;grid-template-columns:minmax(0,31.25rem) 1fr;grid-template-rows:auto auto 1fr auto;column-gap:2.5rem;padding-top:6.5rem;padding-bottom:1.75rem}
 .axis-head{grid-column:1}
 .axis-head h2{font-size:clamp(2.125rem,3.6vw,3.625rem);margin-bottom:.875rem}
 .axis-hint{font-size:.9375rem;color:var(--dim);max-width:42ch}
 .only-mob{display:none}
-.only-pcs{display:none}
-/* PC-Scanner (Kai 7.11., 1A 2A 3A): Kapitel 03 ist eine stehende Bühne wie am Handy (klebt 60svh), Text links bleibt */
-html.seg-pc .axis{height:160svh}
-html.seg-pc .axis-hint .only-desk{display:none}
-html.seg-pc .axis-hint .only-pcs{display:inline}
 .segnav{grid-column:1;grid-row:2;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.375rem;margin-top:1.625rem}
 .segnav button{appearance:none;background:rgba(16,34,42,.5);border:1px solid var(--line);border-radius:3px;color:var(--dim);padding:.75rem .5rem .625rem;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:.375rem;text-align:left;transition:border-color .3s,background .3s,color .3s}
 .segnav b{white-space:nowrap;font:italic 400 1.0625rem/1 var(--serif);color:var(--mute);transition:color .3s}
