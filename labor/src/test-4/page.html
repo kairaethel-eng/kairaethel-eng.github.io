@@ -131,23 +131,19 @@
         <p class="lead">Treten Sie ein. Ein Rundgang durch die Praxis, bevor Sie zum ersten Mal da sind.</p>
       </div>
           </div>
-          <p class="tour-kicker"><span class="only-desk">Raum anklicken, mit ‹ › oder den Pfeiltasten weitergehen. Oder den Rundgang starten.</span><span class="only-mob">Tippen Sie auf einen Raum oder wischen Sie über das Haus. Oder starten Sie den Rundgang.</span></p>
-          <div class="tour-ctrl" role="group" aria-label="Rundgang steuern">
-            <button type="button" class="t-btn" id="tourPrev" aria-label="Vorheriger Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-            <button type="button" class="t-play" id="tourPlay" aria-pressed="false"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><span>Rundgang starten</span></button>
-            <button type="button" class="t-btn" id="tourNext" aria-label="Nächster Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+          <p class="tour-kicker"><span class="only-desk">Raum anklicken: Der Rundgang aus Augenhöhe beginnt dort. Oder ganz vorn an der Tür.</span><span class="only-mob">Tippen Sie auf einen Raum: Der Rundgang aus Augenhöhe beginnt dort. Oder an der Tür.</span></p>
+          <div class="tour-ctrl">
             <button type="button" class="t-ego" id="egoOpen" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg><span>Rundgang aus Augenhöhe</span></button>
-            <button type="button" class="t-exit" id="tourExit">Übersicht</button>
-            <div class="tour-prog" aria-hidden="true"><i id="tourProg"></i></div>
+            
           </div>
-          <div class="roomnav" role="group" aria-label="Raum wählen">
-          <button type="button" data-room="0" class="is-on"><b>01</b><span>Empfang</span><small>Ankommen</small></button>
+          <div class="roomnav" role="group" aria-label="Rundgang aus Augenhöhe ab Raum">
+          <button type="button" data-room="0"><b>01</b><span>Empfang</span><small>Ankommen</small></button>
           <button type="button" data-room="1"><b>02</b><span>Wartebereich</span><small>Wohnzimmer</small></button>
           <button type="button" data-room="2"><b>03</b><span>Behandlung 1</span><small>Manuelle Therapie &amp; mehr</small></button>
           <button type="button" data-room="3" class="hi" title="Highlight: Manuthera"><b>04</b><span>Behandlung 2</span><small>Manuthera ▸</small></button>
           <button type="button" data-room="4"><b>05</b><span>Training</span><small>Bewegung</small></button>
           </div>
-          <div class="room-dots" role="group" aria-label="Raum wählen"><span>Tür</span><button type="button" data-room="0" aria-label="Empfang" class="is-on"></button><button type="button" data-room="1" aria-label="Wartebereich"></button><button type="button" data-room="2" aria-label="Behandlung 1"></button><button type="button" data-room="3" aria-label="Behandlung 2 mit Manuthera" class="hi"></button><button type="button" data-room="4" aria-label="Training"></button><span>Training</span></div>
+          <div class="room-dots" role="group" aria-label="Rundgang aus Augenhöhe ab Raum"><span>Tür</span><button type="button" data-room="0" aria-label="Empfang"></button><button type="button" data-room="1" aria-label="Wartebereich"></button><button type="button" data-room="2" aria-label="Behandlung 1"></button><button type="button" data-room="3" aria-label="Behandlung 2 mit Manuthera" class="hi"></button><button type="button" data-room="4" aria-label="Training"></button><span>Training</span></div>
           <div class="room-cards" id="roomCards" aria-live="polite">
           <article class="room-card is-on" data-room="0">
             <p class="room-no"><i>01</i> Empfang</p>

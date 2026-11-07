@@ -273,11 +273,14 @@ export function createEgo({ canvas, ui, keys = window, mobile = false, reduced =
   canvas.addEventListener('pointermove', (e) => { if (!drag) return; yawOff = clamp(drag.yaw - (e.clientX - drag.x) * 0.006, -0.9, 0.9); pitchOff = clamp(drag.pitch - (e.clientY - drag.y) * 0.004, -0.4, 0.4); lastInput = performance.now(); });
   ['pointerup', 'pointercancel'].forEach((t) => canvas.addEventListener(t, () => { drag = null; lastInput = performance.now(); }));
 
-  function toStart() {
-    state.idx = state.from = state.to = 0; state.t = 1; state.doorWait = 0; state.jumping = false;
-    camPos.copy(STOPS[0].pos); camLook.copy(STOPS[0].lk); U.uDoor.value = 0; yawOff = pitchOff = 0;
-    showCap(0);
+  // an Station i stellen (ohne Fahrt): 0 = Tür (zu), sonst Tür offen – Puls · Scan Kap. 04 startet am angeklickten Raum
+  let startIdx = 0;
+  function place(i) {
+    state.idx = state.from = state.to = i; state.t = 1; state.doorWait = 0; state.jumping = false;
+    camPos.copy(STOPS[i].pos); camLook.copy(STOPS[i].lk); U.uDoor.value = i === 0 ? 0 : 1.75; yawOff = pitchOff = 0;
+    showCap(i);
   }
+  const toStart = () => place(0);
 
   // ---------- Schleife (läuft nur, solange der Rundgang offen ist) ----------
   const tmpA = new V3(), tmpB = new V3(), ahead = new V3();
@@ -324,7 +327,7 @@ export function createEgo({ canvas, ui, keys = window, mobile = false, reduced =
     setPrx(prx) {
       if (api.ready) return;
       buildScene(scene, prx, U); stipSpacing = prx.spacing; api.ready = true;
-      toStart(); setPlayLabel();
+      place(startIdx); setPlayLabel();
     },
     /** Bild zeichnen lassen (Rundgang offen) */
     start() {
@@ -339,8 +342,10 @@ export function createEgo({ canvas, ui, keys = window, mobile = false, reduced =
       timers.splice(0).forEach(clearTimeout); ui.veil.classList.remove('on');
       state.playing = false; drag = null;
     },
-    /** zurück an die Tür (geschlossen), Karte 00 */
-    reset() { state.playing = false; if (api.ready) { toStart(); setPlayLabel(); } ui.hint.classList.remove('gone'); },
+    /** zurück an die Tür (geschlossen), Karte 00 – oder direkt an Station i (Raum aus Kap. 04) */
+    reset(i = 0) { state.playing = false; startIdx = clamp(i, 0, LAST); if (api.ready) { place(startIdx); setPlayLabel(); } ui.hint.classList.remove('gone'); },
+    /** Station des Raums r (ROOMS-Index) */
+    stopOfRoom(r) { const k = STOPS.findIndex((st) => st.room === r); return k < 0 ? 0 : k; },
     get running() { return running; },
   };
   return api;
