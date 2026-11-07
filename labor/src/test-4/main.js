@@ -1749,8 +1749,8 @@ function roofFy() {
   }
   return roofFyV;
 }
-const ROOF_D = 25; // Handy: Abstand so, dass das ganze Haus unter der Überschrift steht (vorher 17 = Räume groß)
-const ROOF_FY_OFF = 0.1; // Bezugspunkt liegt im unteren Teil des Hauses → etwas tiefer, damit das Dach frei bleibt
+const ROOF_D = 34; // Handy: Abstand so, dass das ganze Haus unter der Überschrift steht (vorher 17 = Räume groß)
+const ROOF_FY_OFF = 0.17; // Bezugspunkt liegt im unteren Teil des Hauses → etwas tiefer, damit das Dach frei bleibt
 // Handy: nach dem Rundgang (bis die Manuthera-Bühne vorbei ist) kein Haus/Röntgenblick mehr – 0 … 1
 function houseGone() {
   const vh = MINH, tb = tourEl.getBoundingClientRect().bottom, mb = manuSec ? manuSec.getBoundingClientRect().bottom : 0;
