@@ -596,6 +596,7 @@ const PERI = {
   c12: { txt: 'Hinterkopf · Nacken', d: [0.62, 0.7], m: [0.85, 0.8] },
   c56: { txt: 'Armaußenseite · Daumen', d: [1.15, 0.05], m: [0.7, 0.42] },
   th16: { txt: 'Brustkorb · Zwischenrippen', d: [1.15, 0.12], m: [0.68, 0.36] },
+  th712: { txt: 'Rippenbogen · Bauchwand', d: [1.15, -0.1], m: [0.66, 0.3] },
   l45: { txt: 'Schienbein · Großzehe', d: [1.1, -0.72], m: [0.6, 0.12] },
   s1: { txt: 'Wade · Ferse · Fußaußenrand', d: [1.1, -0.82], m: [0.55, 0.08] },
 };
@@ -610,13 +611,13 @@ function updatePeri(zoneKey) {
   const X = uniforms.uXf.value[2];
   const rot = uniforms.uSpineRot.value;
   const desk = isDesktop(), rows = !desk && linesOn(), side = rows ? -1 : 1;
-  let tip = null, tipX = -1e9, start = 0;
+  let tip = null, tipX = -1e9, start = 0, tipC = null;
   det.curves.forEach((c) => {
-    if (c.kind !== 2 || ZONES[c.zone] !== zoneKey) return;
+    if (c.kind !== 2 || ZONES[c.zone] !== zoneKey || (rows && scanOn() && !rootOk(c, zoneKey))) return;
     const e = c.pts[CURVE_W - 1];
     _pv.set(e[0], e[1], e[2]).applyAxisAngle(new V3(0, 1, 0), rot).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z));
     _ndc.copy(_pv).project(camera);
-    if (_ndc.x * side > tipX) { tipX = _ndc.x * side; tip = _pv.clone(); start = c.start; }
+    if (_ndc.x * side > tipX) { tipX = _ndc.x * side; tip = _pv.clone(); start = c.start; tipC = c; }
   });
   if (!tip) return;
   const tipNdc = tip.clone().project(camera);
@@ -635,11 +636,26 @@ function updatePeri(zoneKey) {
   const mid = rows && scanOn()
     ? new V3(Math.max(tipNdc.x, endNdc.x), THREE.MathUtils.lerp(tipNdc.y, endNdc.y, 0.5), THREE.MathUtils.lerp(tipNdc.z, endNdc.z, 0.5)).unproject(camera)
     : new V3(THREE.MathUtils.lerp(tipNdc.x, endNdc.x, 0.45), THREE.MathUtils.lerp(tipNdc.y, endNdc.y, 0.25) + 0.05, THREE.MathUtils.lerp(tipNdc.z, endNdc.z, 0.5)).unproject(camera);
-  const curve = new THREE.CatmullRomCurve3([tip, tip.clone().lerp(mid, 0.4).add(new V3(0, 0.02, 0)), mid, end]);
+  // Scanner (Kai 7.11., 1A): der Nerv beginnt am Wirbel (Austritt aus dem Wirbelkanal), läuft entlang der Wurzel
+  // und weiter nach außen – ein durchgehender Strang; sonst wie bisher ab dem Wurzelende
+  const wrl = (q) => new V3(q[0], q[1], q[2]).applyAxisAngle(_Y, rot).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z));
+  const curve = rows && scanOn() && tipC
+    ? new THREE.CatmullRomCurve3([...ROOT_I.map((k) => wrl(tipC.pts[k])), mid, end])
+    : new THREE.CatmullRomCurve3([tip, tip.clone().lerp(mid, 0.4).add(new V3(0, 0.02, 0)), mid, end]);
   for (let i = 0; i < CURVE_W; i++) { curve.getPointAt(i / (CURVE_W - 1), _pv); periData.set([_pv.x, _pv.y, _pv.z, 1], i * 4); }
   periTex.needsUpdate = true;
   periCurve = curve;
   sU.uPeriStart.value = start;
+  // Andockpunkte der Zeilen: Austritt = Anfang, Ziel = Ende, die beiden mittleren dort, wo der Nerv auf Zeilenhöhe ist
+  ML.anch = [0, 0.33, 0.66, 1];
+  if (rows && scanOn()) {
+    let from = 0;
+    for (const i of [1, 2]) {
+      const yc = ML.ys[i] + ML.hs[i] / 2; let bt = from, bd = 1e9;
+      for (let k = 0; k <= 48; k++) { const t = from + (0.97 - from) * (k / 48); const d = Math.abs(toPx(curve.getPointAt(t, _pv))[1] - yc); if (d < bd) { bd = d; bt = t; } }
+      ML.anch[i] = bt; from = Math.min(0.96, bt + 0.04);
+    }
+  }
   // Beschriftung am sichtbaren Ende der Bahn
   curve.getPointAt(desk ? 0.72 : 0.6, _pv); _pv.project(camera);
   const lx = Math.min((_pv.x * 0.5 + 0.5) * VW, VW - 16), ly = (-_pv.y * 0.5 + 0.5) * GLH;
@@ -655,6 +671,11 @@ const STOPS = [
   { zone: 'l45', ids: ['L4', 'L5'], d: 7.2, az: -0.45 },
   { zone: 's1', ids: ['L5', 'S'], d: 7.6, az: 0.75 },
 ];
+// Scanner (Handy, Kai 7.11. 3A): zusätzlich Th7–Th12 als 6. Haltestelle; PC und Option A bleiben bei STOPS (vorgemerkt)
+const SSTOPS = [...STOPS.slice(0, 3), { zone: 'th712', ids: ['Th8', 'Th9', 'Th10', 'Th11'], d: 7.6, az: -0.5, root: 'Th10' }, ...STOPS.slice(3)];
+const SLAB = ['C1', 'C5', 'Th1', 'Th7', 'L4', 'S1'];
+// Scanner: Wurzel für den Nerv – fest (root, z. B. Th10 = Nabelhöhe) oder die am weitesten links außen
+const rootOk = (c, zone) => { const st = SSTOPS.find((q) => q.zone === zone); return !st || !st.root || c.id === st.root; };
 const PROFILE = -Math.PI / 2;
 const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
 function frame(T, dir, d, fx, fy) {
@@ -687,7 +708,9 @@ let axisWant = null;
 
 // Bedienung: Desktop = Scrollen + Abschnitts-Knöpfe, Handy = Karten wischen
 const axis = $('#achse');
-const segBtns = $$('.segnav button'), cards = $$('.seg-card'), dots = $$('.seg-dots button');
+const segBtns = $$('.segnav button'), cards = $$('.seg-card:not(.seg-x)'), dots = $$('.seg-dots button');
+const xCards = $$('.seg-card.seg-x'); // nur Scanner (Handy): Th7–Th12
+const cardOf = (zone) => cards[STOPS.findIndex((s) => s.zone === zone)] || xCards.find((c) => c.dataset.zone === zone);
 let active = 0, mobSel = 0;
 function setActive(i) {
   if (i === active) return;
@@ -698,6 +721,7 @@ function setActive(i) {
 const NINFO = {
   c12: { exit: 'Austritt C1–C2', nerv: 'Nn. suboccipitales · N. occipitalis major', gef: 'Tiefe Nackenmuskulatur', ziel: 'Hinterkopf', typ: 'Typisch: Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen', tgt: [84, 30] },
   c56: { exit: 'Austritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [36, 240] },
+  th712: { exit: 'Austritt Th7–Th12', nerv: 'Untere Interkostalnerven · Bauchwand', gef: 'Gefühl: Rippenbogen, Bauchwand', ziel: 'bis zur Nabelhöhe (Th10)', typ: 'Typisch: gürtelförmiger Schmerz am Rippenbogen, Steifigkeit am Übergang zur LWS', tgt: [86, 190] },
   th16: { exit: 'Austritt Th1–Th6', nerv: 'Interkostalnerven, obere Rippen', gef: 'Brustkorbwand · Zwischenrippen', ziel: 'Brustkorb', typ: 'Typisch: atemabhängiges Stechen, Schmerz zwischen den Schulterblättern', tgt: [80, 118] },
   l45: { exit: 'Austritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [76, 404] },
   s1: { exit: 'Austritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [72, 412], pre: 'Iliosakralgelenk (ISG): verbindet Becken und Wirbelsäule.' },
@@ -709,9 +733,11 @@ let periCurve = null;
 // Handy (Option A, 5.11.): dieselben Zeilen wie am PC, links gestapelt, mit Linie zur Wirbelsäule/Bahn.
 // „Typisch“ kommt vollständig aus der Karte (kein Inhaltsverlust), steht über der Karte; die Karte selbst zeigt nur
 // Titel + Schlagworte, ihr Volltext bleibt für Vorleseprogramme (dl sr-only). Ohne WebGL bleibt die alte Karte.
-const ML = { key: null, w: 0, x: 16, colW: 160, hs: [0, 0, 0, 0, 0], ws: [0, 0, 0, 0, 0], ys: [0, 0, 0, 0], typY: 0, chipsY: 0, chH: 0, scan: false, y0: 0, tipT: null, tipKey: null };
+const ML = { key: null, w: 0, x: 16, colW: 160, hs: [0, 0, 0, 0, 0], ws: [0, 0, 0, 0, 0], ys: [0, 0, 0, 0], typY: 0, chipsY: 0, chH: 0, scan: false, y0: 0, tipT: null, exitT: null, tipKey: null, anch: [0, 0.33, 0.66, 1] };
+// Nervenwurzel: Stützpunkte ab dem Austritt aus dem Wirbelkanal (Kurve hat 4 Stützpunkte, 2. = Foramen) bis zum Ende
+const ROOT_I = [42, 64, 86, 106, CURVE_W - 1];
 function mobTexts(zoneKey) {
-  const info = NINFO[zoneKey], card = cards[STOPS.findIndex((s) => s.zone === zoneKey)];
+  const info = NINFO[zoneKey], card = cardOf(zoneKey);
   const dd = card ? card.querySelectorAll('dd') : [];
   const typ = dd[1] ? 'Typisch: ' + dd[1].textContent.trim() : info.typ;
   return [info.exit, info.nerv, info.gef, info.ziel, info.pre ? info.pre + '\n' + typ : typ];
@@ -725,7 +751,7 @@ function mobMeasure(zoneKey) {
   // neuer Abschnitt oder andere Breite: erst mit Schlagwort-Kästchen versuchen
   if (ML.key !== zoneKey || !sc || ML.w !== VW || Math.abs((ML.colW || 0) - colW) > 8) ML.compact = 0;
   ML.key = zoneKey; ML.w = VW; ML.x = pad; ML.scan = sc; ML.colW = colW;
-  const card = cards[STOPS.findIndex((s) => s.zone === zoneKey)], chipTxt = card ? [...card.querySelectorAll('.chips li')].map((li) => li.textContent) : [];
+  const card = cardOf(zoneKey), chipTxt = card ? [...card.querySelectorAll('.chips li')].map((li) => li.textContent) : [];
   const texts = mobTexts(zoneKey);
   // Scanner-Karte (Kai 7.11.): schmal, „Typisch“ als Kurzfassung – Volltext bleibt in der Karte für Vorleseprogramme
   let typCard = NINFO[zoneKey].typ;
@@ -759,11 +785,15 @@ function mobPlaceScan() {
   if ((ML.compact || 0) < 2 && ML.key && !ML.remeasure && sum + 3 * 6 > room) { ML.compact = (ML.compact || 0) + 1; ML.remeasure = true; } // passt nicht → kompakter neu messen
   const g = clamp((room - sum) / 3, 4, 10);
   ML.y0 = top; // Lage ohne Verschiebung (danach richtet sich die Nahansicht)
-  // Kai 7.11.: „Austritt“ auf Höhe des Wurzelendes (bei voller Nahansicht), damit der Nerv bis „Ziel“ Länge hat
-  // und die Hinweislinien sauber auf ihm andocken; nie unter den Hinweis
-  let y = top;
-  if (ML.tipT != null && ML.tipKey === ML.key) y += clamp(ML.tipT - hs[0] / 2 - top, 0, Math.max(0, room - sum - 3 * g));
-  for (let i = 0; i < 4; i++) { ML.ys[i] = y; y += hs[i] + g; }
+  // Kai 7.11. (1A): „Austritt“ auf Höhe des Austritts am Wirbel (bei voller Nahansicht); die Zeilen spreizen sich, bis
+  // „Ziel“ unter dem Wurzelende steht – der Nerv läuft dann neben den Zeilen nach unten; nie unter den Hinweis
+  let y = top, gg = g;
+  if (ML.exitT != null && ML.tipKey === ML.key) {
+    y = clamp(ML.exitT - hs[0] / 2, top, Math.max(top, SCAN.bot - sum - 3 * g));
+    const want = ML.tipT + 24 - hs[3] / 2 - (y + hs[0] + hs[1] + hs[2]);
+    gg = clamp(want / 3, g, Math.max(g, (SCAN.bot - y - sum) / 3));
+  }
+  for (let i = 0; i < 4; i++) { ML.ys[i] = y; y += hs[i] + gg; }
 }
 addEventListener('resize', () => {
   ML.key = null;
@@ -800,7 +830,7 @@ function updateCalloutsMob(zoneKey, on, prog, opt = null) {
   if (!show) return;
   ncalls.forEach((el, i) => { el.style.transform = `translate(${ML.x}px, ${(i < 4 ? ML.ys[i] : ML.typY).toFixed(1)}px)`; });
   if (sc) chipsEl.style.transform = `translate(${ML.x}px, ${ML.chipsY.toFixed(1)}px)`;
-  [0, 0.33, 0.66, 1].forEach((t, i) => {
+  (sc ? ML.anch : [0, 0.33, 0.66, 1]).forEach((t, i) => {
     const [ax, ay] = toPx(periCurve.getPointAt(t)), L = nl[i];
     // Linie endet am Rand des Andockrings, der Ring sitzt genau auf dem Nerv
     const x1 = ML.x + ML.ws[i], y1 = ML.ys[i] + ML.hs[i] / 2, dl = Math.hypot(ax - x1, ay - y1) || 1, k = Math.max(0, 1 - 5 / dl);
@@ -1011,7 +1041,7 @@ function mobileCard(gate) {
 dots.forEach((d) => d.addEventListener('click', () => {
   const i = +d.dataset.seg;
   if (scanOn()) { // Scanner: zum Abschnitt springen; steht die Bühne noch nicht, dorthin scrollen
-    SCAN.idx = i; SCAN.demo = 2; SCAN.touched = true;
+    SCAN.idx = Math.max(0, SSTOPS.findIndex((st) => st.zone === STOPS[i].zone)); SCAN.demo = 2; SCAN.touched = true;
     const r = axis.getBoundingClientRect();
     if (!(r.top <= 2 && r.bottom >= VH - 2)) scrollToY(r.top + scrollY + Math.max(0, r.height - VH) * 0.4);
     return;
@@ -1046,16 +1076,16 @@ const scanUI = document.createElement('div'); scanUI.className = 'scan'; scanUI.
 // Griff zum Anfassen (Kai 6.11. spät, „kindlicher“): runder Knopf mit Rillen und ▲▼ in einer Rinne, Name daneben;
 // eine gezeichnete Hand zieht ihn vor, bis man ihn selbst benutzt
 const HAND_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 11V10a2 2 0 0 0-4 0M14 10V9a2 2 0 0 0-4 0v1M10 9.5V4a2 2 0 0 0-4 0v10M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-6-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>';
-scanUI.innerHTML = '<div class="scan-track"></div>' + STOPS.map(() => '<i class="scan-tick"></i>').join('') +
+scanUI.innerHTML = '<div class="scan-track"></div>' + SSTOPS.map(() => '<i class="scan-tick"></i>').join('') +
   '<div class="scan-line"></div><div class="scan-tag"></div><div class="scan-thumb"><i class="sk-up"></i><i class="sk-grip"></i><i class="sk-dn"></i></div>' +
   `<div class="scan-coach"><i class="sc-ghost"></i>${HAND_SVG}</div>`;
 document.body.appendChild(scanUI);
 // Ziehstreifen = Aufzug: Haltestellen zum Antippen (echte Knöpfe, ersetzen die Punkte-Leiste), Ziehen am Griff
 const scanRail = document.createElement('div'); scanRail.className = 'scan-rail'; scanRail.setAttribute('role', 'group'); scanRail.setAttribute('aria-label', 'Abschnitt wählen'); document.body.appendChild(scanRail);
-const [sTrack, ...sRest] = scanUI.children, sTicks = sRest.slice(0, STOPS.length), [sLine, sTag, sThumb, sCoach] = sRest.slice(STOPS.length);
-const segNames = cards.map((c) => ($('.seg-no', c) || c).textContent.trim());
+const [sTrack, ...sRest] = scanUI.children, sTicks = sRest.slice(0, SSTOPS.length), [sLine, sTag, sThumb, sCoach] = sRest.slice(SSTOPS.length);
+const segNames = SSTOPS.map((st) => { const c = cardOf(st.zone); return c ? ($('.seg-no', c) || c).textContent.trim() : st.zone; });
 const stopBtns = segNames.map((n, i) => {
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'scan-stop'; b.textContent = n.match(/^[A-Za-z]+\d?/)[0].replace(/^Th\d$/, 'Th');
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'scan-stop'; b.textContent = SLAB[i];
   b.setAttribute('aria-label', 'Abschnitt ' + n); scanRail.appendChild(b);
   b.addEventListener('click', () => { SCAN.idx = i; SCAN.demo = 2; SCAN.touched = true; });
   return b;
@@ -1100,7 +1130,7 @@ function screenToWorld(px, py, z, out) { // Bildschirmpunkt → Welt auf der Ebe
 // Vorführen und Antippen eines anderen Abschnitts zurück zur Übersicht. Griff, Leiste und Einrasten rechnen immer mit der
 // Übersicht (OV), damit der Finger dieselbe Strecke behält. Größe je Abschnitt ≈ Kameraabstände der Option A.
 const OV = { x: 0, y: 0, z: 0, w: 0.3, init: false }, ZM = { k: 0, idx: 0 }, _zw = new V3(), _zc = new V3();
-const ZOOM = [3.4, 2.6, 2.15, 2.25, 2.15];
+const ZOOM = [3.4, 2.6, 2.15, 2.15, 2.25, 2.15]; // je Haltestelle (SSTOPS)
 // Einblenden im Scanner (Kai 6.11., Variante b): Karte sofort beim Einrasten, die vier Zeilen nacheinander während des
 // Heranfahrens; beim Ziehen bleiben die Texte kurz stehen und blenden ruhig aus.
 const TX = { zone: null, t0: 0, last: 0 };
@@ -1149,7 +1179,7 @@ function updateScan(dt, r, inSec) {
     const rects = spineRects(OV); // (nutzt dieselbe Projektion wie die PC-Schilder)
     if (rects.length) { SCAN.left = Math.min(...rects.map((q) => q[0])); SCAN.right = Math.max(...rects.map((q) => q[2])); }
     levY = det.levels.map((lv) => toPx(lvLocal(lv, _zc).multiplyScalar(OV.w).add(_zw.set(OV.x, OV.y, 0)))[1]);
-    stopY = STOPS.map((st) => st.ids.reduce((a, id) => a + levY[det.levels.findIndex((l) => l.id === id)], 0) / st.ids.length);
+    stopY = SSTOPS.map((st) => st.ids.reduce((a, id) => a + levY[det.levels.findIndex((l) => l.id === id)], 0) / st.ids.length);
   }
   const ready = eng && stopY.length;
   if (ready && SCAN.demo === 0) { if (reduced || paused) { SCAN.demo = 2; SCAN.idx = 0; } else { SCAN.demo = 1; SCAN.demoT = 0; } }
@@ -1174,7 +1204,7 @@ function updateScan(dt, r, inSec) {
   const iN = stopY.length ? nearestStop(y) : 0;
   const seg = ready && SCAN.demo === 2 && Math.abs(y - stopY[iN]) < 8 ? iN : -1;
   if (seg !== SCAN.seg) { SCAN.seg = seg; SCAN.segT = performance.now(); }
-  if (seg >= 0) setActive(seg);
+  if (seg >= 0) setActive(STOPS.findIndex((st) => st.zone === SSTOPS[seg].zone)); // Th7–Th12: keine Karte aktiv
 
   // Nahansicht: heran, sobald die Linie an einem Abschnitt steht; beim Ziehen/Wechseln zügig zurück (Bühne nicht
   // im Bild: Zustand halten, damit beim Weiterscrollen nichts mehr zoomt)
@@ -1186,7 +1216,7 @@ function updateScan(dt, r, inSec) {
   if (near) {
     let zx = OV.x, zy = OV.y, zw = OV.w;
     if (det && ZM.k > 0.001) {
-      const st = STOPS[ZM.idx];
+      const st = SSTOPS[ZM.idx];
       _zc.set(0, 0, 0); st.ids.forEach((id) => _zc.add(lvLocal(det.levels.find((l) => l.id === id), _zw))); _zc.divideScalar(st.ids.length);
       zw = OV.w * ZOOM[ZM.idx];
       if (ML.key === st.zone && ML.hs[0]) mobPlaceScan();
@@ -1195,9 +1225,14 @@ function updateScan(dt, r, inSec) {
       screenToWorld(Math.max(VW * 0.55, (ML.x + ML.colW + VW - RAIL_W) / 2 + 6), py, _zc.z * zw, _zw);
       zx = _zw.x - _zc.x * zw; zy = _zw.y - _zc.y * zw;
       // Wurzelende (links außen) bei voller Nahansicht → Bildschirmhöhe für die Zeilen (mobPlaceScan)
-      let tb = null;
-      det.curves.forEach((c) => { if (c.kind !== 2 || ZONES[c.zone] !== st.zone) return; const e = c.pts[CURVE_W - 1]; _pv.set(e[0], e[1], e[2]).applyAxisAngle(_Y, spineRot); if (!tb || _pv.x < tb.x) tb = _pv.clone(); });
-      if (tb) { ML.tipT = toPx(tb.multiplyScalar(zw).add(_zw.set(zx, zy, 0)))[1]; ML.tipKey = st.zone; }
+      let tb = null, tc = null;
+      det.curves.forEach((c) => { if (c.kind !== 2 || ZONES[c.zone] !== st.zone || !rootOk(c, st.zone)) return; const e = c.pts[CURVE_W - 1]; _pv.set(e[0], e[1], e[2]).applyAxisAngle(_Y, spineRot); if (!tb || _pv.x < tb.x) { tb = _pv.clone(); tc = c; } });
+      if (tb) {
+        const q = tc.pts[ROOT_I[0]];
+        ML.tipT = toPx(tb.multiplyScalar(zw).add(_zw.set(zx, zy, 0)))[1];
+        ML.exitT = toPx(_pv.set(q[0], q[1], q[2]).applyAxisAngle(_Y, spineRot).multiplyScalar(zw).add(_zw.set(zx, zy, 0)))[1];
+        ML.tipKey = st.zone;
+      }
     }
     const e = ZM.k * ZM.k * (3 - 2 * ZM.k);
     X.set(OV.x + (zx - OV.x) * e, OV.y + (zy - OV.y) * e, 0, OV.w + (zw - OV.w) * e);
@@ -1213,7 +1248,7 @@ function updateScan(dt, r, inSec) {
   sU.uScanAmt.value += ((ready ? 1 - 0.7 * zoomE : 0) - sU.uScanAmt.value) * Math.min(1, dt * 6);
 
   // Abschnitt: Hervorhebung, Bahn, Zeilen (erst, wenn die Nahansicht fast angekommen ist)
-  const zone = seg >= 0 ? ZONES.indexOf(STOPS[seg].zone) : -10, zKey = seg >= 0 ? STOPS[seg].zone : null;
+  const zone = seg >= 0 ? ZONES.indexOf(SSTOPS[seg].zone) : -10, zKey = seg >= 0 ? SSTOPS[seg].zone : null;
   if (zone !== sU.uZone.value) { sU.uZone.value = zone; sU.uZoneAmt.value = 0; sU.uPeri.value = 0; }
   sU.uZoneAmt.value += ((zone >= 0 ? 1 : 0) - sU.uZoneAmt.value) * 0.07;
   sU.uPeri.value += ((zKey && ML.key === zKey && ZM.k > 0.4 ? 1 : 0) - sU.uPeri.value) * 0.05;
@@ -1363,6 +1398,14 @@ $$('.index li').forEach((li) => {
 // ---------- Hausordnung ----------
 const rules = $('#hausordnung'), laws = $$('#laws li'), door = $('#tuer');
 let lawOn = 0;
+// Hausordnung am Handy (Kai 7.11.): die Paragraphen wechseln von selbst, solange der Abschnitt im Bild steht – kein
+// langer Scrollweg mehr. Lesezeit nach Textlänge (~5 s), Leiste wie ein Puls (füllt sich), antippen = dorthin bzw. weiter;
+// bei „Bewegung anhalten“ steht der Wechsel (WCAG 2.2.2), beim erneuten Hereinscrollen beginnt es bei §1. PC: vorgemerkt.
+const lawBtns = $$('#lawProg button'), lawDur = laws.map((li) => 2600 + 45 * li.textContent.trim().length);
+const LAW = { t: 0, vis: false, last: 0 };
+function setLaw(i) { if (i === lawOn) return; laws[lawOn].classList.remove('is-on'); laws[i].classList.add('is-on'); lawOn = i; }
+lawBtns.forEach((b, i) => b.addEventListener('click', () => { setLaw(i); LAW.t = 0; }));
+$('#laws').addEventListener('click', () => { if (!isDesktop()) { setLaw((lawOn + 1) % laws.length); LAW.t = 0; } });
 
 // ---------- K1 „Die Tür geht auf“ (nur mit ?licht=1; Standard dunkel seit 4.11. abends): Kapitel 05 wird hell ----------
 // Über die letzten 60 % der Hausordnung blendet die Seite von Dunkel in warmes Off-White (V10-Palette),
@@ -1682,8 +1725,22 @@ function placeManuTag() {
   addEventListener('pointerup', () => (down = null)); }
 function xrayPose() {
   const X = uniforms.uXf.value[3], desk = isDesktop();
-  return frame(toWorld(new V3(0, -1.75, 0.1)), new V3(0.18, 0.62, 1), (desk ? 20 : 17) * X.w, desk ? 0.69 : 0.5, desk ? 0.56 : 0.3);
+  return frame(toWorld(new V3(0, -1.75, 0.1)), new V3(0.18, 0.62, 1), (desk ? 20 : 17) * X.w, desk ? 0.69 : 0.5, desk ? 0.56 : roofFy());
 }
+// Handy (Kai 7.11., 2A): Überschrift oben, Knöpfe unten – das Haus steht in der freien Fläche dazwischen. Gerechnet in der
+// Lage „Bühne steht“ (relativ zur Bühnen-Oberkante), damit das Haus beim Hereinscrollen nicht mitwandert.
+const tourStickyEl = $('.tour-sticky'), tourKickerEl = $('#tour .tour-kicker');
+let roofFyV = 0.3, roofFyT = 0;
+function roofFy() {
+  const now = performance.now();
+  if (now - roofFyT > 500 && tourStickyEl && roofIntro && tourKickerEl) {
+    roofFyT = now;
+    const st = tourStickyEl.getBoundingClientRect().top, ib = roofIntro.getBoundingClientRect().bottom - st, kt = tourKickerEl.getBoundingClientRect().top - st;
+    if (kt > ib + 40) roofFyV = clamp(((ib + kt) / 2) / GLH + ROOF_FY_OFF, 0.3, 0.75);
+  }
+  return roofFyV;
+}
+const ROOF_FY_OFF = 0.1; // Bezugspunkt liegt im unteren Teil des Hauses → etwas tiefer, damit das Dach frei bleibt
 // Handy: nach dem Rundgang (bis die Manuthera-Bühne vorbei ist) kein Haus/Röntgenblick mehr – 0 … 1
 function houseGone() {
   const vh = MINH, tb = tourEl.getBoundingClientRect().bottom, mb = manuSec ? manuSec.getBoundingClientRect().bottom : 0;
@@ -1961,8 +2018,17 @@ function tick() {
   const rr = rules.getBoundingClientRect();
   const rp = clamp(-rr.top / Math.max(1, rr.height - VH));
   if (licht) { const k = smooth(0.4, 1, rp); setLicht(k); if (dust) dust.visible = k > 0.01; }
-  const li = Math.min(laws.length - 1, Math.floor(rp * laws.length));
-  if (li !== lawOn) { laws[lawOn].classList.remove('is-on'); laws[li].classList.add('is-on'); lawOn = li; }
+  if (isDesktop()) setLaw(Math.min(laws.length - 1, Math.floor(rp * laws.length)));
+  else {
+    const now = performance.now(), step = Math.min(250, now - (LAW.last || now)), vis = rr.top < VH * 0.55 && rr.bottom > VH * 0.45;
+    LAW.last = now;
+    if (vis && !LAW.vis) { setLaw(0); LAW.t = 0; } // neu hereingescrollt → bei §1 beginnen
+    LAW.vis = vis;
+    if (vis) {
+      if (!paused) { LAW.t += step; if (LAW.t > lawDur[lawOn]) { LAW.t = 0; setLaw((lawOn + 1) % laws.length); } }
+      lawBtns.forEach((b, i) => b.style.setProperty('--p', i < lawOn ? 1 : i > lawOn ? 0 : Math.min(1, LAW.t / lawDur[lawOn]).toFixed(3)));
+    }
+  }
 
   // Navigation
   top.classList.toggle('scrolled', scrollY > 30);

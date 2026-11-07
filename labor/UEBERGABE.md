@@ -1,14 +1,15 @@
-# Übergabe – Stand 7.11.2026 (Handy-Scanner: 4 Kleinigkeiten umgesetzt, iPhone-Test offen; Livegang vorbereitet seit 2.11.)
+# Übergabe – Stand 7.11.2026 (Handy: Scanner Runde 1+2, Kap. 04, Hausordnung automatisch – iPhone-Test offen; Livegang vorbereitet seit 2.11.)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
 
-## ▶ Nächster Chat: hier weitermachen (Stand 7.11.2026)
-Start-Prompt: „Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md` (Abschnitt ▶), `labor/ENTSCHEIDUNGEN.md` → „Scanner – 4 Kleinigkeiten“. Hier mein iPhone-Ergebnis: …“
-**7.11. – Scanner, 4 Kleinigkeiten (Go Kai „erstmal nur mobil. Merken für PC“) – ✅ umgesetzt, nur Handy:** (1) ärztlicher Hinweis rückt bei eingeklappten Browserleisten an den echten unteren Rand, Wirbelsäulen-Fläche bleibt fest · (2) Nerv als schmaler Strang mit vielen schnellen Impulsen, Hinweislinien docken mit kleinen Ringen auf dem Nerv an, „Austritt“ steht auf Höhe des Wurzelendes · (3) Karte ~60 % breit, „Typisch“ als Kurzfassung · (4) Wirbelsäule differenziert: helle Deckplatten, Bandscheiben eigenes Blau gekörnt mit dunkler Fuge, Fortsätze feiner, Umriss betont (gleiche Punktzahl). Details `ENTSCHEIDUNGEN.md` → „Scanner – 4 Kleinigkeiten“.
-- **Offen von Kai:** iPhone-Test Safari + Chrome (Hinweis-Lage mit ein-/ausgeklappter Leiste, Nerv/Impulse, Kartenbreite, Wirbelsäule). [O] Safari iOS 26: ob der Hinweis bei eingeklappter Pille zu tief/zu hoch sitzt → Reserve `IOS_SAFARI` in `main.js` (`NOTE`) anpassen.
-- **Für den PC vorgemerkt:** 2 (Nerv fein + Ringe) und 4 (Wirbelsäule differenziert) – Schalter siehe `ENTSCHEIDUNGEN.md` → „Für den PC vorgemerkt“. Nur nach Kais Go.
-- Geprüft (Container): 390×844, 390×664, 320×568, alle fünf Abschnitte, simulierte eingeklappte Leiste (Hinweis +144 px an den Rand), keine Konsolenfehler. Ältere Notiz: Standard-axe 320 px, 1 Kontrastfund an Kap.-02-Überschrift während der Einblend-Animation (nicht vom Scanner).
+## ▶ Nächster Chat: hier weitermachen (Stand 7.11.2026, Runde 2)
+Start-Prompt: „Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md` (Abschnitt ▶), `labor/ENTSCHEIDUNGEN.md` → „Scanner – 4 Kleinigkeiten“ und „Runde 2“. Hier mein iPhone-Ergebnis: …“
+**7.11. Runde 2 (Go Kai „1A 2a 3A nur mobil, alles Wichtige für PC merken“ + Hausordnung automatisch) – ✅ umgesetzt, nur Handy:** Nerv beginnt am Wirbel (ein Strang bis „Ziel“) · Kap. 04: Überschrift oben, Haus mittig, Knöpfe unten · 6. Haltestelle Th7–Th12 im Scanner ([A] Texte prüfen) · Hausordnung wechselt von selbst (~5 s je §, Puls-Striche, antippen). Details `ENTSCHEIDUNGEN.md` → „Runde 2“.
+**7.11. Runde 1 – 4 Kleinigkeiten – ✅ umgesetzt, nur Handy:** Hinweis am echten unteren Rand · Nerv fein + Andockringe · Karte 60 % + Kurz-„Typisch“ · Wirbelsäule differenziert. Kai: „jetzt wird es gut“.
+- **Offen von Kai:** iPhone-Test Safari + Chrome (Nerv am Wirbel, Th7–Th12-Texte fachlich, Kap. 04 Überschrift/Haus, Hausordnung-Tempo). [O] Safari iOS 26: Hinweis-Reserve `IOS_SAFARI` (`NOTE`) ggf. anpassen.
+- **Für den PC vorgemerkt:** siehe `ENTSCHEIDUNGEN.md` → „Für den PC vorgemerkt“ (Runde 1) und „(Runde 2)“. Nur nach Kais Go.
+- Geprüft (Container): Scanner 390×844, 390×664, 320×568 alle Haltestellen; Kap. 04 + Hausordnung 390×844; keine Konsolenfehler.
 
 ## Stand 5.11.2026 – was noch aussteht (Kai)
 - Auftrag 1 (Handy Kap. 03 → 04) und Auftrag 2 (Ego-Rundgang) sind umgesetzt und auf `main`. **Offen von Kai:** erneuter iPhone-Test Kap. 03 → 04 · iPhone-Blick auf den Ego-Rundgang (Schild-Größe: `SIGN.width` in `src/ego/main.js`).

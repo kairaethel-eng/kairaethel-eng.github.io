@@ -275,6 +275,7 @@ main{position:relative;z-index:2}
 .laws b{font:italic 400 clamp(3.75rem,9vw,9.375rem)/1 var(--serif);color:var(--amber);margin-bottom:.625rem}
 .laws span{font-family:var(--disp);font-weight:800;font-size:clamp(2.5rem,7.4vw,7.75rem);line-height:.95;letter-spacing:-.04em;max-width:11ch}
 .laws small{margin-top:1.5rem;font-size:clamp(1.0625rem,1.5vw,1.375rem);color:var(--dim)}
+.law-prog{display:none} /* nur Handy (Kai 7.11.), PC vorgemerkt */
 
 /* Tür */
 .door{padding-top:9.375rem}
@@ -442,7 +443,8 @@ canvas.gl-wait{opacity:0}
   .tour.in .roof-head .lead,.tour.in .tour-kicker{display:none}
   .tour.in .roof-head h2{display:none}
   .tour-inner .roof-intro{order:1}
-  .tour:not(.in) .roof-intro{margin-top:auto}
+  .tour:not(.in) .roof-intro{margin-top:0} /* Kai 7.11. (2A): Überschrift oben, Haus darunter, Knöpfe unten */
+  .tour:not(.in) .tour-kicker{margin-top:auto}
   .tour-kicker{order:2}
   .room-dots{order:3}
   .tour-ctrl{order:4}
@@ -470,8 +472,12 @@ canvas.gl-wait{opacity:0}
   .room-tag{display:none} /* Handy: Räume über Punkte und Karten, das kleine Haus wäre mit Schildern zu voll */
   .roof-head{padding-right:2.5rem}
   .door{background:linear-gradient(rgba(10,22,27,0),var(--ink) 13.75rem);padding-top:10.625rem}
-  .rules{height:300svh}
-  .rules-sticky{align-items:flex-end;padding-bottom:9svh}
+  .rules{height:auto} /* Kai 7.11.: kein Scrollweg mehr, die Paragraphen wechseln von selbst (main.js LAW) */
+  .rules-sticky{position:relative;align-items:flex-end;padding-bottom:9svh}
+  .laws{cursor:pointer}
+  .law-prog{display:flex;gap:.375rem;margin-top:1.5rem;max-width:16rem}
+  .law-prog button{appearance:none;flex:1;height:1.75rem;padding:0;border:0;background:none;cursor:pointer;display:flex;align-items:center}
+  .law-prog i{display:block;width:100%;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--amber) calc(var(--p,0) * 100%),rgba(237,232,220,.18) 0)}
   .laws{min-height:40svh}
   .laws b{font-size:3.5rem}
   .laws span{font-size:clamp(2.125rem,10vw,3rem)}
@@ -565,6 +571,7 @@ canvas.gl-wait{opacity:0}
 .scan-chips.sc-small .sc-no{font-size:1.25rem}.scan-chips.sc-small .sc-h{font-size:.9375rem}.scan-chips.sc-small .sc-typ{font-size:.75rem;line-height:1.4;margin-top:.375rem}
 @media (max-width:360px){.scan-chips{padding:.5625rem .75rem .6875rem}.scan-chips .sc-no{font-size:1.375rem}.scan-chips .sc-h{font-size:1rem}.scan-chips .sc-c span{padding:.3125rem .4375rem}}
 html.no-gl .scan,html.no-gl .scan-rail,html.no-gl .scan-chips{display:none}
+html:not(.seg-scan) .seg-card.seg-x{display:none!important} /* Th7–Th12 nur im Scanner (Kai 7.11.), PC vorgemerkt */
 @media (prefers-reduced-motion:reduce){.scan-coach{transition:none}.scan-coach>*{animation:none;opacity:1}}
 
 /* Option A, schmale Handys (320–360 px): Karte und Zeilen kompakter, damit alle Zeilen zwischen Leiste und Karte passen */
