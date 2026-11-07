@@ -7,6 +7,35 @@
 
 > **Zuerst Kai fragen:** Wie war der iPhone-Test „Rundgang aus Augenhöhe“ (Kap. 04)? Am PC sagt Kai „super“ (7.11. spät). Abfragen: Anflug zur Tür, Tempo der Fahrt, Zurück-Wischgeste in Safari schließt den Rundgang, Knopfzeile lesbar, Aufbau beim ersten Klick, Seite scrollt beim Wischen auf den Knöpfen nicht mit. Rückmeldung = kein Auftrag → je Punkt Optionen, Go abwarten.
 
+### ⏱ Messung Livegang-Vorschau `labor/live/` auf Kais PC (7.11. spät, Stand `0a42a6f`, nur Messung, Code unverändert)
+Aufbau: lokaler Node-Server (127.0.0.1), Chrome 1440×900 bzw. Handy 390×844 (DPR 3, Touch) mit CPU-Drossel 4×, Messung per DevTools-Protokoll (PerformanceObserver für LCP/CLS/Long Tasks/Event-Timing, Bildrate per rAF), Lighthouse 12 lokal (`--only-categories` alle vier). Keine Telemetrie, keine externen Seiten. Das Plugin `chrome-devtools-mcp` wurde **nicht** installiert (`/plugin install` geht nur im Terminal-Claude von Kai) – gleiche Werte stattdessen direkt über das Protokoll. **Wichtig [B]:** Headless-Chrome rendert WebGL per Software (SwiftShader, kein Grafikchip) → Bildraten und Interaktionszeiten unten sind **Untergrenzen**, auf Kais echter Grafikkarte/iPhone deutlich besser; Ladewerte (LCP, CLS, Lighthouse) sind aussagekräftiger.
+
+| Messwert | PC 1440×900 | Handy 390×844, CPU 4× |
+|---|---|---|
+| Lighthouse Performance | 66 | 47 |
+| Lighthouse Accessibility | 96 | 96 |
+| Lighthouse Best Practices | 100 | 100 |
+| Lighthouse SEO | 63 (nur `noindex`: „is-crawlable“, gewollt) | 63 (dto.) |
+| FCP / LCP (Lighthouse) | 1,1 s / 1,1 s (Element `h1#heroTitle`) | 6,6 s / 6,8 s (Element `p.kicker`) |
+| LCP (eigener Lauf, ohne Drossel-Simulation) | 1,9 s (`p.hero-sub`) | 2,7 s (`p.kicker`) |
+| CLS | 0 | 0 (0,004 nach Durchscrollen) |
+| TBT (Lighthouse) | 900 ms | 520 ms |
+| Long Tasks im Lauf (>50 ms) / längster | 10 / 676 ms | 106 / 1192 ms (direkt nach Start) |
+| Speed Index / Interactive | 1,6 s / 2,2 s | 6,6 s / 9,7 s |
+| Hauptthread-Arbeit gesamt | 2,6 s | 10,9 s |
+| Bildrate im Stand (Hero, Partikel) | ≈ 22 B/s (SwiftShader) | ≈ 17 B/s |
+| Bildrate beim Durchscrollen (8076 bzw. 9542 px) | ≈ 16,5 B/s, längster Frame 650 ms | ≈ 32 B/s, längster Frame 250 ms |
+| Längste Interaktion (INP-Näherung, Klicks auf Knöpfe) | ≈ 656 ms | ≈ 560 ms |
+| Seitengröße (HTML, unkomprimiert lokal) | 1,0 MB, 0 Nachladeaufrufe | dto. |
+| Unused JS (Lighthouse) | ≈ 335 KiB | ≈ 329 KiB |
+
+**Die drei größten Bremsen**
+1. **[B] Startarbeit im Hauptthread:** 1 MB Inline-Seite (three.js + Szene) wird beim Laden komplett ausgewertet; am Handy 4× drosselt das zu LCP 6,8 s, TBT 520 ms, Interactive 9,7 s und einem 1,2-s-Long-Task kurz nach dem Start. Hebel: three.js beschneiden/nur genutzte Teile bündeln (Lighthouse: ≈ 330 KiB ungenutzt), Szene-Init noch später starten (erst nach erstem Bild, `requestIdleCallback`), Text zuerst malen.
+2. **[B] Durchgehende Partikel-Last beim Scrollen/im Stand:** Long Tasks (359–676 ms) während Scrollen und Kapitelwechseln (z. B. bei 16 s, 18 s, 21 s im PC-Lauf) und TBT 900 ms am PC – vermutlich Aufbau der Punktwolken pro Kapitel (`whenNear`, Scheiben ≤ 8 ms reichen offenbar nicht überall) plus Weiterfahrt der Kamera. Hebel: Long Tasks im Trace pro Kapitel zuordnen (nächster Schritt, Chrome-Trace mit Aufrufstapel), Aufbau in kleinere Scheiben/Web Worker, Teilchenzahl am Handy senken.
+3. **[A] Forced Reflows, DOM-Größe, ungenutztes CSS:** Lighthouse meldet „forced reflow“ (Layout-Lesen in der Animationsschleife), zu großes DOM (am Handy Note 0) und ≈ 50 % ungenutztes CSS. Hebel: Layout-Messungen cachen (`VW`/`VH` wie beim Start), CSS je Kapitel trennen. [O] Auf echtem iPhone/PC mit Grafikchip nachmessen, bevor umgebaut wird – SwiftShader überzeichnet die GPU-Seite.
+
+Randbefunde: Lighthouse „Textkomprimierung“ ist ein Artefakt des lokalen Servers (GitHub Pages liefert gzip) [A]; Accessibility 96: `color-contrast` (eine Stelle) und am Handy `label-content-name-mismatch` (aria-label „Spannung lösen.“ weicht vom sichtbaren Titeltext ab) – klein, **Go abwarten**. Rohdaten lagen im Scratchpad (nicht im Repo). Keine Codeänderung vorgenommen.
+
 ### 🔎 Prüfung Livegang-Vorschau `labor/live/` (7.11. spät, nur Prüfung, nichts geändert) – **Go je Punkt abwarten**
 Geprüft (Stand `b05ecf4`, also vor Kais Entfernung der alten PC-Kamerafahrt `20f7f62`; Zeilen unten auf den Stand danach angepasst, die Befunde betreffen diesen Teil nicht): `live/index.html`, `impressum.html`, `datenschutz.html` (Chromium/SwiftShader, 320/390/768/1440; `tools/audit.cjs` d, m, s, t; Termin-Blatt PC + Handy; Rechtsseiten Handy). **Stand:** `live/` ist byte-identisch zu einem frischen Build der Quellen (`node build.mjs live`, `npm ci`) [B]; 0 Konsolenfehler; kein Querscrollen; **0 externe Anfragen** vor „Kalender laden“, kein iframe [B]. Durchlauf 1 = Skill `website-design:web-review` (UXKIN-Vergleich nicht verbunden, Proxy 403 – ohne Vergleichsseiten). Durchlauf 2 = `/security-review`: der Skill lief nicht (er arbeitet am Branch-Diff, hier kein Diff) → gleiche Methode von Hand über `labor/src`, `build.mjs`, `live/` (Netzaufrufe, Senken, Eingaben, mailto/vCard, Termin-Blatt). Durchlauf 3 = Plugin „Design“ **nicht aktiv** → axe (320/390/768/1440) + eigene Kritik nach `hop-praxis` (dunkel, Bernstein, Fraunces/Hanken, ruhige Hierarchie). Bekannte Punkte (Offen/Tote Reste/Braucht Kai) nicht erneut gemeldet.
 
