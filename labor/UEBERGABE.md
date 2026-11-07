@@ -5,6 +5,8 @@
 
 ## ▶ Nächster Chat: hier weitermachen (Stand 7.11.2026 spät)
 
+> **Zuerst Kai fragen:** Wie war der iPhone-Test „Rundgang aus Augenhöhe“ (Kap. 04)? Am PC sagt Kai „super“ (7.11. spät). Abfragen: Anflug zur Tür, Tempo der Fahrt, Zurück-Wischgeste in Safari schließt den Rundgang, Knopfzeile lesbar, Aufbau beim ersten Klick, Seite scrollt beim Wischen auf den Knöpfen nicht mit. Rückmeldung = kein Auftrag → je Punkt Optionen, Go abwarten.
+
 ### ✅ Online-Terminkalender als Blatt (Option C, Go Kai 7.11. spät)
 „Termin“ (Leiste), „Termin buchen“ (Start) und „Online-Termin buchen“ (Kap. 05) öffnen ein Blatt (PC rechts, Handy von unten); Optica-Kalender lädt erst nach „Kalender laden“, Datenschutz § 4 neu. Details `ENTSCHEIDUNGEN.md` → „Online-Terminkalender als Blatt“.
 - **Offen von Kai:** Online-Termine in Optica Viva freischalten (Kalender meldet „keine Onlinetermine“) · welche Terminarten online · AV-Vertrag/Anbieter prüfen · iPhone-Test (Blatt, Kalender scrollen, Zurück) · Übergangsseite (Wurzel) bekommt Link/Blatt nur mit eigenem Go.
@@ -17,7 +19,7 @@ Kapitel 03 am PC ist eine stehende Bühne (160svh): Aufzug ganz rechts (Griff zi
 ### ✅ Chat B · Rundgang aus Augenhöhe in Kapitel 04 – umgesetzt (Go Kai „1B+ 2a/a 3a 4 ja“, 7.11. spät)
 Knopf „Rundgang aus Augenhöhe“ neben „Rundgang starten“ (PC gleiche Zeile, Handy eigene Zeile darunter, nur in der Übersicht). Klick → Kamera fährt im Röntgenblick ~0,65 s Richtung Tür → Vollbild-Dialog mit der Fahrt der Testseite (Tür, 7 Stationen, Karten, Ohne Fahrt/Ruhig/Größere Punkte, Logo-Schild). „‹ Übersicht“, Esc und Zurück-Taste/Wischgeste schließen → gleiche Stelle, Röntgenblick. „Bis bald“ mit „Termin & Kontakt →“ (Sprung zu Kapitel 05). Details `ENTSCHEIDUNGEN.md` → „Rundgang aus Augenhöhe in Kapitel 04“.
 - Geprüft (Chromium/SwiftShader, intern): 1440×900, 1440×900 „Bewegung reduzieren“, 2560×1440, 390×844, 375×667, 320×568 – Öffnen, Fahrt, Pfeiltasten, Esc, Zurück-Taste, Kontakt-Link, Mausrad scrollt die Seite nicht, Fokus zurück auf den Knopf, Klick-Rundgang unverändert, Haus-Lage Handy gegenüber vorher ±4 px; axe im offenen Dialog 0 Verstöße, ganze Seite (d, m) nur der bekannte Kontrast-Treffer Kap. 02; keine Konsolenfehler. Testseite `rundgang-ego.html` nutzt denselben Baustein (Bild gleich wie vorher).
-- **Offen von Kai:** iPhone + PC-Test (Anflug zur Tür, Tempo, Zurück-Wischgeste in Safari, Lesbarkeit der Knopfzeile). [O] iOS: zweiter WebGL-Kontext beim ersten Klick (kurzer Moment Aufbau), Seite darunter darf beim Wischen auf den Knöpfen nicht mitscrollen.
+- **Kai 7.11. spät: PC „super“.** **Offen von Kai:** iPhone-Test (Anflug zur Tür, Tempo, Zurück-Wischgeste in Safari, Lesbarkeit der Knopfzeile). [O] iOS: zweiter WebGL-Kontext beim ersten Klick (kurzer Moment Aufbau), Seite darunter darf beim Wischen auf den Knöpfen nicht mitscrollen.
 
 ### Nebenthemen Kai 7.11. spät (noch kein Go – im nächsten Chat erörtern)
 1. **Bandscheiben in Rot.** Ist [B]: Bandscheiben `cDiscD` = Blau #4FA8D6 (`main.js` Shader-Uniform), im aktiven Abschnitt heller. Optionen: (a) dezentes Rot-Orange nur im aktiven Abschnitt (passt zu Bernstein), (b) alle Bandscheiben rot (Kontrast zum Knochenweiß stark, wirkt „entzündet“), (c) Rot als Farbe b nur für die Fuge. Empfehlung (a), Farbe mit Kai per Screenshot abstimmen (z. B. #E0583C).
