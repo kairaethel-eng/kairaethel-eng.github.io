@@ -1,10 +1,21 @@
-# Übergabe – Stand 7.11.2026 (Handy + PC: Scanner/Wirbelsäule, Th7–Th12, Kap. 04, Hausordnung automatisch – PC-Test offen; Livegang vorbereitet seit 2.11.)
+# Übergabe – Stand 7.11.2026 spät (Handy fertig für jetzt; 6 PC-Aufgaben offen, siehe ▶; Livegang vorbereitet seit 2.11.)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
 
-## ▶ Nächster Chat: hier weitermachen (Stand 7.11.2026, PC nachgezogen)
-Start-Prompt: „Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md` (Abschnitt ▶), `labor/ENTSCHEIDUNGEN.md` → „Scanner – 4 Kleinigkeiten“ und „Runde 2“. Hier mein iPhone-Ergebnis: …“
+## ▶ Nächster Chat: hier weitermachen (Stand 7.11.2026 spät – PC an das Handy angleichen)
+Start-Prompt: „Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md` (Abschnitt ▶ → „Aufgaben PC“), `labor/ENTSCHEIDUNGEN.md` (Einträge vom 7.11.). Dann zu meinen 6 PC-Aufgaben je Punkt Ursache, Optionen, Empfehlung – Go abwarten.“
+
+### Aufgaben PC (Kai 7.11. spät, noch **kein Go** – erst erörtern)
+Kai nach PC-Blick: „irgendwie fehlt mir noch viel von dem, was wir am Handy umgesetzt haben.“ Befunde von Claude (noch nicht mit Kai besprochen):
+1. **Nerv am PC noch nicht fein genug.** Ist [B]: gleicher Shader-Zweig wie Handy (`uFine`), Streuung `aOff * uXf.w * .4`, Punkte ≤ 3,6 px – am PC ist `uXf.w` (Wirbelsäulen-Größe) und die Pixeldichte anders, der Strang wirkt breiter. Ansatz: PC eigene Streuung/Punktgröße (z. B. Streuung halbieren, Punkte ≤ 2,4 px), evtl. mehr Impulse.
+2. **Scrollen an den Wirbelsegmenten am PC wie am Handy.** Ist [B]: PC = langes Scroll-Kapitel (530vh, Kamera fährt per Scrollen, `PH`/`updateAxis`), Handy = **Scanner** (Bühne steht, Aufzug rechts mit Griff/Haltestellen, Nahansicht, Zeilen links, `updateScan`). Ansatz: Scanner am PC (Maus ziehen/Mausrad über dem Aufzug, Pfeiltasten, Haltestellen-Knöpfe; Karte/Zeilen-Layout für Breitbild neu, Silhouette rechts behalten?) – größter Umbau, Opus.
+3. **First-Person-Rundgang im Haus + „Verfeinerung“ der Partikel im Haus fehlen am PC.** Ist [B]: Ego-Rundgang existiert nur als eigene Seite `rundgang-ego.html` (`src/ego`), nicht in der Hauptseite; Haus/Praxis-Partikel (`praxis.js` `praxisScan`) wurden am Handy **nicht** verändert. [O] mit Kai klären, was am Handy als „verfeinert“ wahrgenommen wird (evtl. Kap.-04-Kamera/Helligkeit vom 7.11. oder Ego-Seite). Ansatz: Ego-Rundgang in Kapitel 04 einbinden (PC + Handy?), Praxis-Partikel analog „differenziert“ (Wände/Möbel klarer abgegrenzt).
+4. **Wirbelsegmente: Verfeinerung der Partikel (Abgrenzung) am PC fehlt.** Ist [B]: seit Commit 3cc91d8 (7.11.) ist `uDiff` = 1 auch am PC (330 000 Punkte, Schnitt 0,024). [O] Zuerst prüfen: Browser-Zwischenspeicher (GitHub Pages bis ~10 min, Strg+F5) – sonst am PC Anteile `DIFF`/Punktgröße eigens abstimmen (Kanten heller, Bandscheiben-Körnung gröber).
+5. **Hausordnung am PC automatisieren.** Ist [B]: seit 3cc91d8 auch am PC automatisch (Puls-Striche, Klick). [O] wie 4: erst Strg+F5 prüfen; falls doch alt → Fehler suchen.
+6. **Alle optischen Hilfen der ganzen Seite vom Handy auf den PC übertragen.** Ansatz: erst Liste der Handy-Hilfen erstellen (Wisch-/Hinweis-Pillen `.th-pill`, Hand am Griff `sCoach`, Puls-Striche, Andockringe, Haltestellen, Hinweis „Wischen oder Raum antippen“, Kapitel-Hinweise …) und je Hilfe PC-Gegenstück vorschlagen (Maus/Tastatur statt Wischen).
+
+### Am 7.11. umgesetzt (alles auf `main`)
 **7.11. PC nachgezogen (Kai: „passt im Moment so alles, nun am PC die relevanten Sachen“) – ✅ umgesetzt:** Th7–Th12 überall 6. Station (PC Kapitel 03 530vh) · Nerv fein ab Wirbel + Andockringe · Wirbelsäule differenziert · Hausordnung automatisch. Details `ENTSCHEIDUNGEN.md` → „PC nachgezogen“. **Offen von Kai:** PC-Test (Chrome, auch 2560×1440).
 **7.11. Runde 2 (Go Kai „1A 2a 3A nur mobil, alles Wichtige für PC merken“ + Hausordnung automatisch) – ✅ umgesetzt, nur Handy:** Nerv beginnt am Wirbel (ein Strang bis „Ziel“) · Kap. 04: Überschrift oben, Haus mittig, Knöpfe unten · 6. Haltestelle Th7–Th12 im Scanner ([A] Texte prüfen) · Hausordnung wechselt von selbst (~5 s je §, Puls-Striche, antippen). Details `ENTSCHEIDUNGEN.md` → „Runde 2“.
 **7.11. Runde 1 – 4 Kleinigkeiten – ✅ umgesetzt, nur Handy:** Hinweis am echten unteren Rand · Nerv fein + Andockringe · Karte 60 % + Kurz-„Typisch“ · Wirbelsäule differenziert. Kai: „jetzt wird es gut“.
