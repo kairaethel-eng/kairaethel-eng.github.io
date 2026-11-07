@@ -79,6 +79,7 @@ function measure() {
   for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) {
     const a = els[i], b = els[j];
     if (a.e.contains(b.e) || b.e.contains(a.e)) continue;
+    if (label(a.e).length <= 2 && label(b.e).length <= 2) continue; // einzeln animierte Buchstaben mit engem Zeilenabstand (gewollt)
     const w = Math.min(a.r.right, b.r.right) - Math.max(a.r.left, b.r.left), h = Math.min(a.r.bottom, b.r.bottom) - Math.max(a.r.top, b.r.top);
     if (w > 4 && h > 4) out.overlap.push(`„${label(a.e)}“ × „${label(b.e)}“ (${Math.round(w)}×${Math.round(h)} px)`);
   }

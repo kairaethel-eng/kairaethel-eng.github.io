@@ -3,9 +3,10 @@
 Zweck: die ganze Seite in gleichbleibender Weise auf Details prüfen und **Empfehlungen mit der größten Wirkung** liefern.
 Auslöser: Kai schreibt „Detailprüfung“ (optional mit Seite/Bereich) – oder nach größeren Umbauten. Später ggf. als Zeitplan (Option c, erst nach Kais Go).
 
-## Ablauf (Cloud-Container, ~35–60 min)
+## Ablauf (Cloud-Container, ~35–60 min; review.cjs je Ansicht: PC ~10 min, Handy ~4 min, 2560 länger)
 1. `git pull`, `cd labor && npm ci && node build.mjs test-4 && node build.mjs live`
 2. **Bildersatz + Messungen:** `node tools/review.cjs live/index.html <ordner> d,m,xl` (optional `s` 320×568, `dr` „Bewegung reduzieren“).
+   Lange Läufe im Hintergrund starten (`> run.log`) und das Log beobachten – im Vordergrund bricht der Befehl nach 10 min ab.
    Ergebnis: alle Zustände je Ansicht (Start, Kap. 02, Wirbelsäule Übersicht + 6 Haltestellen, Dach, Rundgang, Rundgang aus Augenhöhe, Manuthera, Leistungen mit **allen 12 Motiven einzeln**, Hausordnung, Tür, Termin-Blatt, Fußzeile), `sheet-<ansicht>.png` (Kontaktbogen), `review.md` (je Zustand: Fehler, überlappende/abgeschnittene Texte, Schrift < 11 px, Querscrollen, lange Aufgaben).
 3. **Barrierefreiheit/Struktur:** `npm i -D --no-save axe-core && node tools/audit.cjs live/index.html <ordner2> d,m` (axe WCAG 2.2 AA, Überschriften, Tab-Reihenfolge, kleine Tippziele).
 4. **Sichtung** jedes Bildes nach der Checkliste unten (Kontaktbogen für den Überblick, Einzelbild für Details).
