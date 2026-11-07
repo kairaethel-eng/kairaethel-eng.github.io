@@ -1,4 +1,4 @@
-// Prüfskript (3.11.2026): Screenshots je Kapitel, axe-core (WCAG 2.2 AA), Struktur, Tab-Reihenfolge in mehreren Ansichten.
+// Prüfskript (3.11.2026; Kap. 03 PC seit 7.11. Scanner-Bühne 160svh → Offsets 0.3/0.55): Screenshots je Kapitel, axe-core (WCAG 2.2 AA), Struktur, Tab-Reihenfolge in mehreren Ansichten.
 // Aufruf: cd labor && npm i -D --no-save axe-core && node tools/audit.cjs live/index.html <ausgabeordner> [d,m,t,xl,s,dr]
 // d=1440×900 · dr=dito mit „Bewegung reduzieren“ · m=390×844 · s=320×568 · t=768×1024 · xl=2560×1440. Ergebnis: report.json + PNGs. WAIT=ms je Bild (Standard 6000).
 const { chromium } = require('playwright');
@@ -16,12 +16,12 @@ const MODES = {
   xl: { viewport: { width: 2560, height: 1440 } },
 };
 const STEPS = {
-  d:  ['top|0','#bewegung|0','#achse|0.61','#achse|1.85','#achse|3.1','#dach|0','#manuthera|0','#allTitle|0','#hausordnung|0.5','#tuer|0'],
-  dr: ['top|0','#achse|1.85','#dach|0'],
+  d:  ['top|0','#bewegung|0','#achse|0.3','#achse|0.55','#dach|0','#manuthera|0','#allTitle|0','#hausordnung|0.5','#tuer|0'],
+  dr: ['top|0','#achse|0.3','#dach|0'],
   m:  ['top|0','#bewegung|0','#achse|0.3','#achse|1.5','#achse|3','#dach|0','#manuthera|0','#allTitle|0','#hausordnung|0.5','#tuer|0'],
   s:  ['top|0','#dach|0','#allTitle|0','#tuer|0'],
   t:  ['top|0','#achse|1.2','#dach|0','#manuthera|0','#allTitle|0','#tuer|0'],
-  xl: ['top|0','#achse|1.85','#dach|0','#tuer|0'],
+  xl: ['top|0','#achse|0.3','#dach|0','#tuer|0'],
 };
 const report = {};
 (async () => {

@@ -77,13 +77,16 @@ let renderer = null;
 const glCtx = glContext(canvas);
 if (glCtx) try { renderer = new THREE.WebGLRenderer({ canvas, context: glCtx, antialias: false, alpha: false, powerPreference: 'high-performance' }); } catch (e) { /* ohne WebGL bleibt die Seite lesbar */ }
 // Ohne WebGL (oder wenn eine Bühne scheitert): Standbilder statt Partikel, Hinweise weg (A2, CSS html.no-gl)
-const noGl = () => { document.documentElement.classList.remove('seg-rows', 'seg-scan'); document.documentElement.classList.add('no-gl'); };
+const noGl = () => { document.documentElement.classList.remove('seg-rows', 'seg-scan', 'seg-pc'); document.documentElement.classList.add('no-gl'); };
 // Handy-Wirbelsäule (nur hochkant mit WebGL; Handy quer oder ohne WebGL → Karte mit Volltext):
 // Standard seit 6.11. = Scanner (html.seg-scan, Kapitel 03 als Bühne); ?scan=0 = Option A vom 5.11. (html.seg-rows, Karte klebt unten)
 const scanQ = new URLSearchParams(location.search).get('scan');
 const segRows = () => {
   const el = document.documentElement, ok = !isDesktop() && !el.classList.contains('no-gl') && MINH >= 500;
   el.classList.toggle('seg-scan', ok && scanQ !== '0'); el.classList.toggle('seg-rows', ok && scanQ === '0');
+  // PC (Kai 7.11., 2B · 1A 2A 3A): Hybrid-Scanner – stehende Bühne mit Aufzug rechts, Silhouette + Schilder bleiben;
+  // ?scan=0 = alte Scroll-Kamerafahrt (530vh) zum Vergleich
+  el.classList.toggle('seg-pc', isDesktop() && !el.classList.contains('no-gl') && scanQ !== '0');
 };
 if (!renderer) noGl();
 const scene = new THREE.Scene();
@@ -702,6 +705,7 @@ const MOB_D = 2.3;
 const stickOn = () => document.documentElement.classList.contains('seg-rows');
 const scanOn = () => document.documentElement.classList.contains('seg-scan');
 const linesOn = () => stickOn() || scanOn();
+const pcScan = () => document.documentElement.classList.contains('seg-pc'); // PC-Scanner (Kai 7.11.)
 const OVERVIEW = { pos: new V3(0, 0, 13), target: new V3(0, 0, 0) };
 const lerpPose = (a, b, t) => ({ pos: a.pos.clone().lerp(b.pos, t), target: a.target.clone().lerp(b.target, t), rot: b.rot !== undefined && a.rot !== undefined ? THREE.MathUtils.lerp(a.rot, b.rot, t) : (b.rot ?? a.rot) });
 const cam = { pos: OVERVIEW.pos.clone(), target: OVERVIEW.target.clone() };
@@ -863,7 +867,9 @@ scene.add(camera); camera.add(sil);
 function placeSilhouette() {
   const D = 6, hh = D * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), hw = hh * camera.aspect;
   const s = (hh * 2 * 0.62) / 8.2;
-  sil.position.set(hw * 0.74, -hh * 0.06, -D); sil.scale.setScalar(s);
+  // PC-Scanner (1A): Silhouette rückt vor den Aufzug (rechter Rand der Arme ≈ 0,095 × Bildhöhe neben der Mitte)
+  const fx = pcScan() ? Math.min(0.74, 2 * (VW - RAIL_W - 34 - 0.095 * GLH) / VW - 1) : 0.74;
+  sil.position.set(hw * fx, -hh * 0.06, -D); sil.scale.setScalar(s);
 }
 function silTarget(zoneKey) {
   const [bx, by] = NINFO[zoneKey].tgt;
@@ -909,7 +915,7 @@ function updateCallouts(zoneKey, fl, on) {
   });
   if (!show) { ncState.forEach((s) => { s.init = false; s.k = -1; }); return; }
   const now = performance.now(), ease = 1 - Math.exp(-Math.min(0.1, (now - ncT) / 1000) * 7); ncT = now;
-  const W = VW, H = VH, MINX = Math.min(600, W * 0.42); // Textspalte links frei halten
+  const W = VW - (pcScan() ? RAIL_W + 6 : 0), H = VH, MINX = pcScan() ? PC_COL() : Math.min(600, VW * 0.42); // Textspalte links frei halten, PC-Scanner: Aufzug rechts frei
   const spine = spineRects();
   // Silhouette-Rahmen (Arme hängen, daher schmal) und leuchtendes Ziel
   const [sx0, sy0] = toPx(sil.localToWorld(new V3(-BODY_W * 0.36 * BODY_SCALE, BODY_H / 2 * BODY_SCALE, 0)));
@@ -979,6 +985,7 @@ function updateCallouts(zoneKey, fl, on) {
 
 const PH = () => (isDesktop() ? { M0: 0.06, J0: 0.09, J1: 0.9, M1: 0.94 } : { M0: 0.1, J0: 0.13, J1: 0.9, M1: 0.93 });
 segBtns.forEach((b) => b.addEventListener('click', () => {
+  if (isDesktop() && pcScan()) { scanGo(+b.dataset.seg, true); return; } // PC-Scanner: zweite Bedienung neben dem Aufzug
   const i = +b.dataset.seg, ph = PH(), r = axis.getBoundingClientRect();
   const p = ph.J0 + (i / (STOPS.length - 1)) * (ph.J1 - ph.J0);
   scrollToY(r.top + scrollY + p * (r.height - VH) + 2);
@@ -1043,12 +1050,7 @@ function mobileCard(gate) {
 }
 dots.forEach((d) => d.addEventListener('click', () => {
   const i = +d.dataset.seg;
-  if (scanOn()) { // Scanner: zum Abschnitt springen; steht die Bühne noch nicht, dorthin scrollen
-    SCAN.idx = i; SCAN.demo = 2; SCAN.touched = true;
-    const r = axis.getBoundingClientRect();
-    if (!(r.top <= 2 && r.bottom >= VH - 2)) scrollToY(r.top + scrollY + Math.max(0, r.height - VH) * 0.4);
-    return;
-  }
+  if (scanOn()) { scanGo(i, true); return; } // Scanner: zum Abschnitt springen; steht die Bühne noch nicht, dorthin scrollen
   if (stickOn()) { // so weit, dass die Karte steht und alle Zeilen da sind
     if (!segHs) measureCards();
     scrollToY(natTop(i) + scrollY - (segS[i] - MINH * (MTH[4] + 0.05)));
@@ -1084,18 +1086,61 @@ scanUI.innerHTML = '<div class="scan-track"></div>' + SSTOPS.map(() => '<i class
   `<div class="scan-coach"><i class="sc-ghost"></i>${HAND_SVG}</div>`;
 document.body.appendChild(scanUI);
 // Ziehstreifen = Aufzug: Haltestellen zum Antippen (echte Knöpfe, ersetzen die Punkte-Leiste), Ziehen am Griff
-const scanRail = document.createElement('div'); scanRail.className = 'scan-rail'; scanRail.setAttribute('role', 'group'); scanRail.setAttribute('aria-label', 'Abschnitt wählen'); document.body.appendChild(scanRail);
+// Der Aufzug liegt im Dokument hinter der Bühne (Kapitel 03), damit die Tab-Reihenfolge stimmt (Durchsicht 7.11.);
+// er steht trotzdem fest am rechten Fensterrand (position:fixed, kein Vorfahr mit transform)
+const scanRail = document.createElement('div'); scanRail.className = 'scan-rail'; scanRail.setAttribute('role', 'group'); scanRail.setAttribute('aria-label', 'Abschnitt wählen'); (axis || document.body).appendChild(scanRail);
 const [sTrack, ...sRest] = scanUI.children, sTicks = sRest.slice(0, SSTOPS.length), [sLine, sTag, sThumb, sCoach] = sRest.slice(SSTOPS.length);
 const segNames = SSTOPS.map((st) => { const c = cardOf(st.zone); return c ? ($('.seg-no', c) || c).textContent.trim() : st.zone; });
 const stopBtns = segNames.map((n, i) => {
   const b = document.createElement('button'); b.type = 'button'; b.className = 'scan-stop'; b.textContent = SLAB[i];
-  b.setAttribute('aria-label', 'Abschnitt ' + n); scanRail.appendChild(b);
-  b.addEventListener('click', () => { SCAN.idx = i; SCAN.demo = 2; SCAN.touched = true; });
+  b.setAttribute('aria-label', 'Abschnitt ' + n); b.tabIndex = i ? -1 : 0; scanRail.appendChild(b);
+  b.addEventListener('click', () => scanGo(i));
   return b;
 });
+// Haltestelle wählen (Aufzug, Mausrad, Pfeiltasten, segnav/Punkte); scroll: Bühne ggf. erst ins Bild holen
+function scanGo(i, scroll = false) {
+  SCAN.idx = clamp(i, 0, SSTOPS.length - 1); SCAN.demo = 2; SCAN.touched = true; markStop();
+  const r = axis.getBoundingClientRect();
+  if (scroll && !(r.top <= 2 && r.bottom >= VH - 2)) scrollToY(r.top + scrollY + Math.max(0, r.height - VH) * 0.4);
+}
+// aktive Haltestelle: aria-current + einziger Tab-Halt (roving tabindex); segnav ebenso markiert
+let markedStop = -1;
+function markStop() {
+  if (markedStop === SCAN.idx) return; markedStop = SCAN.idx;
+  stopBtns.forEach((b, k) => { const on = k === SCAN.idx; b.tabIndex = on ? 0 : -1; if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
+  segBtns.forEach((b, k) => { if (k === SCAN.idx && (pcScan() || scanOn())) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
+}
+// Tastatur (Kai 7.11.): ↑↓ (und ←→, Pos1/Ende) wechseln die Haltestelle, der Fokus wandert mit
+scanRail.addEventListener('keydown', (e) => {
+  const k = e.key, n = SSTOPS.length;
+  const to = k === 'ArrowUp' || k === 'ArrowLeft' ? SCAN.idx - 1 : k === 'ArrowDown' || k === 'ArrowRight' ? SCAN.idx + 1 : k === 'Home' ? 0 : k === 'End' ? n - 1 : null;
+  if (to === null) return;
+  e.preventDefault();
+  scanGo(to); stopBtns[SCAN.idx].focus({ preventScroll: true });
+});
+// Mausrad über dem Aufzug (PC): eine Rastung = eine Haltestelle; an der ersten/letzten Haltestelle scrollt die Seite
+// weiter (nicht festhängen). Das Ereignis erreicht Lenis dann nicht (stopPropagation), sonst scrollte die Seite mit.
+const WHEEL = { acc: 0, t: 0 };
+scanRail.addEventListener('wheel', (e) => {
+  if (!scanRail.classList.contains('on')) return;
+  const dy = e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? VH : 1), dir = Math.sign(dy);
+  if (!dir) return;
+  const to = SCAN.idx + dir;
+  if (to < 0 || to >= SSTOPS.length) { WHEEL.acc = 0; return; } // am Ende: Seite scrollt normal
+  e.preventDefault(); e.stopPropagation();
+  const now = performance.now();
+  if (Math.sign(WHEEL.acc) !== dir || now - WHEEL.t > 400) WHEEL.acc = 0;
+  WHEEL.acc += dy;
+  if (Math.abs(WHEEL.acc) >= 40 && now - WHEEL.t > 260) { WHEEL.acc = 0; WHEEL.t = now; scanGo(to); }
+}, { passive: false });
 const levName = (id) => (id === 'S' ? 'Kreuzbein' : id === 'Co' ? 'Steißbein' : id);
 let levY = [], stopY = [];
-const RAIL_W = 88; // Breite des Ziehstreifens rechts (px): links Haltestellen, rechts Rinne mit Griff
+let RAIL_W = 88, RK = 1, railVW = -1; // Breite des Ziehstreifens rechts (px): links Haltestellen, rechts Rinne mit Griff
+// wächst mit der Grundschrift (ab 1600 px, Griff/Haltestellen sind in rem) – Handy: 16 px → unverändert 88 px
+function railMeasure() {
+  if (railVW === VW) return; railVW = VW;
+  RK = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16; RAIL_W = Math.round(88 * RK);
+}
 const nearestStop = (y) => { let b = 0; stopY.forEach((s, i) => { if (Math.abs(s - y) < Math.abs(stopY[b] - y)) b = i; }); return b; };
 // Antippen = zur nächsten Haltestelle; Ziehen erst ab 6 px Bewegung (sonst zoomt ein Tippen kurz heraus) und relativ:
 // die Linie bewegt sich um so viel wie der Finger, egal wo er aufsetzt – kein Sprung
@@ -1134,6 +1179,7 @@ function screenToWorld(px, py, z, out) { // Bildschirmpunkt → Welt auf der Ebe
 // Übersicht (OV), damit der Finger dieselbe Strecke behält. Größe je Abschnitt ≈ Kameraabstände der Option A.
 const OV = { x: 0, y: 0, z: 0, w: 0.3, init: false }, ZM = { k: 0, idx: 0 }, _zw = new V3(), _zc = new V3(), _zc2 = new V3(), _sv2 = new V3();
 const ZOOM = [3.4, 2.6, 2.15, 1.85, 2.25, 2.15]; // je Haltestelle (SSTOPS)
+const PC_ZOOM = 0.92; // PC: Nahansicht relativ zur früheren Kamerafahrt
 // Einblenden im Scanner (Kai 6.11., Variante b): Karte sofort beim Einrasten, die vier Zeilen nacheinander während des
 // Heranfahrens; beim Ziehen bleiben die Texte kurz stehen und blenden ruhig aus.
 const TX = { zone: null, t0: 0, last: 0 };
@@ -1146,10 +1192,32 @@ function scanTexts(zKey, settle) {
   updateCalloutsMob(TX.zone, !!TX.zone && (settle || held), (now - TX.t0) / 1000, { ...TX_OPT, lines: settle });
 }
 const lvLocal = (lv, out) => out.set(lv.center.x * SC, (lv.center.y - CY) * SC, lv.center.z * SC).applyAxisAngle(_Y, spineRot);
+// PC-Scanner (Kai 7.11., 1A 2A 3A): gleiche Mechanik, aber Text links bleibt (Überschrift, segnav, Karte, Hinweis),
+// die Wirbelsäule steht zwischen Textspalte und Aufzug, die Nahansicht legt den Abschnitt in die Mitte, rechts davon
+// erscheinen Silhouette, Versorgungsbahn und die frei platzierten Schilder (updateCallouts)
+// rechter Rand der Textspalte (= MINX der Schilder): mindestens bis hinter die segnav-Knöpfe (große Monitore: Spalte breiter)
+const pcCol = { w: -1, x: 600 };
+const PC_COL = () => {
+  if (pcCol.w !== VW) { const sn = $('.segnav'); pcCol.w = VW; pcCol.x = Math.max(Math.min(600, VW * 0.42), sn ? sn.getBoundingClientRect().right + 24 : 0); }
+  return pcCol.x;
+};
 function updateScan(dt, r, inSec) {
-  const X = uniforms.uXf.value[2], near = r.top < VH * 1.6 && r.bottom > -VH * 0.6;
+  const X = uniforms.uXf.value[2], near = r.top < VH * 1.6 && r.bottom > -VH * 0.6, pc = isDesktop();
+  railMeasure();
   if (!SCAN.cleared) { cards.forEach((c) => { c.style.opacity = ''; c.style.transform = ''; }); if (axisNote) axisNote.style.opacity = ''; SCAN.cleared = true; }
-  if (near) {
+  markStop();
+  if (near && pc) {
+    // Bühne: unter der Kopfleiste bis kurz über den unteren Rand; löst sich die Bühne, geht alles mit nach oben
+    const sr = axSticky ? axSticky.getBoundingClientRect() : null, lift = sr ? Math.min(0, sr.top) : 0;
+    const hb = topBar ? topBar.getBoundingClientRect().bottom : 72;
+    SCAN.top = hb + 22 + lift; SCAN.bot = (sr ? sr.bottom : VH) - 30;
+    const tf = SCAN.top / GLH, bf = SCAN.bot / GLH;
+    OV.w = ((bf - tf) * 8.197 * 0.95) / 8.7; OV.y = (0.5 - (tf + bf) / 2) * 8.197;
+    // Übersicht: Mitte bei 40 % zwischen Textspalte und Aufzug (Silhouette ist beim Ziehen aus)
+    const cx = PC_COL() + (VW - RAIL_W - PC_COL()) * 0.4;
+    const tx = det && SCAN.right ? OV.x + (cx - (SCAN.left + SCAN.right) / 2) * (8.197 / GLH) : (cx - VW / 2) * (8.197 / GLH);
+    OV.x = OV.init ? OV.x + (tx - OV.x) * (reduced ? 1 : 1 - Math.exp(-dt * 6)) : tx; OV.init = true;
+  } else if (near) {
     // Bühne aus der echten Lage von Kopfleiste, Bühne und Hinweis: löst sich die Bühne beim Weiterscrollen, gehen
     // Wirbelsäule, Karte, Zeilen und Griff mit ihr nach oben (Kai 6.11.: in Chrome lief der Hinweis in die Zeilen)
     const nb = axisNote ? axisNote.getBoundingClientRect() : null, sr = axSticky ? axSticky.getBoundingClientRect() : null, lift = sr ? Math.min(0, sr.top) : 0;
@@ -1169,11 +1237,12 @@ function updateScan(dt, r, inSec) {
     OV.x = OV.init ? OV.x + (tx - OV.x) * (reduced ? 1 : 1 - Math.exp(-dt * 6)) : tx; OV.init = true;
   }
   // ruhige Schrägansicht (Wurzeln zeigen nach links), atmet leicht hin und her
-  const want = PROFILE + 0.5 + (paused || reduced ? 0 : Math.sin(uniforms.uTime.value * 0.35) * 0.1);
+  const want = PROFILE + (pc ? -0.5 : 0.5) + (paused || reduced ? 0 : Math.sin(uniforms.uTime.value * 0.35) * 0.1); // PC: Wurzeln nach rechts
   spineRot += (want + Math.PI * 2 * Math.round((spineRot - want) / (Math.PI * 2)) - spineRot) * (reduced ? 1 : 1 - Math.exp(-dt * 2.2));
   uniforms.uSpineRot.value = spineRot;
   axisWant = null;
-  sil.visible = false; silU.uOn.value = 0; periLabel.style.opacity = 0;
+  if (!pc) { sil.visible = false; silU.uOn.value = 0; }
+  periLabel.style.opacity = 0;
 
   const solid = (inSec ? smooth(VH * 1.0, VH * 0.25, r.top) * (1 - smooth(VH * 0.95, VH * 0.45, r.bottom)) : 0) * spineK;
   const eng = inSec && solid > 0.97 && r.top < VH * 0.12 && r.bottom > VH * 0.9; // Bühne steht
@@ -1218,7 +1287,15 @@ function updateScan(dt, r, inSec) {
   }
   if (near) {
     let zx = OV.x, zy = OV.y, zw = OV.w;
-    if (det && ZM.k > 0.001) {
+    if (det && ZM.k > 0.001 && pc) {
+      // PC: Größe wie die frühere Kamerafahrt (Abstand STOPS.d), Abschnitt bei 56 % Breite, mittig in der Bühne
+      const st = SSTOPS[ZM.idx];
+      _zc.set(0, 0, 0); st.ids.forEach((id) => _zc.add(lvLocal(det.levels.find((l) => l.id === id), _zw))); _zc.divideScalar(st.ids.length);
+      zw = Math.max(OV.w, (13 / (st.d * SC * 0.86)) * PC_ZOOM);
+      const silX = VW - RAIL_W - 34 - 0.095 * GLH; // Mitte der Silhouette (siehe placeSilhouette)
+      screenToWorld(Math.max(VW * 0.56, PC_COL() + (silX - PC_COL()) * 0.36), (SCAN.top + SCAN.bot) / 2, _zc.z * zw, _zw);
+      zx = _zw.x - _zc.x * zw; zy = _zw.y - _zc.y * zw;
+    } else if (det && ZM.k > 0.001) {
       const st = SSTOPS[ZM.idx];
       _zc.set(0, 0, 0); st.ids.forEach((id) => _zc.add(lvLocal(det.levels.find((l) => l.id === id), _zw))); _zc.divideScalar(st.ids.length);
       zw = OV.w * ZOOM[ZM.idx];
@@ -1263,19 +1340,33 @@ function updateScan(dt, r, inSec) {
   const zone = seg >= 0 ? ZONES.indexOf(SSTOPS[seg].zone) : -10, zKey = seg >= 0 ? SSTOPS[seg].zone : null;
   if (zone !== sU.uZone.value) { sU.uZone.value = zone; sU.uZoneAmt.value = 0; sU.uPeri.value = 0; }
   sU.uZoneAmt.value += ((zone >= 0 ? 1 : 0) - sU.uZoneAmt.value) * 0.07;
-  sU.uPeri.value += ((zKey && ML.key === zKey && ZM.k > 0.4 ? 1 : 0) - sU.uPeri.value) * 0.05;
-  if (zKey && det) updatePeri(zKey);
-  scanTexts(zKey, settle);
+  sU.uPeri.value += ((zKey && (pc || ML.key === zKey) && ZM.k > (pc ? 0.75 : 0.4) ? 1 : 0) - sU.uPeri.value) * 0.05;
+  if (pc) {
+    // PC: Silhouette rechts (vor dem Aufzug), Bahn bis ins Versorgungsgebiet, Schilder frei platziert
+    placeSilhouette();
+    const silOn = zKey ? sU.uPeri.value : 0;
+    silU.uOn.value = silOn; sil.visible = silOn > 0.01;
+    if (zKey && det) updatePeri(zKey);
+    if (settle && zKey) { if (TX.zone !== zKey) { TX.zone = zKey; TX.t0 = performance.now(); } } else TX.zone = null;
+    updateCallouts(zKey, TX.zone ? Math.min(0.9, (performance.now() - TX.t0) / 1000 * 0.25) : 0, silOn > 0.5);
+    chipsEl.style.opacity = 0;
+  } else {
+    if (zKey && det) updatePeri(zKey);
+    scanTexts(zKey, settle);
+  }
 
   // Überschrift weicht, sobald gescannt wird; Hinweis geht beim Weiterscrollen mit (nicht über dem Haus stehen lassen)
-  if (axisHead) axisHead.style.opacity = ready && SCAN.demo === 2 ? 0 : '';
-  if (axisNote) axisNote.style.opacity = (1 - smooth(VH * 0.98, VH * 0.62, r.bottom)).toFixed(3);
+  // PC: Textspalte bleibt stehen (2A)
+  if (axisHead && !pc) axisHead.style.opacity = ready && SCAN.demo === 2 ? 0 : '';
+  if (axisNote && !pc) axisNote.style.opacity = (1 - smooth(VH * 0.98, VH * 0.62, r.bottom)).toFixed(3);
+  if (pc && axisHead && axisHead.style.opacity) axisHead.style.opacity = ''; // Fenster vom Handy- auf PC-Format gezogen
+  if (pc && axisNote && (axisNote.style.opacity || NOTE.shift)) { axisNote.style.opacity = ''; axisNote.style.transform = ''; NOTE.shift = 0; }
   scanUI.classList.toggle('on', !!ready);
-  scanRail.classList.toggle('on', !!ready && SCAN.demo === 2);
+  scanRail.classList.toggle('on', !!ready && (pc || SCAN.demo === 2)); // PC: auch während der Vorführfahrt per Tab erreichbar
   if (!ready || y < 0) return;
   // Aufzug rechts: Rinne, Haltestellen und Griff bleiben fest (Übersicht), auch in der Nahansicht – der Griff zeigt,
   // wo man steht; die Scan-Linie über der Wirbelsäule gehört zur Übersicht und tritt in der Nahansicht zurück
-  const yMin = levY[0] - 6, yMax = levY[levY.length - 1] + 6, tx = VW - 26, rTop = yMin - 28;
+  const yMin = levY[0] - 6, yMax = levY[levY.length - 1] + 6, tx = VW - 26 * RK, rTop = yMin - 28 * RK;
   sTrack.style.transform = `translate(${tx - 3}px, ${yMin.toFixed(1)}px)`; sTrack.style.height = (yMax - yMin).toFixed(1) + 'px';
   sTicks.forEach((el, i) => { el.style.transform = `translate(${tx - 10}px, ${stopY[i].toFixed(1)}px)`; el.classList.toggle('is-on', i === seg); });
   stopBtns.forEach((b, i) => { b.style.top = (stopY[i] - rTop).toFixed(1) + 'px'; b.classList.toggle('is-on', i === seg); });
@@ -1283,7 +1374,7 @@ function updateScan(dt, r, inSec) {
   // Name links neben dem Griff, solange die Karte nicht steht (Ziehen, Vorführen)
   const txt = seg >= 0 ? segNames[seg] : levName(det.levels[levY.reduce((b, v, i) => (Math.abs(v - y) < Math.abs(levY[b] - y) ? i : b), 0)].id);
   if (txt !== SCAN.tagTxt) { sTag.textContent = txt; SCAN.tagTxt = txt; SCAN.tagW = sTag.offsetWidth; }
-  sTag.style.transform = `translate(${(VW - RAIL_W - 6 - SCAN.tagW).toFixed(1)}px, ${(y - 14).toFixed(1)}px)`;
+  sTag.style.transform = `translate(${(VW - RAIL_W - 6 - SCAN.tagW).toFixed(1)}px, ${(y - 14 * RK).toFixed(1)}px)`;
   sTag.style.opacity = zoomE < 0.3 ? 1 : 0;
   const lx = SCAN.left - 10;
   sLine.style.transform = `translate(${lx.toFixed(1)}px, ${y.toFixed(1)}px)`; sLine.style.width = Math.max(0, VW - RAIL_W - 6 - (zoomE < 0.3 ? SCAN.tagW + 4 : 0) - lx).toFixed(1) + 'px';
@@ -1291,7 +1382,7 @@ function updateScan(dt, r, inSec) {
   // Wischhilfe: eine Hand zieht den Griff vor, bis man ihn selbst benutzt (Text steht im Kapitel-Hinweis)
   sCoach.classList.toggle('on', !SCAN.touched && SCAN.demo === 2);
   sCoach.style.transform = `translate(${tx}px, ${y.toFixed(1)}px)`;
-  scanRail.style.left = (VW - RAIL_W).toFixed(0) + 'px'; scanRail.style.top = rTop.toFixed(0) + 'px'; scanRail.style.height = (yMax - yMin + 56).toFixed(0) + 'px';
+  scanRail.style.left = (VW - RAIL_W).toFixed(0) + 'px'; scanRail.style.top = rTop.toFixed(0) + 'px'; scanRail.style.height = (yMax - yMin + 56 * RK).toFixed(0) + 'px';
 }
 
 function updateAxis(dt) {
@@ -1301,7 +1392,7 @@ function updateAxis(dt) {
   const inSec = r.top < VH && r.bottom > 0 && morphNow > 1.6 && morphNow < 2.4;
   // noch nicht fertig gerechnet: grobe Partikel bleiben, danach fahren Scan und Kamera sanft nach
   spineK = bones ? ramp(spineK, dt) : 0;
-  if (!desk && scanOn()) { updateScan(dt, r, inSec); return; } // Handy: Scanner (6.11.)
+  if (desk ? pcScan() : scanOn()) { updateScan(dt, r, inSec); return; } // Handy: Scanner (6.11.), PC: Hybrid-Scanner (7.11.)
   scanUI.classList.remove('on'); scanRail.classList.remove('on'); chipsEl.style.opacity = 0; sU.uScanAmt.value = 0;
   if (SCAN.cleared) { SCAN.cleared = false; if (axisHead) axisHead.style.opacity = ''; if (axisNote) axisNote.style.transform = ''; NOTE.shift = 0; }
   const X = uniforms.uXf.value[2];
