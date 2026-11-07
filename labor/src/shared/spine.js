@@ -94,12 +94,13 @@ export function vertebraGeometry(lv) {
     parts.push(capsuleBetween(V(R * 0.85, 0, -R * 0.15), V(1, 0, -0.1), R * 0.75, R * 0.1));
     parts.push(capsuleBetween(V(-R * 0.85, 0, -R * 0.15), V(-1, 0, -0.1), R * 0.75, R * 0.1));
     parts.push(sphereAt(V(0, 0, R * 0.45), R * 0.16)); // Tuberculum anterius
-    return mergeGeometries(parts.map(g => g.toNonIndexed()));
+    return solid(mergeGeometries(parts.map(g => g.toNonIndexed())));
   }
 
   if (reg === 's') {
     // Kreuzbein: fünf verschmolzene, kleiner werdende Segmente mit Flügeln (Alae), nach dorsal gekrümmt
     const n = 5, seg = h / n;
+    let top = null;
     for (let i = 0; i < n; i++) {
       const f = i / (n - 1), r = R * (1 - f * 0.62), y = h / 2 - seg * (i + 0.5), z = -Math.pow(f, 1.6) * R * 0.9;
       const b = new THREE.LatheGeometry(roundedProfile(r, seg * 1.12, 6, 0.9), 30);
@@ -107,18 +108,19 @@ export function vertebraGeometry(lv) {
       b.rotateX(-f * 0.35);
       b.translate(0, y, z);
       parts.push(b.toNonIndexed());
+      if (i === 0) top = { n: parts[0].attributes.position.count, yc: y, hh: seg * 0.56, top: true }; // Deckplatte S1
       // seitliche Massen, oben breit (Alae), nach unten schmaler
       const wing = R * (1.05 - f * 0.75);
       for (const sx of [1, -1]) parts.push(sphereAt(V(sx * wing, y, z - r * 0.2), r * (0.62 - f * 0.25), [1.5, 0.95 + (i === 0 ? 0.6 : 0), 0.8]).toNonIndexed());
       // Dornfortsatz-Höcker (Crista sacralis mediana)
       parts.push(sphereAt(V(0, y, z - r * 0.78), r * 0.18, [0.8, 1.4, 1]).toNonIndexed());
     }
-    return mergeGeometries(parts);
+    return solid(mergeGeometries(parts), top);
   }
 
   if (reg === 'co') {
     for (let i = 0; i < 3; i++) parts.push(sphereAt(V(0, h * 0.35 - i * h * 0.33, -i * 0.05), R * (1 - i * 0.25), [1.1, 0.75, 0.9]));
-    return mergeGeometries(parts.map(g => g.toNonIndexed()));
+    return solid(mergeGeometries(parts.map(g => g.toNonIndexed())));
   }
 
   // --- regulärer Wirbel ---
@@ -153,8 +155,13 @@ export function vertebraGeometry(lv) {
     parts.push(sphereAt(V(s * ra * 0.62, h * 0.42, -R * 1.18), R * 0.11, [1, 1.2, 1]));
     parts.push(sphereAt(V(s * ra * 0.62, -h * 0.42, -R * 1.22), R * 0.1, [1, 1.2, 1]));
   }
-  return mergeGeometries(parts.map(g => (g.index ? g.toNonIndexed() : g)));
+  const g = mergeGeometries(parts.map(g => (g.index ? g.toNonIndexed() : g)));
+  // Wirbelkörper = die ersten Ecken (Teil 0), Rest = Bogen und Fortsätze (Handy-Darstellung „differenziert“, 7.11.2026)
+  g.userData.body = { n: body.index.count, yc: 0, hh: h / 2, top: false };
+  return g;
 }
+// Atlas, Kreuzbein, Steißbein: ganze Form gilt als Knochen ohne Fortsätze; Kreuzbein mit Deckplatte S1
+function solid(g, body = null) { g.userData.solid = true; if (body) g.userData.body = body; return g; }
 
 function discGeometry(R, t) {
   const g = new THREE.LatheGeometry(roundedProfile(R * 0.97, t, 6, 0.8), 36);

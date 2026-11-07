@@ -376,12 +376,13 @@ const sU = {
   uTime: uniforms.uTime, uRot: uniforms.uSpineRot, uCut: uniforms.uCut, uXf: { value: uniforms.uXf.value[2] },
   uZone: { value: -10 }, uZoneAmt: { value: 0 }, uOn: { value: 0 }, uStip: { value: 1 }, uPix: uniforms.uPix,
   uPeri: { value: 0 }, uPeriStart: { value: 0 }, uScan: { value: 100 }, uScanAmt: { value: 0 }, // Scanner (Handy, 6.11.)
-  cBone: { value: C('#F3EADA') }, cDisc: { value: C('#86AFC9') }, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue,
+  uDiff: { value: 0 }, uFine: { value: 0 }, // Handy 7.11.: Wirbelsäule differenziert, Nerv fein (PC vorgemerkt)
+  cBone: { value: C('#F3EADA') }, cDisc: { value: C('#86AFC9') }, cDiscD: { value: C('#4FA8D6') }, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue,
   cSignal: { value: C('#DDF1FF') }, cCore: { value: C('#0E1C22') },
 };
 const GLSL_COMMON = /* glsl */`
-  uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart, uScan, uScanAmt; uniform vec4 uXf;
-  uniform vec3 cBone, cDisc, cAmber, cBlue, cSignal, cCore;
+  uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart, uScan, uScanAmt, uDiff, uFine; uniform vec4 uXf;
+  uniform vec3 cBone, cDisc, cDiscD, cAmber, cBlue, cSignal, cCore;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
   const vec3 LDIR = vec3(.48, .72, .5);`;
 
@@ -408,7 +409,7 @@ const coreMat = new THREE.ShaderMaterial({
 const boneMat = new THREE.ShaderMaterial({
   uniforms: sU,
   vertexShader: GLSL_COMMON + /* glsl */`
-    attribute float aZone, aKind; uniform float uMaxSize;
+    attribute float aZone, aKind, aEdge; uniform float uMaxSize;
     varying vec3 vCol; varying float vVis;
     void main(){
       vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
@@ -419,7 +420,25 @@ const boneMat = new THREE.ShaderMaterial({
       float on = (1. - step(.5, abs(aZone - uZone))) * uZoneAmt;
       vec3 base = aKind < .5 ? cBone : cDisc;
       vec3 col = base * (.22 + .78 * lam) + cBlue * rim * .16;
-      col = mix(col, cAmber * (.35 + .95 * lam), on * (aKind < .5 ? 1. : .4));
+      float sz = 1.;
+      if (uDiff > .5) {
+        // Handy (7.11.): wie eine anatomische Zeichnung – Umriss hell, Fläche zum Betrachter lichter;
+        // Deckplatten helle Kante, Bandscheibe eigene Farbe mit dunkler Fuge, Fortsätze feiner
+        float sil = pow(1. - max(dot(n, V), 0.), 1.6);
+        if (aKind > .5) {
+          float fuge = smoothstep(.62, .92, aEdge);
+          col = cDiscD * (.5 + .5 * lam) * (1. - fuge * .78) + cBlue * sil * .22;
+          sz = .9;
+        } else {
+          float plate = aEdge < 0. ? 0. : smoothstep(.74, .9, aEdge);
+          col = cBone * (.2 + .8 * lam) * mix(.58, 1.2, sil) + cBlue * rim * .12;
+          col = mix(col, cBone * 1.3 + vec3(.08, .05, 0.), plate * .85);
+          sz = aEdge < 0. ? .78 : 1. + plate * .2;
+          if (aEdge < 0.) col *= .78;
+        }
+      }
+      if (uDiff > .5 && aKind > .5) col *= 1. + on * .5; // Handy: Bandscheibe bleibt blau, im Abschnitt heller
+      else col = mix(col, cAmber * (.35 + .95 * lam), on * (aKind < .5 ? 1. : .4));
       float g = exp(-pow((p.y - uCut) * 9., 2.));
       col = mix(col, cAmber * 1.3, g);
       float sc = exp(-pow((p.y - uScan) * 16., 2.)) * uScanAmt; // Scanner: Band unter der Scan-Linie leuchtet
@@ -427,7 +446,7 @@ const boneMat = new THREE.ShaderMaterial({
       vCol = col; vVis = step(uCut, p.y) * uOn;
       vec4 mv = viewMatrix * vec4(p, 1.);
       gl_Position = projectionMatrix * mv;
-      gl_PointSize = clamp(uStip / -mv.z, 1., uMaxSize) * (1. + g * .8 + sc * .7);
+      gl_PointSize = clamp(uStip / -mv.z * sz, 1., uMaxSize) * (1. + g * .8 + sc * .7);
     }`,
   fragmentShader: /* glsl */`
     varying vec3 vCol; varying float vVis;
@@ -446,6 +465,7 @@ function boneStyle(name, d) { // d = det.makeGrain(N_GRAIN) bzw. det.makeSlices(
   g.setAttribute('normal', new THREE.BufferAttribute(d.nor, 3));
   g.setAttribute('aZone', new THREE.BufferAttribute(d.zone, 1));
   g.setAttribute('aKind', new THREE.BufferAttribute(d.kind, 1));
+  g.setAttribute('aEdge', new THREE.BufferAttribute(d.edge || new Float32Array(d.kind.length), 1));
   g.setDrawRange(0, d.count);
   const m = boneMat.clone();
   m.uniforms = { ...sU, uStip: { value: 1 }, uMaxSize: { value: name === 'grain' ? 6.5 : 2.6 } };
@@ -469,7 +489,8 @@ function addNerves() {
   sU.uCurves = { value: curveTex }; sU.uPeriTex = { value: periTex }; sU.uRows = { value: ROWS };
 
   const desk = isDesktop();
-  const nCord = desk ? 2600 : 1300, nRoot = desk ? 34 : 20, nPeri = desk ? 900 : 500;
+  sU.uFine.value = desk ? 0 : 1; // Handy (7.11.): Versorgungsbahn als schmaler Nerv mit vielen schnellen Impulsen
+  const nCord = desk ? 2600 : 1300, nRoot = desk ? 34 : 20, nPeri = desk ? 900 : 1100;
   const nAll = nCord + (ROWS - 1) * nRoot + nPeri;
   const aRow = new Float32Array(nAll), aPhase = new Float32Array(nAll), aSpeed = new Float32Array(nAll), aKindN = new Float32Array(nAll), aZoneN = new Float32Array(nAll), aStart = new Float32Array(nAll), aOff = new Float32Array(nAll * 3);
   let q = 0;
@@ -514,17 +535,23 @@ function addNerves() {
           pk = max(packet(r1 - t, 60.) * step(0., r1) * step(r1, 1.4), packet(r2 - t, 60.) * step(0., r2) * step(r2, 1.4));
           pk *= mix(.28, 1.5, on);
           base = .16 + on * .5;
-        } else {                                   // Versorgungsbahn (Weltkoordinaten)
+        } else if (uFine < .5) {                   // Versorgungsbahn (Weltkoordinaten)
           p = curveAt(uPeriTex, 0., 1., t) + aOff * uXf.w * 4.;
           float r1 = (S1 - uPeriStart) * 4. - 1., r2 = (S2 - uPeriStart) * 4. - 1.;
           pk = max(packet(r1 * .55 - t, 40.) * step(0., r1), packet(r2 * .55 - t, 40.) * step(0., r2)) * uPeri;
           base = .4 * uPeri;
+        } else {                                   // Handy (7.11.): schmaler Nerv, viele schnelle Impulse nach außen
+          p = curveAt(uPeriTex, 0., 1., t) + aOff * uXf.w * .4;
+          float w = fract(t * 9. - uTime * 4.5);
+          pk = pow(w, 10.) * 1.5 * uPeri;          // steile Front, kurzer Nachlauf
+          base = .5 * uPeri;
         }
         vec3 col = cBlue * base + cSignal * pk * 1.15;
         float vis = step(uCut, p.y) * uOn;
         vec4 mv = viewMatrix * vec4(p, 1.);
         gl_Position = projectionMatrix * mv;
-        gl_PointSize = clamp(uPix * (1.05 + pk * 1.4) * 15. / -mv.z, 1., 7.);
+        bool fine = aKind > 2.5 && uFine > .5;
+        gl_PointSize = fine ? clamp(uPix * (.75 + pk * .9) * 15. / -mv.z, 1., 3.6) : clamp(uPix * (1.05 + pk * 1.4) * 15. / -mv.z, 1., 7.);
         vCol = col; vA = vis * clamp(base + pk, 0., 1.4);
       }`,
     fragmentShader: /* glsl */`
@@ -552,7 +579,8 @@ spineGroup.visible = false;
 scene.add(spineGroup);
 whenNear($('#achse'), () => runSliced(spineStippleGen(0, false)).then((d) => {
   det = d; SC = d.SC; CY = d.CY;
-  return runSliced(d.makeSlicesGen(N_SLICE, isDesktop() ? 0.024 : 0.032, 0.12));
+  sU.uDiff.value = isDesktop() ? 0 : 1; // Handy: differenziert (7.11.); PC vorgemerkt
+  return runSliced(d.makeSlicesGen(N_SLICE, isDesktop() ? 0.024 : 0.032, 0.12, !isDesktop()));
 }).then((sl) => {
   const core = new THREE.Mesh(det.coreGeo, coreMat);
   core.frustumCulled = false;
@@ -597,11 +625,14 @@ function updatePeri(zoneKey) {
     // Handy (Option A/Scanner): Zeilen links gestapelt, „Austritt“ auf Höhe der Wurzel; die Bahn endet rechts neben „Ziel“
     const sc = scanOn();
     if (sc) mobPlaceScan(); else mobPlace((-tipNdc.y * 0.5 + 0.5) * GLH);
-    const ex = ML.x + ML.ws[3] + 10, ey = ML.ys[3] + ML.hs[3] / 2;
+    // Scanner (Kai 7.11.): Nerv rechts an allen Zeilen vorbei, nicht hinter ihnen
+    const ex = ML.x + (sc ? Math.max(ML.ws[0], ML.ws[1], ML.ws[2], ML.ws[3]) + 14 : ML.ws[3] + 10), ey = ML.ys[3] + ML.hs[3] / 2;
     end = new V3((ex / VW) * 2 - 1, 1 - (ey / GLH) * 2, tipNdc.z).unproject(camera);
   }
   const endNdc = end.clone().project(camera);
-  const mid = new V3(THREE.MathUtils.lerp(tipNdc.x, endNdc.x, 0.45), THREE.MathUtils.lerp(tipNdc.y, endNdc.y, 0.25) + 0.05, THREE.MathUtils.lerp(tipNdc.z, endNdc.z, 0.5)).unproject(camera);
+  const mid = rows && scanOn()
+    ? new V3(Math.max(tipNdc.x, endNdc.x), THREE.MathUtils.lerp(tipNdc.y, endNdc.y, 0.5), THREE.MathUtils.lerp(tipNdc.z, endNdc.z, 0.5)).unproject(camera)
+    : new V3(THREE.MathUtils.lerp(tipNdc.x, endNdc.x, 0.45), THREE.MathUtils.lerp(tipNdc.y, endNdc.y, 0.25) + 0.05, THREE.MathUtils.lerp(tipNdc.z, endNdc.z, 0.5)).unproject(camera);
   const curve = new THREE.CatmullRomCurve3([tip, tip.clone().lerp(mid, 0.4).add(new V3(0, 0.02, 0)), mid, end]);
   for (let i = 0; i < CURVE_W; i++) { curve.getPointAt(i / (CURVE_W - 1), _pv); periData.set([_pv.x, _pv.y, _pv.z, 1], i * 4); }
   periTex.needsUpdate = true;
@@ -676,7 +707,7 @@ let periCurve = null;
 // Handy (Option A, 5.11.): dieselben Zeilen wie am PC, links gestapelt, mit Linie zur Wirbelsäule/Bahn.
 // „Typisch“ kommt vollständig aus der Karte (kein Inhaltsverlust), steht über der Karte; die Karte selbst zeigt nur
 // Titel + Schlagworte, ihr Volltext bleibt für Vorleseprogramme (dl sr-only). Ohne WebGL bleibt die alte Karte.
-const ML = { key: null, w: 0, x: 16, colW: 160, hs: [0, 0, 0, 0, 0], ws: [0, 0, 0, 0, 0], ys: [0, 0, 0, 0], typY: 0, chipsY: 0, chH: 0, scan: false };
+const ML = { key: null, w: 0, x: 16, colW: 160, hs: [0, 0, 0, 0, 0], ws: [0, 0, 0, 0, 0], ys: [0, 0, 0, 0], typY: 0, chipsY: 0, chH: 0, scan: false, y0: 0, tipT: null, tipKey: null };
 function mobTexts(zoneKey) {
   const info = NINFO[zoneKey], card = cards[STOPS.findIndex((s) => s.zone === zoneKey)];
   const dd = card ? card.querySelectorAll('dd') : [];
@@ -694,7 +725,9 @@ function mobMeasure(zoneKey) {
   ML.key = zoneKey; ML.w = VW; ML.x = pad; ML.scan = sc; ML.colW = colW;
   const card = cards[STOPS.findIndex((s) => s.zone === zoneKey)], chipTxt = card ? [...card.querySelectorAll('.chips li')].map((li) => li.textContent) : [];
   const texts = mobTexts(zoneKey);
-  if (sc && ML.compact) texts[4] += '\nTherapie: ' + chipTxt.join(' · '); // wenig Platz: Schlagworte als Textzeile (Stufe 1)
+  // Scanner-Karte (Kai 7.11.): schmal, „Typisch“ als Kurzfassung – Volltext bleibt in der Karte für Vorleseprogramme
+  let typCard = NINFO[zoneKey].typ;
+  if (sc && ML.compact) typCard += '\nTherapie: ' + chipTxt.join(' · '); // wenig Platz: Schlagworte als Textzeile (Stufe 1)
   texts.forEach((t, i) => {
     const el = ncalls[i]; el.textContent = t;
     el.style.maxWidth = i < 4 ? ML.colW + 'px' : '';
@@ -707,10 +740,11 @@ function mobMeasure(zoneKey) {
     head.className = 'sc-t'; no.className = 'sc-no'; no.textContent = card ? ($('.seg-no', card) || card).textContent.trim() : '';
     h.className = 'sc-h'; h.textContent = card && $('h3', card) ? $('h3', card).textContent.trim() : ''; head.append(no, h);
     list.className = 'sc-c'; list.replaceChildren(...(ML.compact ? [] : chipTxt).map((t) => { const s = document.createElement('span'); s.textContent = t; return s; }));
-    const typ = document.createElement('p'); typ.className = 'sc-typ'; typ.textContent = texts[4];
+    const typ = document.createElement('p'); typ.className = 'sc-typ'; typ.textContent = typCard;
     chipsEl.replaceChildren(head, typ, list);
     chipsEl.classList.toggle('sc-small', ML.compact > 1); // Stufe 2: kleinere Schrift
-    chipsEl.style.width = Math.min(VW - pad - RAIL_W - 8, 576) + 'px'; ML.chH = chipsEl.offsetHeight; // Ziehstreifen bleibt frei
+    // ~60 % Breite (Kai 7.11.: Wirbelsäule rechts daneben besser sichtbar), nie in den Ziehstreifen
+    chipsEl.style.width = Math.min(Math.max(Math.round(VW * 0.6), 200), VW - pad - RAIL_W - 8, 480) + 'px'; ML.chH = chipsEl.offsetHeight;
   }
 }
 // Scanner (Kai 6.11. spät): Karte oben unter der Kopfleiste, darunter links die vier Zeilen; die Kamera legt die Wurzel
@@ -722,7 +756,11 @@ function mobPlaceScan() {
   const top = ML.chipsY + ML.chH + 16, room = SCAN.bot - top;
   if ((ML.compact || 0) < 2 && ML.key && !ML.remeasure && sum + 3 * 6 > room) { ML.compact = (ML.compact || 0) + 1; ML.remeasure = true; } // passt nicht → kompakter neu messen
   const g = clamp((room - sum) / 3, 4, 10);
+  ML.y0 = top; // Lage ohne Verschiebung (danach richtet sich die Nahansicht)
+  // Kai 7.11.: „Austritt“ auf Höhe des Wurzelendes (bei voller Nahansicht), damit der Nerv bis „Ziel“ Länge hat
+  // und die Hinweislinien sauber auf ihm andocken; nie unter den Hinweis
   let y = top;
+  if (ML.tipT != null && ML.tipKey === ML.key) y += clamp(ML.tipT - hs[0] / 2 - top, 0, Math.max(0, room - sum - 3 * g));
   for (let i = 0; i < 4; i++) { ML.ys[i] = y; y += hs[i] + g; }
 }
 addEventListener('resize', () => {
@@ -754,7 +792,7 @@ function updateCalloutsMob(zoneKey, on, prog, opt = null) {
     const vis = show && prog > th[i] && !(sc && i === 4); // Scanner: „Typisch“ steht in der Karte
     if (vis) mlVisT = now;
     el.style.opacity = vis ? 1 : 0; el.style.transitionDuration = dur;
-    if (i < 4) nl[i].style.opacity = vis && (!opt || opt.lines) ? 1 : 0;
+    if (i < 4) nl[i].style.opacity = nring[i].style.opacity = vis && (!opt || opt.lines) ? 1 : 0;
   });
   chipsEl.style.opacity = sc && show && prog > (opt ? opt.chip : MTH[4] + 0.06) ? 1 : 0; chipsEl.style.transitionDuration = dur;
   if (!show) return;
@@ -762,7 +800,10 @@ function updateCalloutsMob(zoneKey, on, prog, opt = null) {
   if (sc) chipsEl.style.transform = `translate(${ML.x}px, ${ML.chipsY.toFixed(1)}px)`;
   [0, 0.33, 0.66, 1].forEach((t, i) => {
     const [ax, ay] = toPx(periCurve.getPointAt(t)), L = nl[i];
-    L.setAttribute('x1', ML.x + ML.ws[i]); L.setAttribute('y1', ML.ys[i] + ML.hs[i] / 2); L.setAttribute('x2', ax); L.setAttribute('y2', ay);
+    // Linie endet am Rand des Andockrings, der Ring sitzt genau auf dem Nerv
+    const x1 = ML.x + ML.ws[i], y1 = ML.ys[i] + ML.hs[i] / 2, dl = Math.hypot(ax - x1, ay - y1) || 1, k = Math.max(0, 1 - 5 / dl);
+    L.setAttribute('x1', x1); L.setAttribute('y1', y1); L.setAttribute('x2', x1 + (ax - x1) * k); L.setAttribute('y2', y1 + (ay - y1) * k);
+    nring[i].setAttribute('cx', ax); nring[i].setAttribute('cy', ay);
   });
 }
 
@@ -802,8 +843,8 @@ function silTarget(zoneKey) {
 // Hinweislinien von der Beschriftung zum Punkt (SVG über der Szene)
 const nlines = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 nlines.setAttribute('class', 'nlines'); nlines.setAttribute('aria-hidden', 'true');
-nlines.innerHTML = '<line/><line/><line/><line/>'; document.body.appendChild(nlines);
-const nl = [...nlines.querySelectorAll('line')];
+nlines.innerHTML = '<line/><line/><line/><line/><circle r="4"/><circle r="4"/><circle r="4"/><circle r="4"/>'; document.body.appendChild(nlines);
+const nl = [...nlines.querySelectorAll('line')], nring = [...nlines.querySelectorAll('circle')]; // Andockringe auf dem Nerv (Handy, 7.11.)
 const toPx = (v) => { const q = v.clone().project(camera); return [(q.x * 0.5 + 0.5) * VW, (-q.y * 0.5 + 0.5) * GLH]; };
 // Hindernisse auf dem Bildschirm: jeder sichtbare Wirbel als Rechteck (inkl. Fortsätze), Silhouette, Zielpunkt
 function spineRects(X = uniforms.uXf.value[2]) { // X: Lage/Größe der Wirbelsäule (Scanner: Übersicht statt Nahansicht)
@@ -832,7 +873,7 @@ function updateCallouts(zoneKey, fl, on) {
   ncalls.forEach((el, i) => {
     const vis = show && fl > steps[i] && fl < 0.97;
     el.style.opacity = vis ? 1 : 0;
-    if (i < 4) nl[i].style.opacity = vis ? 1 : 0;
+    if (i < 4) { nl[i].style.opacity = vis ? 1 : 0; nring[i].style.opacity = 0; } // Andockringe nur am Handy (PC vorgemerkt)
   });
   if (!show) { ncState.forEach((s) => { s.init = false; s.k = -1; }); return; }
   const now = performance.now(), ease = 1 - Math.exp(-Math.min(0.1, (now - ncT) / 1000) * 7); ncT = now;
@@ -990,6 +1031,15 @@ let spineRot = -0.9;
 // einmal von oben nach unten und bleibt bei C1 stehen. Die Seite scrollt normal weiter (nur die Leiste fängt Wischen).
 const SCAN = { idx: 0, y: -1, finger: 0, drag: false, demo: 0, demoT: 0, touched: false, seg: -1, segT: 0, top: 120, bot: 500, left: 0, right: 0, cleared: false, tagTxt: '', tagW: 0, grab: 0 };
 const axisHead = $('#achse .axis-head'), axSticky = $('#achse .axis-sticky'), topBar = $('.top');
+// Ärztlicher Hinweis am echten unteren Fensterrand (Kai 7.11.): die Bühne ist 100svh hoch (Leisten eingeblendet);
+// sind Chromes/Safaris Leisten eingeklappt, rückt der Hinweis per Verschiebung nach unten. Die Fläche der Wirbelsäule
+// bleibt fest (SCAN.bot aus der Lage ohne Verschiebung). Safari: Platz für die schwebende Adress-Pille lassen [O].
+const IOS_SAFARI = /iP(hone|ad|od)/.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(navigator.userAgent);
+const NOTE = { shift: 0, safe: -1 };
+const safeProbe = document.createElement('div'); safeProbe.setAttribute('aria-hidden', 'true');
+safeProbe.style.cssText = 'position:fixed;left:0;bottom:0;width:0;height:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none';
+document.body.appendChild(safeProbe);
+addEventListener('resize', () => { NOTE.safe = -1; });
 const scanUI = document.createElement('div'); scanUI.className = 'scan'; scanUI.setAttribute('aria-hidden', 'true');
 // Griff zum Anfassen (Kai 6.11. spät, „kindlicher“): runder Knopf mit Rillen und ▲▼ in einer Rinne, Name daneben;
 // eine gezeichnete Hand zieht ihn vor, bis man ihn selbst benutzt
@@ -1067,9 +1117,16 @@ function updateScan(dt, r, inSec) {
   if (near) {
     // Bühne aus der echten Lage von Kopfleiste, Bühne und Hinweis: löst sich die Bühne beim Weiterscrollen, gehen
     // Wirbelsäule, Karte, Zeilen und Griff mit ihr nach oben (Kai 6.11.: in Chrome lief der Hinweis in die Zeilen)
-    const nb = axisNote ? axisNote.getBoundingClientRect() : null, lift = axSticky ? Math.min(0, axSticky.getBoundingClientRect().top) : 0;
+    const nb = axisNote ? axisNote.getBoundingClientRect() : null, sr = axSticky ? axSticky.getBoundingClientRect() : null, lift = sr ? Math.min(0, sr.top) : 0;
     const hb = topBar ? topBar.getBoundingClientRect().bottom : 70;
-    SCAN.cardTop = hb + 10 + lift; SCAN.top = hb + 16 + lift; SCAN.bot = (nb && nb.height ? nb.top : MINH - 60) - 12;
+    SCAN.cardTop = hb + 10 + lift; SCAN.top = hb + 16 + lift; SCAN.bot = (nb && nb.height ? nb.top - NOTE.shift : MINH - 60) - 12;
+    if (nb && nb.height && sr) {
+      if (NOTE.safe < 0) NOTE.safe = safeProbe.offsetHeight;
+      // Unterkante ohne Verschiebung, als stünde die Bühne oben → Ziel: echter Fensterrand minus Reserve
+      const natBot = nb.bottom - NOTE.shift - lift, res = IOS_SAFARI ? Math.max(64, NOTE.safe + 30) : NOTE.safe + 6;
+      const sh = Math.max(0, Math.round(VH - res - natBot));
+      if (sh !== NOTE.shift) { NOTE.shift = sh; axisNote.style.transform = sh ? `translateY(${sh}px)` : ''; }
+    }
     const tf = SCAN.top / GLH, bf = SCAN.bot / GLH;
     OV.w = ((bf - tf) * 8.197 * 0.95) / 8.7; OV.y = (0.5 - (tf + bf) / 2) * 8.197;
     // ganze Wirbelsäule zwischen Kopfleiste und Hinweis, rechter Rand am Ziehstreifen
@@ -1131,10 +1188,14 @@ function updateScan(dt, r, inSec) {
       _zc.set(0, 0, 0); st.ids.forEach((id) => _zc.add(lvLocal(det.levels.find((l) => l.id === id), _zw))); _zc.divideScalar(st.ids.length);
       zw = OV.w * ZOOM[ZM.idx];
       if (ML.key === st.zone && ML.hs[0]) mobPlaceScan();
-      const py = ML.key === st.zone && ML.hs[0] ? ML.ys[0] + ML.hs[0] / 2 : SCAN.top + (SCAN.bot - SCAN.top) * 0.4;
+      const py = ML.key === st.zone && ML.hs[0] ? ML.y0 + ML.hs[0] / 2 : SCAN.top + (SCAN.bot - SCAN.top) * 0.4;
       // Abschnitt mittig zwischen Zeilen-Spalte und Ziehstreifen
       screenToWorld(Math.max(VW * 0.55, (ML.x + ML.colW + VW - RAIL_W) / 2 + 6), py, _zc.z * zw, _zw);
       zx = _zw.x - _zc.x * zw; zy = _zw.y - _zc.y * zw;
+      // Wurzelende (links außen) bei voller Nahansicht → Bildschirmhöhe für die Zeilen (mobPlaceScan)
+      let tb = null;
+      det.curves.forEach((c) => { if (c.kind !== 2 || ZONES[c.zone] !== st.zone) return; const e = c.pts[CURVE_W - 1]; _pv.set(e[0], e[1], e[2]).applyAxisAngle(_Y, spineRot); if (!tb || _pv.x < tb.x) tb = _pv.clone(); });
+      if (tb) { ML.tipT = toPx(tb.multiplyScalar(zw).add(_zw.set(zx, zy, 0)))[1]; ML.tipKey = st.zone; }
     }
     const e = ZM.k * ZM.k * (3 - 2 * ZM.k);
     X.set(OV.x + (zx - OV.x) * e, OV.y + (zy - OV.y) * e, 0, OV.w + (zw - OV.w) * e);
@@ -1193,7 +1254,7 @@ function updateAxis(dt) {
   spineK = bones ? ramp(spineK, dt) : 0;
   if (!desk && scanOn()) { updateScan(dt, r, inSec); return; } // Handy: Scanner (6.11.)
   scanUI.classList.remove('on'); scanRail.classList.remove('on'); chipsEl.style.opacity = 0; sU.uScanAmt.value = 0;
-  if (SCAN.cleared) { SCAN.cleared = false; if (axisHead) axisHead.style.opacity = ''; }
+  if (SCAN.cleared) { SCAN.cleared = false; if (axisHead) axisHead.style.opacity = ''; if (axisNote) axisNote.style.transform = ''; NOTE.shift = 0; }
   const X = uniforms.uXf.value[2];
   let mob = null;
   if (!desk && r.top < VH * 2 && r.bottom > -VH) {

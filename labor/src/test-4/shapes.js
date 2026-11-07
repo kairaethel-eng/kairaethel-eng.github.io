@@ -201,6 +201,9 @@ export function logoPoints(N) {
   return { pos, kind };
 }
 
+// Handy „differenziert“ (7.11.2026): Annahme-Anteile je Teil (Rest wie „Schichten“)
+export const DIFF = { disc: 0.3, plate: 0.36, plateE: 0.8, proc: 0.8 };
+
 // ---------- Wirbelsäule für die Kamerafahrt ----------
 // Knochen: gleichmäßig verteilte Punkte (wie ein Kupferstich) + Kern-Geometrie, die die Rückseite verdeckt.
 // Nerven: Kurven (Rückenmark + Wurzeln) als Stützpunkte, auf denen Partikel fließen.
@@ -212,11 +215,28 @@ export function* spineStippleGen(nTarget, makeGrainNow = true) {
   sp.group.updateMatrixWorld(true);
   const SC = 8.2 / sp.Ltot, CY = sp.Ltot / 2;
   const parts = [];
+  // Farbe je Ecke: r = Zone, g = Art (0 Knochen, 1 Bandscheibe), b = Kante (7.11.2026, Handy „differenziert“):
+  // Wirbelkörper/Bandscheibe |y| / halbe Höhe (1 = Deckplatte bzw. Fuge), Bogen und Fortsätze −1, verdeckte Deckfläche −2
   const tag = (m, zone, kind) => {
-    const g = m.geometry.clone().applyMatrix4(m.matrixWorld);
-    const ng = g.index ? g.toNonIndexed() : g;
-    const n = ng.attributes.position.count, col = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) { col[i * 3] = zone; col[i * 3 + 1] = kind; }
+    const loc = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry, ud = m.geometry.userData || {};
+    const g = loc.clone().applyMatrix4(m.matrixWorld);
+    const ng = g;
+    const n = ng.attributes.position.count, col = new Float32Array(n * 3), ly = loc.attributes.position.array;
+    let hh = 1;
+    if (kind === 1) { loc.computeBoundingBox(); hh = Math.max(Math.abs(loc.boundingBox.min.y), loc.boundingBox.max.y) || 1; }
+    const B = ud.body;
+    for (let i = 0; i < n; i++) {
+      col[i * 3] = zone; col[i * 3 + 1] = kind;
+      const y = ly[i * 3 + 1];
+      col[i * 3 + 2] = kind === 1 ? Math.min(1, Math.abs(y) / hh)
+        : B && i < B.n ? Math.min(1, B.top ? Math.max(0, (y - B.yc) / B.hh) : Math.abs(y - B.yc) / B.hh)
+          : ud.solid ? 0 : -1;
+    }
+    // flache Deckflächen (alle drei Ecken auf |y| = halbe Höhe) liegen verdeckt in der Nachbar-Scheibe → −2 (diff: überspringen)
+    for (let i = 0; i < n; i += 3) {
+      const a = col[i * 3 + 2], b = col[i * 3 + 5], c = col[i * 3 + 8];
+      if (a > 0.999 && b > 0.999 && c > 0.999) col[i * 3 + 2] = col[i * 3 + 5] = col[i * 3 + 8] = -2;
+    }
     ng.setAttribute('color', new THREE.BufferAttribute(col, 3));
     parts.push(ng);
   };
@@ -258,8 +278,10 @@ export function* spineStippleGen(nTarget, makeGrainNow = true) {
     return { pos: pos.slice(0, i * 3), nor: nor.slice(0, i * 3), zone: zone.slice(0, i), kind: kind.slice(0, i), count: i, spacing: r * SC };
   }
   // Stil „Schichten“: waagerechte Schnittlinien wie bei einem CT-Schichtbild
-  function* makeSlicesGen(n, step = 0.042, band = 0.16) {
-    const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), zone = new Float32Array(n), kind = new Float32Array(n);
+  // diff (Handy, 7.11.2026): Deckplatten als dichtes Band, Bandscheiben gekörnt statt geschnitten, Fortsätze lichter;
+  // gleiche Punktzahl, nur anders verteilt. edge[i] = Kante (siehe tag) für den Shader.
+  function* makeSlicesGen(n, step = 0.042, band = 0.16, diff = false) {
+    const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), zone = new Float32Array(n), kind = new Float32Array(n), edge = new Float32Array(n);
     // Abtastung wie MeshSurfaceSampler (Fläche gewichtet, baryzentrisch), aber zuerst nur die Höhe:
     // ~88 % der Versuche fallen zwischen die Schnittebenen und werden ohne weitere Rechnung verworfen.
     const dist = sampler.distribution, nF = dist.length, tot = dist[nF - 1];
@@ -274,14 +296,23 @@ export function* spineStippleGen(nTarget, makeGrainNow = true) {
       if (u + w > 1) { u = 1 - u; w = 1 - w; }
       const t = 1 - u - w, a = lo * 9;
       const y = (P[a + 1] * u + P[a + 4] * w + P[a + 7] * t - CY) * SC, f = y / step - Math.floor(y / step);
-      if (Math.abs(f - 0.5) > band / 2) continue;
-      const ys = (Math.floor(y / step) + 0.5) * step; // auf die Schnittebene legen → klare Linien
+      const k = Cc[a + 1] * u + Cc[a + 4] * w + Cc[a + 7] * t, e = Cc[a + 2] * u + Cc[a + 5] * w + Cc[a + 8] * t;
+      let free = false; // frei = nicht auf eine Schnittebene gelegt
+      if (diff && e < -1.5) continue; // verdeckte Deckfläche
+      if (diff && k > 0.5) { if (Math.random() > DIFF.disc) continue; free = true; } // Bandscheibe: Körnung
+      else if (diff && e > DIFF.plateE) { if (Math.random() > DIFF.plate) continue; free = true; } // Deckplatte: Band
+      else {
+        if (Math.abs(f - 0.5) > band / 2) continue;
+        if (diff && e < 0 && Math.random() > DIFF.proc) continue; // Fortsätze lichter
+      }
+      const ys = free ? y : (Math.floor(y / step) + 0.5) * step; // auf die Schnittebene legen → klare Linien
       pos[i * 3] = (P[a] * u + P[a + 3] * w + P[a + 6] * t) * SC; pos[i * 3 + 1] = ys + (y - ys) * 0.25; pos[i * 3 + 2] = (P[a + 2] * u + P[a + 5] * w + P[a + 8] * t) * SC;
+      edge[i] = e;
       const nx = Nn[a] * u + Nn[a + 3] * w + Nn[a + 6] * t, ny = Nn[a + 1] * u + Nn[a + 4] * w + Nn[a + 7] * t, nz = Nn[a + 2] * u + Nn[a + 5] * w + Nn[a + 8] * t, nl = Math.hypot(nx, ny, nz) || 1;
       nor[i * 3] = nx / nl; nor[i * 3 + 1] = ny / nl; nor[i * 3 + 2] = nz / nl;
-      zone[i] = Cc[a] * u + Cc[a + 3] * w + Cc[a + 6] * t; kind[i] = Cc[a + 1] * u + Cc[a + 4] * w + Cc[a + 7] * t; i++;
+      zone[i] = Cc[a] * u + Cc[a + 3] * w + Cc[a + 6] * t; kind[i] = k; i++;
     }
-    return { pos, nor, zone, kind, count: i, spacing: step };
+    return { pos, nor, zone, kind, edge, count: i, spacing: step };
   }
   // Kern (leicht nach innen versetzt), Formkoordinaten
   const core = new Float32Array(P.length);
