@@ -547,7 +547,9 @@ function addNerves() {
           base = .5 * uPeri;
         }
         vec3 col = cBlue * base + cSignal * pk * 1.15;
-        float vis = step(uCut, p.y) * uOn;
+        // Handy (7.11.): fertig aufgebaut → Wurzeln/Bahn unterhalb des Steißbeins (S1) nicht abschneiden
+        float cut = (uFine > .5 && aKind > 1.5 && uCut < uXf.y - 4.3 * uXf.w) ? -1e4 : uCut;
+        float vis = step(cut, p.y) * uOn;
         vec4 mv = viewMatrix * vec4(p, 1.);
         gl_Position = projectionMatrix * mv;
         bool fine = aKind > 2.5 && uFine > .5;
