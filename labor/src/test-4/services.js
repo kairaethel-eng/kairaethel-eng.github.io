@@ -8,6 +8,7 @@ import { runSync } from '../shared/slice.js';
 const R = Math.random;
 // Bewegungsarten (im Shader): 0 ruhig · 1 Hände drücken · 2 Welle läuft nach außen · 3 Drehen (Atlas) · 4 Kiefer öffnet
 // 5 Wärme steigt · 6 Pendeln · 7 Springen · 8 Netz wogt · 9 Funke · 10 Schmerzwelle beruhigt sich · 11 Liegenteil kippt · 12 Heben
+// 13 Gelenk öffnen (Manuelle Therapie, beide Seiten auseinander)
 const P = () => ({ list: [] });
 const add = (m, w, fn) => m.list.push({ w, fn });
 const v = (x, y, z) => [x, y, z];
@@ -31,8 +32,97 @@ function hand(sx, y = 0.15, a = 1) {
   parts.push(T(2.6, capsule([sx * 0.55, y - 0.02, 0.26], [sx * 0.3, y - 0.08, 0.42], 0.055), 0, a));
   return parts;
 }
+
+// ---------- Manuelle Therapie (7.11. spät): zwei Hände umgreifen ein Kniegelenk ----------
+// Bein liegt quer (Achse x), Hände von hinten oben: Handrücken gewölbt (Knöchel, Sehnen), Handfläche quer leicht hohl,
+// Finger aus drei Gliedern, deren Gelenke auf einem Kreis um das Bein liegen (legen sich um das Bein), Daumen abgewinkelt
+// oben am Bein zum Gelenkspalt. Punktanteile = Fläche × Dichte. Bewegung 13: beide Seiten ziehen sanft auseinander.
+const vAdd = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], vSc = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+const vSub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], vLen = (a) => Math.hypot(a[0], a[1], a[2]), vN = (a) => vSc(a, 1 / (vLen(a) || 1));
+const vX = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+// Röhre durch Stützpunkte {p, r}, Gelenke als Kugeln; ref = Richtung, entlang der der Querschnitt um fl gestaucht wird
+function tube(nodes, ref = null, fl = 1) {
+  const items = [];
+  for (let i = 0; i < nodes.length - 1; i++) {
+    const a = nodes[i], b = nodes[i + 1], d = vSub(b.p, a.p), L = vLen(d), u = vSc(d, 1 / L);
+    const rr = ref || (Math.abs(u[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0]);
+    const n1 = vN(vSub(rr, vSc(u, rr[0] * u[0] + rr[1] * u[1] + rr[2] * u[2]))), n2 = vX(u, n1);
+    items.push({ A: Math.PI * (a.r + b.r) * L * (1 + fl) / 2, f: () => { const t = R(), g = R() * 6.283, r = a.r + (b.r - a.r) * t; return vAdd(vAdd(a.p, vSc(d, t)), vAdd(vSc(n1, Math.cos(g) * r * fl), vSc(n2, Math.sin(g) * r))); } });
+  }
+  nodes.forEach((nd, i) => { if (i === 0) return; const r = nd.r * (i === nodes.length - 1 ? 1 : 1.06); items.push({ A: 2 * Math.PI * r * r * (i === nodes.length - 1 ? 1 : 0.6), f: () => { const u = R() * 2 - 1, g = R() * 6.283, q = Math.sqrt(1 - u * u); return vAdd(nd.p, [q * Math.cos(g) * r, u * r, q * Math.sin(g) * r]); } }); });
+  return pick(items);
+}
+function pick(items) { // Flächen-gewichtete Auswahl
+  const A = items.reduce((s, it) => s + it.A, 0); let acc = 0; const cum = items.map((it) => (acc += it.A / A));
+  const fn = () => { const x = R(); let i = 0; while (i < cum.length - 1 && cum[i] < x) i++; return items[i].f(); };
+  return { A, fn, f: fn };
+}
+const GRIP = { yl: -0.2, rl: 0.2, phiP: 0.2, xh: 0.6 };
+function gripHand(sx) {
+  const { yl, rl, phiP } = GRIP, xh = sx * GRIP.xh;
+  const at = (phi, rad, x) => [x, yl + Math.cos(phi) * rad, Math.sin(phi) * rad]; // Zylinderkoordinaten um das Bein (0 = oben, + nach vorn)
+  // Handfläche: Mittelebene auf einem flacheren Bogen (Radius Rb) tangential am Bein, Ort (f längs, w quer zum Daumen, d dorsal)
+  const Lp = 0.44, th = (f) => 0.052 - f * 0.012, hw = (f) => 0.15 + f * 0.085, fc = 0.2;
+  const Rg = rl + 0.058, Rb = Rg / 0.55, C0 = [Math.cos(phiP) * (Rg - Rb), Math.sin(phiP) * (Rg - Rb)];
+  const palm = (f, w, d) => { const ps = phiP + (f - fc) / Rb, r = Rb + d; return [xh - sx * w, yl + C0[0] + Math.cos(ps) * r, C0[1] + Math.sin(ps) * r]; };
+  const WI = [0.135, 0.045, -0.045, -0.13], KO = [-0.012, 0.01, -0.006, -0.04]; // Zeige-, Mittel-, Ring-, Kleinfinger (w zum Daumen)
+  const LEN = [[0.2, 0.12, 0.09], [0.22, 0.135, 0.095], [0.21, 0.13, 0.09], [0.165, 0.1, 0.08]], RS = [1, 1.02, 0.97, 0.85];
+  const SPR = [0.07, 0.015, -0.03, -0.09]; // Fächer: Drift in w je Längeneinheit
+  // Handrücken: Wölbung quer, Knöchel-Höcker, Sehnen-Grate zu den Fingern
+  const dors = (f, w) => {
+    const u = w / hw(f); let d = th(f) + 0.022 * (1 - u * u);
+    for (let k = 0; k < 4; k++) {
+      const wk = WI[k] * (0.55 + 0.45 * f / Lp);
+      d += 0.022 * Math.exp(-(((w - WI[k]) / 0.032) ** 2) - (((f - Lp - KO[k] + 0.01) / 0.04) ** 2)) + 0.006 * Math.exp(-(((w - wk) / 0.013) ** 2)) * Math.min(1, f / 0.12);
+    }
+    return d;
+  };
+  const items = [];
+  const fw = () => { let f, w; do { f = R() * Lp; w = (R() * 2 - 1) * hw(Lp); } while (Math.abs(w) > hw(f)); return [f, w]; };
+  items.push({ A: Lp * 2 * hw(Lp * 0.6) * 1.1, f: () => { const [f, w] = fw(); return palm(f, w, dors(f, w)); } }); // Rücken (sichtbar)
+  items.push({ A: Lp * 2 * hw(Lp * 0.6) * 0.3, f: () => { const [f, w] = fw(), u = w / hw(f); return palm(f, w, -th(f) - 0.012 * (1 - u * u)); } }); // Fläche (verdeckt, licht)
+  items.push({ A: Lp * 2 * 0.1 * 0.8, f: () => { const f = R() * Lp, s = R() < 0.5 ? -1 : 1, a = (R() - 0.5) * Math.PI; return palm(f, s * (hw(f) + Math.cos(a) * 0.012), Math.sin(a) * th(f)); } }); // Ränder
+  // Finger: Gelenke auf dem Kreis Rf um das Bein → Glieder sind Sehnen des Kreises, Beugung ergibt sich
+  for (let k = 0; k < 4; k++) {
+    const rf = 0.041 * RS[k], Rf = rl + rf + 0.006;
+    const f0 = Lp + KO[k], K = palm(f0, WI[k], 0.004);
+    let phi = Math.atan2(K[2], K[1] - yl), rad = Math.hypot(K[1] - yl, K[2]), w = WI[k];
+    const nodes = [{ p: K, r: rf * 1.08 }];
+    LEN[k].forEach((L, j) => {
+      // nächster Punkt auf dem Kreis Rf im Abstand L (vorwärts); Startradius ≥ Rf
+      const c = (rad * rad + Rf * Rf - L * L) / (2 * rad * Rf), dphi = Math.acos(Math.max(-1, Math.min(1, c)));
+      phi += dphi; rad = Rf; w += SPR[k] * L;
+      nodes.push({ p: at(phi, rad, xh - sx * w), r: rf * [0.95, 0.86, 0.74][j] });
+    });
+    items.push(tube(nodes, [sx, 0, 0], 0.88));
+  }
+  // Daumen: aus dem Handballen schräg nach vorn-innen, Glieder oben auf dem Bein zum Gelenkspalt
+  const rt = 0.05, Rt = rl + rt + 0.004;
+  const tn = [{ p: palm(0.08, 0.13, -0.035), r: rt * 1.15 }, { p: at(phiP + 0.45, Rt + 0.012, xh - sx * 0.3), r: rt }, { p: at(phiP + 0.64, Rt, xh - sx * 0.375), r: rt * 0.9 }, { p: at(phiP + 0.8, Rt, xh - sx * 0.43), r: rt * 0.74 }];
+  items.push(tube(tn, null, 1));
+  items.push({ A: 0.035, f: () => { const p = ell([0, 0, 0], [0.1, 0.05, 0.08])(); return palm(0.14 + p[0], 0.1 + p[2], -0.05 + p[1]); } }); // Daumenballen
+  // Unterarm: vom Handgelenk nach hinten oben, leicht nach außen, ovaler Querschnitt, nach hinten lichter
+  const Wr = palm(0, 0, 0), Fw = vN(vSub(palm(0.05, 0, 0), Wr)), Dw = vN(vSub(palm(0, 0, 0.05), Wr));
+  const ax = vN(vAdd(vAdd(vSc(Fw, -0.62), vSc(Dw, 0.72)), [sx * 0.22, 0, 0])), side = [-sx, 0, 0];
+  const up = vN(vX(ax, side)), FL = 0.62;
+  items.push({ A: 2 * Math.PI * 0.1 * FL * 0.55, f: () => { let t; do { t = 0.06 + R() * 0.94; } while (R() < t * 0.75); const g = R() * 6.283, a = 0.13 + t * 0.03, b = 0.06 + t * 0.035;
+    return vAdd(vAdd(Wr, vSc(ax, t * FL)), vAdd(vSc(side, Math.cos(g) * a), vSc(up, Math.sin(g) * b))); } });
+  return pick(items);
+}
+function gripLimb() {
+  const { yl, rl, phiP, xh } = GRIP;
+  // Bein: Oberschenkel links, Unterschenkel rechts, zum Gelenk hin breiter (Kondylen / Tibiaplateau); unter den Händen ausgespart
+  const rad = (x) => { const a = Math.abs(x); return rl + 0.045 * Math.exp(-(((a - 0.12) / 0.1) ** 2)) - (x > 0 ? 0.03 * Math.min(1, a / 1.2) : 0); };
+  const under = (x, phi) => Math.abs(Math.abs(x) - xh) < 0.21 && phi > phiP - 0.9 && phi < phiP + 2.4;
+  return () => { for (;;) { const x = (R() < 0.5 ? -1 : 1) * (0.045 + R() * 1.25), phi = R() * 6.283 - 3.1416; if (under(x, phi)) continue; const r = rad(x); return [x, yl + Math.cos(phi) * r, Math.sin(phi) * r]; } };
+}
+const gripGap = () => { const g = R() * 6.283, r = GRIP.rl + 0.03 + (R() - 0.5) * 0.02; return [(R() - 0.5) * 0.03, GRIP.yl + Math.cos(g) * r, Math.sin(g) * r]; };
+function manualGrip() {
+  const hl = gripHand(-1), hr = gripHand(1), dens = 26; // Gewichte ≈ Fläche × Dichte
+  return [T(hl.A * dens, hl.fn, 0, 13), T(hr.A * dens, hr.fn, 0, 13), T(8, gripLimb(), 4, 13), T(2.4, gripGap, 1, 2, () => R())];
+}
 export const MOTIFS = [
-  { name: 'Manuelle Therapie', parts: () => [...hand(1), ...hand(-1), T(6, ring([0, -0.22, 0], 0.2, 0, 6.283, 'xz', 0.06), 1, 0), T(3, ell([0, -0.22, 0], [0.1, 0.07, 0.1]), 1, 0), T(5, ring([0, -0.36, 0], 0.26, 0, 6.283, 'xz', 0.05), 4, 0)] },
+  { name: 'Manuelle Therapie', parts: manualGrip },
   { name: 'Krankengymnastik', parts: () => [T(6, capsule([-0.5, 0, 0], [0.5, 0, 0], 0.045), 0, 12), T(8, () => { const s = R() < 0.5 ? -1 : 1, p = ell([s * 0.5, 0, 0], [0.07, 0.24, 0.24])(); return p; }, 0, 12), T(8, () => { const s = R() < 0.5 ? -1 : 1; return ell([s * 0.64, 0, 0], [0.05, 0.19, 0.19])(); }, 4, 12),
     T(5, () => { const a = -1.2 + R() * 2.4; return [Math.sin(a) * 0.95, -0.15 + Math.cos(a) * 0.55 - 0.35, 0]; }, 1, 2, (p) => (p[0] + 1) / 2), T(5, seg([-1.2, -0.75, -0.4], [1.2, -0.75, 0.4]), 4, 0)] },
   { name: 'Sport-Physiotherapie', parts: () => [T(14, ell([0.25, -0.05, 0], [0.32, 0.32, 0.32]), 0, 7), T(3, ring([0.25, -0.05, 0], 0.325, 0, 6.283, 'xy', 0.02), 1, 7),
@@ -117,7 +207,8 @@ export function* initServicesGen(canvas, ui = {}) {
         else if (type > 8.5 && type < 9.5) al = step(.4, fract(sin(floor(t * 12.) * 1.7 + aRnd.x * 91.) * 43758.5)) * 1.4;
         else if (type > 9.5 && type < 10.5) { float calm = smoothstep(-.3, .7, sin(t * .55)); b.y += mix(zig(b.x + ph), sin(b.x * 2.6 + t * 1.2 + ph * 2.) * .14, calm); }
         else if (type > 10.5 && type < 11.5) { b = rotZ(b - vec3(.22, 0., 0.), sin(t * .9) * .22) + vec3(.22, 0., 0.); }
-        else if (type > 11.5) b.y += (.5 + .5 * sin(t * 1.4)) * .3;
+        else if (type > 11.5 && type < 12.5) b.y += (.5 + .5 * sin(t * 1.4)) * .3;
+        else if (type > 12.5) b.x += sign(b.x) * .035 * (.5 + .5 * sin(t * 1.1)); // Gelenk: beide Seiten ziehen sanft auseinander
         float k = smoothstep(aRnd.y * .35, aRnd.y * .35 + .65, uT);
         vec3 dir = normalize(aRnd - .5 + 1e-4);
         vec3 p = mix(position, b, k) + dir * sin(k * 3.14159) * .25;
