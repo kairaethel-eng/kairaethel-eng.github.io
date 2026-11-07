@@ -2380,6 +2380,10 @@ if (!reduced) requestAnimationFrame(() => {
     load.addEventListener('click', () => {
       frame = document.createElement('iframe');
       frame.title = 'Online-Terminkalender HOP (Optica Viva)';
+      // Prüfung 7.11. P1: Fremdseite im Rahmen einsperren (keine Umleitung der Hauptseite, kein Plugin/Download); Skripte, Formular, Speicher (reCAPTCHA/Cookie) und Popups bleiben erlaubt.
+      // Zum Vergleich ohne Käfig: Adresse mit ?sandbox=0 öffnen.
+      if (new URLSearchParams(location.search).get('sandbox') !== '0') frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-storage-access-by-user-activation');
+      frame.referrerPolicy = 'strict-origin-when-cross-origin';
       frame.src = box.dataset.src;
       frame.addEventListener('load', () => box.classList.add('loaded'), { once: true });
       box.appendChild(frame);
