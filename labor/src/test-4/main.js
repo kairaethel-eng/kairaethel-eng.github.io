@@ -490,7 +490,7 @@ function addNerves() {
 
   const desk = isDesktop();
   sU.uFine.value = desk ? 0 : 1; // Handy (7.11.): Versorgungsbahn als schmaler Nerv mit vielen schnellen Impulsen
-  const nCord = desk ? 2600 : 1300, nRoot = desk ? 34 : 20, nPeri = desk ? 900 : 1100;
+  const nCord = desk ? 2600 : 1300, nRoot = desk ? 34 : 40, nPeri = desk ? 900 : 1100; // Handy 7.11.: Wurzeln dichter (S1-Wurzel bis zum Nerv sichtbar)
   const nAll = nCord + (ROWS - 1) * nRoot + nPeri;
   const aRow = new Float32Array(nAll), aPhase = new Float32Array(nAll), aSpeed = new Float32Array(nAll), aKindN = new Float32Array(nAll), aZoneN = new Float32Array(nAll), aStart = new Float32Array(nAll), aOff = new Float32Array(nAll * 3);
   let q = 0;
