@@ -1,14 +1,15 @@
-# Übergabe – Stand 7.11.2026 (Handy: Scanner Runde 1+2, Kap. 04, Hausordnung automatisch – iPhone-Test offen; Livegang vorbereitet seit 2.11.)
+# Übergabe – Stand 7.11.2026 (Handy + PC: Scanner/Wirbelsäule, Th7–Th12, Kap. 04, Hausordnung automatisch – PC-Test offen; Livegang vorbereitet seit 2.11.)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
 
-## ▶ Nächster Chat: hier weitermachen (Stand 7.11.2026, Runde 2)
+## ▶ Nächster Chat: hier weitermachen (Stand 7.11.2026, PC nachgezogen)
 Start-Prompt: „Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md` (Abschnitt ▶), `labor/ENTSCHEIDUNGEN.md` → „Scanner – 4 Kleinigkeiten“ und „Runde 2“. Hier mein iPhone-Ergebnis: …“
+**7.11. PC nachgezogen (Kai: „passt im Moment so alles, nun am PC die relevanten Sachen“) – ✅ umgesetzt:** Th7–Th12 überall 6. Station (PC Kapitel 03 530vh) · Nerv fein ab Wirbel + Andockringe · Wirbelsäule differenziert · Hausordnung automatisch. Details `ENTSCHEIDUNGEN.md` → „PC nachgezogen“. **Offen von Kai:** PC-Test (Chrome, auch 2560×1440).
 **7.11. Runde 2 (Go Kai „1A 2a 3A nur mobil, alles Wichtige für PC merken“ + Hausordnung automatisch) – ✅ umgesetzt, nur Handy:** Nerv beginnt am Wirbel (ein Strang bis „Ziel“) · Kap. 04: Überschrift oben, Haus mittig, Knöpfe unten · 6. Haltestelle Th7–Th12 im Scanner ([A] Texte prüfen) · Hausordnung wechselt von selbst (~5 s je §, Puls-Striche, antippen). Details `ENTSCHEIDUNGEN.md` → „Runde 2“.
 **7.11. Runde 1 – 4 Kleinigkeiten – ✅ umgesetzt, nur Handy:** Hinweis am echten unteren Rand · Nerv fein + Andockringe · Karte 60 % + Kurz-„Typisch“ · Wirbelsäule differenziert. Kai: „jetzt wird es gut“.
 - **Offen von Kai:** iPhone-Test Safari + Chrome (Nerv am Wirbel, Th7–Th12-Texte fachlich, Kap. 04 Überschrift/Haus, Hausordnung-Tempo). [O] Safari iOS 26: Hinweis-Reserve `IOS_SAFARI` (`NOTE`) ggf. anpassen.
-- **Für den PC vorgemerkt:** siehe `ENTSCHEIDUNGEN.md` → „Für den PC vorgemerkt“ (Runde 1) und „(Runde 2)“. Nur nach Kais Go.
+- ~~Für den PC vorgemerkt~~ → am 7.11. umgesetzt (siehe oben).
 - Geprüft (Container): Scanner 390×844, 390×664, 320×568 alle Haltestellen; Kap. 04 + Hausordnung 390×844; keine Konsolenfehler.
 
 ## Stand 5.11.2026 – was noch aussteht (Kai)
