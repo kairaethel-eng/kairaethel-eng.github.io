@@ -1739,13 +1739,13 @@ function xrayPose() {
 // Handy (Kai 7.11., 2A): Überschrift oben, Knöpfe unten – das Haus steht in der freien Fläche dazwischen. Gerechnet in der
 // Lage „Bühne steht“ (relativ zur Bühnen-Oberkante), damit das Haus beim Hereinscrollen nicht mitwandert.
 const tourStickyEl = $('.tour-sticky'), tourKickerEl = $('#tour .tour-kicker');
-let roofFyV = 0.3, roofFyT = 0;
+let roofFyV = 0.3, roofFyT = 0, roofMid = 0; // roofMid: Mitte der freien Fläche (px ab Bühnen-Oberkante)
 function roofFy() {
   const now = performance.now();
   if (now - roofFyT > 500 && tourStickyEl && roofIntro && tourKickerEl) {
     roofFyT = now;
     const st = tourStickyEl.getBoundingClientRect().top, ib = roofIntro.getBoundingClientRect().bottom - st, kt = tourKickerEl.getBoundingClientRect().top - st;
-    if (kt > ib + 40) roofFyV = clamp(((ib + kt) / 2) / GLH + ROOF_FY_OFF, 0.3, 0.75);
+    if (kt > ib + 40) { roofMid = (ib + kt) / 2; roofFyV = clamp(roofMid / GLH + ROOF_FY_OFF, 0.3, 0.75); }
   }
   return roofFyV;
 }
@@ -1778,7 +1778,7 @@ function updateTour(dt) {
   const pv = morphNow > 2.55 && morphNow < 3.45 ? pvIn * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) * (1 - listK) * (desk ? 1 : 1 - houseGone()) : 0;
   xray = pv;
   if (tourIdx >= 0) tourEngaged = true; else if (!tourInView()) tourEngaged = false;
-  xrayCalm += ((desk || tourEngaged ? 1 : 0.25) - xrayCalm) * (1 - Math.exp(-dt * 3));
+  xrayCalm += ((desk || tourEngaged ? 1 : 0.6) - xrayCalm) * (1 - Math.exp(-dt * 3)); // Handy 7.11.: Text steht über dem Haus, nicht mehr darauf → weniger dämpfen (vorher 0.25)
   tU.uCut.value = inside > 0.001 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
   tU.uOn.value = inside > 0.001 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0.001 || pv > 0;
   tU.uFade.value = inside > 0.001 ? Math.max(inside, pv * 0.55 * xrayCalm) : pv * 0.55 * xrayCalm;
@@ -2127,7 +2127,7 @@ function updateHints(dt) {
   xrayT = houseReady ? xrayT + dt : 0;
   const showHouse = !houseUsed && xrayT > (desk ? 3 : 1);
   hintHouse.classList.toggle('on', showHouse);
-  if (showHouse) hintHouse.style.transform = desk ? `translate(${VW * 0.72}px, ${VH * 0.84}px) translate(-50%,-50%)` : `translate(${VW * 0.5}px, ${VH * 0.36}px) translate(-50%,-50%)`;
+  if (showHouse) hintHouse.style.transform = desk ? `translate(${VW * 0.72}px, ${VH * 0.84}px) translate(-50%,-50%)` : `translate(${VW * 0.5}px, ${(roofMid && tourStickyEl ? tourStickyEl.getBoundingClientRect().top + roofMid : VH * 0.36).toFixed(1)}px) translate(-50%,-50%)`; // Handy 7.11.: mitten auf dem Haus, wandert mit der Bühne
   // Manuthera-Liege
   if (hintManu) { manuT = manuK > 0.8 ? manuT + dt : 0; hintManu.classList.toggle('on', !manuUsed && manuT > 1.5); }
 }
