@@ -167,7 +167,7 @@ const vert = /* glsl */`
       float relax = texture2D(uRelax, vec2(uv.x, 1.-uv.y)).r;
       float tension = aHeat * (1. - relax);
       float breath = sin(uBreath) * (1. + uCalm*1.3); // entspannt: ruhiger, tiefer Atem
-      p = position * vec3(1. + breath*.007, 1. + breath*.004, 1.) + jitter(.012*(1. - uCalm*.6) + tension*.11, 6. + tension*10.);
+      p = position * vec3(1. + breath*.007, 1. + breath*.004, 1.) + jitter(.012*(1. - uCalm*.6) + tension*.06, 5.); // Spannung (8.11., Option C): Ausschlag ±4 statt ±7,5 px, Takt fest ≈ 1 Hz statt 3–4 Hz → wabert statt zu flimmern; fester Takt = kein Phasensprung beim Lösen
       p = rotY(p, sin(uTime*.25)*.32);
       vec3 base = mix(cPetrol, cBone, .25 + aRand.y*.35);
       float throb = .7 + .3*sin(uTime*3.4 + aRand.x*.8);
@@ -2052,7 +2052,7 @@ function manuVisible() {
 // ---------- Schleife ----------
 const timer = new THREE.Timer(); // (THREE.Clock ist veraltet)
 const top = $('#top');
-// Handy: im Stillstand nur jedes zweite Bild rendern (Akku), beim Scrollen volle Rate
+// Handy: im Stillstand nur jedes zweite Bild rendern (Akku), beim Scrollen und im Hero volle Rate
 let lastInput = 0, frameN = 0;
 ['scroll', 'touchmove', 'pointermove'].forEach((ev) => addEventListener(ev, () => (lastInput = performance.now()), { passive: true }));
 // Taktgeber-Reserve: iOS hält requestAnimationFrame in eingebetteten Vorschau-Rahmen an, solange niemand
@@ -2067,9 +2067,9 @@ function tick() {
   frameN++;
   if (sheetOpen && !isDesktop()) return; // Handy: Termin-Blatt deckt die Szene ab → nicht rendern (Akku)
   if (egoOpen) return; // Rundgang aus Augenhöhe offen: eigene Bühne zeichnet, die Seite ruht (Akku)
-  if (!viaWatchdog && !isDesktop() && performance.now() - lastInput > 1500 && frameN % 2) return;
+  if (!viaWatchdog && !isDesktop() && morphNow >= 0.6 && performance.now() - lastInput > 1500 && frameN % 2) return; // Hero (Figur sichtbar): immer volle Rate (8.11., Option C)
   timer.update();
-  const dt = Math.min(timer.getDelta(), 0.05);
+  const dt = Math.min(timer.getDelta(), 0.1); // 0,1 statt 0,05 (8.11.): Zeit läuft auch bei 15 B/s (Stromsparmodus) richtig
   uniforms.uTime.value += paused ? 0 : dt * CALM;
   uniforms.uCalm.value += ((calm ? 1 : 0) - uniforms.uCalm.value) * Math.min(1, dt * 0.8);
   uniforms.uBreath.value += paused ? 0 : dt * CALM * (1.15 - uniforms.uCalm.value * 0.45);
