@@ -5,6 +5,10 @@
 
 ## ▶ Nächster Chat: hier weitermachen (Stand 7.11.2026 spät)
 
+### ✅ Handy: HOP-Logo früher und mittig vor der Hausordnung (Go Kai 8.11., Option A, `main.js`, `live/` neu gebaut)
+Ursache: Formwechsel Haus → Logo lief erst über die Oberkante der Hausordnung (0,95 → 0,05 vh), die Leistungsliste blendete die Partikel bis ~0,25 vh Listenende aus → Logo erst bei ~60 % des Wechsels sichtbar, fest bei ~22 % der Bildhöhe, darunter 0,54 vh Leere. **Jetzt (nur Handy, PC unverändert):** Formwechsel an das Listenende gekoppelt (`logoGeo.list`, Listenende 1,25 → 0,55 vh); Logo blendet unter der Liste ein (`logoIn`, Listenende 0,7 → 0,5 vh; `listK` wird am Handy damit multipliziert) und steht mittig zwischen Listenende/Leiste und Kicker „§ Die Hausordnung“ (`logoPlace`, max. 0,6 vh, mind. 75 px unter der Liste), steigt mit dem Text auf und landet wie vorher bei ~25 %. Leiste zeigt am Handy „04 Dach“, bis die Hausordnung im Bild ist (`ci`-Kappe). Lage/Kicker einmal gemessen (`logoGeo`, wie `chapTop` per `chapDirty` erneuert). Geprüft: 390×844 Versatz −1,0…0 (SwiftShader, WAIT 12000), PC 1440 (unverändert), „Bewegung reduzieren“, keine Konsolenfehler. **Offen [O]:** iPhone-Test (Safari-Leiste, `GLH`); 320×568 nicht eigens geprüft.
+
+
 > **Zuerst Kai fragen:** Wie war der iPhone-Test „Rundgang aus Augenhöhe“ (Kap. 04)? Am PC sagt Kai „super“ (7.11. spät). Abfragen: Anflug zur Tür, Tempo der Fahrt, Zurück-Wischgeste in Safari schließt den Rundgang, Knopfzeile lesbar, Aufbau beim ersten Klick, Seite scrollt beim Wischen auf den Knöpfen nicht mit. Rückmeldung = kein Auftrag → je Punkt Optionen, Go abwarten.
 
 ### 🩺 Diagnose „Hero ruckelt/rauscht am iPhone seit `bcca71e`“ (7.11. spät) – **Optionen A–C: Go abwarten**

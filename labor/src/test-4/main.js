@@ -1597,8 +1597,8 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape' && topNav.classList.
 addEventListener('resize', () => { if (VW > 1000) setMenu(false); });
 let chapShown = -1;
 let morphNow = 0;
-let chapTop = null;
-const chapDirty = () => { chapTop = null; };
+let chapTop = null, logoGeo = null;
+const chapDirty = () => { chapTop = null; logoGeo = null; };
 addEventListener('resize', chapDirty); addEventListener('load', chapDirty);
 if (window.ResizeObserver) new ResizeObserver(chapDirty).observe(document.body);
 function targetMorph() {
@@ -1606,6 +1606,7 @@ function targetMorph() {
   let m = 0;
   if (!chapTop) chapTop = chapters.map((c) => c.getBoundingClientRect().top + scrollY);
   const sy = scrollY;
+  if (!isDesktop()) logoGeo = logoGeo || { list: servList.getBoundingClientRect().bottom + sy, kick: rules.querySelector('.kicker').getBoundingClientRect().top + sy }; // Handy: Listenende + Kicker der Hausordnung (absolut, gemerkt)
   for (let i = 0; i < chapters.length; i++) {
     const r = { top: chapTop[i] - sy };
     const s = +chapters[i].dataset.stage;
@@ -1618,9 +1619,22 @@ function targetMorph() {
     if (!isDesktop() && prev === 2 && s === 3) t = smooth(vh * 0.95, vh * 0.3, r.top);
     // Handy: Bewegungslinien → Wirbelsäule früher fertig, damit der Scan schon mit der Überschrift entsteht
     if (!isDesktop() && prev === 1 && s === 2) t = smooth(vh * 0.95, vh * 0.4, r.top);
+    // Handy: Haus → HOP-Logo am Ende der Leistungsliste (nicht erst mit der Hausordnung): fertig, wenn die Liste das Bild verlässt (Go Kai 8.11., Option A)
+    if (!isDesktop() && prev === 3 && s === 4) t = smooth(vh * 1.25, vh * 0.55, logoGeo.list - sy);
     if (t > 0) m = prev + (s - prev) * t;
   }
   return m;
+}
+// Handy: Logo steht mittig im freien Raum zwischen Listenende (bzw. Leiste) und „§ Die Hausordnung“ und steigt mit dem Text auf
+let logoIn = 0;
+function logoPlace() {
+  const vh = VH, sy = scrollY, lb = logoGeo.list - sy, kt = logoGeo.kick - sy;
+  logoIn = smooth(vh * 0.7, vh * 0.5, lb); // Logo erscheint erst unter der Liste, nie über ihrem Text
+  let c = Math.min((Math.max(lb, 78) + kt) / 2, vh * 0.6);
+  c = Math.min(Math.max(c, lb + 75), kt - 90);
+  c = Math.max(c, 150);
+  const hh = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)), wpp = 2 * hh / GLH;
+  uniforms.uXf.value[4].set(0, (GLH / 2 - c) * wpp, 0, 0.32);
 }
 
 // ---------- Kapitel 04: Rundgang durch die Praxis (Punktwolke im Partikel-Haus) ----------
@@ -2060,6 +2074,7 @@ function tick() {
   uniforms.uCalm.value += ((calm ? 1 : 0) - uniforms.uCalm.value) * Math.min(1, dt * 0.8);
   uniforms.uBreath.value += paused ? 0 : dt * CALM * (1.15 - uniforms.uCalm.value * 0.45);
   const tm = targetMorph();
+  if (!isDesktop() && logoGeo) logoPlace();
   morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uMorph.value = morphNow;
   manuK = manuVisible();
@@ -2079,7 +2094,7 @@ function tick() {
   }
   if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
   dim = Math.max(dim, xray * (0.4 + (1 - xrayCalm) * 0.75)); // im Rundgang/Röntgenblick tritt das äußere Partikel-Haus zurück (Handy vor dem Betreten stärker)
-  dim = Math.max(dim, manuK, listK); // Manuthera-Bühne und Leistungen: Partikel-Hintergrund blendet ganz aus
+  dim = Math.max(dim, manuK, isDesktop() ? listK : listK * (1 - logoIn)); // Manuthera-Bühne und Leistungen: Partikel-Hintergrund blendet ganz aus
   if (licht && lichtK > 0) dim = Math.max(dim, lichtK); // K1: Partikel weichen dem Sonnenstaub
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
   if (!isDesktop()) {
@@ -2127,8 +2142,9 @@ function tick() {
 
   // Navigation
   top.classList.toggle('scrolled', scrollY > 30);
-  const ci = Math.round(clamp(morphNow, 0, 4));
   const rr2 = rules.getBoundingClientRect();
+  let ci = Math.round(clamp(morphNow, 0, 4));
+  if (!isDesktop() && ci >= 4 && rr2.top > VH * 0.5) ci = 3; // Handy: Logo ist früh fertig, die Leiste zeigt „Dach“ bis die Hausordnung im Bild ist
   const chapKey = rr2.top < VH * 0.5 && rr2.bottom > VH * 0.5 ? 9 : ci;
   // Leiste: 01–04, § Hausordnung (Eintrag 4), 05 Tür (Eintrag 5) – Kais Wunsch 2.11.: Hausordnung auch am PC in der Leiste
   const navIdx = chapKey === 9 ? 4 : ci >= 4 ? 5 : ci;
