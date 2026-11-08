@@ -1749,7 +1749,7 @@ const roomTags = ROOMS.map((r, i) => {
   el.innerHTML = tagHTML(String(i + 1).padStart(2, '0'), i === 3 ? 'Manuthera' : r.short, ROOM_SUB[i], i === 3 ? '▶ in Bewegung ansehen' : ''); document.body.appendChild(el);
   el.addEventListener('pointerenter', () => (hoverRoom = i)); el.addEventListener('pointerleave', () => (hoverRoom = -1));
   // Im Röntgenblick ist Raum 04 ein Knopf direkt zur Manuthera-Bühne, im Rundgang ein normales Raum-Schild
-  el.addEventListener('click', () => { if (el.classList.contains('cta')) { const t = $('#manuthera'); if (t) scrollToY(t.getBoundingClientRect().top + scrollY); } else openRoom(i); });
+  el.addEventListener('click', () => { if (el.classList.contains('cta')) { const t = $('#manuthera'); if (t) scrollToY(t.getBoundingClientRect().top + scrollY); } else goRoom(i); });
   const [x, y, w, h] = r.r; const [cx, cz] = P(x + w / 2, y + h / 2);
   return { el, p: new V3(cx, EYE + 0.55, cz) };
 });
@@ -1764,39 +1764,97 @@ const extraTags = [
   el.addEventListener('click', () => { const tg = $(t.to); if (tg) scrollToY(tg.getBoundingClientRect().top + scrollY); });
   return { el, p: t.at };
 });
-// Kamera-Stationen in Form-Koordinaten [Grundriss x, Grundriss y, Höhe] – nur noch der Anflug vor dem Rundgang aus Augenhöhe
-// (alte Kamerafahrt durch die Räume entfernt, Kai 7.11. spät: „nur Augenhöhe“; Klick auf einen Raum → Augenhöhe ab diesem Raum)
+// Kamera-Stationen in Form-Koordinaten [Grundriss x, Grundriss y, Höhe]
 const TS = (px, py, y) => { const [x, z] = P(px, py); return new V3(x, y, z); };
 const TOUR = {
   entry: { pos: TS(199, 330, -2.0), tgt: TS(199, 150, -2.3) },
-  rooms: [ // Anflug Richtung Raum (Puppenhaus-Blick), dann öffnet der Dialog an dieser Station
+  rooms: [
     { pos: TS(160, 132, EYE), tgt: TS(58, 44, EYE - 0.22) },
     { pos: TS(160, 150, EYE), tgt: TS(56, 250, EYE - 0.22) },
     { pos: TS(238, 88, EYE), tgt: TS(340, 40, EYE - 0.2) },
     { pos: TS(238, 172, EYE), tgt: TS(340, 130, EYE - 0.2) },
     { pos: TS(238, 266, EYE), tgt: TS(376, 204, EYE - 0.2) },
   ],
+  bird: { pos: TS(210, 330, 2.6), tgt: TS(210, 128, -3) },
 };
+const TOUR_ROT = -0.3;
 const toWorld = (v) => { const X = uniforms.uXf.value[3]; return v.clone().applyAxisAngle(new V3(0, 1, 0), uniforms.uHouseRot.value).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z)); };
 function tourPose(st) {
   const T = toWorld(st.tgt), Pw = toWorld(st.pos), desk = isDesktop(), X = uniforms.uXf.value[3];
-  // in den Räumen weiter zurück und etwas höher (Puppenhaus-Blick)
+  // in den Räumen weiter zurück und etwas höher (Puppenhaus-Blick); nahe Wände blenden aus
   const inRoom = TOUR.rooms.includes(st), dir = Pw.clone().sub(T);
   if (inRoom) dir.y += 0.42 * X.w;
   const d = dir.length() * (inRoom ? (desk ? 1.85 : 3.0) : 1);
   return frame(T, dir, d * (desk && inRoom ? 1.12 : 1), desk ? 0.68 : 0.5, desk ? 0.5 : 0.3);
 }
-// Raum wählen (Liste, Punkte am Handy, Schilder im Haus) → Rundgang aus Augenhöhe beginnt dort
-// gewählter Raum: Knopf/Punkt markiert; Karte nur als Ersatz ohne WebGL bzw. ohne zweite Bühne (Klasse .pick)
-function setRoomOn(i) { [roomCards, roomBtns, roomDots].forEach((list) => list.forEach((el, k) => el.classList.toggle('is-on', k === i))); }
-const roomFallback = (r) => { if (r >= 0) { setRoomOn(r); tourEl.classList.add('pick'); } };
-if (renderer) [...roomBtns, ...roomDots].forEach((b) => b.setAttribute('aria-haspopup', 'dialog'));
-roomBtns.forEach((b) => b.addEventListener('click', () => openRoom(+b.dataset.room)));
-roomDots.forEach((d) => d.addEventListener('click', () => openRoom(+d.dataset.room)));
-let tourWant = null, xray = 0, dragRot = 0, hoverRoom = -1;
+let roomOn = -1;
+function setRoom(i) {
+  if (i === roomOn) return; roomOn = i;
+  [roomCards, roomBtns, roomDots].forEach((list) => list.forEach((el, k) => el.classList.toggle('is-on', k === i)));
+}
+// Rundgang ohne Scrollen: Räume per Klick, Pfeil, Wischen oder Pfeiltaste; „Rundgang starten“ fährt selbst
+// tourIdx: -1 draußen (Übersicht/Röntgenblick), 0–4 Räume, 5 Grundriss von oben
+let tourIdx = -1, insideK = 0, viaEntry = 0, autoTour = false, autoT = 0;
+const tourPlay = $('#tourPlay'), tourProg = $('#tourProg');
+const TOUR_STEP = reduced ? 6.5 : 5, TOUR_BIRD = 3.5;
+function tourInView() { const r = tourEl.getBoundingClientRect(); return r.top < VH * 0.5 && r.bottom > VH * 0.5; }
+function bringTourIntoView() { const r = tourEl.getBoundingClientRect(); if (Math.abs(r.top) > 4 && !(r.top <= 0 && r.bottom >= VH)) scrollToY(r.top + scrollY + 2); }
+function setAuto(on) {
+  autoTour = on; autoT = 0;
+  tourEl.classList.toggle('auto', on);
+  if (tourPlay) { tourPlay.setAttribute('aria-pressed', on ? 'true' : 'false'); tourPlay.querySelector('span').textContent = on ? 'Rundgang anhalten' : 'Rundgang starten'; }
+}
+function goRoom(i, fromAuto) {
+  i = Math.max(-1, Math.min(5, i));
+  if (tourIdx < 0 && i >= 0) viaEntry = reduced ? 0 : 0.9; // erst durch die Tür
+  tourIdx = i;
+  tourEl.classList.toggle('in', i >= 0);
+  if (!fromAuto) setAuto(false);
+  if (i >= 0) bringTourIntoView();
+}
+function tourStep(d) { goRoom(tourIdx < 0 ? (d > 0 ? 0 : 4) : tourIdx + d > 5 ? -1 : tourIdx + d); }
+roomBtns.forEach((b) => b.addEventListener('click', () => goRoom(+b.dataset.room)));
+roomDots.forEach((d) => d.addEventListener('click', () => goRoom(+d.dataset.room)));
+$('#tourPrev')?.addEventListener('click', () => tourStep(-1));
+$('#tourNext')?.addEventListener('click', () => tourStep(1));
+$('#tourExit')?.addEventListener('click', () => goRoom(-1));
+tourPlay?.addEventListener('click', () => { if (autoTour) setAuto(false); else { goRoom(0, true); setAuto(true); } });
+addEventListener('keydown', (e) => {
+  if (egoOpen || !tourInView() || e.altKey || e.ctrlKey || e.metaKey || /input|textarea|select/i.test(document.activeElement?.tagName || '')) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); tourStep(1); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); tourStep(-1); }
+  else if (e.key === 'Escape' && tourIdx >= 0) goRoom(-1);
+});
+// Wischen über das Haus (Handy): waagerecht = Raum wechseln, senkrecht bleibt Scrollen
+{ let x0 = null, y0 = 0; const st = $('.tour-sticky');
+  st?.addEventListener('touchstart', (e) => { if (e.target.closest('a,button')) return; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  st?.addEventListener('touchend', (e) => { if (x0 === null) return; const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) tourStep(dx < 0 ? 1 : -1); }, { passive: true }); }
+let tourWant = null, tourHide = 0, xray = 0, dragRot = 0, hoverRoom = -1;
 // Handy: Röntgenblick ruhiger (Linien 25 %, Haus-Umriss blass), bis man den Rundgang betritt – der Text von Kapitel 04 liegt darüber
-let xrayCalm = 1, viewLift = 0;
-const xrayPoseRef = { st: null }; // Anflug-Ziel vor dem Rundgang aus Augenhöhe (Tür oder Raum)
+let tourEngaged = false, xrayCalm = 1, viewLift = 0;
+// Schild „Manuthera“ an der Liege in Raum 04 (Röntgenblick und Rundgang, PC und Handy)
+const manuTag = document.createElement('a');
+manuTag.className = 'manu-tag'; manuTag.href = '#manuthera'; manuTag.setAttribute('aria-label', 'Manuthera ansehen');
+manuTag.innerHTML = '<b class="dot" aria-hidden="true"></b>Manuthera <span aria-hidden="true">↓</span>';
+($('main') || document.body).appendChild(manuTag);
+manuTag.addEventListener('click', (e) => { e.preventDefault(); const t = $('#manuthera'); if (t) scrollToY(t.getBoundingClientRect().top + scrollY); });
+const manuTagP = (() => { const [x, z] = P(320, 136); return new V3(x, EYE - 0.22, z); })();
+let manuTagVis = 0;
+// rechte Kante der linken Textspalte im Rundgang (PC); Schilder im Raum bleiben rechts davon
+function textColRight() {
+  if (!isDesktop()) return -1e9;
+  const r = $('.roomnav')?.getBoundingClientRect();
+  return r && r.width ? r.right + 16 : -1e9;
+}
+function placeManuTag() {
+  const w = toWorld(manuTagP); w.project(camera);
+  const sx = (w.x * 0.5 + 0.5) * VW;
+  const vis = manuTagVis * (w.z < 1 && Math.abs(w.x) < 0.92 && Math.abs(w.y) < 0.85 && sx - manuTag.offsetWidth / 2 > textColRight() ? 1 : 0) * (1 - manuK);
+  manuTag.style.opacity = vis.toFixed(2);
+  manuTag.classList.toggle('on', vis > 0.3);
+  manuTag.tabIndex = vis > 0.3 ? 0 : -1; // unsichtbar auch nicht per Tastatur erreichbar
+  if (vis > 0) manuTag.style.transform = `translate(${((w.x * 0.5 + 0.5) * VW).toFixed(1)}px, ${((-w.y * 0.5 + 0.5) * GLH - 30).toFixed(1)}px) translate(-50%, -100%)`;
+}
 // Haus mit gedrückter Maus drehen (PC, Röntgenblick)
 { let down = null; addEventListener('pointerdown', (e) => { if (!egoOpen && xray > 0.4 && e.pointerType === 'mouse' && e.clientX > VW * 0.45 && !e.target.closest('a,button,.room-tag')) down = e.clientX; });
   addEventListener('pointermove', (e) => { if (down !== null) { dragRot += (e.clientX - down) * 0.006; down = e.clientX; } });
@@ -1826,29 +1884,41 @@ function houseGone() {
   return (1 - smooth(vh * 0.55, vh * 0.98, tb)) * smooth(vh * 0.1, vh * 0.5, mb); // blendet aus, sobald die Knöpfe hochwandern
 }
 // ---------- Kapitel 04: Rundgang aus Augenhöhe (Go Kai 7.11. „1B+ 2a/a 3a 4 ja“) ----------
-// Eigene Vollbild-Bühne als <dialog> (Fahrt aus src/ego/tour.js, wie die Testseite rundgang-ego.html). Angelegt erst beim
-// ersten Klick (keine Startzeit), nutzt die fertige Praxis-Punktwolke (prxP). B+: vorher fährt die Kamera im Röntgenblick
-// ~0,65 s Richtung Tür. Esc/„Übersicht“/Zurück-Taste schließen → gleiche Scroll-Stelle, wieder Röntgenblick.
-// „Bewegung reduzieren“: kein Anflug, „Ohne Fahrt“ an und gesperrt (Schnitte); „Bewegung anhalten“: „Ohne Fahrt“ vorausgewählt.
+// Eigene Vollbild-Bühne als <dialog> (Fahrt aus src/ego/tour.js, wie die Testseite rundgang-ego.html). Angelegt im Leerlauf,
+// sobald die Hausansicht steht (sonst beim ersten Klick), nutzt die fertige Praxis-Punktwolke (prxP).
+// Übergang (Go Kai 8.11. „a B“, ersetzt den Anflug B+): der Dialog öffnet sofort mit genau der Kamera der Seite (Pose, 35°,
+// Bildausschnitt) über durchsichtigem Hintergrund und fliegt selbst in einem Zug bis an die Tür (ego.intro) – kein Schnitt.
+// Esc/„Übersicht“/Zurück-Taste schließen → gleiche Scroll-Stelle, wieder Röntgenblick.
+// „Bewegung reduzieren“/„Ohne Fahrt“: kein Flug, nur Überblenden; „Bewegung anhalten“: „Ohne Fahrt“ vorausgewählt.
 const egoDlg = $('#ego'), egoBtn = $('#egoOpen'), egoLoading = $('#egoLoading');
-let ego = null, egoOpen = false, egoZoom = false, egoSkipPop = false, egoAfter = null, egoRoom = -1, egoFrom = null;
-let openRoom = () => {}; // Raum r → Augenhöhe ab diesem Raum (unten belegt, wenn der Dialog da ist)
+let ego = null, egoOpen = false, egoSkipPop = false, egoAfter = null, egoWarm = false;
+// Einflug (Go Kai 8.11. „a B“): Pose der Haupt-Kamera in Grundriss-Koordinaten (Umkehrung von toWorld)
+let egoWarmUp = () => {};
+const toForm = (w) => { const X = uniforms.uXf.value[3]; return w.clone().sub(new V3(X.x, X.y, X.z)).divideScalar(X.w).applyAxisAngle(new V3(0, 1, 0), -uniforms.uHouseRot.value); };
+let egoMake = () => null;
 if (egoDlg && egoBtn) {
   $('#egoHint').textContent = finePointer ? 'Ziehen = umschauen · Pfeiltasten = weiter' : 'Ziehen = umschauen';
-  const egoShow = () => {
-    egoZoom = false;
-    if (!ego) {
-      ego = createEgo({
-        canvas: $('#egoGl'), keys: egoDlg, mobile: !isDesktop(), reduced, still: paused,
-        ui: {
-          cap: $('#egoCap'), capNo: $('#egoNo'), capKick: $('#egoKick'), capTitle: $('#egoTitle'), capText: $('#egoText'), contact: $('#egoContact'),
-          prev: $('#egoPrev'), play: $('#egoPlay'), next: $('#egoNext'), optStill: $('#egoStill'), optCalm: $('#egoCalm'), optBig: $('#egoBig'),
-          hint: $('#egoHint'), veil: $('#egoVeil'),
-        },
-      });
-      if (!ego) { egoBtn.hidden = true; roomFallback(egoRoom); return; } // zweite WebGL-Bühne nicht möglich → Knopf weg, Raumkarte statt Fahrt
-    }
-    ego.reset(egoRoom >= 0 ? ego.stopOfRoom(egoRoom) : 0); // Raum angeklickt: dort beginnen, sonst an der Tür
+  // Bühne anlegen (im Leerlauf vorab, sonst beim ersten Klick); Praxis übergeben und Shader übersetzen, damit der Einflug nicht hakt
+  egoMake = () => {
+    if (ego || egoBtn.hidden) return ego;
+    ego = createEgo({
+      canvas: $('#egoGl'), keys: egoDlg, mobile: !isDesktop(), reduced, still: paused,
+      ui: {
+        cap: $('#egoCap'), capNo: $('#egoNo'), capKick: $('#egoKick'), capTitle: $('#egoTitle'), capText: $('#egoText'), contact: $('#egoContact'),
+        prev: $('#egoPrev'), play: $('#egoPlay'), next: $('#egoNext'), optStill: $('#egoStill'), optCalm: $('#egoCalm'), optBig: $('#egoBig'),
+        hint: $('#egoHint'), veil: $('#egoVeil'),
+      },
+    });
+    if (!ego) { egoBtn.hidden = true; return null; } // zweite WebGL-Bühne nicht möglich → Knopf weg, Klick-Rundgang bleibt
+    if (prx) { ego.setPrx(prx); ego.warm(); }
+    return ego;
+  };
+  // fly: Einflug aus der aktuellen Hausansicht (sonst nur Überblenden – „Bewegung reduzieren“, „Ohne Fahrt“, Praxis noch im Aufbau)
+  const egoShow = (fly) => {
+    if (!egoMake()) return;
+    if (!ego.ready && prx) ego.setPrx(prx);
+    ego.reset();
+    if (fly && ego.ready) ego.intro({ pos: toForm(camera.position), look: toForm(cam.target), fov: camera.fov, fullW: VW, fullH: GLH, offY: viewLift, viewH: VH, lum: isDesktop() ? 0.7 : 0.5 }); // Röntgenblick der Seite ist gedämpfter als der Rundgang → hell werden während des Flugs
     egoOpen = true;
     document.documentElement.classList.add('ego-open');
     if (lenis) lenis.stop();
@@ -1860,18 +1930,19 @@ if (egoDlg && egoBtn) {
       buildPrx().then((r) => { ego.setPrx(r); egoLoading.hidden = true; }).catch(() => { egoLoading.textContent = 'Fehler beim Aufbau.'; });
     }
   };
-  // Öffnen: r = -1 Tür (Knopf), 0–4 Raum (Liste, Punkte, Schild im Haus); vorher fährt die Kamera kurz dorthin (B+)
-  const egoGo = (r) => {
-    if (!renderer || (ego === null && egoBtn.hidden)) { roomFallback(r); return; } // ohne WebGL: Raumkarte
-    if (egoOpen || egoZoom) return;
-    const ae = document.activeElement; egoFrom = ae && ae.matches && ae.matches('button') ? ae : null; // Fokus kommt hierher zurück
-    egoRoom = r; xrayPoseRef.st = r >= 0 ? TOUR.rooms[r] : TOUR.entry;
-    setRoomOn(r);
-    if (reduced || xray < 0.3) { egoShow(); return; }
-    egoZoom = true; setTimeout(egoShow, 650);
+  // Vorab anlegen, sobald die Hausansicht steht und niemand scrollt (Leerlauf) – nicht schon beim Laden (Startzeit)
+  egoWarmUp = () => {
+    if (egoWarm || ego || !prx || egoBtn.hidden) return;
+    egoWarm = true;
+    (window.requestIdleCallback || ((f) => setTimeout(f, 200)))(() => egoMake(), { timeout: 1500 });
   };
-  egoBtn.addEventListener('click', () => egoGo(-1));
-  openRoom = egoGo;
+  egoBtn.addEventListener('click', () => {
+    if (egoOpen || !renderer) return;
+    houseUsed = true;
+    const inRoom = tourIdx >= 0;
+    if (inRoom) goRoom(-1);
+    egoShow(!inRoom && !reduced && xray > 0.3);
+  });
   const egoClose = (fromPop) => {
     if (!egoOpen) return;
     egoOpen = false;
@@ -1881,7 +1952,7 @@ if (egoDlg && egoBtn) {
     if (lenis) lenis.start();
     if (!fromPop && history.state && history.state.hopEgo) { egoSkipPop = true; history.back(); } // eigener Verlaufseintrag weg
     else if (egoAfter) { const f = egoAfter; egoAfter = null; requestAnimationFrame(f); }
-    (egoFrom && egoFrom.isConnected && egoFrom.offsetParent ? egoFrom : egoBtn).focus({ preventScroll: true });
+    egoBtn.focus({ preventScroll: true });
   };
   $('#egoClose').addEventListener('click', () => egoClose());
   egoDlg.addEventListener('close', () => egoClose()); // Esc (Browser schließt den Dialog selbst)
@@ -1897,29 +1968,71 @@ if (egoDlg && egoBtn) {
   });
 }
 function updateTour(dt) {
-  const desk = isDesktop();
+  manuTagVis = 0;
+  const r = tourEl.getBoundingClientRect(), vh = VH, desk = isDesktop();
+  const near = r.top < vh && r.bottom > 0 && morphNow > 2.6 && morphNow < 3.4;
+  if (tourIdx >= 0 && !tourInView()) goRoom(-1); // weggescrollt → wieder draußen
+  // Rundgang-Film
+  if (autoTour && tourIdx >= 0 && !paused) {
+    autoT += dt;
+    const dur = tourIdx === 5 ? TOUR_BIRD : TOUR_STEP;
+    if (tourProg) tourProg.style.width = (((tourIdx + Math.min(1, autoT / dur)) / 6) * 100).toFixed(1) + '%';
+    if (autoT > dur) { autoT = 0; if (tourIdx < 5) goRoom(tourIdx + 1, true); else { setAuto(false); goRoom(-1); } }
+  } else if (tourProg && !autoTour) tourProg.style.width = '0%';
+  // Scan hinein/hinaus (Boden → Decke)
+  const want = near && tourIdx >= 0 ? 1 : 0;
+  insideK = reduced ? want : insideK + (want - insideK) * (1 - Math.exp(-dt * (want ? 1.5 : 2.6)));
+  const inside = near ? insideK : 0;
   // Röntgenblick (PC): von außen leuchtet das Innere durch das Haus, das Dach schwebt angehoben
   // Handy: erst steht das Haus groß in der Bildmitte; der Röntgenblick (Haus oben) kommt mit dem Text von unten
   const pvIn = desk ? smooth(2.55, 2.95, morphNow) : Math.min(smooth(2.7, 2.95, morphNow), smooth(MINH * 1.02, MINH * 0.72, roofIntro.getBoundingClientRect().top));
-  const pv = morphNow > 2.55 && morphNow < 3.45 ? pvIn * (1 - smooth(3.05, 3.45, morphNow)) * (1 - manuK) * (1 - listK) * (desk ? 1 : 1 - houseGone()) : 0;
+  const pv = morphNow > 2.55 && morphNow < 3.45 ? pvIn * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) * (1 - listK) * (desk ? 1 : 1 - houseGone()) : 0;
   xray = pv;
-  xrayCalm += ((desk ? 1 : 0.6) - xrayCalm) * (1 - Math.exp(-dt * 3)); // Handy 7.11.: Text steht über dem Haus → etwas gedämpft
-  tU.uCut.value = pv > 0 ? -1.0 : -10;
-  tU.uOn.value = pv > 0 ? 1 : 0; tourPts.visible = pv > 0;
-  tU.uFade.value = pv * 0.55 * xrayCalm;
-  tU.uDim.value = 0.2 + 0.8 * xrayCalm; // Möbel mitdämpfen (PC: xrayCalm = 1 → unverändert)
+  if (tourIdx >= 0) tourEngaged = true; else if (!tourInView()) tourEngaged = false;
+  xrayCalm += ((desk || tourEngaged ? 1 : 0.6) - xrayCalm) * (1 - Math.exp(-dt * 3)); // Handy 7.11.: Text steht über dem Haus, nicht mehr darauf → weniger dämpfen (vorher 0.25)
+  tU.uCut.value = inside > 0.001 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
+  tU.uOn.value = inside > 0.001 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0.001 || pv > 0;
+  tU.uFade.value = inside > 0.001 ? Math.max(inside, pv * 0.55 * xrayCalm) : pv * 0.55 * xrayCalm;
+  tU.uDim.value = Math.max(inside, 0.2 + 0.8 * xrayCalm); // Möbel mitdämpfen (PC: xrayCalm = 1 → unverändert)
   tU.uReady.value = prx ? ramp(tU.uReady.value, dt) : 0;
   if (prx) tU.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * GLH * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * prx.spacing * uniforms.uXf.value[3].w * 0.62;
-  uniforms.uRoofLift.value += (pv * 1.3 - uniforms.uRoofLift.value) * 0.08;
-  uniforms.uHouseRot.value = Math.sin(uniforms.uTime.value * 0.2) * 0.45 - 0.55 + dragRot;
-  // Kamera: leicht von oben (wie im Design „Zuhause“); B+: vor dem Rundgang aus Augenhöhe Richtung Tür bzw. Raum
-  tourWant = pv > 0.3 ? (egoZoom && xrayPoseRef.st ? tourPose(xrayPoseRef.st) : xrayPose()) : null;
-  if (pv > 0.3) { // Räume, Tür und Manuthera als anklickbare Schilder
-    tU.uRoom.value = egoZoom ? egoRoom : hoverRoom;
-    const place = (t, i, p, right) => { const w = toWorld(p); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = egoZoom ? 0 : pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * VW}px, ${(-w.y * 0.5 + 0.5) * GLH}px) translate(${right ? '-12%' : '-50%'}, -50%)`; };
-    roomTags.forEach((t, i) => { t.el.classList.toggle('cta', i === 3); place(t, i, i === 3 ? manuCtaP : t.p.clone().setY(EYE + 0.2), i === 3); });
-    extraTags.forEach((t) => place(t, -9, t.p));
-  } else { tU.uRoom.value = -1; [...roomTags, ...extraTags].forEach((t) => { t.el.classList.remove('click'); t.el.style.opacity = 0; }); }
+  uniforms.uRoofLift.value += (Math.max(pv * 1.3, inside * 1.1) - uniforms.uRoofLift.value) * 0.08;
+  tourHide = Math.min(1, inside * 1.4);
+  // Hausdrehung festhalten, solange wir drinnen sind
+  const free = Math.sin(uniforms.uTime.value * 0.2) * 0.45 - 0.55 + dragRot;
+  uniforms.uHouseRot.value = THREE.MathUtils.lerp(free, TOUR_ROT, smooth(0, 0.6, inside));
+  if (tourIdx < 0) {
+    // Röntgenblick: Kamera leicht von oben (wie im Design „Zuhause“), damit sich die Schilder nicht überlagern
+    tourWant = pv > 0.3 ? xrayPose() : null; // Augenhöhe: der Dialog übernimmt diese Kamera und fliegt selbst (Go Kai 8.11. „a B“)
+    if (pv > 0.6 && performance.now() - lastInput > 1200) egoWarmUp();
+    if (pv > 0.3) { // Räume, Tür und Modell als anklickbare Schilder
+      tU.uRoom.value = hoverRoom;
+      const place = (t, i, p, right) => { const w = toWorld(p); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * VW}px, ${(-w.y * 0.5 + 0.5) * GLH}px) translate(${right ? '-12%' : '-50%'}, -50%)`; };
+      roomTags.forEach((t, i) => { t.el.classList.toggle('cta', i === 3); place(t, i, i === 3 ? manuCtaP : t.p.clone().setY(EYE + 0.2), i === 3); });
+      extraTags.forEach((t) => place(t, -9, t.p));
+    } else { tU.uRoom.value = -1; [...roomTags, ...extraTags].forEach((t) => { t.el.classList.remove('click'); t.el.style.opacity = 0; }); }
+    return;
+  }
+  roomTags.forEach((t) => t.el.classList.remove('click', 'cta'));
+  extraTags.forEach((t) => { t.el.classList.remove('click'); t.el.style.opacity = 0; });
+  // Kamera: erst durch die Tür, dann zum Raum (die Kamera gleitet weich hinüber)
+  if (viaEntry > 0) viaEntry -= dt;
+  const room = tourIdx <= 4 ? tourIdx : -1;
+  const st = viaEntry > 0 ? tourPose(TOUR.entry) : tourPose(tourIdx === 5 ? TOUR.bird : TOUR.rooms[tourIdx]);
+  setRoom(room); // Grundriss von oben: keine Raumkarte
+  tU.uRoom.value = room;
+  manuTagVis = room === 3 ? smooth(0.85, 1, inside) : 0;
+  tourWant = st;
+  // Beschriftungen (nie über der linken Textspalte mit Raum-Knöpfen und Karte)
+  const colR = textColRight();
+  roomTags.forEach((t, i) => {
+    const w = toWorld(t.p); w.project(camera);
+    const sx = (w.x * 0.5 + 0.5) * VW;
+    const vis = desk && inside > 0.9 && w.z < 1 && Math.abs(w.x) < 0.95 && Math.abs(w.y) < 0.9 && sx - t.el.offsetWidth / 2 > colR;
+    t.el.style.opacity = vis ? (i === room ? 1 : 0.55) : 0;
+    t.el.classList.toggle('on', i === room);
+    if (vis) t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * VW}px, ${(-w.y * 0.5 + 0.5) * GLH}px) translate(-50%, -50%)`;
+  });
 }
 
 // ---------- Lebende Überschriften ----------
@@ -2080,6 +2193,7 @@ function tick() {
   manuK = manuVisible();
   updateAxis(dt);
   updateTour(dt);
+  placeManuTag();
   { // Kamera: Rundgang > Wirbelsäule > Übersicht
     const want = tourWant || axisWant || OVERVIEW, k = reduced ? 1 : 1 - Math.exp(-dt * 2.2);
     cam.pos.lerp(want.pos, k); cam.target.lerp(want.target, k);
@@ -2093,7 +2207,7 @@ function tick() {
     if (morphNow > 0.3 && morphNow < 1.6) dim = Math.max(dim, 0.55); // Bewegungslinien leise hinter Text
   }
   if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
-  dim = Math.max(dim, xray * (0.4 + (1 - xrayCalm) * 0.75)); // im Rundgang/Röntgenblick tritt das äußere Partikel-Haus zurück (Handy vor dem Betreten stärker)
+  dim = Math.max(dim, tourHide, xray * (0.4 + (1 - xrayCalm) * 0.75)); // im Rundgang/Röntgenblick tritt das äußere Partikel-Haus zurück (Handy vor dem Betreten stärker)
   dim = Math.max(dim, manuK, isDesktop() ? listK : listK * (1 - logoIn)); // Manuthera-Bühne und Leistungen: Partikel-Hintergrund blendet ganz aus
   if (licht && lichtK > 0) dim = Math.max(dim, lichtK); // K1: Partikel weichen dem Sonnenstaub
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
@@ -2204,7 +2318,8 @@ const mkHint = (txt, parent) => {
 // bis zur ersten richtigen Benutzung; auf Touch-Geräten als dunkle Pille (lesbar über den Partikeln).
 // Senkrecht wischen scrollt überall (auch über der Figur); bedient wird seitlich, durch Antippen oder am Ziehstreifen (Kap. 03).
 const hintBody = mkHint(finePointer ? 'Maus über den Körper' : 'Seitlich streichen');
-const hintHouse = mkHint(isDesktop() ? 'Ziehen zum Drehen' : 'Raum unten antippen'); // Handy: Räume über die Punkte darunter (Haus selbst hat am Handy keine Schilder)
+const hintHouse = mkHint(isDesktop() ? 'Ziehen zum Drehen' : 'Raum antippen'); // Handy: zeigt auf die Raumleiste darunter (Wischen steht im Satz über der Leiste)
+const roomDotsEl = $('.room-dots');
 const hintManu = manuSec ? mkHint(finePointer ? 'Ziehen zum Drehen' : 'Seitlich wischen', $('.manu-stage')) : null;
 [hintBody, hintHouse, hintManu].forEach((h) => h && h.classList.add('th-pill')); // 6A (7.11.): auch am PC dunkle Pille (vorher nur Touch)
 let houseUsed = false, manuUsed = false, xrayT = 0, manuT = 0, rotSeen = dragRot;
@@ -2222,13 +2337,22 @@ function updateHints(dt) {
   hintBody.classList.toggle('on', showBody);
   if (showBody) hintBody.style.transform = desk ? `translate(${VW * 0.6}px, ${VH * 0.6}px) translate(-50%,-50%)` : `translate(${VW - 12}px, ${heroFit ? heroFit.top + (heroFit.bot - heroFit.top) * 0.3 - scrollY : VH * 0.24}px) translate(-100%,-50%)`; // rechts neben der Figur (Pille bleibt im Bild)
   // Haus: PC im Röntgenblick (ziehen), Handy vor dem Betreten (wischen/antippen)
-  if (dragRot !== rotSeen || egoOpen || egoZoom) houseUsed = true;
+  if (dragRot !== rotSeen || tourIdx >= 0) houseUsed = true;
   // Handy: sobald die Praxis-Ansicht steht (nicht erst, wenn der Rundgang halb im Bild ist), nach ~1 s
-  const houseReady = xray > 0.6 && !egoZoom && (desk || (morphNow > 2.7 && morphNow < 3.3));
+  const houseReady = xray > 0.6 && tourIdx < 0 && (desk || (morphNow > 2.7 && morphNow < 3.3));
   xrayT = houseReady ? xrayT + dt : 0;
   const showHouse = !houseUsed && xrayT > (desk ? 3 : 1);
   hintHouse.classList.toggle('on', showHouse);
-  if (showHouse) hintHouse.style.transform = desk ? `translate(${VW * 0.72}px, ${VH * 0.84}px) translate(-50%,-50%)` : `translate(${VW * 0.5}px, ${(roofMid && tourStickyEl ? tourStickyEl.getBoundingClientRect().top + roofMid : VH * 0.36).toFixed(1)}px) translate(-50%,-50%)`; // Handy 7.11.: mitten auf dem Haus, wandert mit der Bühne
+  hintHouse.classList.toggle('th-tap', !desk);
+  // Handy (Go Kai 8.11. „b A“): Pille direkt über der Raumleiste (statt mitten auf dem Haus), Spitze zeigt auf die Punkte;
+  // solange sie steht, ersetzt sie den gleichlautenden Satz darüber, und die Punkte pulsieren nacheinander (Tür → Training)
+  const dotsOn = showHouse && !desk && roomDotsEl && roomDotsEl.offsetParent;
+  tourEl.classList.toggle('hint-on', !!dotsOn);
+  if (roomDotsEl) roomDotsEl.classList.toggle('pulse', !!dotsOn);
+  if (showHouse) {
+    if (dotsOn) { const r = roomDotsEl.getBoundingClientRect(); hintHouse.style.transform = `translate(${(r.left + r.width / 2).toFixed(1)}px, ${(r.top - 10).toFixed(1)}px) translate(-50%,-100%)`; }
+    else hintHouse.style.transform = `translate(${VW * 0.72}px, ${VH * 0.84}px) translate(-50%,-50%)`;
+  }
   // Manuthera-Liege
   if (hintManu) { manuT = manuK > 0.8 ? manuT + dt : 0; hintManu.classList.toggle('on', !manuUsed && manuT > 1.5); }
 }

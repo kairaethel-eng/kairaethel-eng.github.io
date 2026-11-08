@@ -58,8 +58,8 @@ function buildLogoSign(U) {
   g.setAttribute('aCol', new THREE.BufferAttribute(new Float32Array(col), 3));
   const pts = new THREE.Points(g, new THREE.ShaderMaterial({
     uniforms: U,
-    vertexShader: /* glsl */`attribute vec3 aCol; uniform float uLogo, uBig; varying vec3 vC;
-      void main(){ vC = aCol; vec4 mv = viewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
+    vertexShader: /* glsl */`attribute vec3 aCol; uniform float uLogo, uBig, uLum; varying vec3 vC;
+      void main(){ vC = aCol * uLum; vec4 mv = viewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
         gl_PointSize = cameraPosition.z < ${(SIGN.z - 0.03).toFixed(4)} ? 0. : clamp(uLogo * uBig / -mv.z, 1.4, 9.); }`,   // von innen nicht sichtbar (wäre seitenverkehrt)
     fragmentShader: /* glsl */`varying vec3 vC;
       void main(){ float d = length(gl_PointCoord - .5); if (d > .5) discard; gl_FragColor = vec4(vC * (1. - smoothstep(.25, .5, d) * .4), 1.);
@@ -73,7 +73,7 @@ function buildLogoSign(U) {
 
 const COMMON = /* glsl */`
   attribute float aKind, aRoom, aDoor;
-  uniform float uPix, uStip, uDoor, uBig; uniform vec2 uHinge;
+  uniform float uPix, uStip, uDoor, uBig, uLum, uFar; uniform vec2 uHinge;
   uniform vec3 cBone, cAmber, cBlue, cGreen, cPetrol, cCore;
   vec3 doorP(vec3 p, float door){ if (door < .5) return p; float a = uDoor; float dx = p.x - uHinge.x, dz = p.z - uHinge.y; float c = cos(a), s = sin(a);
     return vec3(uHinge.x + c*dx + s*dz, p.y, uHinge.y - s*dx + c*dz); }`;
@@ -107,8 +107,8 @@ function buildScene(scene, prx, U) {
         vec4 mv = viewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
         float d = -mv.z;
         gl_PointSize = clamp(uPix * (aKind > 5.5 ? 1.5 : 1.2) * 7. / d, 1.3, 4.5) * uBig;
-        float near = smoothstep(.12, .5, d), far = 1. - smoothstep(7., 14., d) * .6;
-        vA = (aKind < .5 ? .5 : aKind < 1.5 ? .6 : .95) * near * far;
+        float near = smoothstep(.12, .5, d), far = 1. - smoothstep(7., 14., d) * .6 * uFar; // uFar < 1: Einflug von weit oben
+        vA = (aKind < .5 ? .5 : aKind < 1.5 ? .6 : .95) * near * far * uLum;
         vCol = col;
       }`,
     fragmentShader: /* glsl */`
@@ -125,7 +125,7 @@ function buildScene(scene, prx, U) {
         vec3 n = normal; vec3 V = normalize(cameraPosition - position);
         float lam = max(dot(n, normalize(vec3(.4, .8, .5))), 0.), rim = pow(1. - abs(dot(n, V)), 3.);
         vec3 base = aKind < 2.5 ? cBone : aKind < 3.5 ? cGreen : aKind < 4.5 ? cAmber : aKind < 5.5 ? mix(cPetrol * 1.7, cBlue, .3) : cBone;
-        vCol = base * (.3 + .7 * lam) + cBlue * rim * .12;
+        vCol = (base * (.3 + .7 * lam) + cBlue * rim * .12) * uLum;
         vec4 mv = viewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
         float d = -mv.z;
         gl_PointSize = clamp(uStip / d, 1.3, 7.) * uBig;
@@ -178,7 +178,7 @@ export function createEgo({ canvas, ui, keys = window, mobile = false, reduced =
   }
 
   const U = {
-    uPix: { value: 1 }, uStip: { value: 1 }, uLogo: { value: 1 }, uBig: { value: 1 }, uDoor: { value: 0 }, uHinge: { value: new THREE.Vector2((182 - 210) * K, (272 - 140) * K) },
+    uPix: { value: 1 }, uStip: { value: 1 }, uLogo: { value: 1 }, uBig: { value: 1 }, uDoor: { value: 0 }, uLum: { value: 1 }, uFar: { value: 1 }, uHinge: { value: new THREE.Vector2((182 - 210) * K, (272 - 140) * K) },
     cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') }, cBlue: { value: C('#5AA2D6') }, cGreen: { value: C('#8BC34A') }, cPetrol: { value: C('#4E7F93') }, cCore: { value: C('#0E1C22') },
   };
   let stipSpacing = 0.02;
@@ -219,7 +219,7 @@ export function createEgo({ canvas, ui, keys = window, mobile = false, reduced =
     state.dur = clamp(leg.len * 1.35 + 1.4, 2.4, 6.5) / (opt.calm ? 0.6 : 1);
   }
   function go(i) {
-    i = clamp(i, 0, LAST); if (!api.ready || state.jumping || (i === state.idx && state.t >= 1)) return;
+    i = clamp(i, 0, LAST); if (!api.ready || intro || state.jumping || (i === state.idx && state.t >= 1)) return;
     const cur = state.t >= 1 ? state.idx : state.to;
     ui.cap.classList.add('hide');
     if (opt.still) { jump(i); return; }
@@ -249,7 +249,7 @@ export function createEgo({ canvas, ui, keys = window, mobile = false, reduced =
   ui.next.addEventListener('click', () => step(1));
   ui.prev.addEventListener('click', () => step(-1));
   ui.play.addEventListener('click', () => {
-    if (!api.ready) return;
+    if (!api.ready || intro) return;
     if (state.playing) { state.playing = false; setPlayLabel(); return; }
     if (state.idx >= LAST) { toStart(); state.playing = true; state.hold = 2.5; }
     else { state.playing = true; state.hold = state.t >= 1 ? (state.idx === 0 ? 2.5 : 0.2) : 0; }
@@ -269,7 +269,7 @@ export function createEgo({ canvas, ui, keys = window, mobile = false, reduced =
     else if (e.key === ' ' && (document.activeElement === document.body || document.activeElement === keys)) { e.preventDefault(); ui.play.click(); }
   });
   // Umschauen: ziehen, springt langsam zurück
-  canvas.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY, yaw: yawOff, pitch: pitchOff }; canvas.setPointerCapture(e.pointerId); ui.hint.classList.add('gone'); });
+  canvas.addEventListener('pointerdown', (e) => { if (intro) return; drag = { x: e.clientX, y: e.clientY, yaw: yawOff, pitch: pitchOff }; canvas.setPointerCapture(e.pointerId); ui.hint.classList.add('gone'); });
   canvas.addEventListener('pointermove', (e) => { if (!drag) return; yawOff = clamp(drag.yaw - (e.clientX - drag.x) * 0.006, -0.9, 0.9); pitchOff = clamp(drag.pitch - (e.clientY - drag.y) * 0.004, -0.4, 0.4); lastInput = performance.now(); });
   ['pointerup', 'pointercancel'].forEach((t) => canvas.addEventListener(t, () => { drag = null; lastInput = performance.now(); }));
 
@@ -282,6 +282,31 @@ export function createEgo({ canvas, ui, keys = window, mobile = false, reduced =
   }
   const toStart = () => place(0);
 
+  // ---------- Einflug aus der Hausansicht (Kap. 04, Go Kai 8.11. „a B“) ----------
+  // Der Dialog übernimmt die Kamera der Hauptseite (Pose in Grundriss-Koordinaten, Bildwinkel/Ausschnitt als Projektion P0)
+  // und fliegt in einem Zug zur Station: Abstand logarithmisch (gleichmäßiger Zoom), Umlauf um die Hausmitte, Höhe linear,
+  // Projektion P0 → eigene (35° → 66/82°). Keine zweite Bewegung, kein Schnitt.
+  let intro = null;
+  const camI = new THREE.PerspectiveCamera(), P0 = new THREE.Matrix4();
+  const easeIO = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  function introStep(dt) {
+    const I = intro;
+    I.t = Math.min(1, I.t + dt / I.dur);
+    const e = easeIO(I.t);
+    const r = Math.exp(lerp(Math.log(I.a.r), Math.log(I.b.r), e)), ang = I.a.ang + I.da * e;
+    camPos.set(Math.sin(ang) * r, lerp(I.a.y, I.b.y, e), Math.cos(ang) * r);
+    camLook.lerpVectors(I.l0, I.l1, smooth(0, 0.85, e));
+    U.uLum.value = lerp(I.lum, 1, smooth(0, 0.5, e));
+    U.uFar.value = smooth(0.25, 1, e);
+    I.k = e;
+    if (I.t >= 1) {
+      intro = null; U.uLum.value = 1; U.uFar.value = 1;
+      camera.updateProjectionMatrix();
+      place(state.idx); setPlayLabel(); ui.hint.classList.remove('gone');
+    }
+  }
+
   // ---------- Schleife (läuft nur, solange der Rundgang offen ist) ----------
   const tmpA = new V3(), tmpB = new V3(), ahead = new V3();
   let last = 0, raf = 0, running = false;
@@ -289,7 +314,8 @@ export function createEgo({ canvas, ui, keys = window, mobile = false, reduced =
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     if (!api.ready) return;
-    if (state.t < 1 && state.doorWait > 0) state.doorWait -= dt;      // Tür geht auf, Kamera wartet
+    if (intro) introStep(dt);
+    else if (state.t < 1 && state.doorWait > 0) state.doorWait -= dt;      // Tür geht auf, Kamera wartet
     else if (state.t < 1) {
       state.t = Math.min(1, state.t + dt / state.dur);
       const e = ease(state.t);
@@ -313,9 +339,15 @@ export function createEgo({ canvas, ui, keys = window, mobile = false, reduced =
     tmpA.copy(camLook).sub(camPos);
     const r = tmpA.length(), yaw = Math.atan2(tmpA.x, tmpA.z) + yawOff, pit = Math.asin(clamp(tmpA.y / r, -1, 1)) + pitchOff;
     camera.lookAt(camPos.x + Math.sin(yaw) * Math.cos(pit), camPos.y + Math.sin(pit), camPos.z + Math.cos(yaw) * Math.cos(pit));
+    if (intro) { // Projektion weich von der Hauptseite (P0) zur eigenen
+      camI.fov = camera.fov; camI.aspect = camera.aspect; camI.near = camera.near; camI.far = camera.far; camI.clearViewOffset(); camI.updateProjectionMatrix();
+      const a = P0.elements, b = camI.projectionMatrix.elements, m = camera.projectionMatrix.elements;
+      for (let i = 0; i < 16; i++) m[i] = a[i] + (b[i] - a[i]) * intro.k;
+      camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+    }
     U.uPix.value = pr * (H / 900);
     U.uBig.value += ((opt.big ? 1.6 : 1) - U.uBig.value) * (1 - Math.exp(-dt * 8));
-    const f = pr * H * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const f = pr * H * 0.5 * camera.projectionMatrix.elements[5]; // = 1/tan(fov/2), auch während des Einflugs richtig
     U.uLogo.value = f * 0.0042 * 1.05;
     U.uStip.value = f * stipSpacing * 0.62;
     renderer.render(scene, camera);
@@ -341,9 +373,33 @@ export function createEgo({ canvas, ui, keys = window, mobile = false, reduced =
       cancelAnimationFrame(raf); removeEventListener('resize', resize);
       timers.splice(0).forEach(clearTimeout); ui.veil.classList.remove('on');
       state.playing = false; drag = null;
+      if (intro) { intro = null; U.uLum.value = 1; U.uFar.value = 1; camera.updateProjectionMatrix(); place(state.idx); }
     },
     /** zurück an die Tür (geschlossen), Karte 00 – oder direkt an Station i (Raum aus Kap. 04) */
     reset(i = 0) { state.playing = false; startIdx = clamp(i, 0, LAST); if (api.ready) { place(startIdx); setPlayLabel(); } ui.hint.classList.remove('gone'); },
+    /** Shader vorab übersetzen (Hauptseite: im Leerlauf, bevor jemand tippt) */
+    warm() { if (api.ready) try { renderer.compile(scene, camera); } catch (e) { /* egal */ } },
+    /**
+     * Einflug aus der Hauptseite bis zur Startstation (nach reset). o: pos, look (Grundriss-Koordinaten wie STOPS),
+     * fov, fullW, fullH, offY, viewH (Ausschnitt der Haupt-Zeichenfläche, der zu sehen ist), lum (Helligkeit am Anfang).
+     * false = kein Einflug (nicht bereit, „Ohne Fahrt“) → Aufrufer zeigt den Dialog ohne Flug.
+     */
+    intro(o) {
+      if (!api.ready || opt.still) return false;
+      resize();
+      const B = STOPS[state.idx];
+      const pol = (p) => ({ r: Math.max(0.3, Math.hypot(p.x, p.z)), ang: Math.atan2(p.x, p.z), y: p.y });
+      const a = pol(o.pos), b = pol(B.pos);
+      intro = { t: 0, k: 0, dur: opt.calm ? 3.6 : 2.5, a, b, da: Math.atan2(Math.sin(b.ang - a.ang), Math.cos(b.ang - a.ang)), l0: o.look.clone(), l1: B.lk.clone(), lum: o.lum ?? 1 };
+      camI.fov = o.fov; camI.aspect = o.fullW / o.fullH; camI.near = camera.near; camI.far = camera.far;
+      camI.setViewOffset(o.fullW, o.fullH, 0, o.offY || 0, o.fullW, o.viewH || o.fullH); camI.updateProjectionMatrix();
+      P0.copy(camI.projectionMatrix);
+      camPos.copy(o.pos); camLook.copy(o.look); yawOff = pitchOff = 0; drag = null;
+      U.uLum.value = intro.lum; U.uFar.value = 0;
+      ui.cap.classList.add('hide'); ui.hint.classList.add('gone');
+      return true;
+    },
+    get flying() { return !!intro; },
     /** Station des Raums r (ROOMS-Index) */
     stopOfRoom(r) { const k = STOPS.findIndex((st) => st.room === r); return k < 0 ? 0 : k; },
     get running() { return running; },

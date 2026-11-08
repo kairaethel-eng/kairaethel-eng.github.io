@@ -211,11 +211,25 @@ main{position:relative;z-index:2}
 @media (min-width:921px){
   .tour.in .roof-intro,.tour.in .tour-kicker,.tour.in .tour-inner .note{display:none}
   .tour:not(.in) .room-cards{opacity:0;visibility:hidden;transition:opacity .3s,visibility 0s .3s}
-  .tour.pick:not(.in) .room-cards{opacity:1;visibility:visible} /* ohne WebGL: Raum anklicken = Karte */
-  .tour.pick .roof-intro{display:none} /* Platz für die Karte (wie früher im Rundgang) */
 }
-/* Kapitel 04: nur noch Rundgang aus Augenhöhe (alte Kamerafahrt entfernt, Kai 7.11. spät) */
+/* Rundgang-Steuerung (ohne Scrollen) */
 .tour-ctrl{grid-column:1;grid-row:4;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-top:.875rem}
+.t-btn{width:2.75rem;height:2.75rem;border-radius:50%;border:1px solid rgba(237,232,220,.25);background:rgba(16,34,42,.6);color:var(--txt);display:grid;place-items:center;cursor:pointer;transition:border-color .3s,background .3s}
+.t-btn:hover{border-color:var(--amber);background:rgba(224,154,53,.12)}
+.t-btn svg{width:1.125rem;height:1.125rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.t-play{display:inline-flex;align-items:center;gap:.625rem;height:2.75rem;padding:0 1.125rem;border-radius:1.375rem;border:0;background:var(--amber);color:#14110A;font:700 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:transform .3s var(--ease)}
+.t-play:hover{transform:translateY(-1px)}
+.t-play svg{width:.875rem;height:.875rem}
+.t-play .i-play{fill:currentColor}
+.t-play .i-pause{display:none;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.tour.auto .t-play .i-pause{display:block}
+.tour.auto .t-play .i-play{display:none}
+.t-exit{height:2.75rem;padding:0 .875rem;border-radius:1.375rem;border:1px solid var(--line);background:transparent;color:var(--dim);font:600 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s,color .3s}
+.t-exit:hover{color:var(--txt)}
+.tour.in .t-exit{opacity:1;pointer-events:auto}
+.tour-prog{flex-basis:100%;height:2px;margin-top:.25rem;background:rgba(237,232,220,.12);opacity:0;transition:opacity .3s}
+.tour.auto .tour-prog{opacity:1}
+.tour-prog i{display:block;height:100%;width:0;background:var(--amber);transition:width .2s linear}
 .room-tag{position:fixed;left:0;top:0;z-index:3;pointer-events:none;cursor:pointer;display:flex;align-items:center;gap:.55rem;padding:.45rem .75rem .45rem .55rem;border-radius:1.25rem;border:1px solid rgba(237,232,220,.22);background:rgba(10,22,27,.84);color:var(--txt);white-space:nowrap;text-align:left;opacity:0;transition:opacity .5s,border-color .3s,background .3s}
 .room-tag i{font:italic 400 1.125rem/1 var(--serif);color:var(--amber)}
 .room-tag span{display:flex;flex-direction:column;gap:2px}
@@ -454,7 +468,6 @@ canvas.gl-wait{opacity:0}
   .tour.in .room-dots{margin-top:auto}
   .room-cards{display:block;min-height:0;margin-top:.75rem}
   .tour:not(.in) .room-cards{display:none}
-  .tour.pick:not(.in) .room-cards{display:block}
   .room-card{display:none;position:relative;inset:auto;visibility:visible;opacity:1;transform:none;margin:0;padding:.875rem 1rem 1rem;background:rgba(14,30,37,.97);border:1px solid rgba(224,154,53,.55);border-radius:.375rem}
   .room-card.is-on{display:block;animation:cardIn .5s var(--ease)}
   @keyframes cardIn{from{opacity:0;transform:translateY(.75rem)}to{opacity:1;transform:none}}
@@ -600,7 +613,7 @@ html.paused .btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}
 .ix-plus::before,.ix-plus::after{content:"";position:absolute;left:0;right:0;top:50%;height:1.5px;margin-top:-.75px;background:var(--amber);border-radius:1px}
 .ix-plus::after{transform:rotate(90deg)}
 .index button[aria-expanded="true"] .ix-plus{transform:rotate(135deg)}
-.btn:active,.room-more:active,.segnav button:active,.roomnav button:active,.manu-modes button:active,.chap-now:active,.motion-btn:active,.style-switch button:active{transform:scale(.97)}
+.btn:active,.t-play:active,.t-btn:active,.room-more:active,.segnav button:active,.roomnav button:active,.manu-modes button:active,.chap-now:active,.motion-btn:active,.style-switch button:active{transform:scale(.97)}
 /* Stufe 3: Wisch-Hinweis über Bildern zum Anfassen */
 .touch-hint{position:fixed;z-index:6;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:.5rem;pointer-events:none;opacity:0;transition:opacity .6s;font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--amber);white-space:nowrap;text-shadow:0 0 .75rem rgba(10,22,27,.95),0 0 .25rem rgba(10,22,27,.95)}
 .touch-hint.on{opacity:1}
@@ -608,6 +621,23 @@ html.paused .btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}
 .touch-hint.th-pill{flex-direction:row;gap:.375rem;padding:.375rem .875rem .375rem .375rem;border-radius:1.25rem;background:rgba(10,22,27,.88);border:1px solid rgba(224,154,53,.45);letter-spacing:.12em;text-shadow:none} /* Touch: ganze Wischhilfe als dunkle Pille (wie Kap. 03), lesbar über den Partikeln */
 .touch-hint.th-pill .th-track{width:4rem}
 .touch-hint.th-pill .th-dot{width:1rem;height:1rem;margin:-.5rem 0 0 -.5rem;animation-name:thSwayS}
+/* Haus am Handy (Go Kai 8.11. „b A“): Pille sitzt direkt über der Raumleiste, Tipp-Symbol statt Wischspur, Spitze zeigt auf die Punkte */
+.touch-hint.th-tap{transform-origin:50% 100%}
+.touch-hint.th-tap .th-track{width:1.5rem}
+.touch-hint.th-tap .th-track::before{display:none}
+.touch-hint.th-tap .th-dot{animation:thTap 1.6s ease-out infinite}
+.touch-hint.th-tap::after{content:"";position:absolute;left:50%;bottom:-.3125rem;width:.5625rem;height:.5625rem;margin-left:-.28rem;background:rgba(10,22,27,.95);border-right:1px solid rgba(224,154,53,.45);border-bottom:1px solid rgba(224,154,53,.45);transform:rotate(45deg)}
+@keyframes thTap{0%,55%,100%{transform:scale(1);box-shadow:0 0 1rem rgba(224,154,53,.5)}15%{transform:scale(.72);box-shadow:0 0 0 0 rgba(224,154,53,.7)}40%{box-shadow:0 0 0 .5rem rgba(224,154,53,0)}}
+.tour-kicker{transition:opacity .4s}
+.tour.hint-on .tour-kicker{opacity:0}
+.room-dots.pulse{border-color:rgba(224,154,53,.6);transition:border-color .4s}
+.room-dots.pulse button{animation:dotPulse 2.6s ease-in-out infinite}
+.room-dots.pulse button:nth-of-type(2){animation-delay:.18s}
+.room-dots.pulse button:nth-of-type(3){animation-delay:.36s}
+.room-dots.pulse button:nth-of-type(4){animation-delay:.54s}
+.room-dots.pulse button:nth-of-type(5){animation-delay:.72s}
+@keyframes dotPulse{0%,45%,100%{background:var(--mute);box-shadow:0 0 0 0 rgba(224,154,53,0)}15%{background:var(--amber);box-shadow:0 0 0 .3125rem rgba(224,154,53,.3)}}
+@media (prefers-reduced-motion:reduce){.room-dots.pulse button{animation:none}}
 @keyframes thSwayS{0%,100%{transform:translateX(-1.25rem)}50%{transform:translateX(1.25rem)}}
 .th-track{position:relative;display:block;width:4.75rem;height:1.5rem}
 .th-track::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:linear-gradient(90deg,rgba(224,154,53,0),rgba(224,154,53,.65),rgba(224,154,53,0))}
@@ -701,15 +731,23 @@ html.sheet-open{overflow:hidden}
 html.paused .sheet[open]{animation:none}
 /* Rundgang aus Augenhöhe (Kapitel 04, Go Kai 7.11. „1B+ 2a/a 3a 4 ja“): Knopf neben „Rundgang starten“ + Vollbild-Dialog
    (eigene WebGL-Bühne, Fahrt aus src/ego/tour.js; Aufbau wie die Testseite rundgang-ego.html) */
-.t-ego{display:inline-flex;align-items:center;gap:.5rem;height:2.75rem;padding:0 1.125rem;border-radius:1.375rem;border:0;background:var(--amber);color:#14110A;font:700 .75rem/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:transform .3s var(--ease)}
-.t-ego:hover{transform:translateY(-1px)}
-.t-ego:active{transform:scale(.97)}
-.t-ego svg{width:1.125rem;height:1.125rem;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round} /* seit 7.11. spät Hauptknopf (alte Fahrt entfernt) */
+.t-ego{display:inline-flex;align-items:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:1.375rem;border:1px solid var(--amber);background:rgba(10,22,27,.55);color:var(--txt);font:700 .75rem/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .3s,transform .3s var(--ease)}
+.t-ego:hover{background:rgba(224,154,53,.16);transform:translateY(-1px)}
+.t-ego svg{width:1.125rem;height:1.125rem;fill:none;stroke:var(--amber);stroke-width:1.8;stroke-linejoin:round}
 .tour.in .t-ego,html.no-gl .t-ego,.t-ego[hidden]{display:none}
-html.ego-open{overflow:hidden}
+@media (min-width:921px){.tour:not(.in) .tour-ctrl{grid-column:1/-1}} /* PC: Knopf rechts neben ‹ Rundgang starten › (Zeile darf in die freie Fläche unter dem Haus) */
+@media (max-width:920px){
+  .tour-ctrl .tour-prog{order:5}
+  .tour-ctrl .t-ego{order:6;margin-top:.25rem} /* Handy: eigene Zeile unter ‹ Rundgang starten › */
+  .tour:not(.in) .t-exit{display:none} /* unsichtbar belegte er sonst eine eigene Zeile (Lücke über dem Augenhöhe-Knopf) */
+}
+@media (max-width:359px){ /* 320 px: ‹ › brechen sonst um und schieben den Augenhöhe-Knopf aus dem Bild; Räume bleiben über Punkte/Wischen erreichbar */
+  .tour:not(.in) .tour-ctrl .t-btn{display:none}
+}
+html.ego-open{overflow:hidden;scrollbar-gutter:stable}
 .ego{--e-ink:#0A161B;--e-txt:#EDE8DC;--e-dim:#B0BFC3;--e-line:rgba(237,232,220,.14);position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:var(--e-ink);color:var(--e-txt);overflow:hidden;touch-action:pinch-zoom;overscroll-behavior:contain}
 .ego[open]{animation:egoIn .35s ease-out}
-.ego::backdrop{background:var(--e-ink)}
+.ego::backdrop{background:transparent} /* Go Kai 8.11. „a B“: kein Schwarz zwischen Haus und Rundgang – die Seite (stehendes Bild) bleibt sichtbar, der Dialog blendet darüber */
 @keyframes egoIn{from{opacity:0}to{opacity:1}}
 .ego-gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 .ego-gl:active{cursor:grabbing}
