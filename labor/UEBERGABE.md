@@ -17,6 +17,8 @@ Testadresse (noindex, nach Push auf `main`): https://kairaethel-eng.github.io/la
 
 **Annahmen [A] (Kai hat freie Hand gegeben, bitte beim Ansehen prüfen):** (1) Reihenfolge und Dauer der Stationen (`TL`: Tür 0,6 · Weg 1,5 · Empfang 0,9 + 1,4 · Weg 1,3 · B1 0,8 + 6 × 0,65 · Weg 0,8 · B2 1,4 · Weg 0,8 · Training 0,9 Bildschirmhöhen). (2) Wirbelsäule schwebt als Hologramm über der Behandlungsliege (statt Modell auf dem Ständer). (3) Manuthera als eigene Bühne über dem Raum (die Liege im Raum selbst bleibt sichtbar, Haus auf 32 %); Alternative wäre, die ideaA-Liege in die Welt zu setzen (größerer Umbau). (4) Leistungen/Hausordnung als Infoseiten nach dem Rundgang (wie Hausbesuch), Praxis schimmert dahinter. (5) Keine Versorgungsbahn/Silhouette aus Puls Kap. 03 (zu viel Fläche im Raum); dafür Nerven mit Signalen und Abschnitts-Hervorhebung. (6) Figur dreht sich zur Kamera („Gast, der sich umdreht“).
 
+**Kai 9.11. (Chat-Ende):** Go für `main` gegeben (Bedingung: alles Vorbestehende unangetastet, Fusion als eigenes Projekt – beides vor dem Push gegen `origin/main` geprüft), erste Reaktion „begeistert“; Seite ist auf `main` veröffentlicht. Nächster Chat: Kais Sichtprüfung abwarten, dann je Punkt Ursache/Optionen/Empfehlung/Go. Build-Ausgabe `hausbesuch-puls.html` liegt mit im Repo.
+
 **Offen / nächste Schritte:** Kais Sichtprüfung PC (Chrome) + iPhone; danach je Punkt Ursache/Optionen/Go. Bekannt: Esc am Termin-Blatt im Container nicht geprüft (gleicher Code wie Puls); Tablet-Drehung über 920 px zieht Punktzahlen nicht nach (wie Puls); Kapitel-Label-Wechsel beim Weg zwischen zwei Räumen erst ab der Hälfte.
 
 ## ▶ Nächster Chat: hier weitermachen (Stand 7.11.2026 spät)
