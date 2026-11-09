@@ -1,4 +1,4 @@
-# Übergabe – Stand 8.11.2026 (Kap. 04: Klick-Rundgang zurück, Einflug zur Tür ohne Schnitt, Hinweis an der Raumleiste; Hero-Rauschen iPhone: Option C umgesetzt, Kai testet; Scanner am PC + Rundgang aus Augenhöhe umgesetzt; offen: Kais Tests, siehe ▶)
+# Übergabe – Stand 8.11.2026 (Kap. 04: Klick-Rundgang zurück, Einflug zur Tür ohne Schnitt, Hinweis an der Raumleiste; Hero-Rauschen iPhone: Option C umgesetzt, Kai bestätigt 9.11.; Scanner am PC + Rundgang aus Augenhöhe umgesetzt; offen: Kais Tests, siehe ▶)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
