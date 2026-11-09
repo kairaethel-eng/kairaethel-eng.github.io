@@ -1,0 +1,266 @@
+<title>HOP Hausbesuch · Puls</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Entwurf „Hausbesuch · Puls“: Rundgang durch die Praxis HOP als dunkle Partikel-Welt – vor der Tür ankommen, hereinkommen, durch Empfang, Behandlungsräume und Training gehen.">
+<style>/*FONTS*//*CSS*/</style>
+<!--BODY-->
+<a class="skip" href="#leistungen">Zum Inhalt</a>
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<div class="letterbox" aria-hidden="true"></div>
+
+<header class="top" id="top">
+  <a class="brand" href="#start" aria-label="HOP – Home of Physiotherapy, zum Anfang">
+    <svg viewBox="0 0 560 240" aria-hidden="true"><circle cx="110" cy="120" r="66" fill="#7FAF45"/><circle cx="300" cy="120" r="66" fill="#3C7189"/><circle cx="490" cy="120" r="66" fill="#3F86B5"/><g font-family="Archivo Expanded,Archivo,Arial,sans-serif" font-weight="800" font-size="60" fill="#fff" text-anchor="middle"><text x="110" y="142">H</text><text x="300" y="142">O</text><text x="490" y="142">P</text></g></svg>
+  </a>
+  <p class="chap-label" id="chapLabel" aria-live="polite"></p>
+  <button type="button" class="motion-btn" id="motionBtn" aria-pressed="false" aria-label="Bewegung anhalten" title="Bewegung anhalten"><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bewegung</span></button>
+  <a class="btn btn-small" href="#tuer" data-termin aria-haspopup="dialog">Termin</a>
+</header>
+
+<!-- Kapitel-Texte über dem Rundgang (Reihenfolge = Weg durch die Praxis) -->
+<div class="overlay" id="overlay">
+  <section class="chap is-on" data-ch="0" id="start">
+    <p class="kicker">Physiotherapie in Schorndorf</p>
+    <h1>Kommen Sie <em>rein.</em></h1>
+    <p class="lede">Bei uns sind Sie Gast, nicht Patient. Scrollen Sie, die Tür ist offen.</p>
+    <div class="actions"><a class="btn" href="#tuer" data-termin aria-haspopup="dialog">Termin anfragen</a><a class="btn btn-ghost" href="tel:+4971819931470">07181 9931470</a></div>
+    <p class="nogl-note">Die bewegte Ansicht braucht einen aktuellen Browser. Alle Inhalte stehen auch so untereinander.</p>
+  </section>
+  <section class="chap" data-ch="1">
+    <p class="kicker">Empfang</p>
+    <h2 id="greet">Guten Tag.</h2>
+    <p class="lede">Schön, dass Sie da sind. Jacke ablegen, durchatmen, ankommen.</p>
+    <ul class="promises">
+      <li>Wir begrüßen Sie mit Namen, nicht mit einer Nummer.</li>
+      <li>Wasser oder Kaffee, und ein Platz am Fenster.</li>
+      <li>Termine mit Zeit statt im Minutentakt.</li>
+    </ul>
+  </section>
+  <section class="chap" data-ch="2">
+    <p class="kicker">Empfang · Gast statt Patient</p>
+    <h2>Spannung <em>lösen.</em></h2>
+    <p class="lede"><span class="only-fine">Fahren Sie mit der Maus über den Gast am Empfang und lösen Sie die Verspannungen.</span><span class="only-touch">Streichen Sie seitlich über den Gast am Empfang und lösen Sie die Verspannungen.</span> Genau damit beginnt auch jede Behandlung: zuhören, hinschauen, lösen.</p>
+    <div class="meter" aria-hidden="true"><span>Spannung</span><div class="meter-bar"><i id="tension"></i></div><b id="tensionVal">100</b></div>
+  </section>
+  <section class="chap" data-ch="3">
+    <p class="kicker">Behandlungsraum 1</p>
+    <h2>Hände, die <em>verstehen.</em></h2>
+    <p class="lede">Jedes Segment der Wirbelsäule erzählt etwas. Scrollen Sie weiter: Wir gehen sie Abschnitt für Abschnitt durch, vom Kopf bis zum Becken.</p>
+  </section>
+  <section class="chap chap-seg" data-ch="4" aria-labelledby="segTitle">
+    <p class="kicker">Behandlungsraum 1 · Wirbelsäule</p>
+    <h2 id="segTitle" class="sr-only">Abschnitte der Wirbelsäule</h2>
+    <div class="segnav" role="group" aria-label="Wirbelsäulen-Abschnitt wählen">
+      <button type="button" data-seg="0" class="is-on"><b>C1–C2</b><span>Kopf</span></button>
+      <button type="button" data-seg="1"><b>C5–C6</b><span>HWS</span></button>
+      <button type="button" data-seg="2"><b>Th1–6</b><span>BWS</span></button>
+      <button type="button" data-seg="3"><b>Th7–12</b><span>Bauch</span></button>
+      <button type="button" data-seg="4"><b>L4–L5</b><span>LWS</span></button>
+      <button type="button" data-seg="5"><b>S1</b><span>Becken</span></button>
+    </div>
+    <div class="seg-cards" id="segCards" aria-live="polite">
+      <article class="seg-card is-on" data-seg="0">
+        <p class="seg-no">C1–C2</p>
+        <h3>Kopfgelenke</h3>
+        <dl><dt>Nerven</dt><dd>Nn. suboccipitales und N. occipitalis major versorgen Hinterkopf und tiefe Nackenmuskulatur.</dd><dt>Typisch</dt><dd>Vom Nacken aufsteigender Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen.</dd></dl>
+        <ul class="chips"><li>Atlas-Axis-Therapie</li><li>Manuelle Therapie</li><li>Fango</li></ul>
+      </article>
+      <article class="seg-card" data-seg="1">
+        <p class="seg-no">C5–C6</p>
+        <h3>Halswirbelsäule</h3>
+        <dl><dt>Nerven</dt><dd>Wurzeln u. a. für Bizeps und Schulterheber, Gefühl außen am Arm bis zum Daumen.</dd><dt>Typisch</dt><dd>Ausstrahlung über die Armaußenseite bis in den Daumen, Kribbeln, Schwächegefühl beim Beugen.</dd></dl>
+        <ul class="chips"><li>Manuelle Therapie</li><li>Schlingentisch</li><li>Krankengymnastik</li></ul>
+      </article>
+      <article class="seg-card" data-seg="2">
+        <p class="seg-no">Th1–Th6</p>
+        <h3>Brustwirbelsäule</h3>
+        <dl><dt>Nerven</dt><dd>Interkostalnerven der oberen Rippen versorgen Brustkorbwand und Zwischenrippenmuskeln.</dd><dt>Typisch</dt><dd>Blockaden mit atemabhängigem Stechen, Schmerz zwischen den Schulterblättern, „Rippenklemme“.</dd></dl>
+        <ul class="chips"><li>Manuelle Therapie</li><li>Lojer Manuthera</li><li>Fango</li></ul>
+      </article>
+      <article class="seg-card" data-seg="3">
+        <p class="seg-no">Th7–Th12</p>
+        <h3>Untere Brustwirbelsäule</h3>
+        <dl><dt>Nerven</dt><dd>Untere Zwischenrippennerven und Nerven der Bauchwand. Th10 versorgt die Haut etwa auf Nabelhöhe.</dd><dt>Typisch</dt><dd>Gürtelförmig ausstrahlender Schmerz am Rippenbogen, Steifigkeit am Übergang zur Lendenwirbelsäule (Th12/L1).</dd></dl>
+        <ul class="chips"><li>Manuelle Therapie</li><li>Krankengymnastik</li><li>Fango</li></ul>
+      </article>
+      <article class="seg-card" data-seg="4">
+        <p class="seg-no">L4–L5</p>
+        <h3>Lendenwirbelsäule</h3>
+        <dl><dt>Nerven</dt><dd>Wurzeln Richtung N. ischiadicus. L5 hebt den Fuß, Gefühl am Schienbein bis zur Großzehe.</dd><dt>Typisch</dt><dd>Bandscheiben-Region: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche.</dd></dl>
+        <ul class="chips"><li>Schlingentisch</li><li>Schmerztherapie</li><li>Krankengymnastik</li></ul>
+      </article>
+      <article class="seg-card" data-seg="5">
+        <p class="seg-no">S1 · ISG</p>
+        <h3>Kreuzbein &amp; Becken</h3>
+        <dl><dt>Nerven</dt><dd>S1-Wurzel für Wade, Fußaußenrand und Achillessehnenreflex. Das Iliosakralgelenk verbindet Becken und Wirbelsäule.</dd><dt>Typisch</dt><dd>Ausstrahlung über die Beinrückseite bis zur Ferse, tiefsitzender einseitiger Kreuzschmerz.</dd></dl>
+        <ul class="chips"><li>Manuelle Therapie / ISG</li><li>Sport-Physiotherapie</li><li>Stoßwelle</li></ul>
+      </article>
+    </div>
+    <p class="note">Vereinfachte Orientierung, ersetzt keine ärztliche Diagnose. Bitte lassen Sie Beschwerden immer zuerst ärztlich abklären – bei Taubheit oder Lähmungszeichen umgehend.</p>
+  </section>
+  <section class="chap chap-manu" data-ch="5">
+    <p class="kicker hi"><b class="dot" aria-hidden="true"></b> Behandlungsraum 2 · Highlight</p>
+    <h2>Bewegung in <em>drei Dimensionen.</em></h2>
+    <p class="lede">Hier steht die Lojer Manuthera 242. Kopf-, Brust- und Beckenteil bewegen sich unabhängig voneinander: Sie liegen entspannt, die Liege führt die Bewegung. So lassen sich Wirbelsäule und große Gelenke in Positionen mobilisieren, die auf einer normalen Liege nicht möglich sind.</p>
+    <div class="manu-modes" id="manuModes" role="group" aria-label="Bewegung der Liege zeigen">
+      <button type="button" aria-pressed="false"><span>Traktion</span><i></i></button>
+      <button type="button" aria-pressed="false"><span>Flexion</span><i></i></button>
+      <button type="button" aria-pressed="false"><span>Seitneigung</span><i></i></button>
+      <button type="button" aria-pressed="false"><span>Rotation</span><i></i></button>
+    </div>
+    <p class="manu-read" id="manuRead" aria-live="polite"></p>
+  </section>
+  <section class="chap" data-ch="6">
+    <p class="kicker">Trainingsfläche</p>
+    <h2>Bewegung ist das beste <em>Zuhause.</em></h2>
+    <p class="lede">Aktiv werden, angeleitet und begleitet. Mit wenigen, wirksamen Übungen für zuhause.</p>
+    <p class="tags">Krankengymnastik · Sport-Physiotherapie · Schlingentisch</p>
+    <div class="actions"><a class="btn btn-ghost" href="#leistungen">Alle Leistungen</a></div>
+  </section>
+</div>
+
+<!-- Manuthera-Bühne (eigene Partikel-Liege aus manu/ideaA.js) liegt über dem Behandlungsraum 2 -->
+<div class="manu-panel" id="manuPanel" aria-hidden="true">
+  <div class="still still-manu"></div>
+  <canvas id="glManu" role="img" aria-label="Partikel-Darstellung der Manuthera-Liege mit liegender Person. Die Liegeteile zeigen nacheinander Traktion, Flexion, Seitneigung und Rotation."></canvas>
+  <p class="manu-hint"><span class="only-fine">Ziehen zum Drehen</span><span class="only-touch">Seitlich wischen zum Drehen</span> · schematisch</p>
+</div>
+
+<nav class="dock" aria-label="Stationen des Rundgangs">
+  <ol class="progress" id="dock">
+    <li class="is-on"><button type="button" data-go="tuer">Tür</button></li>
+    <li><button type="button" data-go="empfang">Empfang</button></li>
+    <li><button type="button" data-go="b1">Behandlung</button></li>
+    <li><button type="button" data-go="b2">Manuthera</button></li>
+    <li><button type="button" data-go="training">Training</button></li>
+    <li><button type="button" data-go="leistungen">Leistungen</button></li>
+    <li><button type="button" data-go="hausordnung">Hausordnung</button></li>
+    <li><button type="button" data-go="tuer2">Bis bald</button></li>
+  </ol>
+</nav>
+
+<main>
+  <!-- Scrollweg des Rundgangs (die Kamera folgt dem Fortschritt); Höhe setzt main.js -->
+  <section id="film" class="film" aria-label="Rundgang durch die Praxis"></section>
+
+  <section class="chapter list" id="leistungen" aria-labelledby="l-title">
+    <div class="wrap roof-list">
+      <div class="roof-head">
+        <p class="kicker"><i>§</i> Alle Leistungen</p>
+        <h2 id="l-title">Alles unter<br><em>einem</em> Dach.</h2>
+        <p class="lead">Viele Therapieformen, ein vertrauter Ansprechpartner. <span class="only-fine">Fahren Sie über eine Leistung, die Partikel formen ihr Motiv.</span></p>
+      </div>
+      <ol class="index" id="index">
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Manuelle Therapie</span><span class="ix-tag">Zertifikat</span></button><div class="ix-body"><p>Mit gezielten Handgriffen untersuche und behandle ich Gelenke, Muskeln und Nerven, dort, wo Bewegung blockiert ist. Nach gründlichem Befund kombiniere ich Mobilisation, Weichteiltechniken und aktives Üben.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Krankengymnastik</span><span class="ix-tag">Reha</span></button><div class="ix-body"><p>Aktiv statt passiv: Kraft, Beweglichkeit und Sicherheit wachsen Schritt für Schritt, nach Operationen, Verletzungen oder bei chronischen Beschwerden. Dazu ein kurzes Heimprogramm.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Sport-Physiotherapie</span><span class="ix-tag">Aktiv</span></button><div class="ix-body"><p>Vom ersten schmerzfreien Schritt bis zurück auf den Platz: Belastung wird gezielt gesteigert, sportartspezifisch getestet und dokumentiert.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Schmerztherapie</span><span class="ix-tag">Individuell</span></button><div class="ix-body"><p>Schmerz hat immer eine Geschichte. Ich suche die Ursache und kombiniere manuelle Techniken, Übungen und Aufklärung zu einem Plan, der zu Ihrem Alltag passt.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">CMD-Therapie</span><span class="ix-tag">Spezialisierung</span></button><div class="ix-body"><p>Bei Kieferschmerz, Knirschen, Knacken oder eingeschränkter Mundöffnung behandle ich Kiefergelenk und Kaumuskulatur, oft abgestimmt mit Ihrem Zahnarzt. Die HWS wird immer mitbetrachtet.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Atlas-Axis-Therapie</span><span class="ix-tag">Sanft</span></button><div class="ix-body"><p>Die beiden obersten Halswirbel steuern feinste Kopfbewegungen. Mit sehr sanften, präzisen Impulsen löse ich Spannungen in diesem sensiblen Bereich.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Stoßwellen-Therapie</span><span class="ix-tag">Modern</span></button><div class="ix-body"><p>Radiale Druckwellen regen die Durchblutung direkt am Sehnenansatz an. Klassische Einsatzgebiete: Ferse, Achillessehne, Ellenbogen, Schulter.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Traktion im Schlingentisch</span><span class="ix-tag">Entlastung</span></button><div class="ix-body"><p>Im Schlingentisch wird Ihr Körper teilweise schwerelos. Unter sanftem Zug entspannen Bandscheiben, Gelenke und Muskulatur.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Osteopathische Ansätze</span><span class="ix-tag">Ganzheitlich</span></button><div class="ix-body"><p>Faszien, Gelenke und innere Strukturen beeinflussen sich gegenseitig. Mit sanften Techniken folge ich den Spannungsketten bis zur Ursache.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Thermische Behandlung</span><span class="ix-tag">Fango · Kälte</span></button><div class="ix-body"><p>Tiefenwärme aus der Fangopackung lockert die Muskulatur und bereitet sie auf die Behandlung vor. Kälte dämpft akute Reizungen und Schwellungen. Je nach Beschwerde das passende Mittel.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Reizstrom</span><span class="ix-tag">Ergänzend</span></button><div class="ix-body"><p>Elektrotherapie lindert Schmerzen und aktiviert geschwächte Muskeln, meist ergänzend zur manuellen Behandlung oder zum Üben.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Lojer Manuthera</span><span class="ix-tag ix-hi"><b class="dot" aria-hidden="true"></b>Highlight</span></button><div class="ix-body"><p>Die Manuthera erlaubt dreidimensionale Mobilisation und Traktion der Wirbelsäule in Positionen, die auf einer normalen Liege nicht möglich sind.<a class="ix-link" href="#" data-go="b2">Zurück in Behandlungsraum 2 <span aria-hidden="true">↑</span></a></p></div></li>
+      </ol>
+      <div class="serv-stage" aria-hidden="true"><canvas id="glServ"></canvas><p class="serv-name" id="servName"></p></div>
+    </div>
+  </section>
+
+  <section class="chapter rules" id="hausordnung" aria-labelledby="h-title">
+    <div class="rules-sticky">
+      <div class="wrap">
+        <p class="kicker"><i>§</i> Die Hausordnung</p>
+        <h2 id="h-title" class="sr-only">Die Hausordnung</h2>
+        <ol class="laws" id="laws">
+          <li class="is-on"><b>§1</b><span>Der Mensch zuerst.</span><small>Zuhören kommt vor Behandeln.</small></li>
+          <li><b>§2</b><span>Zeit statt Taktung.</span><small>Termine, in denen Sie wirklich ankommen dürfen.</small></li>
+          <li><b>§3</b><span>Alles unter einem Dach.</span><small>Viele Therapieformen, ein vertrauter Ansprechpartner.</small></li>
+          <li><b>§4</b><span>Ehrlichkeit.</span><small>Ich sage, was hilft und was nicht.</small></li>
+          <li><b>§5</b><span>Gast statt Fall.</span><small>Sie sollen gerne wiederkommen, nicht müssen.</small></li>
+        </ol>
+        <div class="law-prog" id="lawProg" role="group" aria-label="Paragraph wählen"><button type="button" aria-label="§1 anzeigen"><i></i></button><button type="button" aria-label="§2 anzeigen"><i></i></button><button type="button" aria-label="§3 anzeigen"><i></i></button><button type="button" aria-label="§4 anzeigen"><i></i></button><button type="button" aria-label="§5 anzeigen"><i></i></button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter door" id="tuer" aria-labelledby="t-title">
+    <!-- Rückweg zur Tür: die Kamera geht aus dem Training zurück in den Flur, die Haustür steht offen -->
+    <div class="door-film" id="doorFilm">
+      <div class="door-sticky">
+        <div class="wrap">
+          <div class="chap chap-door" id="bisbald">
+            <p class="kicker">Bis bald</p>
+            <h2 id="t-title">Bis <em>bald.</em></h2>
+            <p class="lede">Wir freuen uns auf Sie. Der erste Schritt ist eine kurze Nachricht, oder Sie buchen Ihren Termin direkt online.</p>
+            <div class="actions">
+              <a class="btn" href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener" data-termin aria-haspopup="dialog">Online-Termin buchen</a>
+              <a class="btn btn-ghost" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage&amp;body=Guten%20Tag%20Herr%20Raethel%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20einen%20Termin%20anfragen.%0D%0A%0D%0AName%3A%0D%0AR%C3%BCckrufnummer%3A%0D%0AWunschzeiten%3A%0D%0A%C3%84rztliche%20Verordnung%20vorhanden%20%28ja%2Fnein%29%3A%0D%0A%0D%0AMeine%20Beschwerde%20schildere%20ich%20Ihnen%20bitte%20erst%20im%20Gespr%C3%A4ch%2C%20nicht%20per%20E-Mail.%0D%0A%0D%0AVielen%20Dank">Per E-Mail anfragen</a>
+              <a class="btn btn-ghost" href="tel:+4971819931470">07181 9931470</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="wrap door-inner">
+      <div>
+        <p class="kicker"><i>§</i> Gut zu wissen</p>
+        <h2 class="door-h">Damit Sie entspannt <em>ankommen.</em></h2>
+        <p class="lead">Telefonisch erreichen Sie nur den Anrufbeantworter, ich rufe zurück. Schneller geht es per E-Mail oder über den Online-Kalender.</p>
+        <div class="actions"><button type="button" class="btn btn-ghost" id="copyMail" hidden>E-Mail-Adresse kopieren</button></div>
+        <p class="copy-state" id="copyState" role="status"></p>
+        <p class="small">Bitte keine ausführlichen Gesundheitsangaben per E-Mail oder auf dem Anrufbeantworter. Die besprechen wir persönlich.</p>
+        <div class="faq">
+          <details><summary>Brauche ich ein Rezept?</summary><p>Mit ärztlicher Verordnung rechne ich direkt mit Ihrer Krankenkasse ab. Privat Versicherte und Selbstzahler sind ebenso willkommen.</p></details>
+          <details><summary>Was bringe ich zum ersten Termin mit?</summary><p>Ihre Verordnung, die Versichertenkarte, vorhandene Befunde und bequeme Kleidung.</p></details>
+          <details><summary>Wo kann ich parken?</summary><p>Direkt vor dem Haus und in der Nähe. Mit dem Bus: VVS-Haltestelle „Schlichtener Straße“ oder „Grauhalde“.</p></details>
+        </div>
+      </div>
+      <dl class="facts">
+        <div><dt>E-Mail</dt><dd><a id="mailAddr" href="mailto:kontakt@hopphysio.de">kontakt@hopphysio.de</a></dd></div>
+        <div><dt>Telefon</dt><dd><a href="tel:+4971819931470">07181 9931470</a><span class="dd-note">Nur Anrufbeantworter. Ich rufe Sie zurück, schneller geht es per E-Mail.</span><a class="vc" href="hop-physiotherapie.vcf" download>Praxis im Telefon speichern</a></dd></div>
+        <div><dt>Adresse</dt><dd><a href="https://www.google.com/maps/search/?api=1&amp;query=Schlichtener%20Stra%C3%9Fe%2087%2C%2073614%20Schorndorf" target="_blank" rel="noopener">Schlichtener Straße 87, 73614 Schorndorf</a><span class="dd-note">In Google Maps öffnen</span></dd></div>
+        <div><dt>Zeiten</dt><dd>Mo–Fr 8:30–19:30 Uhr<br>Sa nach Absprache<br>So und feiertags geschlossen<span class="dd-note">Termine nach Vereinbarung</span><span class="dd-open" id="openNow" hidden></span></dd></div>
+        <div><dt>Abrechnung</dt><dd>Kassenpatienten, Privatpatienten und Selbstzahler<span class="dd-note">Ihre ärztliche Verordnung (falls vorhanden) bitte zum ersten Termin mitbringen.</span></dd></div>
+        <div><dt>Parken</dt><dd>Direkt vor dem Haus und in der Nähe</dd></div>
+        <div><dt>ÖPNV</dt><dd>VVS-Bus „Schlichtener Straße“ / „Grauhalde“</dd></div>
+        <div><dt>Inhaber</dt><dd>Kai Raethel · Manuelle Therapie · CMD</dd></div>
+      </dl>
+    </div>
+    <footer class="foot wrap">
+      <span>© 2026 HOP – Home of Physiotherapy · Kai Raethel</span>
+      <span><a href="recht-impressum.html">Impressum</a> · <a href="recht-datenschutz.html">Datenschutz</a></span>
+      <span class="lab">Entwurf · Hausbesuch · Puls</span>
+    </footer>
+  </section>
+</main>
+
+<!-- Termin-Blatt (wie Puls · Scan, Option C): Online-Kalender von Optica Viva, lädt erst nach Klick auf „Kalender laden“ -->
+<dialog class="sheet" id="terminSheet" aria-labelledby="ts-title">
+  <div class="sheet-in">
+    <div class="sheet-head">
+      <p class="kicker">Termin</p>
+      <h2 id="ts-title">Termin <em>buchen.</em></h2>
+      <button type="button" class="sheet-x" id="tsClose" aria-label="Schließen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sheet-pre" id="tsPre">
+      <p class="sheet-lead">Wählen Sie Ihren Termin direkt im Kalender meiner Praxis.</p>
+      <button type="button" class="btn" id="tsLoad">Kalender laden</button>
+      <p class="sheet-note">Der Kalender gehört zu meiner Praxissoftware Optica Viva und wird erst nach Ihrem Klick geladen. Mit „Kalender laden“ stimmen Sie zu, dass dabei Daten an Optica und zum Schutz vor Missbrauch an Google (reCAPTCHA) übertragen werden. <a href="recht-datenschutz.html#termin">Mehr dazu im Datenschutz</a></p>
+      <p class="sheet-note">Der Kalender fragt nur nach Ihren Kontaktdaten. Ihre Beschwerden besprechen wir persönlich.</p>
+      <div class="sheet-alt">
+        <p class="sheet-alt-h">Lieber ohne Online-Kalender?</p>
+        <a class="btn btn-ghost" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage&amp;body=Guten%20Tag%20Herr%20Raethel%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20einen%20Termin%20anfragen.%0D%0A%0D%0AName%3A%0D%0AR%C3%BCckrufnummer%3A%0D%0AWunschzeiten%3A%0D%0A%C3%84rztliche%20Verordnung%20vorhanden%20%28ja%2Fnein%29%3A%0D%0A%0D%0AMeine%20Beschwerde%20schildere%20ich%20Ihnen%20bitte%20erst%20im%20Gespr%C3%A4ch%2C%20nicht%20per%20E-Mail.%0D%0A%0D%0AVielen%20Dank">Per E-Mail anfragen</a>
+        <a class="btn btn-ghost" href="tel:+4971819931470">07181 9931470</a>
+        <p class="sheet-note">Mo–Fr 8:30–19:30 Uhr · Telefon: nur Anrufbeantworter, ich rufe zurück.<span class="dd-open" id="tsOpen" hidden></span></p>
+      </div>
+    </div>
+    <div class="sheet-frame" id="tsFrame" data-src="https://termine.opticaviva.de/b/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" hidden>
+      <p class="sheet-wait" aria-hidden="true">Kalender wird geladen …</p>
+    </div>
+    <p class="sheet-foot"><a href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener">Kalender in neuem Fenster öffnen</a></p>
+  </div>
+</dialog>
+<!--JS-->

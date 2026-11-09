@@ -24,6 +24,8 @@ const PAGES = {
   'portrait': { out: 'portrait.html' },
   'zuhause': { out: 'zuhause.html' },
   'ego': { out: 'rundgang-ego.html' },
+  // Fusion Hausbesuch + Puls (Auftrag Kai 9.11.2026): Rundgang aus Augenhöhe durch die Partikel-Praxis, Inhalte von Puls · Scan
+  'fusion': { out: 'hausbesuch-puls.html' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
   'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true, noTermin: true }, // Übergangsseite hat kein Termin-Blatt
