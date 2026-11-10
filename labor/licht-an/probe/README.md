@@ -29,6 +29,7 @@ npm ci && node build.mjs fusion      # erzeugt hausbesuch-puls.html in der Kopie
 - Fensterlagen und Himmelsrichtung sind Annahmen; der echte Grundriss fehlt.
 - Am Handy liegt im Empfang die Pendelleuchte über dem Tresen außerhalb des Bildausschnitts; eine zusätzliche Hängeleuchte beim Teppich bringt eine Lichtquelle ins Bild. Die Kamera wurde nicht neu eingerichtet – das gehört zum Bau.
 - Glasflächen wirken aus der Nähe noch körnig; Schatten der Möbel fehlen.
+- Text und Licht: Im Training steht die Überschrift noch auf dem Fenster, „Guten Abend.“ läuft noch in die Figur (Befund des zweiten Gutachtens). Die Regel „Text steht nie auf Licht“ ist in der Probe nur für Dachzeile und Fließtext umgesetzt.
 - Im Container gibt es keinen Grafikchip: Die Kosten sind nur als Vergleich vorher/nachher gemessen (`../BELEGE.md`), nicht als Bildrate am iPhone.
 - Mittags wirkt der Raum neutraler als abends – gewollt („dunkel bleibt“), aber Geschmackssache.
 - Die Probe rechnet das Licht in jedem Bild für jeden Punkt neu. Das ist bequem zum Ausprobieren, aber teuer (ohne Grafikchip −45 % Bilder je Sekunde). Für den Bau ist vorgesehen, das Licht beim Erzeugen der Punkte einzubacken und nur den aktuellen Raum zu zeichnen.
