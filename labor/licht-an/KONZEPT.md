@@ -182,6 +182,8 @@ Barrierefreiheit: Als Kleinstunternehmen fällt die Praxis nicht unter die Pflic
 
 Jede Stufe endet mit den Prüfungen aus Abschnitt 7 und Kais Gerätetest. Stufe 1 ist bewusst ein Aufsatz auf die bestehende Seite und kein Neubau: So lässt sich das Licht am iPhone beurteilen, bevor mehr daran hängt.
 
+**Kosten: 0 €.** Regel Kai (10.11.2026): kein Geld ausgeben, alles nur kostenlos nutzen. Kein Baustein und keine Zugabe braucht einen Kauf, ein Abo oder einen bezahlten Dienst [A]: three.js und die Mess- und Prüfwerkzeuge sind quelloffen; die Rechnung für echte Räume geht mit freier Software am eigenen PC [B, `belege/scan.md`]; Porträt, Raumfotos und Stimme entstehen mit dem eigenen Handy; für den Android-Test genügt ein geliehenes Gerät. Die einzige Stelle, an der Geld ins Spiel käme, ist die Fachprüfung der Rechts-Ampel (Abschnitte 8 und 10) – sie ist eine Empfehlung, kein Teil des Baus, und bleibt Kais Entscheidung. Die Hosting-Frage (Nebenbefunde) wird nur geklärt; ein Wechsel käme nur auf einem kostenlosen Weg in Frage [O].
+
 ---
 
 ## 10 Prüfbericht (gegen die vorab festgelegten Ziele)
