@@ -1,0 +1,297 @@
+--- a/labor/src/fusion/scene.js
++++ b/labor/src/fusion/scene.js
+@@ -86,7 +86,8 @@
+  * Szene aus der fertigen Praxis-Punktwolke: Linien (+ Haustür), Möbel, dunkler Kern, Logo-Schild.
+  * prx = Ergebnis von praxisScanGen (lines, furn, core, spacing). Rückgabe: Gruppe + Objekte.
+  */
+-export function buildHouse(scene, prx, U) {
++export function buildHouse(scene, prx, U, L = null) {
++  const LG = L ? '#define LICHT\n' + L.glsl : '', LF = L ? '#define LICHT\n' : ''; // Lichtprobe: Baustein houseLight() für alle Haus-Shader
+   // Tür: Rahmen + Zeilen aus Linienpunkten, Scharnier links, schwingt nach innen
+   const dp = [], dk = [], dr = [], dd = [];
+   const x0 = (182 - 210) * K, x1 = (216 - 210) * K, z = (272 - 140) * K, y0 = Y0, y1 = Y0 + 1.05;
+@@ -105,7 +106,7 @@
+   lg.setAttribute('aDoor', new THREE.BufferAttribute(door, 1));
+   const lines = new THREE.Points(lg, new THREE.ShaderMaterial({
+     uniforms: U, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+-    vertexShader: COMMON + /* glsl */`
++    vertexShader: LG + COMMON + /* glsl */`
+       varying vec3 vCol; varying float vA;
+       void main(){
+         vec3 p = doorP(position, aDoor);
+@@ -115,7 +116,14 @@
+         gl_PointSize = clamp(uPix * (aKind > 5.5 ? 1.5 : 1.2) * 7. / d, 1.3, 4.5) * uBig;
+         float near = smoothstep(.12, .5, d), far = 1. - smoothstep(7., 14., d) * .6 * uFar;
+         float g = exp(-pow((position.y - uCut) * 14., 2.));
+-        vA = (aKind < .5 ? .5 : aKind < 1.5 ? .6 : .95) * near * far * uLum * step(position.y, uCut) * (1. + g * 1.5);
++        float kk = 1.;
++        #ifdef LICHT
++        // Licht-Modus: Boden-Raster und Wand-Zeilen treten zurück, Kanten bleiben; die Tür wird ein warmes Holzblatt
++        kk = aDoor > .5 ? .9 : aKind < .5 ? uGridK : aKind < 1.5 ? uRowK : .9;
++        col *= uLineTint;
++        if (aDoor > .5 && aKind < 3.5) col = mix(col, vec3(.6, .34, .15), .6);
++        #endif
++        vA = (aKind < .5 ? .5 : aKind < 1.5 ? .6 : .95) * near * far * uLum * step(position.y, uCut) * (kk + g * 1.5);
+         vCol = mix(col, cAmber * 1.4, g);
+       }`,
+     fragmentShader: /* glsl */`
+@@ -126,13 +134,25 @@
+   }));
+   const furn = new THREE.Points(prx.furn, new THREE.ShaderMaterial({
+     uniforms: U,
+-    vertexShader: COMMON + /* glsl */`
++    vertexShader: LG + COMMON + /* glsl */`
+       varying vec3 vCol; varying float vVis;
++      #ifdef LICHT
++      uniform vec3 cF2, cF3, cF4, cF5, cF6;
++      #endif
+       void main(){
+         vec3 n = normal; vec3 V = normalize(cameraPosition - position);
+         float lam = max(dot(n, normalize(vec3(.4, .8, .5))), 0.), rim = pow(1. - abs(dot(n, V)), 3.);
++        #ifdef LICHT
++        // Licht-Modus: echtes Raumlicht statt festem Lambert, wärmere Grundfarben, Lampenschirme leuchten selbst
++        vec3 base = aKind < 2.5 ? cF2 : aKind < 3.5 ? cF3 : aKind < 4.5 ? cF4 : aKind < 5.5 ? cF5 : cF6;
++        vec3 E = houseLight(position, n, aRoom);
++        float shade = aKind > 3.5 && aKind < 4.5 ? lLampNear(position) : 0.;
++        vec3 col = (base * E * (1. + rim * .35) + uLampCol * shade * .34 + (aKind > 2.5 && aKind < 3.5 ? base * .085 : vec3(0.))) * uLum; // Pflanzen behalten ihr Grün
++        col = col / (1. + lLum(col) * .5);
++        #else
+         vec3 base = aKind < 2.5 ? cBone : aKind < 3.5 ? cGreen : aKind < 4.5 ? cAmber : aKind < 5.5 ? mix(cPetrol * 1.7, cBlue, .3) : cBone;
+         vec3 col = (base * (.3 + .7 * lam) + cBlue * rim * .12) * uLum;
++        #endif
+         float g = exp(-pow((position.y - uCut) * 14., 2.));
+         vCol = mix(col, cAmber * 1.4, g);
+         vec4 mv = viewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
+@@ -150,9 +170,17 @@
+   }));
+   const core = new THREE.Mesh(prx.core, new THREE.ShaderMaterial({
+     uniforms: U,
+-    vertexShader: /* glsl */`varying float vL, vD, vY; void main(){ vec3 p = position - normal * .006; vL = max(dot(normal, normalize(vec3(.4, .8, .5))), 0.); vY = position.y;
++    vertexShader: LG + /* glsl */`varying float vL, vD, vY; varying vec3 vE;
++      #ifdef LICHT
++      attribute float aRoom;
++      #endif
++      void main(){ vec3 p = position - normal * .006; vL = max(dot(normal, normalize(vec3(.4, .8, .5))), 0.); vY = position.y; vE = vec3(0.);
++      // (Licht am dunklen Kern bewusst nicht je Ecke gerechnet: kaum sichtbar, spart rund 40 % der Lichtrechnungen am Handy)
+       vec4 mv = viewMatrix * vec4(p, 1.); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
+-    fragmentShader: /* glsl */`uniform vec3 cCore, cBone; uniform float uCut; varying float vL, vD, vY; void main(){ if (vD < .2 || vY > uCut) discard; gl_FragColor = vec4(cCore + cBone * vL * .04, 1.);
++    fragmentShader: LF + /* glsl */`uniform vec3 cCore, cBone, uCoreCol; uniform float uCut, uLum; varying float vL, vD, vY; varying vec3 vE; void main(){ if (vD < .2 || vY > uCut) discard; gl_FragColor = vec4(cCore + cBone * vL * .04, 1.);
++      #ifdef LICHT
++      gl_FragColor = vec4(uCoreCol + vE * vec3(.05, .042, .034) * uLum, 1.);
++      #endif
+       #include <colorspace_fragment>
+     }`,
+   }));
+@@ -167,7 +195,8 @@
+ /**
+  * Staub: feine Partikel, die durch die Praxis treiben (Puls: „die Seite lebt“). Additiv, leise; uDust blendet.
+  */
+-export function buildDust(scene, n, shared) {
++export function buildDust(scene, n, shared, L = null) {
++  const LG = L ? '#define LICHT\n' + L.glsl : '';
+   const pos = new Float32Array(n * 3), rnd = new Float32Array(n * 3);
+   for (let i = 0; i < n; i++) {
+     // innen (Haus) und draußen vor der Tür
+@@ -180,22 +209,35 @@
+   const g = new THREE.BufferGeometry();
+   g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+   g.setAttribute('aR', new THREE.BufferAttribute(rnd, 3));
+-  const U = { uTime: shared.uTime, uPix: shared.uPix, uDust: { value: 1 }, cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') } };
++  const U = { ...(L ? L.U : {}), uTime: shared.uTime, uPix: shared.uPix, uDust: { value: 1 }, cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') } };
+   const pts = new THREE.Points(g, new THREE.ShaderMaterial({
+     uniforms: U, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+-    vertexShader: /* glsl */`
++    vertexShader: LG + /* glsl */`
+       attribute vec3 aR; uniform float uTime, uPix, uDust; uniform vec3 cPetrol, cBone; varying vec3 vC; varying float vA;
+       void main(){
++        float T = uTime;
++        #ifdef LICHT
++        T = uTimeL;   // steht bei „Bewegung reduzieren“ und Pause
++        #endif
+         vec3 p = position;
+-        p.x += sin(uTime * (.12 + aR.x * .2) + aR.y * 6.283) * .22;
+-        p.y += sin(uTime * (.09 + aR.y * .15) + aR.z * 6.283) * .12;
+-        p.z += cos(uTime * (.1 + aR.z * .18) + aR.x * 6.283) * .22;
++        p.x += sin(T * (.12 + aR.x * .2) + aR.y * 6.283) * .22;
++        p.y += sin(T * (.09 + aR.y * .15) + aR.z * 6.283) * .12;
++        p.z += cos(T * (.1 + aR.z * .18) + aR.x * 6.283) * .22;
+         vec4 mv = viewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
+         float d = -mv.z;
+         gl_PointSize = clamp(uPix * (1.2 + aR.y * 1.6) * 2.4 / d, 1., 5.);
+-        float tw = .55 + .45 * sin(uTime * (.5 + aR.z) + aR.x * 40.);
++        float tw = .55 + .45 * sin(T * (.5 + aR.z) + aR.x * 40.);
+         vC = mix(cPetrol * 1.2, cBone, aR.x * .6);
+         vA = uDust * (.1 + .3 * aR.z) * tw * smoothstep(.15, .6, d) * (1. - smoothstep(5., 9., d));
++        #ifdef LICHT
++        // Staub leuchtet im Sonnenstrahl und nahe den Lampen bernsteinfarben auf, sonst ist er leise
++        float room = lRoom(p);
++        float sunB = uSunCol.r > .001 && room < 5.5 ? lSun(p, room) : 0.;
++        float lampB = min(lLampNear(p), 1.2);
++        float ph = .35 + .65 * pow(max(dot(normalize(p - cameraPosition), uSunDir), 0.), 3.);
++        vC = uAmbCol * 2.5 + uSkyCol * .25 + uLampCol * lampB + uSunCol * sunB * ph;
++        vA *= .5 + 1.8 * sunB * ph + 1.5 * lampB;
++        #endif
+       }`,
+     fragmentShader: /* glsl */`varying vec3 vC; varying float vA; void main(){ float d = length(gl_PointCoord - .5); gl_FragColor = vec4(vC, smoothstep(.5, .08, d) * vA);
+       #include <colorspace_fragment>
+--- a/labor/src/fusion/main.js
++++ b/labor/src/fusion/main.js
+@@ -15,6 +15,7 @@
+ import { buildHouse, buildDust, houseUniforms, Y0 } from './scene.js';
+ import { createFigure } from './figure.js';
+ import { createSpine } from './spine.js';
++import { createLight } from './light.js';
+ 
+ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const CALM = reduced ? 0.45 : 1;
+@@ -83,15 +84,19 @@
+ 
+ // ---------- Praxis (Haus), Staub, Figur, Wirbelsäule ----------
+ const U = houseUniforms();
++// Lichtprobe (Entwurf): ?licht=0 zeigt das unveränderte Aussehen, ?zeit=morgen|mittag|golden|abend|nacht|jetzt wählt die Tageszeit
++const QS = new URLSearchParams(location.search);
++const light = renderer && QS.get('licht') !== '0' ? createLight({ scene, shared, mob, reduced, U, zeit0: QS.get('zeit') || 'jetzt' }) : null;
+ let prx = null, house = null;
+-const dust = renderer ? buildDust(scene, mob ? 1400 : 3000, shared) : null;
++const dust = renderer ? buildDust(scene, mob ? 1400 : 3000, shared, light) : null;
+ const fig = renderer ? createFigure(scene, mob ? 14000 : 30000, shared) : null;
+ const spine = renderer ? createSpine(scene, shared, { desktop: !mob }) : null;
+ let spineBuilt = false;
+ const buildSpine = () => { if (spineBuilt || !spine) return; spineBuilt = true; spine.build(mob ? 85000 : 300000, mob ? 0.032 : 0.024).catch((e) => console.error(e)); };
+ if (renderer) {
+   runSliced(praxisScanGen(mob ? 32000 : 85000, mob ? 0.62 : 1)).then((r) => {
+-    prx = r; house = buildHouse(scene, prx, U);
++    prx = r; if (light) light.fixRooms(prx); house = buildHouse(scene, prx, U, light);
++    if (light) runSliced(light.surfacesGen(mob ? 55000 : 240000)).then(() => { try { renderer.compile(scene, camera); } catch (e) { /* egal */ } }).catch((e) => console.error(e));
+     // Shader vorab übersetzen (sonst Ruckler beim ersten Bild der Figur/Wirbelsäule)
+     try { renderer.compile(scene, camera); } catch (e) { /* egal */ }
+     (window.requestIdleCallback || ((f) => setTimeout(f, 300)))(buildSpine, { timeout: 2500 });
+@@ -490,6 +495,12 @@
+   const f = fPx();
+   U.uLogo.value = f * 0.0042 * 1.05;
+   if (prx) U.uStip.value = f * prx.spacing * 0.62;
++  if (light) {
++    light.update(dt, { pos: cam.pos, door: U.uDoor.value / 1.75, f, still: paused || reduced });
++    if (light.inkChanged) { light.inkChanged = false; renderer.setClearColor(new THREE.Color(`rgb(${light.ink.join(',')})`), 1); }
++    if (fig) fig.U.uTint.value.fromArray(light.tint);
++    if (spine) spine.U.uTint.value.fromArray(light.tint);
++  }
+ 
+   // Kamera weich nachführen, Umschauen (zieht sich langsam zurück), leichtes Atmen
+   cam.pos.lerp(want.pos, k3); cam.look.lerp(want.look, k3);
+--- a/labor/src/fusion/figure.js
++++ b/labor/src/fusion/figure.js
+@@ -27,7 +27,7 @@
+ 
+   const U = {
+     uTime: shared.uTime, uPix: shared.uPix, uRelax: { value: tex }, uBodyWH: { value: new THREE.Vector2(BODY_W * BODY_SCALE, BODY_H * BODY_SCALE) },
+-    uPos: { value: new THREE.Vector3() }, uS: { value: 0.1 }, uYaw: { value: 0 }, uIn: { value: 0 }, uBreath: { value: 0 }, uCalm: { value: 0 }, uPx: { value: 2.0 }, uLum: { value: 1 },
++    uPos: { value: new THREE.Vector3() }, uS: { value: 0.1 }, uYaw: { value: 0 }, uIn: { value: 0 }, uBreath: { value: 0 }, uCalm: { value: 0 }, uPx: { value: 2.0 }, uLum: { value: 1 }, uTint: { value: new THREE.Vector3(1, 1, 1) },
+     cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') }, cBlue: { value: C('#5AA2D6') }, cGreen: { value: C('#8BC34A') },
+   };
+   const mat = new THREE.ShaderMaterial({
+@@ -35,7 +35,7 @@
+     vertexShader: /* glsl */`
+       attribute float aHeat; attribute vec4 aRand;
+       uniform float uTime, uPix, uS, uYaw, uIn, uBreath, uCalm, uPx, uLum; uniform vec3 uPos; uniform vec2 uBodyWH;
+-      uniform sampler2D uRelax; uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen;
++      uniform sampler2D uRelax; uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, uTint;
+       varying vec3 vCol; varying float vA;
+       vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
+       vec3 jitter(float amp, float sp){ return vec3(sin(uTime*sp*1.3+aRand.x*40.), sin(uTime*sp*1.7+aRand.y*40.), sin(uTime*sp*1.1+aRand.z*40.))*amp; }
+@@ -60,7 +60,7 @@
+         float sz = 1. + tension*.9*throb;
+         vec4 mv = viewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
+         gl_PointSize = clamp(uPix * uPx * sz * mix(.55, 1.35, aRand.y) / -mv.z, 1., 9.);
+-        vCol = col * uLum;
++        vCol = col * uLum * uTint;
+         vA = (.5 + aRand.x*.5) * sqrt(k) * (1. - .5 * sin(k * 3.14159));
+       }`,
+     fragmentShader: /* glsl */`
+--- a/labor/src/fusion/spine.js
++++ b/labor/src/fusion/spine.js
+@@ -21,14 +21,14 @@
+ export function createSpine(scene, shared, { desktop }) {
+   const U = {
+     uTime: shared.uTime, uPix: shared.uPix, uRot: { value: -0.9 }, uCut: { value: 100 }, uXf: { value: new THREE.Vector4(0, 0, 0, 0.08) },
+-    uZone: { value: -10 }, uZoneAmt: { value: 0 }, uOn: { value: 0 }, uStip: { value: 1 }, uMaxSize: { value: 2.6 }, uDiff: { value: 1 }, uLum: { value: 1 },
++    uZone: { value: -10 }, uZoneAmt: { value: 0 }, uOn: { value: 0 }, uStip: { value: 1 }, uMaxSize: { value: 2.6 }, uDiff: { value: 1 }, uLum: { value: 1 }, uTint: { value: new THREE.Vector3(1, 1, 1) },
+     uScan: { value: 100 }, uScanAmt: { value: 0 }, uDiscMode: { value: 0 }, cDiscA: { value: C('#E0583C') },
+     cBone: { value: C('#F3EADA') }, cDisc: { value: C('#86AFC9') }, cDiscD: { value: C('#4FA8D6') }, cAmber: { value: C('#E59A2F') }, cBlue: { value: C('#5AA2D6') },
+     cSignal: { value: C('#DDF1FF') }, cCore: { value: C('#0E1C22') },
+   };
+   const COMMON = /* glsl */`
+     uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uScan, uScanAmt, uDiff, uDiscMode, uLum; uniform vec4 uXf;
+-    uniform vec3 cBone, cDisc, cDiscD, cDiscA, cAmber, cBlue, cSignal, cCore;
++    uniform vec3 cBone, cDisc, cDiscD, cDiscA, cAmber, cBlue, cSignal, cCore, uTint;
+     vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
+     const vec3 LDIR = vec3(.48, .72, .5);`;
+ 
+@@ -81,7 +81,7 @@
+         }
+         float g = exp(-pow((p.y - uCut) * 7.5 / uXf.w, 2.));
+         col = mix(col, cAmber * 1.3, g);
+-        vCol = col * uLum; vVis = step(uCut, p.y) * uOn;
++        vCol = col * uLum * uTint; vVis = step(uCut, p.y) * uOn;
+         vec4 mv = viewMatrix * vec4(p, 1.);
+         gl_Position = projectionMatrix * mv;
+         gl_PointSize = clamp(uStip / -mv.z * sz, 1., uMaxSize) * (1. + g * .8);
+@@ -153,7 +153,7 @@
+           vec4 mv = viewMatrix * vec4(p, 1.);
+           gl_Position = projectionMatrix * mv;
+           gl_PointSize = clamp(uPix * (1.05 + pk * 1.4) * 2.2 / -mv.z, 1., 7.);
+-          vCol = col * uLum; vA = vis * clamp(base + pk, 0., 1.4);
++          vCol = col * uLum * uTint; vA = vis * clamp(base + pk, 0., 1.4);
+         }`,
+       fragmentShader: /* glsl */`
+         uniform float uGhost;
+--- a/labor/src/fusion/page.html
++++ b/labor/src/fusion/page.html
+@@ -1,4 +1,4 @@
+-<title>HOP Hausbesuch · Puls</title>
++<title>HOP Lichtprobe</title>
+ <meta name="claude:viewport-fit-sides" content="cover">
+ <meta name="robots" content="noindex, nofollow">
+ <meta name="description" content="Entwurf „Hausbesuch · Puls“: Rundgang durch die Praxis HOP als dunkle Partikel-Welt – vor der Tür ankommen, hereinkommen, durch Empfang, Behandlungsräume und Training gehen.">
+@@ -127,6 +127,8 @@
+   <p class="manu-hint"><span class="only-fine">Ziehen zum Drehen</span><span class="only-touch">Seitlich wischen zum Drehen</span> · schematisch</p>
+ </div>
+ 
++<div class="zeit" id="zeit" role="group" aria-label="Tageszeit der Lichtprobe" hidden><button type="button" class="zeit-auf" id="zeitAuf" aria-expanded="false">Licht · <b id="zeitName">Jetzt</b></button><button type="button" data-zeit="jetzt">Jetzt</button><button type="button" data-zeit="morgen">Morgen</button><button type="button" data-zeit="mittag">Mittag</button><button type="button" data-zeit="golden">Golden</button><button type="button" data-zeit="abend">Abend</button><button type="button" data-zeit="nacht">Nacht</button></div>
++
+ <nav class="dock" aria-label="Stationen des Rundgangs">
+   <ol class="progress" id="dock">
+     <li class="is-on"><button type="button" data-go="tuer">Tür</button></li>
+@@ -232,7 +234,7 @@
+     <footer class="foot wrap">
+       <span>© 2026 HOP – Home of Physiotherapy · Kai Raethel</span>
+       <span><a href="recht-impressum.html">Impressum</a> · <a href="recht-datenschutz.html">Datenschutz</a></span>
+-      <span class="lab">Entwurf · Hausbesuch · Puls</span>
++      <span class="lab">Lichtprobe · Wegwerf-Entwurf zum Konzept „Licht an“</span>
+     </footer>
+   </section>
+ </main>
+--- a/labor/src/fusion/style.css
++++ b/labor/src/fusion/style.css
+@@ -399,3 +399,21 @@
+   .letterbox{background:linear-gradient(90deg,rgba(10,22,27,.8) 0%,rgba(10,22,27,.3) 40%,rgba(10,22,27,0) 60%)}
+   .manu-panel{left:auto;width:48vw;top:0;bottom:0}
+ }
++
++/* Lichtprobe (Entwurf): Umschaltleiste Tageszeit – am PC offen, am Handy als kleiner Knopf, der aufklappt (damit die Leuchte im Bild frei bleibt) */
++.zeit{position:fixed;z-index:7;right:max(var(--gut-r),3vw);bottom:calc(env(safe-area-inset-bottom,0px) + 3.6rem);display:flex;align-items:center;gap:.25rem;padding:.25rem .3rem;border-radius:2rem;background:rgba(10,14,16,.72);border:1px solid rgba(237,232,220,.2);backdrop-filter:blur(.5rem);-webkit-backdrop-filter:blur(.5rem)}
++.zeit button{appearance:none;border:0;background:none;color:var(--dim);font:600 .75rem/1 var(--sans);padding:.55rem .6rem;border-radius:2rem;cursor:pointer;min-height:2.25rem}
++.zeit button[aria-pressed="true"]{background:var(--amber);color:#14110A}
++.zeit .zeit-auf{font-size:.6875rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);pointer-events:none;padding-right:.3rem}
++.zeit .zeit-auf b{display:none}
++@media (max-width:57.4375rem){
++  .zeit{left:max(var(--gut),3vw);right:auto;top:calc(env(safe-area-inset-top,0px) + 4.6rem);bottom:auto;max-width:calc(100vw - 1rem);flex-wrap:wrap}
++  .zeit .zeit-auf{pointer-events:auto;color:var(--txt);letter-spacing:.06em;text-transform:none;font-size:.75rem;min-height:2.5rem;padding:.55rem .8rem}
++  .zeit .zeit-auf b{display:inline;color:var(--amber);font-weight:700}
++  .zeit:not(.offen) button[data-zeit]{display:none}
++}
++/* Lichtprobe: dunkle Lesezone hinter dem Text (Gutachten: kein Text auf Lichtflächen) */
++html.licht-an .letterbox{background:
++  linear-gradient(90deg,rgba(8,11,13,.9) 0%,rgba(8,11,13,.66) 30%,rgba(8,11,13,.22) 52%,rgba(8,11,13,0) 66%),
++  linear-gradient(0deg,rgba(8,11,13,.82) 0%,rgba(8,11,13,0) 42%)}
++@media (max-width:57.4375rem){html.licht-an .letterbox{background:linear-gradient(0deg,rgba(8,11,13,.94) 0%,rgba(8,11,13,.8) 30%,rgba(8,11,13,0) 58%)}}
