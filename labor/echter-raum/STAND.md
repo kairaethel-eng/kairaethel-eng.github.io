@@ -26,6 +26,10 @@ npx esbuild labor/echter-raum/main.js --bundle --minify --format=iife --outfile=
 - [O] Aussehen des Scans im echten Renderer, Lage der Figur im Raum, Bildrate am iPhone/PC – **nur Kai kann das sehen**.
 - [A] Die Figur blendet additiv: auf hellen Wänden („Hell“) ist sie schwach sichtbar → der echte Raum muss gedämpft werden oder die Figur braucht eine andere Zeichenart.
 
+## Kais Rückmeldung (11.11.)
+„Sieht leider nicht gut aus, sehr schlechte Qualität, aber es geht in die Richtung, die ich mir vorgestellt habe. Figur steht eigentlich ganz gut.“ Vermutung Kai: Scaniverse ist auf Objekte ausgelegt, nicht auf Räume.
+→ Richtung (echter Raum + Partikel-Hauptmotiv, durchgehend gehen) bestätigt; Scan-Qualität reicht nicht. Offen: Sieht der Scan in der Scaniverse-App selbst gut aus (dann läge es an der Vorschau) oder auch dort schlecht (dann an Aufnahme/App)?
+
 ## Nächste Schritte (warten auf Kai)
 1. Kais Blick auf die Vorschau (PC + iPhone): Scan-Qualität, Ruckeln, welche Helligkeit, steht die Figur richtig.
 2. Wenn überzeugend: Kamera-Video der Strecke Haustür → Empfang → Flur → Behandlung 1, Rechnen am PC (Spirula Studio o. ä., kostenlos).
