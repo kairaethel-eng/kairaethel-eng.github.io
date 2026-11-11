@@ -1,7 +1,15 @@
-# Übergabe – Stand 9.11.2026 (neu: Fusion „Hausbesuch · Puls“ `hausbesuch-puls.html`, wartet auf Kais Sichtprüfung; Kap. 04: Klick-Rundgang zurück, Einflug zur Tür ohne Schnitt, Hinweis an der Raumleiste; Hero-Rauschen iPhone: Option C umgesetzt, Kai bestätigt 9.11.; Scanner am PC + Rundgang aus Augenhöhe umgesetzt; offen: Kais Tests, siehe ▶)
+# Übergabe – Stand 11.11.2026 (neu: Ideenbuch „Das Haus lebt“ – nur Ideen und Plan, nichts gebaut, wartet auf Kais Auswahl, siehe ▶ Ideenbuch; Fusion „Hausbesuch · Puls“ `hausbesuch-puls.html`, wartet auf Kais Sichtprüfung; Kap. 04: Klick-Rundgang zurück, Einflug zur Tür ohne Schnitt, Hinweis an der Raumleiste; Hero-Rauschen iPhone: Option C umgesetzt, Kai bestätigt 9.11.; Scanner am PC + Rundgang aus Augenhöhe umgesetzt; offen: Kais Tests, siehe ▶)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
+
+## ▶ Ideenbuch „Das Haus lebt“ (Auftrag Kai 11.11.2026 – nur Ideen und Plan, **nichts gebaut**, wartet auf Kais Auswahl)
+
+Kai will die modernste, lebendigste Website neu denken: warmes, willkommenes Haus, Struktur Haustür → Hereintreten → Rundgang mit Stationen, Highlights Wirbelsäule (Vorbild Magnific-Videos), Manuthera 242, Philosophie, Leistungen; ohne Extrakosten; erst Ideen zeigen.
+- Ergebnis: `labor/IDEEN-Lebendes-Haus-2026-11-11.md` (Kurzfassung mit allen Kürzeln, Recherche-Fakten, Bauplan) und die private Seite mit fünf Skizzen zum Anfassen: https://claude.ai/artifact/9o1k9z5KAhEsTyCT6PWCSV
+- Recherche (vier parallele Läufe): Technikstand, Wirbelsäulen-Vorbilder/3D-Daten, Lojer-Unterlagen, Preise/Recht. Wichtig für später: **Manuthera 242 hat fünf Abschnitte + Armstützen** (nicht drei), Scaniverse Free ohne gewerbliche Rechte, BodyParts3D CC BY 4.0, bei WebGL 2 bleiben.
+- **Nächster Schritt:** Kais Antworten auf F1–F7 abwarten (Richtung A/B/C, Puls-Anteil, Licht, Schrift, Ideen-Kürzel, Material, Probe-Raum). Erst nach Go bauen, als eigene neue Quelle; Bestehendes unangetastet.
+- Stand im Repo: nur auf Zweig `claude/kind-galileo-ol6z1q` (drei Markdown-Dateien in `labor/`), **nicht auf `main`** – Kai entscheidet.
 
 ## ▶ Fusion „Hausbesuch · Puls“ – neue Seite `hausbesuch-puls.html` (Auftrag Kai 9.11.2026, umgesetzt, wartet auf Kais Sichtprüfung)
 

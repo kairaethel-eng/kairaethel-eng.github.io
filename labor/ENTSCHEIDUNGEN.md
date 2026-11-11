@@ -8,6 +8,8 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **Kai, 1.11.2026 (spät):** Die Live-Wix-Seite hopphysio.de wird vorerst **nicht** angefasst (Banner, Tippfehler, Alt-Texte bleiben). **Puls · Scan wird fertiggestellt und geht dann als neue Website live.** Wie (Hosting/Domain) ist noch zu entscheiden; siehe „Offen für die echte Website“.
 - **Kai, 2.11.2026: Hosting = GitHub Pages mit eigener Domain hopphysio.de** (DNS der Domain zeigt auf GitHub Pages; Wix behält Domain-Verwaltung und E-Mail, die Wix-Website wird dadurch unter hopphysio.de abgelöst). Puls · Scan wird als `/index.html` gebaut, Impressum/Datenschutz daneben; keine Drittskripte, kein Cookie-Banner nötig. Vorbereitung: Build-Ziel `live` → Vorschau `labor/live/` (noindex), Wurzel erst nach Go.
 
+- **Kai, 11.11.2026: neue Website-Idee „Das Haus lebt“ – erst Ideen, nichts bauen.** Warmes Haus, Tür → Rundgang → Stationen, Wirbelsäule und Manuthera 242 realitätsgetreu, ohne Extrakosten. Ideenbuch: `IDEEN-Lebendes-Haus-2026-11-11.md` + private Seite https://claude.ai/artifact/9o1k9z5KAhEsTyCT6PWCSV. Offen (Kai): F1 Richtung A/B/C (Empfehlung C „Lichthaus mit echten Momenten“), F2 Puls-Anteil, F3 Licht, F4 Schrift, F5 Ideen-Kürzel, F6 Material, F7 Probe-Raum. Puls · Scan, Hausbesuch, Fusion bleiben unverändert.
+
 ## Umgesetzte Entscheidungen
 
 | Punkt | Entscheidung | Handy | PC |
