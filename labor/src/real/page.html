@@ -1,0 +1,32 @@
+<title>HOP Wirbelsäule · realistisch (Test)</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Labor: realistisch modellierte Wirbelsäule zum Drehen, mit Abschnitten und fließenden Nervenimpulsen.">
+<style>/*FONTS*//*CSS*/</style>
+<!--BODY-->
+<div class="app">
+  <div class="stage" id="stage">
+    <canvas id="gl" aria-label="3D-Modell der Wirbelsäule. Mit Maus oder Finger drehen, zum Heranholen scrollen oder zwei Finger spreizen, Wirbel antippen."></canvas>
+    <p class="loading" id="loading" role="status">Wirbelsäule wird aufgebaut … <span id="loadPct">0 %</span></p>
+    <p class="nogl" id="nogl">Dieses Gerät zeigt keine 3D-Grafik an. Die Abschnitte lassen sich trotzdem lesen.</p>
+    <div class="tip" id="tip" aria-hidden="true"></div>
+    <p class="hint" id="hint" aria-hidden="true"><span class="h-pc">Ziehen = drehen · Mausrad = heranholen · Wirbel anklicken</span><span class="h-mob">Ziehen = drehen · zwei Finger = heranholen · Wirbel antippen</span></p>
+  </div>
+  <aside class="panel" id="panel">
+    <header class="bar">
+      <a class="back" href="index.html">‹ Labor</a>
+      <span class="tag">Test · realistisch</span>
+    </header>
+    <h1>Die Wirbelsäule <em>zum Anfassen.</em></h1>
+    <nav class="segs" id="segs" aria-label="Abschnitte der Wirbelsäule"></nav>
+    <article class="card" id="card" aria-live="polite"></article>
+    <div class="opts" role="group" aria-label="Darstellung">
+      <button type="button" id="optGhost" aria-pressed="false">Knochen durchsichtig</button>
+      <button type="button" id="optNerve" aria-pressed="true">Nervenimpulse</button>
+      <button type="button" id="optMotion" aria-pressed="false">Bewegung anhalten</button>
+    </div>
+    <p class="legend" id="legend"><span><i class="dot d-mot"></i>Befehl zum Muskel</span><span><i class="dot d-sen"></i>Gefühl zum Gehirn</span></p>
+    <p class="note">Vereinfachte Orientierung, ersetzt keine ärztliche Diagnose. Bitte lassen Sie Beschwerden immer zuerst ärztlich abklären – bei Taubheit oder Lähmungszeichen umgehend.</p>
+  </aside>
+</div>
+<!--JS-->
