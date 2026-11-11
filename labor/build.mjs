@@ -26,6 +26,8 @@ const PAGES = {
   'ego': { out: 'rundgang-ego.html' },
   // Fusion Hausbesuch + Puls (Auftrag Kai 9.11.2026): Rundgang aus Augenhöhe durch die Partikel-Praxis, Inhalte von Puls · Scan
   'fusion': { out: 'hausbesuch-puls.html' },
+  // Neue Richtung „Von Kopf bis Fuß im echten Zuhause“ (Auftrag Kai 11.11.2026): Studien, reines SVG, eigener Ordner labor/kopf-bis-fuss/
+  'kbf': { out: 'kopf-bis-fuss/index.html', dir: 'kopf-bis-fuss' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
   'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true, noTermin: true }, // Übergangsseite hat kein Termin-Blatt

@@ -3,6 +3,12 @@
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
 
+## ▶ Neue Richtung „Von Kopf bis Fuß im echten Zuhause“ – Studien (Auftrag Kai 11.11.2026, wartet auf Kais Urteil)
+Eigener Bau neben Puls/Fusion (beides unberührt): `src/kopf-bis-fuss/` → `node build.mjs kbf` → `kopf-bis-fuss/index.html` (reines SVG, kein three.js, 158 KB). **Nur lokal committet auf dem Arbeitszweig, nicht gepusht, nicht auf der Testadresse** (Kai: nichts ohne Go); Kai hat eine private Vorschau und die Quellen als ZIP.
+- Drei Studien vom ersten Bildschirm (Kopf + Begrüßung) mit Übergang zu Kiefer/Nacken, unten umschaltbar: `#zeichnung` (Stift zeichnet die Figur), `#lot` (Senklot + Nummern-Tafel), `#striche` (Federstriche lösen sich und bilden sich neu). Dateien: `figure.js` (Figur als Stützpunkte, Tastpunkte `FIG.mark`), `s1.js`/`s2.js`/`s3.js` (je `frame(t)`/`destroy()`), `util.js` (Kamera über `viewBox`: `setCam`, Strichstärke über `--u`), `main.js` (Umschalter, Begrüßung nach Uhrzeit), `page.html`, `style.css`.
+- Vorgaben, Selbstkritik je Studie, Abweichungen (warm-dunkel statt „alles dunkel“, keine Osteopathie) und Offenes: `ENTSCHEIDUNGEN.md` ▶ „Neue Richtung …“.
+- **Nächster Chat:** Kais Urteil abwarten (er entscheidet mit den Augen, eine Frage auf einmal, Handy zuerst). Dann gewählte Richtung ausbauen; nach jeder Studie anhalten.
+
 ## ▶ Fusion „Hausbesuch · Puls“ – neue Seite `hausbesuch-puls.html` (Auftrag Kai 9.11.2026, umgesetzt, wartet auf Kais Sichtprüfung)
 
 Kais Auftrag: Mischung aus **Hausbesuch** (vor der Tür ankommen, hereinkommen, beim Scrollen durch die Räume „laufen“, Hauptüberschriften/Infos) und **Puls · Scan** (dunkles Partikel-Konzept, Inhalte, Figur „Spannung lösen“, Wirbelsäule). Vorgeschlagene Reihenfolge a–g 1:1 umgesetzt; gestalterische Freiheit laut Kai. **Puls (`test-4`) und Hausbesuch (`haus`) sind unverändert** (nur lesende Importe), der Bau ist eine eigene Quelle `src/fusion/` + Eintrag `fusion` in `build.mjs`.

@@ -1,0 +1,113 @@
+html{font-size:clamp(16px,calc(8px + .5vw),22px);-webkit-text-size-adjust:100%}
+/* „Von Kopf bis Fuß im echten Zuhause“ – Studien erster Bildschirm.
+   Aufbau: eine schmale Spalte (Handy zuerst, 390 px), Text linksbündig, die Figur als Vektorzeichnung dahinter bzw. darüber.
+   Farbe: warm-dunkel (Umbra statt Puls-Schwarz), Schrift cremeweiß, Bernstein nur für Stift/Lot/Knopf, Blau für Knochen, Grün nur als Eck-Klammer. */
+:root{
+  --ground:#2B2520;--deep:#211C18;--txt:#F0E8D8;--dim:#CDC2AE;--mute:#A09480;--line:rgba(240,232,216,.16);
+  --amber:#E3A043;--amber-ink:#1D150A;--blue:#8FBBD0;--green:#93BE5C;
+  --sans:"Archivo","Helvetica Neue",Arial,sans-serif;--disp:"Archivo Expanded","Archivo","Helvetica Neue",Arial,sans-serif;--serif:"Libre Caslon Text",Georgia,serif;
+  --gl:max(1.25rem,env(safe-area-inset-left,0px));--gr:max(1.25rem,env(safe-area-inset-right,0px));
+  --wahl:48px;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--txt);font:400 1.0625rem/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
+main{position:relative;max-width:30rem;margin:0 auto}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:3px}
+[hidden]{display:none!important}
+
+/* Kopfleiste */
+.bar{position:fixed;z-index:20;top:0;left:50%;transform:translateX(-50%);width:min(100%,30rem);height:calc(3.5rem + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) var(--gr) 0 var(--gl);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(var(--ground) 45%,rgba(43,37,32,0))}
+.brand{width:3.75rem;height:auto;display:block}
+.termin{background:var(--ground);display:inline-flex;align-items:center;min-height:2.5rem;padding:0 .875rem;border:1px solid rgba(227,160,67,.6);border-radius:3px;color:var(--amber);text-decoration:none;font:700 .6875rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase}
+
+/* Studien-Leiste (nur Labor) */
+.wahl{position:fixed;z-index:30;left:50%;bottom:0;transform:translateX(-50%);width:min(100%,30rem);height:calc(var(--wahl) + env(safe-area-inset-bottom,0px));padding:0 var(--gr) env(safe-area-inset-bottom,0px) var(--gl);display:flex;align-items:center;gap:.125rem;background:rgba(30,26,22,.94);border-top:1px solid var(--line);font:500 .8125rem/1 var(--sans)}
+.wahl span{margin-right:auto;color:var(--mute)}
+.wahl a{display:inline-flex;align-items:center;gap:.375rem;min-height:2.25rem;padding:0 .625rem;border-radius:3px;color:var(--dim);text-decoration:none}
+.wahl a[aria-current]{background:var(--amber);color:var(--amber-ink)}
+
+/* Gemeinsame Schrift */
+.studie{padding-bottom:calc(var(--wahl) + 1.5rem)}
+h1{margin:0;font:italic 400 clamp(2.5rem,11.4vw,3.125rem)/1.07 var(--serif);letter-spacing:-.012em;text-wrap:balance}
+h1 span{display:block}
+h2{margin:0 0 1rem;font:italic 400 1.875rem/1.14 var(--serif);letter-spacing:-.005em;text-wrap:balance}
+.lead{margin:0;font-size:1rem;line-height:1.5;color:var(--dim)}
+.cue{margin:auto 0 0;padding-top:1rem;display:flex;align-items:center;gap:.625rem;font:600 .75rem/1 var(--disp);letter-spacing:.05em;color:var(--mute)}
+.cue::after{content:"";width:1px;height:1.75rem;background:linear-gradient(var(--amber),rgba(227,160,67,0))}
+.where{margin:0 0 .5rem;font:600 .75rem/1.3 var(--disp);letter-spacing:.05em;color:var(--amber)}
+.first{display:flex;flex-direction:column;min-height:calc(100svh - var(--wahl));padding:4.75rem var(--gr) 1rem var(--gl)}
+.block{position:relative;padding:5.5rem var(--gr) 5.5rem var(--gl);background:linear-gradient(rgba(43,37,32,0),var(--ground) 4rem,var(--ground) calc(100% - 4rem),rgba(43,37,32,0))}
+.block p{margin:0 0 1rem;text-wrap:pretty}
+blockquote{position:relative;margin:2.5rem 0 0;padding:1rem 0 0 1.125rem}
+blockquote::before{content:"";position:absolute;left:0;top:0;width:1.375rem;height:1.375rem;border-left:2px solid var(--green);border-top:2px solid var(--green)}
+blockquote p{margin:0 0 .5rem;font:italic 400 1.5rem/1.25 var(--serif)}
+cite{font:500 .8125rem/1.3 var(--sans);color:var(--mute)}
+.leist{list-style:none;margin:1.5rem 0;padding:0;border-top:1px solid var(--line)}
+.leist li{padding:.875rem 0;border-bottom:1px solid var(--line);font:600 1.0625rem/1.3 var(--disp)}
+.block .hint{font-size:.8125rem;line-height:1.5;color:var(--mute)}
+.block .ende{margin:3rem 0 0;font:italic 400 1rem/1.4 var(--serif);color:var(--mute)}
+
+/* Foto-Platzhalter: Abendlicht durchs Fenster an der Wand */
+.foto{position:relative;margin:2.5rem 0 0;max-width:100%;aspect-ratio:4/5;overflow:hidden;border-radius:3px;background:linear-gradient(165deg,#6B4E37 0%,#4B392D 48%,#352B24 100%)}
+.licht{position:absolute;left:12%;top:10%;width:60%;height:50%;transform:skewY(-9deg);filter:blur(2px);opacity:.82;background:linear-gradient(90deg,rgba(75,57,45,0) 46%,#4B392D 46% 54%,rgba(75,57,45,0) 54%),linear-gradient(0deg,rgba(75,57,45,0) 47%,#4B392D 47% 53%,rgba(75,57,45,0) 53%),linear-gradient(120deg,rgba(248,198,124,.9),rgba(227,160,67,.4))}
+.foto figcaption{position:absolute;left:1rem;right:1rem;bottom:1rem;font-size:.875rem;line-height:1.4;color:var(--dim)}
+.foto b{display:block;font:600 .75rem/1.5 var(--disp);letter-spacing:.05em;color:var(--amber)}
+
+/* Bühne der Studien 1 und 2: Figur steht hinter dem Text */
+.s1 .stage,.s2 .stage{position:sticky;top:0;z-index:0;height:100vh;height:100svh;overflow:hidden;pointer-events:none}
+.s1 .flow,.s2 .flow{position:relative;z-index:1;margin-top:-100vh;margin-top:-100svh}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.abend{position:absolute;inset:0;background:radial-gradient(95% 60% at 100% 0%,rgba(227,160,67,.2),rgba(227,160,67,0) 62%),radial-gradient(85% 50% at 0% 100%,rgba(60,113,137,.22),rgba(60,113,137,0) 60%)}
+.fig path,.fig circle{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.ln{stroke:var(--txt);stroke-width:calc(1.35*var(--u,1px))}
+.ln.fine{stroke-width:calc(.9*var(--u,1px));opacity:.78}
+.an{stroke-width:calc(.95*var(--u,1px))}
+.an.amber{stroke:var(--amber)}
+.an.blue{stroke:var(--blue)}
+.draw{stroke-dasharray:1 2;stroke-dashoffset:1.02;transition:stroke-dashoffset .9s cubic-bezier(.4,0,.2,1)}
+.draw.on,.acc.on .draw{stroke-dashoffset:0}
+.acc.on .draw{transition-duration:1.1s;transition-delay:calc(var(--i)*90ms)}
+.acc:not(.on) .draw{transition-duration:.35s}
+.fig .tip{fill:var(--amber);stroke:none;transition:opacity .4s}
+.window{height:135vh;height:135svh;padding:0 var(--gr) 0 var(--gl)}
+.region{position:sticky;top:var(--rtop,50vh);width:var(--rw,10rem);opacity:0}
+.region h2{margin:0;font-size:1.5rem}
+
+/* Studie 1 */
+.s1 h1{margin-bottom:var(--gap,20rem)}
+.s1 .lead{max-width:var(--leadw,11rem)}
+
+/* Studie 2 */
+.s2 .lead{margin-top:.875rem}
+.s2 .note{margin:var(--ntop,18rem) 0 0;max-width:var(--nw,11rem);font:italic 400 1.0625rem/1.4 var(--serif);opacity:0;transition:opacity .9s}
+.s2 .note.on{opacity:1}
+.fig .ring{stroke:var(--amber);stroke-width:calc(1.1*var(--u,1px));opacity:0;transition:opacity .5s}
+.fig .ring.on{opacity:1}
+.string{stroke:var(--amber);stroke-width:1;opacity:.9}
+.bobshape{fill:var(--amber)}
+.offs,.hook{fill:none;stroke:var(--amber);stroke-width:1}
+.num{transition:opacity .5s}
+.num circle{fill:var(--ground);stroke:var(--amber);stroke-width:1}
+.num text{fill:var(--amber);font:700 10px/1 var(--sans)}
+.offs{transition:opacity .5s}
+.marks{list-style:none;margin:1.125rem 0 0;padding:0;display:grid;gap:.625rem;font:italic 400 .9375rem/1.25 var(--serif);color:var(--txt)}
+.marks{counter-reset:m}
+.marks li{counter-increment:m;display:grid;grid-template-columns:1.125rem 1fr;gap:.5rem;align-items:start;opacity:0;transition:opacity .5s}
+.marks li::before{content:counter(m);display:grid;place-items:center;width:1.0625rem;height:1.0625rem;margin-top:.0625rem;border:1px solid var(--amber);border-radius:50%;color:var(--amber);font:700 .625rem/1 var(--sans)}
+.marks li.on{opacity:1}
+
+/* Studie 3: Tafel klebt oben, Text läuft darunter durch */
+.s3 .first{min-height:0;padding-bottom:.5rem}
+.s3 .stage{position:sticky;top:0;z-index:2;height:calc(46vh + 3.25rem);height:calc(46svh + 3.25rem);background:var(--ground)}
+.s3 .stage svg{top:3.25rem;height:calc(100% - 3.25rem)}
+.s3 .stage::after{content:"";position:absolute;left:0;right:0;top:100%;height:3rem;background:linear-gradient(var(--ground) 20%,rgba(43,37,32,0));pointer-events:none}
+.s3 .abend{background:radial-gradient(95% 90% at 100% 0%,rgba(227,160,67,.16),rgba(227,160,67,0) 62%)}
+.s3 .st{fill:none;stroke:var(--txt);stroke-width:1.15;stroke-linecap:round}
+.tafel{position:absolute;left:var(--gl);bottom:.5rem;margin:0;font:600 .75rem/1 var(--disp);letter-spacing:.05em;color:var(--amber);transition:opacity .35s}
+.s3 .flow{position:relative;z-index:1}
+.s3 .block{padding-block:2.25rem 2.5rem;background:none}
+.s3 .block.open{display:flex;flex-direction:column;min-height:calc(54svh - 3.25rem - var(--wahl) - 12.75rem)}
+.s3 .block.next{padding-top:4rem}
+
+@media (min-width:60rem){body{background:var(--deep)}main{background:var(--ground)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
