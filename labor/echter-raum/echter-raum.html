@@ -24,11 +24,11 @@
   .shade { position: fixed; inset: auto 0 0 0; height: 62%; pointer-events: none;
     background: linear-gradient(to top, rgba(7, 13, 16, 0.94) 0%, rgba(7, 13, 16, 0.7) 38%, rgba(7, 13, 16, 0) 100%); }
 
-  .top { position: fixed; inset: 0 0 auto 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem;
+  .top { position: fixed; inset: 0 0 auto 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.6rem;
     padding-block: calc(0.8rem + env(safe-area-inset-top, 0px)) 0.8rem;
     padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
     pointer-events: none; }
-  .mark { font: italic 500 1.15rem/1 var(--serif); color: var(--ink); }
+  .mark { font: italic 500 1.15rem/1 var(--serif); color: var(--ink); margin-right: auto; }
   .mark small { font: 600 0.62rem/1 var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-dim); margin-left: 0.6rem; }
   .levels { display: flex; align-items: center; gap: 0.15rem; padding: 0.2rem; border: 1px solid var(--line); border-radius: 999px; background: var(--pill); pointer-events: auto; }
   .levels span { font: 600 0.6rem/1 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); padding: 0 0.5rem 0 0.7rem; }
@@ -65,6 +65,11 @@
 
 <header class="top">
   <div class="mark">Echter Raum<small>Probe · privat</small></div>
+  <div class="levels" role="group" aria-label="Scan wählen">
+    <span>Scan</span>
+    <button type="button" id="scFlur" data-scene="flur" aria-pressed="true">2 · Flur</button>
+    <button type="button" id="scRaum" data-scene="raum" aria-pressed="false">1 · Raum</button>
+  </div>
   <div class="levels" role="group" aria-label="Helligkeit des Raums">
     <span>Raum</span>
     <button type="button" id="lvHell" data-level="hell" aria-pressed="false">Hell</button>
@@ -78,7 +83,7 @@
     <section class="panel on">
       <p class="eyebrow">Physiotherapie in Schorndorf</p>
       <h1>Kommen Sie <em>rein.</em></h1>
-      <p>Das ist der Scan vom Handy, unbearbeitet. Scrollen Sie, um zu gehen. Seitlich ziehen, um sich umzuschauen.</p>
+      <p>Das sind Ihre Scans vom Handy, unbearbeitet. Scrollen Sie, um zu gehen. Seitlich ziehen, um sich umzuschauen.</p>
     </section>
     <section class="panel">
       <p class="eyebrow">Spannung lösen</p>
@@ -88,12 +93,12 @@
     </section>
     <section class="panel">
       <p class="eyebrow">Weitergehen</p>
-      <h2>Durch die Tür, <em>ohne Schnitt.</em></h2>
-      <p>Die Fahrt geht durchgehend weiter. So würde der Weg von Raum zu Raum aussehen.</p>
+      <h2>Weiter, <em>ohne Schnitt.</em></h2>
+      <p>Die Fahrt geht durchgehend weiter, den Flur entlang. So würde der Weg von Raum zu Raum aussehen.</p>
     </section>
     <p class="hint">Oben: Raum hell, gedämpft oder dunkel vergleichen.</p>
   </div>
 </main>
 
-<div id="status" role="status">Raum wird geladen (8,6 MB) …</div>
+<div id="status" role="status">Scan wird geladen …</div>
 <script src="probe.js"></script>

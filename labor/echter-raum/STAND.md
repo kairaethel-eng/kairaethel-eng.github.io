@@ -7,6 +7,7 @@ Kai (10./11.11.): Die Lichtprobe „Licht an“ (Zweig `claude/festive-clarke-8m
 
 ## Was es gibt
 - Private Vorschau: https://claude.ai/artifact/5HurrGcwKRE3Bxts2WR152 – Kais Scaniverse-Scan „Schorndorf“ (349 154 Splats, SH3, 8,6 MB) als Kulisse, Fusion-Figur „Spannung lösen“ (`../src/fusion/figure.js`, unverändert) bedienbar darin, Scrollweg = Weg (Ankommen → Figur → durch die Tür), seitlich ziehen = umschauen, Umschalter Raum hell / gedämpft / dunkel.
+- **Zweiter Scan (11.11., Kai):** „Schorndorf“ 565 893 Splats, SH3, 13,4 MB – ein Flur, rund 8 m lang, Boden y = −0,75 m, achsparallel. In der Vorschau als „2 · Flur“ (Standard) neben „1 · Raum“ wählbar; Weg den Flur entlang, Figur steht im Flur. Geladen wird nur der gewählte Scan.
 - `main.js`, `echter-raum.html` – Quellen. Renderer: Spark 2.4.0 (`@sparkjsdev/spark`, MIT) am vorhandenen three-Renderer.
 - `vorschau.py` – grobe Software-Vorschau eines SPZ (Punkte statt Splats), um im Container Kamerastandpunkte zu prüfen.
 - **Der Scan liegt nicht im Repo** (Scaniverse: nur private, nicht-kommerzielle Nutzung; für die Website braucht es den Weg Kamera-Video → Rechnen am PC).
@@ -15,7 +16,7 @@ Kai (10./11.11.): Die Lichtprobe „Licht an“ (Zweig `claude/festive-clarke-8m
 ```bash
 npm i @sparkjsdev/spark three@0.187.0 esbuild      # in einem Arbeitsordner außerhalb des Repos
 npx esbuild labor/echter-raum/main.js --bundle --minify --format=iife --outfile=pub/probe.js
-# Scan als pub/scan.wasm ablegen (die Artifact-Vorschau liefert keine .spz aus), Seite + beide Dateien veröffentlichen
+# Scans als pub/scan.wasm (Raum) und pub/scan2.wasm (Flur) ablegen (die Artifact-Vorschau liefert keine .spz aus), Seite + beide Dateien veröffentlichen
 ```
 
 ## Geprüft / offen

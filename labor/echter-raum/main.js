@@ -12,16 +12,16 @@ addEventListener('unhandledrejection', (e) => fail(String(e.reason && e.reason.m
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const mob = matchMedia('(max-width: 920px)').matches;
-const FLOOR = -0.67, EYE = FLOOR + 1.55;
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
-// Weg in Scan-Koordinaten (Meter): Ankommen → vor der Figur → durch die Tür
-const KEYS = [
-  { t: 0.00, p: V(1.257, EYE, 0.468), l: V(0.12, FLOOR + 0.9, 1.60) },
-  { t: 0.50, p: V(1.20, EYE, 0.52), l: V(0.12, FLOOR + 0.88, 1.60) },
-  { t: 0.72, p: V(0.30, EYE, 1.42), l: V(0.75, FLOOR + 1.0, 2.60) },
-  { t: 1.00, p: V(0.58, EYE, 2.29), l: V(0.95, FLOOR + 0.95, 3.00) },
-];
-const FIG_FOOT = V(0.122, FLOOR, 1.596), FIG_H = 1.75;
+// Zwei Scans (Meter, y nach oben). Weg: Ankommen → vor der Figur → weitergehen
+const mk = (floor, pts, foot) => { const e = floor + 1.55; return { floor, foot: V(foot[0], floor, foot[1]),
+  keys: pts.map(([t, px, pz, lx, lh, lz]) => ({ t, p: V(px, e, pz), l: V(lx, floor + lh, lz) })) }; };
+const SCENES = {
+  flur: { file: 'scan2.wasm', mb: '13,4', ...mk(-0.75, [[0, 0.7, -0.7, -1.3, 0.9, -0.75], [0.5, 0.55, -0.7, -1.3, 0.88, -0.75], [0.72, -1.5, -0.72, -5.0, 1.0, -0.8], [1, -4.4, -0.8, -6.2, 1.0, -0.85]], [-1.3, -0.75]) },
+  raum: { file: 'scan.wasm', mb: '8,6', ...mk(-0.67, [[0, 1.257, 0.468, 0.12, 0.9, 1.6], [0.5, 1.2, 0.52, 0.12, 0.88, 1.6], [0.72, 0.3, 1.42, 0.75, 1.0, 2.6], [1, 0.58, 2.29, 0.95, 0.95, 3.0]], [0.122, 1.596]) },
+};
+let SC = SCENES.flur;
+const FIG_H = 1.75;
 
 const canvas = $('#gl');
 let renderer;
@@ -33,14 +33,27 @@ renderer.setClearColor(0x070d10, 1);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(mob ? 78 : 68, 1, 0.05, 600);
 const spark = new SparkRenderer({ renderer }); scene.add(spark);
-// Der Scan liegt als Datei neben der Seite (Endung .wasm nur, weil die Vorschau keine .spz ausliefert)
-let room = { recolor: new THREE.Color(1, 1, 1) }, roomReady = false;
-fetch('scan.wasm').then((r) => { if (!r.ok) throw new Error('Scan-Datei fehlt (' + r.status + ')'); return r.arrayBuffer(); }).then((buf) => {
-  const m = new SplatMesh({ fileBytes: new Uint8Array(buf), fileName: 'scan.spz' });
-  scene.add(m);
-  return m.initialized.then(() => { room = m; roomReady = true; status.hidden = true; });
-}).catch((e) => fail(String(e && e.message || e)));
+// Die Scans liegen als Dateien neben der Seite (Endung .wasm nur, weil die Vorschau keine .spz ausliefert)
+let room = { recolor: new THREE.Color(1, 1, 1) }, roomReady = false, loadNo = 0;
+function loadScene(key) {
+  SC = SCENES[key]; const no = ++loadNo;
+  if (room.dispose) { scene.remove(room); room.dispose(); }
+  room = { recolor: new THREE.Color(1, 1, 1) }; roomReady = false;
+  status.classList.remove('err'); status.hidden = false; status.textContent = 'Scan wird geladen (' + SC.mb + ' MB) …';
+  fetch(SC.file).then((r) => { if (!r.ok) throw new Error('Scan-Datei fehlt (' + r.status + ')'); return r.arrayBuffer(); }).then((buf) => {
+    if (no !== loadNo) return;
+    const m = new SplatMesh({ fileBytes: new Uint8Array(buf), fileName: 'scan.spz' });
+    scene.add(m);
+    return m.initialized.then(() => { if (no !== loadNo) { scene.remove(m); m.dispose(); return; } room = m; roomReady = true; status.hidden = true; });
+  }).catch((e) => fail(String(e && e.message || e)));
+}
+document.querySelectorAll('[data-scene]').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-scene]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  scroller.scrollTop = 0; prog = shown = 0; lookWant = look = 0;
+  loadScene(b.dataset.scene);
+}));
 
+const scroller = $('#scroller');
 const shared = { uTime: { value: 0 }, uPix: { value: 1 } };
 const fig = createFigure(scene, mob ? 14000 : 30000, shared);
 fig.U.uPx.value = 4.2;               // Fusion rechnet in Einheiten zu 2 m, der Scan in Metern
@@ -55,13 +68,12 @@ document.querySelectorAll('[data-level]').forEach((b) => b.addEventListener('cli
 }));
 
 // Scrollweg
-const scroller = $('#scroller');
-let prog = 0, shown = 0;
+let prog = 0, shown = 0, look = 0, lookWant = 0;
 const readProg = () => { const m = scroller.scrollHeight - scroller.clientHeight; prog = m > 0 ? clamp(scroller.scrollTop / m) : 0; };
 scroller.addEventListener('scroll', readProg, { passive: true });
 
 // Umschauen (seitlich ziehen), Streichen über die Figur
-let look = 0, lookWant = 0, drag = null, lastLook = 0, figActive = 0;
+let drag = null, lastLook = 0, figActive = 0;
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), hit = new THREE.Vector3();
 const paintAt = (e) => {
   if (figActive < 0.3) return false;
@@ -85,8 +97,8 @@ setInterval(() => { if (!fig.touched) return; const t = fig.tension(); tVal.text
 const panels = [...document.querySelectorAll('.panel')];
 const P = V(), L = V(), dir = V();
 function pose(t) {
-  let i = 0; while (i < KEYS.length - 2 && t > KEYS[i + 1].t) i++;
-  const a = KEYS[i], b = KEYS[i + 1], k = ss(a.t, b.t, t);
+  const K = SC.keys; let i = 0; while (i < K.length - 2 && t > K[i + 1].t) i++;
+  const a = K[i], b = K[i + 1], k = ss(a.t, b.t, t);
   P.lerpVectors(a.p, b.p, k); L.lerpVectors(a.l, b.l, k);
 }
 function resize() {
@@ -97,6 +109,7 @@ function resize() {
 }
 new ResizeObserver(resize).observe(canvas); resize();
 
+loadScene('flur');
 let last = performance.now();
 renderer.setAnimationLoop((now) => {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;
@@ -114,7 +127,7 @@ renderer.setAnimationLoop((now) => {
   shared.uTime.value += reduced ? 0 : dt;
   const figIn = roomReady ? ss(0.06, 0.3, shown) * (1 - ss(0.52, 0.66, shown)) : 0;
   figActive = figIn;
-  fig.place(FIG_FOOT, FIG_H, Math.atan2(P.x - FIG_FOOT.x, P.z - FIG_FOOT.z));
+  fig.place(SC.foot, FIG_H, Math.atan2(P.x - SC.foot.x, P.z - SC.foot.z));
   fig.U.uIn.value = figIn; fig.pts.visible = figIn > 0.01;
   fig.U.uBreath.value += reduced ? 0 : dt * 1.15;
   fig.U.uLum.value = level === 'hell' ? 1.5 : 1;
