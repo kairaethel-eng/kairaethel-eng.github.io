@@ -28,6 +28,8 @@ const PAGES = {
   'fusion': { out: 'hausbesuch-puls.html' },
   // Neue Richtung „Von Kopf bis Fuß im echten Zuhause“ (Auftrag Kai 11.11.2026): Studien, reines SVG, eigener Ordner labor/kopf-bis-fuss/
   'kbf': { out: 'kopf-bis-fuss/index.html', dir: 'kopf-bis-fuss' },
+  // Vorschau „Glas“ (Kai 12.11.2026): Röntgen-Glas-Figur (Bild) + 3D-Wirbelsäule (three.js), eigene Seite
+  'kbf-glas': { out: 'kopf-bis-fuss/glas.html', dir: 'kopf-bis-fuss/glas' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
   'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true, noTermin: true }, // Übergangsseite hat kein Termin-Blatt

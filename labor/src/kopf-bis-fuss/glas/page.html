@@ -1,0 +1,57 @@
+<title>HOP Kopf bis Fuß Glas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Vorschau zur Richtung „Von Kopf bis Fuß“ für HOP – Home of Physiotherapy: Röntgen-Glas-Figur, aus der sich die Wirbelsäule als bewegtes 3D-Modell mit Abschnitten löst.">
+<style>/*FONTS*//*CSS*/</style>
+<!--BODY-->
+<canvas id="gl" aria-hidden="true"></canvas>
+<header class="bar">
+  <svg class="brand" viewBox="0 0 560 240" role="img" aria-label="HOP – Home of Physiotherapy"><circle cx="110" cy="120" r="66" fill="#7FAF45"/><circle cx="300" cy="120" r="66" fill="#3C7189"/><circle cx="490" cy="120" r="66" fill="#3F86B5"/><g font-family="Archivo Expanded,Archivo,Arial,sans-serif" font-weight="800" font-size="60" fill="#fff" text-anchor="middle"><text x="110" y="142">H</text><text x="300" y="142">O</text><text x="490" y="142">P</text></g></svg>
+  <a class="termin" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage">Termin anfragen</a>
+</header>
+
+<main>
+  <section class="first" id="kopf">
+    <h1><span class="gruss">Willkommen.</span> <span>Kommen Sie erst einmal an.</span></h1>
+    <p class="lead">Physiotherapie in einem echten Zuhause in Schorndorf. Ein Therapeut begleitet Sie durch die ganze Therapie.</p>
+    <p class="cue">Von Kopf bis Fuß</p>
+  </section>
+
+  <section class="block">
+    <h2>Zuerst höre ich zu.</h2>
+    <p>Im ersten Gespräch erzählen Sie, und ich höre zu. Danach untersuche ich Sie von Kopf bis Fuß, nicht nur dort, wo es wehtut.</p>
+    <p>Viele kommen mit dem Satz „Keiner kann mir helfen“. Dafür nehme ich mir Zeit.</p>
+    <blockquote><p>Der Körper heilt sich selbst, nicht ich.</p><cite>Kai Raethel, Physiotherapeut</cite></blockquote>
+    <figure class="foto"><div class="licht"></div><figcaption><b>Foto folgt</b>Ohrensessel im Abendlicht</figcaption></figure>
+  </section>
+
+  <section class="spine" id="wirbelsaeule">
+    <div class="seg" id="seg">
+      <div class="intro">
+        <p class="where">Wirbelsäule</p>
+        <h2>Abschnitt für Abschnitt.</h2>
+      </div>
+      <article class="card" id="card" aria-live="polite">
+        <p class="seg-no" id="cNo">C1–C2</p>
+        <h3 id="cTitle">Kopfgelenke</h3>
+        <p class="typ" id="cTyp">Vom Nacken aufsteigender Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen.</p>
+        <p class="peri" id="cPeri">Versorgung: Hinterkopf · Nacken</p>
+        <p class="ther" id="cTher">Atlas-Axis-Therapie · Manuelle Therapie · Fango</p>
+      </article>
+      <div class="chips" id="chips" role="group" aria-label="Abschnitt der Wirbelsäule wählen">
+        <button type="button" data-seg="0" aria-pressed="true">C1–C2</button>
+        <button type="button" data-seg="1" aria-pressed="false">C5–C6</button>
+        <button type="button" data-seg="2" aria-pressed="false">Th1–6</button>
+        <button type="button" data-seg="3" aria-pressed="false">Th7–12</button>
+        <button type="button" data-seg="4" aria-pressed="false">L4–L5</button>
+        <button type="button" data-seg="5" aria-pressed="false">S1</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="block end">
+    <p class="hint">Vereinfachte Orientierung, ersetzt keine ärztliche Diagnose. Bitte lassen Sie Beschwerden immer zuerst ärztlich abklären – bei Taubheit oder Lähmungszeichen umgehend.</p>
+    <p class="ende">Hier endet die Vorschau. Weiter ginge es mit Händen, Becken, Beinen und Füßen.</p>
+  </section>
+</main>
+<!--JS-->

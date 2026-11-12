@@ -246,3 +246,25 @@ Eigener Bau, **Puls, Fusion, Wurzel und Livegang-Plan unberührt**. Quelle `src/
 **Geprüft [B]** (Container, Chromium): 390×844, 375×667, 320×568, 1440×900, „Bewegung reduzieren“; kein Querscrollen, keine Konsolenfehler, keine externen Abrufe; Scrollen mit CPU-Drossel 4× bei 60 B/s (alle drei). **Nicht geprüft [O]:** echtes iPhone (Safari-Leisten, svh), Vorleseprogramm.
 
 **Offen / Nächster Schritt:** Kais Urteil je Studie (Go/Nein/Mischen). Danach: gewählte Richtung auf die ganze Figur ausbauen (Wirbelsäule, Hände, Becken/Beine, Füße mit Terminanfrage + Wartezeit-Zeile), Figur verfeinern, echte Fotos einsetzen. Satz „Er hat mein Problem erkannt“ nur als echte, freigegebene Patientenstimme verwenden (HWG; Fachperson). Push/Testadresse erst nach Kais Go.
+
+## „Von Kopf bis Fuß“ – Vorschau „Glas“ (Auftrag Kai 12.11.2026, nachts)
+**Kai:** Mit „Technik“ war gemeint: **Die Technik darf so aufwändig wie möglich sein**, damit die Seite modern, innovativ und lebendig wird (die Grenze „reines SVG“ aus dem ersten Auftrag gilt damit nicht mehr; kostenlos, ohne externe Abrufe und noindex bleibt). Gewünschter Look: Röntgen-Glas-Figur wie auf seinem Pixabay-Bild; „lebendig“ heißt für ihn: wie bei Puls löst/bildet sich in einem anderen Kapitel nur die Wirbelsäule mit Abschnitts-Erklärung heraus. Auftrag: Vorschau auf Basis dieses Bildes mit Effekt.
+
+**Umgesetzt:** eigene Seite `kopf-bis-fuss/glas.html` (Quelle `src/kopf-bis-fuss/glas/`, Build `node build.mjs kbf-glas`, 833 KB mit three.js, eine Datei, keine externen Abrufe). Studien 1–3 unverändert.
+- **Bild als lebende Bühne** (`main.js`, Shader `bg`): Das Bild leuchtet additiv auf dem warm-dunklen Grund (Schwarz wird durchsichtig, kein Bildrand). Lichtpulse laufen die gelblichen Nervenbahnen hinab, ein Lichtband gleitet alle 11 s über das Glas, leichte Tiefe (helle Bereiche bewegen sich stärker), leises Atmen. Begrüßung, Leittext, Gespräch-Block wie in den Studien.
+- **Kapitel Wirbelsäule** (`#wirbelsaeule`, 340svh, Bühne klebt): Beim Scrollen fährt das Bild an Hals und Nacken heran, alles außer der Wirbelsäule verlischt, ein **3D-Glasmodell** (Geometrie aus `shared/spine.js` wie in Puls, neues Röntgen-Glas-Material: Kantenlicht, additiv) entsteht deckungsgleich über der Halswirbelsäule im Bild (`a1`/`a2` = Lage von C1/Th2 im Bild), das Bild verstreut sich, das Modell dreht ins Halbprofil und wächst Wirbel für Wirbel bis zum Steißbein; Rückenmark und Nervenwurzeln mit laufenden Signalen.
+- **Abschnitte nur per Antippen** (keine Wischgeste): sechs Knöpfe C1–C2 … S1 (Texte wörtlich aus Puls · Scan), Abschnitt glüht bernstein, Bandscheiben dort rot-orange, Modell fährt in die obere Bildhälfte heran, Karte mit „Typisch“, Versorgung, Therapien darunter; bis zum ersten Antippen wechselt der Abschnitt alle 5 s von selbst. Standard-Hinweis nach dem Kapitel.
+- „Bewegung reduzieren“: keine Pulse, kein Lichtband, kein Verstreuen, keine Eigenbewegung, kein automatischer Wechsel. Ohne WebGL 2: Bild als Standbild, Karte und Knöpfe bleiben bedienbar.
+
+**Wo es nicht reicht (Claude, offen gesagt):**
+- **Bildrechte [O]:** Bild stammt aus Kais Bildschirmfoto (dort steht „Free for use under the Pixabay Content License“); Adresse und Urheber kenne ich nicht. Vor jeder Veröffentlichung: Original bei Pixabay laden, Adresse/Urheber/Datum hier notieren, Lizenz für genau dieses Bild prüfen.
+- **Schärfe:** Das Bild ist aus dem Bildschirmfoto geschnitten (880 px breit) → am iPhone (3-fache Pixeldichte) leicht weich, in der Nahansicht deutlich. Mit dem Original deutlich besser. Das 3D-Modell ist in jeder Größe scharf.
+- **Anatomie:** Das Bild ist ein KI-Bild; Nerven/Gefäße im Kopf sind Fantasie. Das 3D-Modell ist anatomisch vereinfacht, aber richtig aufgebaut.
+- **Wirkung:** Ein Schädel als erstes Bild ist stark und „anders“, aber nicht „willkommen“ (Kais Reihenfolge 1 willkommen). Kaltes Blau statt warm; nur der Grund ist warm.
+- **Nur ein Motiv:** Für Hände, Becken, Beine, Füße bräuchte es weitere Bilder im gleichen Stil oder ein echtes 3D-Ganzkörpermodell.
+- **Nicht geprüft [O]:** echtes iPhone (Bildrate, Akku), der Container hat keinen Grafikchip. PC zeigt die Handy-Spalte, das Bild endet dort am Spaltenrand.
+
+**Geprüft [B]** (Container, Chromium mit Software-Grafik): 390×844, 375×667, 1440×900, „Bewegung reduzieren“; Ablauf des Kapitels in sieben Stufen, alle sechs Abschnitte angetippt; keine Konsolenfehler, kein Querscrollen.
+
+**Offen / Nächster Schritt:** Kais Urteil zur Richtung „Glas“ (Bild-Bühne + 3D-Modell) gegenüber den Studien 1–3. Bei Go: Original-Bild, Wirkung „willkommen“ lösen (z. B. Begrüßung/Foto zuerst, Figur danach), weitere Körperregionen klären.
+
