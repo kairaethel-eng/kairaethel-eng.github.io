@@ -1,10 +1,14 @@
-// „Von Kopf bis Fuß“ – Vorschau „Glas“ (Auftrag Kai 12.11.2026): Röntgen-Glas-Figur als lebende Bühne.
-// 1) Das Bild lebt: Signale laufen die Nervenbahnen hinab, ein Lichtband gleitet über das Glas, leichte Tiefe.
-// 2) Kapitel Wirbelsäule: alles außer der Wirbelsäule verlischt, ein echtes 3D-Glasmodell entsteht deckungsgleich
-//    über der Halswirbelsäule im Bild, löst sich, dreht ins Profil und bildet sich Wirbel für Wirbel bis zum Steißbein.
-// 3) Abschnitte per Antippen (kein Wischen): Abschnitt glüht bernstein, Modell fährt heran, Karte erklärt.
+// „Von Kopf bis Fuß“ – Vorschau „Glas“ (Auftrag Kai 12.11.2026, freie Hand ab „Hauptbauen“): eine Reise durch den Körper.
+// 1) Kopf: Röntgen-Glas-Bild als lebende Bühne (Nervenpulse, Lichtband, Tiefe, Ränder lösen sich in Lichtfäden auf).
+// 2) Kiefer und Nacken: das Bild fährt heran.
+// 3) Wirbelsäule: alles außer der Wirbelsäule verlischt, ein gerechnetes 3D-Glasskelett entsteht deckungsgleich über dem Bild,
+//    löst sich, dreht ins Halbprofil und wächst Wirbel für Wirbel. Abschnitte per Antippen.
+// 4) Becken und Beine: Becken, Beine, Arme und die Glashülle der Figur wachsen von oben nach unten.
+// 5) Füße: die Kamera kommt am Boden an, Nervensignale laufen bis in die Sohle, der Boden antwortet. Terminanfrage.
+// Knochen: eigene Abstandsfunktionen (bones.js, sdf.js), kein fremdes 3D-Modell. Nur Scrollen und Antippen.
 import * as THREE from 'three';
-import { buildSpine, rootCurves } from '../../shared/spine.js';
+import { runSliced } from '../../shared/slice.js';
+import { spineLevels, vertebraGeos, bodyGeos, discGeo, rootCurves, ribCurves, legNerve, joints } from './bones.js';
 import { IMG, IMG_W, IMG_H } from './img.js';
 
 const $ = (s) => document.querySelector(s);
@@ -17,15 +21,17 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const hr = new Date().getHours();
 document.querySelectorAll('.gruss').forEach((e) => { e.textContent = hr < 11 ? 'Guten Morgen.' : hr < 18 ? 'Guten Tag.' : 'Guten Abend.'; });
 
-// ---- Abschnitte (Texte aus Puls · Scan, von Kai freigegeben) -----------------------------------
+// ---- Abschnitte der Wirbelsäule (Texte aus Puls · Scan, von Kai freigegeben) ----------------------
+const TH = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => 'Th' + (a + i));
 const SEG = [
-  { ids: ['C1', 'C2'], no: 'C1–C2', title: 'Kopfgelenke', typ: 'Vom Nacken aufsteigender Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen.', peri: 'Hinterkopf · Nacken', ther: ['Atlas-Axis-Therapie', 'Manuelle Therapie', 'Fango'], zoom: 2.5 },
-  { ids: ['C5', 'C6'], no: 'C5–C6', title: 'Halswirbelsäule', typ: 'Ausstrahlung über die Armaußenseite bis in den Daumen, Kribbeln, Schwächegefühl beim Beugen.', peri: 'Armaußenseite · Daumen', ther: ['Manuelle Therapie', 'Schlingentisch', 'Krankengymnastik'], zoom: 2.5 },
-  { ids: ['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6'], no: 'Th1–Th6', title: 'Brustwirbelsäule', typ: 'Blockaden mit atemabhängigem Stechen, Schmerz zwischen den Schulterblättern, „Rippenklemme“.', peri: 'Brustkorb · Zwischenrippen', ther: ['Manuelle Therapie', 'Lojer Manuthera', 'Fango'], zoom: 1.5 },
-  { ids: ['Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'], no: 'Th7–Th12', title: 'Untere Brustwirbelsäule', typ: 'Gürtelförmig ausstrahlender Schmerz am Rippenbogen, Steifigkeit am Übergang zur Lendenwirbelsäule (Th12/L1).', peri: 'Rippenbogen · Bauchwand', ther: ['Manuelle Therapie', 'Krankengymnastik', 'Fango'], zoom: 1.35 },
-  { ids: ['L4', 'L5'], no: 'L4–L5', title: 'Lendenwirbelsäule', typ: 'Bandscheiben-Region: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche.', peri: 'Schienbein · Großzehe', ther: ['Schlingentisch', 'Schmerztherapie', 'Krankengymnastik'], zoom: 1.55 },
-  { ids: ['S'], no: 'S1 · ISG', title: 'Kreuzbein & Becken', typ: 'Ausstrahlung über die Beinrückseite bis zur Ferse, tiefsitzender einseitiger Kreuzschmerz.', peri: 'Wade · Ferse · Fußaußenrand', ther: ['Manuelle Therapie / ISG', 'Sport-Physiotherapie', 'Stoßwelle'], zoom: 1.45 },
+  { ids: ['C1', 'C2'], no: 'C1–C2', title: 'Kopfgelenke', typ: 'Vom Nacken aufsteigender Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen.', peri: 'Hinterkopf · Nacken', ther: ['Atlas-Axis-Therapie', 'Manuelle Therapie', 'Fango'], zoom: 3.1 },
+  { ids: ['C5', 'C6'], no: 'C5–C6', title: 'Halswirbelsäule', typ: 'Ausstrahlung über die Armaußenseite bis in den Daumen, Kribbeln, Schwächegefühl beim Beugen.', peri: 'Armaußenseite · Daumen', ther: ['Manuelle Therapie', 'Schlingentisch', 'Krankengymnastik'], zoom: 3.1 },
+  { ids: TH(1, 6), no: 'Th1–Th6', title: 'Brustwirbelsäule', typ: 'Blockaden mit atemabhängigem Stechen, Schmerz zwischen den Schulterblättern, „Rippenklemme“.', peri: 'Brustkorb · Zwischenrippen', ther: ['Manuelle Therapie', 'Lojer Manuthera', 'Fango'], zoom: 1.9 },
+  { ids: TH(7, 12), no: 'Th7–Th12', title: 'Untere Brustwirbelsäule', typ: 'Gürtelförmig ausstrahlender Schmerz am Rippenbogen, Steifigkeit am Übergang zur Lendenwirbelsäule (Th12/L1).', peri: 'Rippenbogen · Bauchwand', ther: ['Manuelle Therapie', 'Krankengymnastik', 'Fango'], zoom: 1.75 },
+  { ids: ['L4', 'L5'], no: 'L4–L5', title: 'Lendenwirbelsäule', typ: 'Bandscheiben-Region: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche.', peri: 'Schienbein · Großzehe', ther: ['Schlingentisch', 'Schmerztherapie', 'Krankengymnastik'], zoom: 2.5 },
+  { ids: ['S'], no: 'S1 · ISG', title: 'Kreuzbein & Becken', typ: 'Ausstrahlung über die Beinrückseite bis zur Ferse, tiefsitzender einseitiger Kreuzschmerz.', peri: 'Wade · Ferse · Fußaußenrand', ther: ['Manuelle Therapie / ISG', 'Sport-Physiotherapie', 'Stoßwelle'], zoom: 1.9 },
 ];
+const segOf = (id) => SEG.findIndex((s) => s.ids.includes(id));
 const segEl = $('#seg'), card = $('#card'), chips = [...document.querySelectorAll('#chips button')];
 let active = 0, auto = !reduced, autoT = 0;
 function setSeg(i, byUser) {
@@ -53,7 +59,6 @@ try {
   document.documentElement.classList.add('no-gl');
   document.documentElement.style.setProperty('--img', `url(${IMG})`);
 }
-
 if (renderer) start();
 
 function start() {
@@ -61,7 +66,7 @@ function start() {
   const DPR = Math.min(devicePixelRatio || 1, 2);
   renderer.setPixelRatio(DPR);
   const scene = new THREE.Scene();
-  const cam = new THREE.OrthographicCamera(0, 1, 0, -1, -6000, 6000);
+  const cam = new THREE.OrthographicCamera(0, 1, 0, -1, -9000, 9000);
   let W = 1, H = 1, CX = 0, CW = 1;                   // Fenster und Textspalte (am PC ist die Bühne breiter als die Spalte)
 
   // ---- Bild als Bühne -------------------------------------------------------------------------
@@ -140,18 +145,20 @@ function start() {
   bg.frustumCulled = false; bg.renderOrder = -1;
   scene.add(bg);
 
-  // ---- 3D-Glasmodell der Wirbelsäule ------------------------------------------------------------
-  // Material „Röntgen-Glas“: vordere Flächen verdecken hintere (Tiefenpuffer), dazu Kantenlicht, weiches Streiflicht,
-  // Glanzpunkte und feine Knochenstruktur. Ein weicher Lichtschein (unten: bloom) bindet das Modell an das Bild.
+  // ---- Material „Röntgen-Glas“ ------------------------------------------------------------------
+  // Vordere Flächen verdecken hintere (Tiefen-Vorlauf), dazu Kantenlicht, Streiflicht, Glanzpunkte, feine Knochenstruktur.
+  // uRev = Höhe, bis zu der ein Knochen schon „gewachsen“ ist (leuchtende Wachstumskante); uFade = Auslaufen entlang der Länge (Rippen).
   const glassV = `varying vec3 vN, vO; varying vec2 vUv;
     void main(){ vN = normalize(normalMatrix * normal); vO = position; vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`;
   const glassF = `
-    varying vec3 vN, vO; uniform vec3 uCol, uHot; uniform float uAct, uOp, uTex;
+    varying vec3 vN, vO; varying vec2 vUv; uniform vec3 uCol, uHot; uniform float uAct, uOp, uTex, uRev, uFade;
     float h3(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
     float n3(vec3 p){ vec3 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
       return mix(mix(mix(h3(i), h3(i+vec3(1,0,0)), f.x), mix(h3(i+vec3(0,1,0)), h3(i+vec3(1,1,0)), f.x), f.y),
                  mix(mix(h3(i+vec3(0,0,1)), h3(i+vec3(1,0,1)), f.x), mix(h3(i+vec3(0,1,1)), h3(i+vec3(1,1,1)), f.x), f.y), f.z); }
     void main(){
+      float grow = smoothstep(uRev - 1.2, uRev + 1.2, vO.y);
+      if (grow < .01) discard;
       vec3 n = normalize(vN);
       float ndv = clamp(n.z, 0., 1.);
       float rim = pow(1. - ndv, 2.4);
@@ -162,80 +169,97 @@ function start() {
       vec3 base = mix(uCol, uHot, uAct);
       vec3 edge = mix(vec3(.78, .92, 1.), vec3(1., .84, .58), uAct);
       vec3 c = base * (.035 + .19 * dif) * grain + edge * rim * 1.15 + vec3(1.) * spec * .5;
-      float a = uOp * (1. + uAct * .45);
+      c += vec3(1., .8, .5) * exp(-pow((vO.y - uRev) / 1.5, 2.)) * (uFade > 0. ? .15 : .6);
+      float a = uOp * (1. + uAct * .45) * grow * (uFade > 0. ? 1. - smoothstep(uFade, 1., vUv.x) : 1.);
       gl_FragColor = vec4(c * a, (.05 + .45 * rim) * a);
     }`;
-  const glass = (col, hot) => new THREE.ShaderMaterial({
-    uniforms: { uCol: { value: new THREE.Color(col) }, uHot: { value: new THREE.Color(hot) }, uAct: { value: 0 }, uOp: { value: 0 }, uTex: { value: 30 } },
-    vertexShader: glassV, fragmentShader: glassF, transparent: true, premultipliedAlpha: true, depthTest: true, depthWrite: false, side: THREE.FrontSide,
-  });
-  const ghostF = `
-    varying vec3 vN; uniform vec3 uCol, uHot; uniform float uAct, uOp;
-    void main(){ float rim = pow(1. - abs(normalize(vN).z), 2.); gl_FragColor = vec4(mix(uCol, uHot, uAct) * (.03 + .3 * rim) * uOp, 0.); }`;
-  const depthOnly = new THREE.MeshBasicMaterial({ colorWrite: false });
   const ADD = { blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneFactor };
+  const ghostF = `
+    varying vec3 vN, vO; uniform vec3 uCol, uHot; uniform float uAct, uOp, uRev;
+    void main(){ float rim = pow(1. - abs(normalize(vN).z), 2.); gl_FragColor = vec4(mix(uCol, uHot, uAct) * (.03 + .3 * rim) * uOp * step(uRev, vO.y), 0.); }`;
+  const depthF = 'varying vec3 vO; uniform float uRev; void main(){ if (vO.y < uRev) discard; gl_FragColor = vec4(0.); }';
+  const hullF = `
+    varying vec3 vN, vO; uniform float uOp, uRev, uTop;
+    void main(){ float rim = pow(1. - abs(normalize(vN).z), 2.6);
+      float a = uOp * smoothstep(uRev - 2., uRev + 5., vO.y) * (1. - smoothstep(uTop - 10., uTop, vO.y));
+      gl_FragColor = vec4(vec3(.42, .68, 1.) * (.012 + .42 * rim) * a, 0.); }`;
   const nerveF = `
-    varying vec3 vN; varying vec2 vUv; uniform float uAct, uOp, uTime, uN, uPh;
+    varying vec3 vN, vO; varying vec2 vUv; uniform float uAct, uOp, uTime, uN, uPh, uRev;
     void main(){ float core = pow(clamp(abs(normalize(vN).z), 0., 1.), 1.4);
       float s = pow(max(0., sin((vUv.x*uN - uTime*.9 + uPh)*6.2832)), 9.);
       vec3 c = mix(vec3(.9, .6, .2), vec3(1., .93, .7), s) * (.3 + .7*core);
-      gl_FragColor = vec4(c * (.26 + s*1.25 + uAct*.55) * uOp, 0.); }`;
+      gl_FragColor = vec4(c * (.26 + s*1.25 + uAct*.55) * uOp * smoothstep(uRev - 1., uRev + 1., vO.y), 0.); }`;
   const tU = { value: 0 };
-  const nerve = (n, ph) => new THREE.ShaderMaterial({
-    uniforms: { uAct: { value: 0 }, uOp: { value: 0 }, uTime: tU, uN: { value: n }, uPh: { value: ph } },
+  const glassU = (col, hot, tex) => ({ uCol: { value: new THREE.Color(col) }, uHot: { value: new THREE.Color(hot) }, uAct: { value: 0 }, uOp: { value: 0 }, uTex: { value: tex }, uRev: { value: -1e5 }, uFade: { value: 0 } });
+  const glassM = (u) => new THREE.ShaderMaterial({ uniforms: u, vertexShader: glassV, fragmentShader: glassF, transparent: true, premultipliedAlpha: true, depthTest: true, depthWrite: false, side: THREE.FrontSide });
+  const nerveM = (n, ph) => new THREE.ShaderMaterial({
+    uniforms: { uAct: { value: 0 }, uOp: { value: 0 }, uTime: tU, uN: { value: n }, uPh: { value: ph }, uRev: { value: -1e5 } },
     vertexShader: glassV, fragmentShader: nerveF, transparent: true, ...ADD, depthTest: true, depthWrite: false,
   });
 
-  const sp = buildSpine({ boneMaterial: () => glass(0x9CCBF2, 0xFFB45A) });
-  // Kreuzbein und Steißbein: eigener, geformter Körper (keilförmig, nach hinten gekrümmt, mit Verschmelzungsleisten)
-  function wedge(R, h, o) {
-    const NU = o.nu, NV = 40, pos = [], idx = [];
-    for (let i = 0; i <= NU; i++) {
-      const u = i / NU, y = h / 2 - u * h;
-      const rip = 1 + o.rip * Math.cos(u * o.seg * 6.2832);
-      const w = R * (o.w0 - (o.w0 - o.w1) * Math.pow(u, o.pw)) * rip, d = R * (o.d0 - (o.d0 - o.d1) * u) * rip, zc = o.bend * Math.pow(u, 1.5) * R;
-      for (let j = 0; j < NV; j++) {
-        const a = (j / NV) * 6.2832, c = Math.cos(a), sn = Math.sin(a);
-        pos.push(w * Math.sign(c) * Math.pow(Math.abs(c), 0.8), y, zc + d * Math.sign(sn) * Math.pow(Math.abs(sn), 0.9) * (sn > 0 ? 0.8 : 1));
+  // ---- Figur ------------------------------------------------------------------------------------
+  const sp = spineLevels(), J = joints(sp.P0);
+  const body = new THREE.Group(); scene.add(body);     // Körperkoordinaten in cm, Ursprung am Boden
+  const parts = [];                                    // { m, u, grp: 'spine'|'upper'|'lower', y (Höhe, nur spine), seg, kind }
+  // Glaskörper mit Tiefen-Vorlauf und durchschimmernden Rückseiten
+  function solid(geo, u, grp, extra = {}) {
+    const m = new THREE.Mesh(geo, glassM(u));
+    const dm = new THREE.Mesh(geo, new THREE.ShaderMaterial({ uniforms: u, vertexShader: glassV, fragmentShader: depthF, colorWrite: false }));
+    const gm = new THREE.Mesh(geo, new THREE.ShaderMaterial({ uniforms: u, vertexShader: glassV, fragmentShader: ghostF, transparent: true, ...ADD, depthTest: false, depthWrite: false, side: THREE.BackSide }));
+    gm.renderOrder = -0.5; m.add(dm, gm);
+    m.traverse((o) => o.layers.set(1)); m.visible = false; body.add(m);
+    const p = { m, u, grp, seg: -1, ...extra }; parts.push(p); return p;
+  }
+  function tube(curve, n, r, mat, grp, extra = {}) {
+    const m = new THREE.Mesh(new THREE.TubeGeometry(curve, n, r, 8), mat);
+    m.layers.set(1); m.visible = false; body.add(m);
+    const p = { m, u: mat.uniforms, grp, seg: -1, ...extra }; parts.push(p); return p;
+  }
+  const ready = { spine: false, body: false };
+  let hull = null, ground = null;
+  function addSpine(vg) {
+    sp.levels.forEach((lv, i) => {
+      const p = solid(vg[lv.type], glassU(0x9CCBF2, 0xFFB45A, lv.type === 's' || lv.type === 'co' ? 9 : 30), 'spine', { y: lv.center.y, seg: segOf(lv.id), local: true });
+      p.m.position.copy(lv.center); p.m.quaternion.copy(lv.quat);
+      if (lv.type !== 's' && lv.type !== 'co') p.m.scale.set(lv.R, lv.sy, lv.R);
+      const nx = sp.levels[i + 1];
+      if (lv.disc > 0.3 && nx && nx.reg !== 'co') {      // Bandscheibe: blass, im aktiven Abschnitt rot-orange (wie in Puls)
+        const a = segOf(lv.id), b = segOf(nx.id), R = (lv.R + nx.R) / 2;
+        const d = solid(discGeo(R * 0.98, lv.disc * 1.12, lv.reg === 'l' ? 0.76 : lv.reg === 't' ? 0.92 : 0.8), glassU(0xBFD9EE, 0xF0683C, 30), 'spine', { y: lv.center.y - lv.h / 2, seg: a === b ? a : b === 5 ? 5 : -1, local: true, disc: true });
+        d.m.position.copy(lv.pt(0, -lv.h / 2 - lv.disc / 2, 0)); d.m.quaternion.copy(lv.quat);
       }
+    });
+    ribCurves(sp).forEach((r) => { const u = glassU(0x9CCBF2, 0xFFB45A, 12); u.uFade.value = 0.42; tube(r.curve, 48, r.r, glassM(u), 'spine', { seg: segOf(r.id), rib: true }); });
+    rootCurves(sp).forEach((r, k) => tube(r.curve, 18, 0.13, nerveM(1.6, k * 0.37), 'spine', { seg: segOf(r.id), nerve: true }));
+    const cut = sp.canal.findIndex((c, i) => sp.levels[i].id === 'L2');
+    tube(new THREE.CatmullRomCurve3(sp.canal.slice(0, cut + 1)), 200, 0.42, nerveM(9, 0), 'spine', { nerve: true });                 // Rückenmark
+    tube(new THREE.CatmullRomCurve3(sp.canal.slice(cut)), 60, 0.2, nerveM(4, 0.3), 'spine', { nerve: true });                        // Nervenfasern darunter
+    ready.spine = true;
+  }
+  function addBody(list) {
+    for (const b of list) {
+      if (b.name === 'hull') {
+        hull = new THREE.Mesh(b.geo, new THREE.ShaderMaterial({ uniforms: { uOp: { value: 0 }, uRev: { value: 1e5 }, uTop: { value: 166 } }, vertexShader: glassV, fragmentShader: hullF, transparent: true, ...ADD, depthTest: false, depthWrite: false, side: THREE.DoubleSide }));
+        hull.layers.set(1); hull.visible = false; hull.renderOrder = -1; body.add(hull);
+      } else solid(b.geo, glassU(0x9CCBF2, 0xFFB45A, 9), ['girdle', 'arm', 'hand'].includes(b.name) ? 'upper' : 'lower');
     }
-    for (let i = 0; i < NU; i++) for (let j = 0; j < NV; j++) { const a = i * NV + j, b = i * NV + (j + 1) % NV, c = a + NV, d2 = b + NV; idx.push(a, c, b, b, c, d2); }
-    const top = pos.length / 3; pos.push(0, h / 2, 0); const bot = top + 1; pos.push(0, -h / 2, o.bend * R);
-    for (let j = 0; j < NV; j++) { idx.push(top, j, (j + 1) % NV); idx.push(bot, NU * NV + (j + 1) % NV, NU * NV + j); }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
-    g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array((pos.length / 3) * 2), 2));
-    return g;
+    for (const s of [1, -1]) tube(legNerve(sp, s), 220, 0.3, nerveM(13, s * 0.21), 'lower', { nerve: true });
+    // Boden unter den Füßen: Lichtkreise, die von den Sohlen ausgehen
+    const gg = new THREE.PlaneGeometry(110, 110); gg.rotateX(-Math.PI / 2);
+    ground = new THREE.Mesh(gg, new THREE.ShaderMaterial({
+      uniforms: { uOp: { value: 0 }, uTime: tU, uF: { value: new THREE.Vector3(J.ank.x, J.ank.z + 4, 0) } }, transparent: true, ...ADD, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+      vertexShader: 'varying vec2 vP; void main(){ vP = position.xz; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
+      fragmentShader: `varying vec2 vP; uniform float uOp, uTime; uniform vec3 uF;
+        void main(){ float d = min(length((vP - vec2(uF.x, uF.y)) * vec2(1., .55)), length((vP - vec2(-uF.x, uF.y)) * vec2(1., .55)));
+          float ring = pow(max(0., sin((d*.085 - uTime*.2) * 6.2832)), 12.) * exp(-d*.05);
+          float pool = exp(-d*d*.02) * .55;
+          float a = (ring*.7 + pool) * uOp * smoothstep(52., 30., length(vP - vec2(0., uF.y)));
+          gl_FragColor = vec4(vec3(1., .66, .26) * a, 0.); }`,
+    }));
+    ground.position.set(0, 0.05, 0); ground.layers.set(1); ground.visible = false; ground.renderOrder = -2; body.add(ground);
+    ready.body = true;
   }
-  sp.vertebrae.forEach((m) => {
-    const lv = m.userData.lv;
-    if (lv.reg === 's') m.geometry = wedge(lv.R, lv.h, { nu: 40, w0: 1.34, w1: 0.36, pw: 0.8, d0: 0.5, d1: 0.2, bend: -0.85, rip: 0.05, seg: 5 });
-    if (lv.reg === 'co') m.geometry = wedge(lv.R, lv.h, { nu: 20, w0: 1.1, w1: 0.3, pw: 1, d0: 0.7, d1: 0.25, bend: 0.9, rip: 0.14, seg: 3.5 });
-  });
-  const N = sp.levels.length;
-  const segOf = (id) => SEG.findIndex((s) => s.ids.includes(id));
-  const parts = [];                                    // alles, was je Wirbelhöhe erscheint und glüht
-  sp.vertebrae.forEach((m, i) => parts.push({ m, i, seg: segOf(m.userData.lv.id) }));
-  sp.discs.forEach((d) => {                            // Bandscheiben: blass, im aktiven Abschnitt rot-orange (wie in Puls)
-    d.material = glass(0xBFD9EE, 0xF0683C);
-    const i = sp.levels.findIndex((l) => l.id === d.userData.afterId), a = segOf(sp.levels[i].id), b = segOf(sp.levels[i + 1].id);
-    parts.push({ m: d, i: i + 0.5, seg: a === b ? a : b === 5 ? 5 : -1, disc: true });
-  });
-  rootCurves(sp).forEach((r, k) => {
-    const m = new THREE.Mesh(new THREE.TubeGeometry(r.curve, 18, 0.022, 8), nerve(1.6, k * 0.37));
-    sp.group.add(m); parts.push({ m, i: sp.levels.findIndex((l) => l.id === r.id) + 0.3, seg: segOf(r.id), root: true });
-  });
-  const cord = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(sp.canal), 200, 0.05, 10), nerve(9, 0));
-  sp.group.add(cord);
-  for (const p of parts) if (!p.root) {
-    p.dm = new THREE.Mesh(p.m.geometry, depthOnly); p.m.add(p.dm);                       // Tiefen-Vorlauf: nur die vorderste Fläche zählt
-    p.gm = new THREE.Mesh(p.m.geometry, new THREE.ShaderMaterial({ uniforms: p.m.material.uniforms, vertexShader: glassV, fragmentShader: ghostF, transparent: true, ...ADD, depthTest: false, depthWrite: false, side: THREE.BackSide }));
-    p.gm.renderOrder = -0.5; p.m.add(p.gm);                                              // Rückseiten schimmern durch
-  }
-  const holder = new THREE.Group();
-  sp.group.position.y = -sp.Ltot / 2;
-  holder.add(sp.group); scene.add(holder);
-  holder.traverse((o) => o.layers.set(1));             // Ebene 1 = Modell (wird für den Lichtschein zusätzlich einzeln gezeichnet)
+  runSliced(vertebraGeos()).then((vg) => { addSpine(vg); return runSliced(bodyGeos(sp.P0)); }).then(addBody).catch((e) => console.error(e));
 
   // Lichtschein: Modell klein in einen Zwischenspeicher zeichnen, weichzeichnen, über das Bild addieren
   const rtA = new THREE.WebGLRenderTarget(4, 4), rtB = new THREE.WebGLRenderTarget(4, 4, { depthBuffer: false }), rtC = new THREE.WebGLRenderTarget(4, 4, { depthBuffer: false });
@@ -257,18 +281,18 @@ function start() {
   }));
   glow.frustumCulled = false; glow.renderOrder = 50; scene.add(glow);
   const blur = (from, to, dx, dy) => { blurU.uTex.value = from.texture; blurU.uDir.value.set(dx, dy); renderer.setRenderTarget(to); renderer.render(post, pcam); };
-  const off = new THREE.Vector3(0, -sp.Ltot / 2, 0);
-  const local = (id) => sp.levels.find((l) => l.id === id).center.clone().add(off);
-  const C1 = local('C1'), T2 = local('Th2');
-  SEG.forEach((s) => { s.c = s.ids.reduce((v, id) => v.add(local(id)), new THREE.Vector3()).multiplyScalar(1 / s.ids.length); });
 
-  // Lagen: A = deckungsgleich mit dem Bild (Dreiviertelansicht), B = frei stehend im Halbprofil
-  const qA = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI / 2 - 0.62, 0.2, 'ZYX'));
-  const eB = new THREE.Euler(0, 0, 0, 'ZYX'), qB = new THREE.Quaternion(), q = new THREE.Quaternion(), v = new THREE.Vector3();
-  const pose = { s: 1, x: 0, y: 0 };                   // geglättete Lage in der Abschnitts-Ansicht
-  let poseInit = false;
+  // ---- Lagen der Figur --------------------------------------------------------------------------
+  const C1 = sp.byId('C1').center, T2 = sp.byId('Th2').center, mid = new THREE.Vector3(0, (C1.y + sp.byId('Co').center.y) / 2, 0);
+  SEG.forEach((s) => { s.c = s.ids.reduce((v, id) => v.add(sp.byId(id).center), new THREE.Vector3()).multiplyScalar(1 / s.ids.length); });
+  const yT2 = T2.y, yEnd = sp.byId('Co').center.y - 3;
+  const qA = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI / 2 - 0.62, 0.2, 'ZYX'));   // deckungsgleich mit dem Bild
+  const eB = new THREE.Euler(), eP = new THREE.Euler(), eF = new THREE.Euler();
+  const qB = new THREE.Quaternion(), qP = new THREE.Quaternion(), qF = new THREE.Quaternion(), q = new THREE.Quaternion(), v = new THREE.Vector3(), c3 = new THREE.Vector3();
+  const aP = new THREE.Vector3(0, sp.P0.y - 20, sp.P0.z + 2), aF = new THREE.Vector3(0, 9, J.ank.z + 6.5);
+  const pose = { init: false, s: 1, x: 0, y: 0, c: new THREE.Vector3() };   // geglättete Lage in der Abschnitts-Ansicht
 
-  const first = $('.first'), h1 = first.querySelector('h1'), win = $('#wirbelsaeule');
+  const first = $('.first'), h1 = first.querySelector('h1'), kief = $('#kiefer'), win = $('#wirbelsaeule'), beck = $('#becken'), feet = $('#fuesse');
   function resize() {
     W = canvas.clientWidth; H = canvas.clientHeight;
     CW = document.querySelector('main').clientWidth; CX = (W - CW) / 2;
@@ -280,80 +304,98 @@ function start() {
   }
   new ResizeObserver(resize).observe(canvas); resize();
 
-  let last = 0, time = 0;
+  let last = 0, time = 0, fadeS = 0, fadeB = 0;
   function frame(now) {
     requestAnimationFrame(frame);
     if (document.hidden) return;
     const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
     if (!reduced) time += dt;
-    const sy = scrollY, vh = innerHeight, wr = win.getBoundingClientRect();
-    const t = (0.8 * vh - wr.top) / vh;                // Fortschritt im Kapitel Wirbelsäule in Bildschirmhöhen
-    const ar = IMG_H / IMG_W;
+    const sy = scrollY, vh = innerHeight, ar = IMG_H / IMG_W;
+    const kr = kief.getBoundingClientRect(), wr = win.getBoundingClientRect(), br = beck.getBoundingClientRect(), fr = feet.getBoundingClientRect();
+    const tk = (0.8 * vh - kr.top) / vh;               // Fortschritt Kiefer/Nacken (in Bildschirmhöhen)
+    const t = (0.8 * vh - wr.top) / vh;                // Fortschritt Wirbelsäule
+    const kP = smooth((0.9 * vh - br.top) / (0.95 * vh));   // Becken und Beine
+    const kF = smooth((0.95 * vh - fr.top) / (0.9 * vh));   // Füße
 
     // ---- Bild: Lage und Zustand ----
     let rw, rx, ry, alpha, keep = 0, scatter = 0;
-    if (t <= 0) {                                      // erster Bildschirm: Kopf unter der Begrüßung
+    if (tk <= 0) {                                     // erster Bildschirm: Kopf unter der Begrüßung
       rw = CW * 1.14; rx = CX - 0.07 * CW; ry = h1.offsetTop + h1.offsetHeight + 4 - 0.03 * rw * ar - sy * 0.4; alpha = 1;
-    } else {                                           // Kapitel: heran an Hals und Nacken
-      const k = smooth(t / 0.6);
-      rw = CW * lerp(1.3, 1.8, k);
-      rx = CX + 0.5 * CW - 0.53 * rw; ry = lerp(0.52, 0.47, k) * vh - 0.6 * rw * ar;
-      alpha = smooth(t / 0.3) * (1 - smooth((t - 0.95) / 0.45));
+    } else if (t <= 0) {                               // Kiefer und Nacken: heran, Kiefer in die obere Bildhälfte
+      const k = smooth(tk / 0.7);
+      rw = CW * lerp(1.3, 1.75, k); rx = CX + 0.5 * CW - lerp(0.55, 0.6, k) * rw; ry = lerp(0.5, 0.31, k) * vh - lerp(0.5, 0.52, k) * rw * ar;
+      alpha = smooth(tk / 0.3);
+    } else {                                           // Wirbelsäule: Hals in die Mitte, dann verlischt alles andere
+      const k = smooth(t / 0.5);
+      rw = CW * lerp(1.75, 1.8, k); rx = CX + 0.5 * CW - lerp(0.6, 0.53, k) * rw; ry = lerp(0.31, 0.47, k) * vh - lerp(0.52, 0.6, k) * rw * ar;
+      alpha = 1 - smooth((t - 0.95) / 0.45);
       keep = smooth((t - 0.45) / 0.4); scatter = reduced ? 0 : smooth((t - 0.9) / 0.5);
     }
     bgU.uRect.value.set(rx, ry, rw, rw * ar);
     bgU.uAlpha.value = alpha; bgU.uKeep.value = keep; bgU.uScatter.value = scatter; bgU.uTime.value = time; tU.value = time;
     bgU.uTilt.value.set(Math.sin(time * 0.33) * 0.55, Math.cos(time * 0.27) * 0.3 + clamp(sy / vh, 0, 1.2) * 0.5);
+    bg.visible = alpha > 0.002;
 
-    // ---- Wirbelsäule: Sichtbarkeit je Höhe ----
-    const out = clamp((wr.bottom - 0.3 * vh) / (0.35 * vh));
-    const op3 = smooth((t - 0.5) / 0.4) * out;
-    const rev = 9.5 + (N - 8) * smooth((t - 0.9) / 0.8);  // erst Hals und obere Brust, dann wächst sie nach unten
-    const ui = smooth((t - 1.65) / 0.25) * clamp((wr.bottom - 0.8 * vh) / (0.2 * vh));
-    const on = ui > 0.5;
+    // ---- Figur: was ist sichtbar ----
+    fadeS += ((ready.spine ? 1 : 0) - fadeS) * (1 - Math.exp(-dt / 0.4)); fadeB += ((ready.body ? 1 : 0) - fadeB) * (1 - Math.exp(-dt / 0.4));
+    const opS = smooth((t - 0.5) / 0.4) * fadeS;
+    const revS = lerp(yT2 - 1.5, yEnd, smooth((t - 0.9) / 0.8));        // erst Hals und obere Brust, dann wächst sie nach unten
+    const opL = smooth(kP / 0.25) * fadeB;
+    const revL = lerp(sp.P0.y + 10, -8, smooth((kP - 0.08) / 0.8)), revU = lerp(158, 56, smooth(kP / 0.7)), revH = lerp(172, -8, smooth(kP / 0.9));
+    const uiEnd = clamp((wr.bottom - 0.8 * vh) / (0.2 * vh));
+    const ui = smooth((t - 1.65) / 0.25) * uiEnd, on = ui > 0.5;
+    const ka = reduced ? 1 : 1 - Math.exp(-dt / 0.18);
     for (const p of parts) {
-      const u = p.m.material.uniforms, act = on && p.seg === active ? 1 : 0;
-      u.uOp.value = op3 * smooth(rev - p.i) * (p.disc ? 0.7 + 0.8 * u.uAct.value : 1);
-      u.uAct.value += (act - u.uAct.value) * (reduced ? 1 : 1 - Math.exp(-dt / 0.18));
-      if (p.dm) p.dm.visible = u.uOp.value > 0.03;
+      const u = p.u;
+      if (p.grp === 'spine') {
+        if (p.local) u.uOp.value = opS * smooth((p.y - revS) / 3 + 0.5) * (p.disc ? 0.7 + 0.8 * u.uAct.value : 1);
+        else { u.uOp.value = opS * (p.rib ? 0.7 * smooth((t - 1.05) / 0.5) : 1); u.uRev.value = revS; }   // Rippen erst, wenn die Säule frei steht
+      } else { u.uOp.value = opL; u.uRev.value = p.grp === 'upper' ? revU : revL; }
+      u.uAct.value += ((on && p.seg === active ? 1 : 0) - u.uAct.value) * ka;
+      p.m.visible = u.uOp.value > 0.01;
     }
-    cord.material.uniforms.uOp.value = op3 * 0.9;
-    holder.visible = op3 > 0.002;
+    if (hull) { hull.material.uniforms.uOp.value = opL * 0.9; hull.material.uniforms.uRev.value = revH; hull.visible = opL > 0.01; }
+    if (ground) { ground.material.uniforms.uOp.value = kF * fadeB * (reduced ? 0.5 : 1); ground.visible = kF > 0.01; }
+    body.visible = opS > 0.002;
 
-    // ---- Wirbelsäule: Lage ----
-    if (holder.visible) {
+    // ---- Figur: Lage ----
+    if (body.visible) {
+      const osc = reduced ? 0 : Math.sin(time * 0.45);
       // A: C1 und Th2 liegen auf ihren Stellen im Bild
       const a1x = rx + 0.462 * rw, a1y = ry + 0.415 * rw * ar, a2x = rx + 0.578 * rw, a2y = ry + 0.735 * rw * ar;
       const sA = Math.hypot(a2x - a1x, a2y - a1y) / C1.distanceTo(T2);
-      // B: ganze Säule rechts im Bild, leicht zum Betrachter gedreht, atmet
-      eB.set(0, Math.PI / 2 - 0.52 + (reduced ? 0 : Math.sin(time * 0.45) * 0.16), reduced ? 0 : Math.sin(time * 0.3) * 0.015);
-      qB.setFromEuler(eB);
+      // B: ganze Wirbelsäule frei stehend im Halbprofil; im Abschnitt fährt sie heran (obere Bildhälfte, Karte darunter)
+      eB.set(0, Math.PI / 2 - 0.52 + osc * 0.16, 0); qB.setFromEuler(eB);
       const sB = (0.66 * vh) / sp.Ltot;
-      let tS = sB, tX = CX + 0.56 * CW, tY = 0.52 * vh, tC = v.set(0, 0, 0);
-      if (ui > 0.02) { const s = SEG[active]; tS = sB * s.zoom; tX = CX + 0.56 * CW; tY = 0.3 * vh; tC = s.c; }   // Abschnitt in die obere Bildhälfte, Karte steht darunter
-      // Mitte des Ziels (Abschnitt oder ganze Säule) auf den Bildschirmpunkt legen
-      const cx = tC.x, cy = tC.y, cz = tC.z;
+      let tS = sB, tY = 0.52 * vh, tC = mid;
+      if (ui > 0.02) { const s = SEG[active]; tS = sB * s.zoom; tY = 0.3 * vh; tC = s.c; }
       const k = reduced ? 1 : 1 - Math.exp(-dt / 0.32);
-      if (!poseInit) { pose.s = tS; pose.cx = cx; pose.cy = cy; pose.cz = cz; pose.x = tX; pose.y = tY; poseInit = true; }
-      pose.s += (tS - pose.s) * k; pose.x += (tX - pose.x) * k; pose.y += (tY - pose.y) * k;
-      pose.cx += (cx - pose.cx) * k; pose.cy += (cy - pose.cy) * k; pose.cz += (cz - pose.cz) * k;
-      const m = smooth((t - 0.9) / 0.8);
-      q.copy(qA).slerp(qB, m);
-      const s = lerp(sA, pose.s, m);
-      holder.quaternion.copy(q); holder.scale.setScalar(s);
-      // Ankerpunkt: in A der Atlas, in B die Mitte des Ziels
-      v.set(lerp(C1.x, pose.cx, m), lerp(C1.y, pose.cy, m), lerp(C1.z, pose.cz, m)).multiplyScalar(s).applyQuaternion(q);
-      holder.position.set(lerp(a1x, pose.x, m) - v.x, -lerp(a1y, pose.y, m) - v.y, 0);
+      if (!pose.init) { pose.s = tS; pose.y = tY; pose.c.copy(tC); pose.init = true; }
+      pose.s += (tS - pose.s) * k; pose.y += (tY - pose.y) * k; pose.c.lerp(tC, k);
+      // P: Becken und Beine von schräg vorn · F: Füße von der Seite, leicht von oben (Boden sichtbar)
+      eP.set(0.07, 0.62 + osc * 0.1, 0); qP.setFromEuler(eP);
+      eF.set(0.2, Math.PI / 2 - 0.5 + osc * 0.07, 0); qF.setFromEuler(eF);
+      const sP = (0.5 * vh) / 48, sF = (CW * 0.74) / 30;
+      const m = smooth((t - 0.9) / 0.8), cxs = CX + 0.5 * CW;
+      q.copy(qA).slerp(qB, m).slerp(qP, kP).slerp(qF, kF);
+      const s = lerp(lerp(lerp(sA, pose.s, m), sP, kP), sF, kF);
+      c3.copy(C1).lerp(pose.c, m).lerp(aP, kP).lerp(aF, kF);                   // Ankerpunkt im Körper …
+      const tx = lerp(lerp(lerp(a1x, CX + 0.56 * CW, m), cxs, kP), cxs, kF), ty = lerp(lerp(lerp(a1y, pose.y, m), 0.3 * vh, kP), 0.27 * vh, kF);   // … liegt auf diesem Bildschirmpunkt
+      body.quaternion.copy(q); body.scale.setScalar(s);
+      v.copy(c3).multiplyScalar(s).applyQuaternion(q);
+      body.position.set(tx - v.x, -ty - v.y, 0);
     }
 
     // ---- Oberfläche ----
     segEl.style.setProperty('--ui', ui.toFixed(3));
-    segEl.style.setProperty('--in', (smooth((t - 1.35) / 0.3) * clamp((wr.bottom - 0.8 * vh) / (0.2 * vh))).toFixed(3));
+    segEl.style.setProperty('--in', (smooth((t - 1.35) / 0.3) * uiEnd).toFixed(3));
     segEl.classList.toggle('on', on);
+    kief.style.setProperty('--cap', (smooth((tk - 0.5) / 0.3) * (1 - smooth(t / 0.2))).toFixed(3));
+    beck.style.setProperty('--cap', (smooth((kP - 0.55) / 0.3) * clamp((br.bottom - 0.75 * vh) / (0.2 * vh))).toFixed(3));
     if (on && auto) { autoT += dt; if (autoT > 5) { autoT = 0; setSeg((active + 1) % SEG.length); } } else if (!on) autoT = 0;
 
-    glow.visible = holder.visible;
-    if (holder.visible) {                              // Lichtschein des Modells
+    glow.visible = body.visible;
+    if (body.visible) {                                // Lichtschein des Modells
       cam.layers.set(1); renderer.setRenderTarget(rtA); renderer.render(scene, cam);
       blur(rtA, rtB, 1.5 / rtA.width, 0); blur(rtB, rtC, 0, 1.5 / rtB.height);
       blur(rtC, rtB, 2.6 / rtC.width, 0); blur(rtB, rtC, 0, 2.6 / rtB.height);
@@ -363,5 +405,5 @@ function start() {
     renderer.render(scene, cam);
   }
   requestAnimationFrame(frame);
-  window.__glas = { sp, holder, bgU };
+  window.__glas = { sp, body, parts, bgU, ready };
 }

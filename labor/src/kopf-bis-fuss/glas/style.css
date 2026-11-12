@@ -39,6 +39,38 @@ cite{font:500 .8125rem/1.3 var(--sans);color:var(--mute)}
 .foto figcaption{position:absolute;left:1rem;right:1rem;bottom:1rem;font-size:.875rem;line-height:1.4;color:var(--dim)}
 .foto b{display:block;font:600 .75rem/1.5 var(--disp);letter-spacing:.05em;color:var(--amber)}
 
+/* Fenster: die Bühne ist zu sehen, eine kurze Beschriftung klebt in der unteren Bildhälfte */
+.win{position:relative;height:150vh;height:150svh}
+.win.tall{height:190vh;height:190svh}
+.cap{position:sticky;top:54vh;top:54svh;padding:2.5rem var(--gr) 1.25rem var(--gl);min-height:46vh;min-height:46svh;background:linear-gradient(rgba(43,37,32,0),var(--ground) 2.5rem);opacity:var(--cap,0)}
+.cap h2{font-size:1.625rem;margin-bottom:.75rem}
+.cap p{margin:0 0 .75rem;font-size:.9375rem;line-height:1.5}
+.cap .tags{font:600 .8125rem/1.5 var(--disp);color:var(--txt)}
+.drei{margin:0;display:grid;gap:.625rem}
+.drei div{display:grid;grid-template-columns:5.25rem 1fr;gap:.75rem;padding-top:.625rem;border-top:1px solid var(--line);font-size:.9375rem;line-height:1.4}
+.drei dt{font:600 .8125rem/1.6 var(--disp);color:var(--amber)}
+.drei dd{margin:0}
+.block.mid{padding-block:6rem}
+.block.mid .hint{margin:0}
+
+/* Füße: die Figur steht oben, darunter Terminanfrage und Anfahrt */
+.feet{position:relative;padding-top:52vh;padding-top:52svh}
+.land{padding:3.5rem var(--gr) 4rem var(--gl);background:linear-gradient(rgba(43,37,32,0),var(--ground) 3rem)}
+.land p{margin:0 0 1rem}
+.go{margin:1.5rem 0 1rem!important}
+.btn{display:flex;align-items:center;justify-content:center;min-height:3.25rem;padding:0 1.75rem;border-radius:3px;background:var(--amber);color:var(--amber-ink);text-decoration:none;font:700 .8125rem/1 var(--sans);letter-spacing:.15em;text-transform:uppercase}
+.wait{font-size:.9375rem}
+.wait b{font-weight:600}
+.wait span{color:var(--mute)}
+.facts{margin:2rem 0 1.5rem;border-top:1px solid var(--line)}
+.facts div{display:grid;grid-template-columns:5.25rem 1fr;gap:.75rem;padding:.75rem 0;border-bottom:1px solid var(--line);font-size:.9375rem;line-height:1.4}
+.facts dt{font:600 .8125rem/1.6 var(--disp);color:var(--mute)}
+.facts dd{margin:0;overflow-wrap:anywhere}
+.facts dd span{display:block;font-size:.8125rem;color:var(--mute)}
+.facts a{color:var(--txt);text-decoration:underline;text-decoration-color:rgba(227,160,67,.6);text-underline-offset:.2em}
+.land .hint{font-size:.8125rem;line-height:1.5;color:var(--mute)}
+.land .ende{margin:2.5rem 0 0;font:italic 400 1rem/1.4 var(--serif);color:var(--mute)}
+
 /* Kapitel Wirbelsäule: Bühne klebt einen Bildschirm lang, Abschnitte per Antippen */
 .spine{position:relative;height:340vh;height:340svh}
 .seg{position:sticky;top:0;height:100vh;height:100svh;padding:4.5rem var(--gr) 1.25rem var(--gl);display:flex;flex-direction:column;pointer-events:none}
@@ -61,6 +93,7 @@ cite{font:500 .8125rem/1.3 var(--sans);color:var(--mute)}
 
 .no-gl #gl{display:none}
 .no-gl .first{background:var(--ground) var(--img) 50% 5.5rem/118% auto no-repeat}
-.no-gl .card,.no-gl .chips,.no-gl .intro{opacity:1}
+.no-gl .card,.no-gl .chips,.no-gl .intro,.no-gl .cap{opacity:1}
+.no-gl .win,.no-gl .win.tall{height:auto}.no-gl .cap{position:static}.no-gl .feet{padding-top:0}
 .no-gl .seg .chips{pointer-events:auto}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
