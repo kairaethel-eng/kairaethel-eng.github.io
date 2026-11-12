@@ -62,7 +62,7 @@ function start() {
   renderer.setPixelRatio(DPR);
   const scene = new THREE.Scene();
   const cam = new THREE.OrthographicCamera(0, 1, 0, -1, -6000, 6000);
-  let W = 1, H = 1;
+  let W = 1, H = 1, CX = 0, CW = 1;                   // Fenster und Textspalte (am PC ist die Bühne breiter als die Spalte)
 
   // ---- Bild als Bühne -------------------------------------------------------------------------
   const tex = new THREE.Texture();
@@ -107,7 +107,22 @@ function start() {
         uv += n * uScatter * uScatter * .16 * (1. - m) + vec2(0., uScatter*uScatter*.05*(1.-m));
         if (uv.x < 0. || uv.x > 1. || uv.y < 0. || uv.y > 1. || uReady < .5) { gl_FragColor = vec4(0.); return; }
         vec3 c = texture2D(uTex, vec2(uv.x, 1.-uv.y)).rgb;
-        float edge = smoothstep(0., .05, uv.x) * smoothstep(1., .95, uv.x) * smoothstep(1., .9, uv.y) * smoothstep(0., .015, uv.y);
+        float edge = smoothstep(0., .04, uv.x) * smoothstep(1., .96, uv.x) * smoothstep(1., .97, uv.y) * smoothstep(0., .015, uv.y);
+        // Kein Bildrand: Kopf und Hals stehen klar, Schultern und Arme lösen sich nach außen in Lichtfäden und Glasstaub auf
+        float r = length((uv - vec2(.5, .36)) / vec2(.66, .64)) + (noise(uv*5. + uTime*.04) - .5) * .16;
+        float fig = 1. - smoothstep(.56, 1., r);
+        vec3 tr = vec3(0.);
+        for (int i = 1; i <= 5; i++) {
+          vec2 u2 = uv - vec2((noise(vec2(uv.x*34., float(i)*3.7)) - .5) * .012, float(i) * .034);
+          float f2 = 1. - smoothstep(.56, 1., length((u2 - vec2(.5, .36)) / vec2(.66, .64)));
+          tr += texture2D(uTex, vec2(u2.x, 1.-u2.y)).rgb * f2 * (1. - float(i)/6.);
+        }
+        float strand = smoothstep(.3, .8, noise(vec2(uv.x*64., uv.y*2.6 - uTime*.12)));
+        c = c * fig + tr * .2 * strand * (1. - fig);
+        vec2 gp = vec2(uv.x*42., uv.y*42.*uAspect); gp.y -= uTime * (.2 + .45*hash(vec2(floor(gp.x), 3.)));
+        vec2 id = floor(gp), gf = fract(gp) - .5;
+        float mote = step(.87, hash(id)) * smoothstep(.1, 0., length(gf - (vec2(hash(id+7.), hash(id+13.)) - .5) * .6));
+        c += vec3(.55, .8, 1.) * mote * smoothstep(0., .4, 1. - fig) * smoothstep(1.3, .85, r) * .9 * uLife * (.5 + .5*sin(uTime*1.3 + hash(id)*40.));
         // Nervensignale: gelbliche Bahnen bekommen Lichtpulse, die nach unten laufen
         float yel = clamp((min(c.r, c.g) - c.b) * 3.2, 0., 1.);
         float ph = uv.y*7. - uTime*.55 + noise(uv*5.)*1.3;
@@ -126,29 +141,77 @@ function start() {
   scene.add(bg);
 
   // ---- 3D-Glasmodell der Wirbelsäule ------------------------------------------------------------
-  const glassV = 'varying vec3 vN; varying vec2 vUv; void main(){ vN = normalize(normalMatrix * normal); vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }';
+  // Material „Röntgen-Glas“: vordere Flächen verdecken hintere (Tiefenpuffer), dazu Kantenlicht, weiches Streiflicht,
+  // Glanzpunkte und feine Knochenstruktur. Ein weicher Lichtschein (unten: bloom) bindet das Modell an das Bild.
+  const glassV = `varying vec3 vN, vO; varying vec2 vUv;
+    void main(){ vN = normalize(normalMatrix * normal); vO = position; vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`;
   const glassF = `
-    varying vec3 vN; uniform vec3 uCol, uHot; uniform float uAct, uOp;
-    void main(){ float f = 1. - abs(normalize(vN).z); float rim = pow(f, 1.7);
-      vec3 c = mix(uCol, uHot, uAct);
-      float a = (.025 + rim*.5) * uOp * (1. + uAct*.9);
-      gl_FragColor = vec4(c * (.5 + rim*.7), a); }`;
+    varying vec3 vN, vO; uniform vec3 uCol, uHot; uniform float uAct, uOp, uTex;
+    float h3(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+    float n3(vec3 p){ vec3 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
+      return mix(mix(mix(h3(i), h3(i+vec3(1,0,0)), f.x), mix(h3(i+vec3(0,1,0)), h3(i+vec3(1,1,0)), f.x), f.y),
+                 mix(mix(h3(i+vec3(0,0,1)), h3(i+vec3(1,0,1)), f.x), mix(h3(i+vec3(0,1,1)), h3(i+vec3(1,1,1)), f.x), f.y), f.z); }
+    void main(){
+      vec3 n = normalize(vN);
+      float ndv = clamp(n.z, 0., 1.);
+      float rim = pow(1. - ndv, 2.4);
+      vec3 L = normalize(vec3(-.5, .62, .6));
+      float dif = max(dot(n, L), 0.);
+      float spec = pow(max(dot(n, normalize(L + vec3(0., 0., 1.))), 0.), 56.);
+      float grain = .84 + .3 * n3(vO * uTex) * n3(vO * uTex * 2.7 + 3.1);
+      vec3 base = mix(uCol, uHot, uAct);
+      vec3 edge = mix(vec3(.78, .92, 1.), vec3(1., .84, .58), uAct);
+      vec3 c = base * (.035 + .19 * dif) * grain + edge * rim * 1.15 + vec3(1.) * spec * .5;
+      float a = uOp * (1. + uAct * .45);
+      gl_FragColor = vec4(c * a, (.05 + .45 * rim) * a);
+    }`;
   const glass = (col, hot) => new THREE.ShaderMaterial({
-    uniforms: { uCol: { value: new THREE.Color(col) }, uHot: { value: new THREE.Color(hot) }, uAct: { value: 0 }, uOp: { value: 0 } },
-    vertexShader: glassV, fragmentShader: glassF, transparent: true, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+    uniforms: { uCol: { value: new THREE.Color(col) }, uHot: { value: new THREE.Color(hot) }, uAct: { value: 0 }, uOp: { value: 0 }, uTex: { value: 30 } },
+    vertexShader: glassV, fragmentShader: glassF, transparent: true, premultipliedAlpha: true, depthTest: true, depthWrite: false, side: THREE.FrontSide,
   });
+  const ghostF = `
+    varying vec3 vN; uniform vec3 uCol, uHot; uniform float uAct, uOp;
+    void main(){ float rim = pow(1. - abs(normalize(vN).z), 2.); gl_FragColor = vec4(mix(uCol, uHot, uAct) * (.03 + .3 * rim) * uOp, 0.); }`;
+  const depthOnly = new THREE.MeshBasicMaterial({ colorWrite: false });
+  const ADD = { blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneFactor };
   const nerveF = `
-    varying vec2 vUv; uniform float uAct, uOp, uTime, uN, uPh;
-    void main(){ float s = pow(max(0., sin((vUv.x*uN - uTime*.9 + uPh)*6.2832)), 9.);
-      vec3 c = mix(vec3(.93,.66,.26), vec3(1.,.92,.66), s);
-      gl_FragColor = vec4(c, (.13 + s*.8 + uAct*.4) * uOp); }`;
+    varying vec3 vN; varying vec2 vUv; uniform float uAct, uOp, uTime, uN, uPh;
+    void main(){ float core = pow(clamp(abs(normalize(vN).z), 0., 1.), 1.4);
+      float s = pow(max(0., sin((vUv.x*uN - uTime*.9 + uPh)*6.2832)), 9.);
+      vec3 c = mix(vec3(.9, .6, .2), vec3(1., .93, .7), s) * (.3 + .7*core);
+      gl_FragColor = vec4(c * (.26 + s*1.25 + uAct*.55) * uOp, 0.); }`;
   const tU = { value: 0 };
   const nerve = (n, ph) => new THREE.ShaderMaterial({
     uniforms: { uAct: { value: 0 }, uOp: { value: 0 }, uTime: tU, uN: { value: n }, uPh: { value: ph } },
-    vertexShader: glassV, fragmentShader: nerveF, transparent: true, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false,
+    vertexShader: glassV, fragmentShader: nerveF, transparent: true, ...ADD, depthTest: true, depthWrite: false,
   });
 
   const sp = buildSpine({ boneMaterial: () => glass(0x9CCBF2, 0xFFB45A) });
+  // Kreuzbein und Steißbein: eigener, geformter Körper (keilförmig, nach hinten gekrümmt, mit Verschmelzungsleisten)
+  function wedge(R, h, o) {
+    const NU = o.nu, NV = 40, pos = [], idx = [];
+    for (let i = 0; i <= NU; i++) {
+      const u = i / NU, y = h / 2 - u * h;
+      const rip = 1 + o.rip * Math.cos(u * o.seg * 6.2832);
+      const w = R * (o.w0 - (o.w0 - o.w1) * Math.pow(u, o.pw)) * rip, d = R * (o.d0 - (o.d0 - o.d1) * u) * rip, zc = o.bend * Math.pow(u, 1.5) * R;
+      for (let j = 0; j < NV; j++) {
+        const a = (j / NV) * 6.2832, c = Math.cos(a), sn = Math.sin(a);
+        pos.push(w * Math.sign(c) * Math.pow(Math.abs(c), 0.8), y, zc + d * Math.sign(sn) * Math.pow(Math.abs(sn), 0.9) * (sn > 0 ? 0.8 : 1));
+      }
+    }
+    for (let i = 0; i < NU; i++) for (let j = 0; j < NV; j++) { const a = i * NV + j, b = i * NV + (j + 1) % NV, c = a + NV, d2 = b + NV; idx.push(a, c, b, b, c, d2); }
+    const top = pos.length / 3; pos.push(0, h / 2, 0); const bot = top + 1; pos.push(0, -h / 2, o.bend * R);
+    for (let j = 0; j < NV; j++) { idx.push(top, j, (j + 1) % NV); idx.push(bot, NU * NV + (j + 1) % NV, NU * NV + j); }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array((pos.length / 3) * 2), 2));
+    return g;
+  }
+  sp.vertebrae.forEach((m) => {
+    const lv = m.userData.lv;
+    if (lv.reg === 's') m.geometry = wedge(lv.R, lv.h, { nu: 40, w0: 1.34, w1: 0.36, pw: 0.8, d0: 0.5, d1: 0.2, bend: -0.85, rip: 0.05, seg: 5 });
+    if (lv.reg === 'co') m.geometry = wedge(lv.R, lv.h, { nu: 20, w0: 1.1, w1: 0.3, pw: 1, d0: 0.7, d1: 0.25, bend: 0.9, rip: 0.14, seg: 3.5 });
+  });
   const N = sp.levels.length;
   const segOf = (id) => SEG.findIndex((s) => s.ids.includes(id));
   const parts = [];                                    // alles, was je Wirbelhöhe erscheint und glüht
@@ -159,14 +222,41 @@ function start() {
     parts.push({ m: d, i: i + 0.5, seg: a === b ? a : b === 5 ? 5 : -1, disc: true });
   });
   rootCurves(sp).forEach((r, k) => {
-    const m = new THREE.Mesh(new THREE.TubeGeometry(r.curve, 14, 0.028, 5), nerve(1.6, k * 0.37));
+    const m = new THREE.Mesh(new THREE.TubeGeometry(r.curve, 18, 0.022, 8), nerve(1.6, k * 0.37));
     sp.group.add(m); parts.push({ m, i: sp.levels.findIndex((l) => l.id === r.id) + 0.3, seg: segOf(r.id), root: true });
   });
-  const cord = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(sp.canal), 160, 0.07, 6), nerve(9, 0));
+  const cord = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(sp.canal), 200, 0.05, 10), nerve(9, 0));
   sp.group.add(cord);
+  for (const p of parts) if (!p.root) {
+    p.dm = new THREE.Mesh(p.m.geometry, depthOnly); p.m.add(p.dm);                       // Tiefen-Vorlauf: nur die vorderste Fläche zählt
+    p.gm = new THREE.Mesh(p.m.geometry, new THREE.ShaderMaterial({ uniforms: p.m.material.uniforms, vertexShader: glassV, fragmentShader: ghostF, transparent: true, ...ADD, depthTest: false, depthWrite: false, side: THREE.BackSide }));
+    p.gm.renderOrder = -0.5; p.m.add(p.gm);                                              // Rückseiten schimmern durch
+  }
   const holder = new THREE.Group();
   sp.group.position.y = -sp.Ltot / 2;
   holder.add(sp.group); scene.add(holder);
+  holder.traverse((o) => o.layers.set(1));             // Ebene 1 = Modell (wird für den Lichtschein zusätzlich einzeln gezeichnet)
+
+  // Lichtschein: Modell klein in einen Zwischenspeicher zeichnen, weichzeichnen, über das Bild addieren
+  const rtA = new THREE.WebGLRenderTarget(4, 4), rtB = new THREE.WebGLRenderTarget(4, 4, { depthBuffer: false }), rtC = new THREE.WebGLRenderTarget(4, 4, { depthBuffer: false });
+  const quadV = 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }';
+  const blurU = { uTex: { value: null }, uDir: { value: new THREE.Vector2() } };
+  const post = new THREE.Scene(), pcam = new THREE.Camera();
+  const pq = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+    uniforms: blurU, depthTest: false, depthWrite: false, vertexShader: quadV,
+    fragmentShader: `varying vec2 vUv; uniform sampler2D uTex; uniform vec2 uDir;
+      void main(){ vec4 c = texture2D(uTex, vUv) * .227;
+        c += (texture2D(uTex, vUv + uDir*1.385) + texture2D(uTex, vUv - uDir*1.385)) * .316;
+        c += (texture2D(uTex, vUv + uDir*3.231) + texture2D(uTex, vUv - uDir*3.231)) * .0703;
+        gl_FragColor = c; }`,
+  }));
+  pq.frustumCulled = false; post.add(pq);
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+    uniforms: { uTex: { value: rtC.texture }, uK: { value: 1.05 } }, transparent: true, ...ADD, depthTest: false, depthWrite: false, vertexShader: quadV,
+    fragmentShader: 'varying vec2 vUv; uniform sampler2D uTex; uniform float uK; void main(){ vec3 c = texture2D(uTex, vUv).rgb * uK; gl_FragColor = vec4(c, max(c.r, max(c.g, c.b)) * .5); }',
+  }));
+  glow.frustumCulled = false; glow.renderOrder = 50; scene.add(glow);
+  const blur = (from, to, dx, dy) => { blurU.uTex.value = from.texture; blurU.uDir.value.set(dx, dy); renderer.setRenderTarget(to); renderer.render(post, pcam); };
   const off = new THREE.Vector3(0, -sp.Ltot / 2, 0);
   const local = (id) => sp.levels.find((l) => l.id === id).center.clone().add(off);
   const C1 = local('C1'), T2 = local('Th2');
@@ -181,9 +271,12 @@ function start() {
   const first = $('.first'), h1 = first.querySelector('h1'), win = $('#wirbelsaeule');
   function resize() {
     W = canvas.clientWidth; H = canvas.clientHeight;
+    CW = document.querySelector('main').clientWidth; CX = (W - CW) / 2;
     renderer.setSize(W, H, false);
     cam.right = W; cam.bottom = -H; cam.updateProjectionMatrix();
     bgU.uRes.value.set(W, H);
+    const dw = Math.max(4, Math.round(W * DPR / 2)), dh = Math.max(4, Math.round(H * DPR / 2));
+    rtA.setSize(dw, dh); rtB.setSize(dw >> 1, dh >> 1); rtC.setSize(dw >> 1, dh >> 1);
   }
   new ResizeObserver(resize).observe(canvas); resize();
 
@@ -200,11 +293,11 @@ function start() {
     // ---- Bild: Lage und Zustand ----
     let rw, rx, ry, alpha, keep = 0, scatter = 0;
     if (t <= 0) {                                      // erster Bildschirm: Kopf unter der Begrüßung
-      rw = W * 1.14; rx = -0.07 * W; ry = h1.offsetTop + h1.offsetHeight + 4 - 0.03 * rw * ar - sy * 0.4; alpha = 1;
+      rw = CW * 1.14; rx = CX - 0.07 * CW; ry = h1.offsetTop + h1.offsetHeight + 4 - 0.03 * rw * ar - sy * 0.4; alpha = 1;
     } else {                                           // Kapitel: heran an Hals und Nacken
       const k = smooth(t / 0.6);
-      rw = W * lerp(1.3, 1.8, k);
-      rx = 0.5 * W - 0.53 * rw; ry = lerp(0.52, 0.47, k) * vh - 0.6 * rw * ar;
+      rw = CW * lerp(1.3, 1.8, k);
+      rx = CX + 0.5 * CW - 0.53 * rw; ry = lerp(0.52, 0.47, k) * vh - 0.6 * rw * ar;
       alpha = smooth(t / 0.3) * (1 - smooth((t - 0.95) / 0.45));
       keep = smooth((t - 0.45) / 0.4); scatter = reduced ? 0 : smooth((t - 0.9) / 0.5);
     }
@@ -222,6 +315,7 @@ function start() {
       const u = p.m.material.uniforms, act = on && p.seg === active ? 1 : 0;
       u.uOp.value = op3 * smooth(rev - p.i) * (p.disc ? 0.7 + 0.8 * u.uAct.value : 1);
       u.uAct.value += (act - u.uAct.value) * (reduced ? 1 : 1 - Math.exp(-dt / 0.18));
+      if (p.dm) p.dm.visible = u.uOp.value > 0.03;
     }
     cord.material.uniforms.uOp.value = op3 * 0.9;
     holder.visible = op3 > 0.002;
@@ -235,8 +329,8 @@ function start() {
       eB.set(0, Math.PI / 2 - 0.52 + (reduced ? 0 : Math.sin(time * 0.45) * 0.16), reduced ? 0 : Math.sin(time * 0.3) * 0.015);
       qB.setFromEuler(eB);
       const sB = (0.66 * vh) / sp.Ltot;
-      let tS = sB, tX = 0.56 * W, tY = 0.52 * vh, tC = v.set(0, 0, 0);
-      if (ui > 0.02) { const s = SEG[active]; tS = sB * s.zoom; tX = 0.56 * W; tY = 0.3 * vh; tC = s.c; }   // Abschnitt in die obere Bildhälfte, Karte steht darunter
+      let tS = sB, tX = CX + 0.56 * CW, tY = 0.52 * vh, tC = v.set(0, 0, 0);
+      if (ui > 0.02) { const s = SEG[active]; tS = sB * s.zoom; tX = CX + 0.56 * CW; tY = 0.3 * vh; tC = s.c; }   // Abschnitt in die obere Bildhälfte, Karte steht darunter
       // Mitte des Ziels (Abschnitt oder ganze Säule) auf den Bildschirmpunkt legen
       const cx = tC.x, cy = tC.y, cz = tC.z;
       const k = reduced ? 1 : 1 - Math.exp(-dt / 0.32);
@@ -258,6 +352,14 @@ function start() {
     segEl.classList.toggle('on', on);
     if (on && auto) { autoT += dt; if (autoT > 5) { autoT = 0; setSeg((active + 1) % SEG.length); } } else if (!on) autoT = 0;
 
+    glow.visible = holder.visible;
+    if (holder.visible) {                              // Lichtschein des Modells
+      cam.layers.set(1); renderer.setRenderTarget(rtA); renderer.render(scene, cam);
+      blur(rtA, rtB, 1.5 / rtA.width, 0); blur(rtB, rtC, 0, 1.5 / rtB.height);
+      blur(rtC, rtB, 2.6 / rtC.width, 0); blur(rtB, rtC, 0, 2.6 / rtB.height);
+      renderer.setRenderTarget(null);
+    }
+    cam.layers.enableAll();
     renderer.render(scene, cam);
   }
   requestAnimationFrame(frame);

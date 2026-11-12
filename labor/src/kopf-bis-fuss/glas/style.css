@@ -11,7 +11,7 @@ html{font-size:clamp(16px,calc(8px + .5vw),22px);-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--ground);color:var(--txt);font:400 1.0625rem/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
 main{position:relative;z-index:1;max-width:30rem;margin:0 auto}
 :focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:3px}
-#gl{position:fixed;z-index:0;top:0;left:50%;transform:translateX(-50%);width:min(100%,30rem);height:100vh;height:100lvh;display:block;pointer-events:none}
+#gl{position:fixed;z-index:0;top:0;left:0;width:100%;height:100vh;height:100lvh;display:block;pointer-events:none}
 
 .bar{position:fixed;z-index:20;top:0;left:50%;transform:translateX(-50%);width:min(100%,30rem);height:calc(3.5rem + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) var(--gr) 0 var(--gl);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(var(--ground) 45%,rgba(43,37,32,0))}
 .brand{width:3.75rem;height:auto;display:block}
