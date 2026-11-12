@@ -33,7 +33,7 @@ export function s3(root, opt) {
       if (y < box[1] || y > box[3] || x < box[0] || x > box[2]) continue;
       let s = 0, col = 0;
       for (const b of bodies) if (inside(b, x, y)) { s = 0.85; col = 2; }
-      if (!s && inside(SILHOUETTE, x, y)) for (const [bx, by, br, bs] of shade) s = Math.max(s, bs * clamp(1 - Math.hypot(x - bx, y - by) / br));
+      if (!s && inside(SILHOUETTE, x, y)) for (const [bx, by, br, bs, y0 = 0] of shade) if (y > y0) s = Math.max(s, bs * clamp(1 - Math.hypot(x - bx, y - by) / br));
       if (r() < s) out.push({ x: px, y: py, a: ang + (r() - 0.5) * 0.07, l: 3.6 + 1.2 * r(), c: col, k: 1 });
     }
     return out;
@@ -43,13 +43,13 @@ export function s3(root, opt) {
     W = stage.clientWidth; H = stage.clientHeight;
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     const D = FIG.detail, r = rng(41);
-    const A = drawing([18, 24, 266, 318],
-      [[FIG.front], [FIG.back], [D.ear, 0, 5], [D.earIn, 0, 5], [D.eye, 0, 4.5], [D.brow, 0, 5], [D.nostril, 0, 4], [D.mouth, 0, 4.5], [D.jaw, 0, 6], [D.scm, 0, 6]],
-      [[150, 318, 62, 1.25], [246, 176, 52, 0.95]], []);
+    const A = drawing([22, 28, 262, 300],
+      [[FIG.front], [FIG.back], ...Object.entries(D).filter(([n]) => n !== 'clav').map(([n, L]) => [L, 0, /lid|cornea|iris|nostril|ala/.test(n) ? 3 : 5])],
+      [[150, 308, 46, 1.25, 273], [219, 238, 22, 0.85]], []);
     const V = FIG.vert.slice(0, 7);
-    const B = drawing([52, 140, 236, 372],
-      [[FIG.front.filter((q) => q[1] > 207)], [FIG.back.filter((q) => q[1] > 150)], [D.ear, 0, 6], [D.earIn, 0, 6], [D.scm, 0, 7], [FIG.mandible, 1, 5.5], ...V.flatMap((v) => v.lines.map((L) => [L, 2, 4.5]))],
-      [[150, 322, 50, 0.8]], V.filter((_, i) => i > 0).map((v) => v.lines[0]));
+    const B = drawing([48, 126, 236, 338],
+      [[FIG.front.filter((q) => q[1] > 201)], [FIG.back.filter((q) => q[1] > 140)], [D.ear, 0, 6], [D.earAnti, 0, 6], [D.earTragus, 0, 5], [D.scm, 0, 7], [FIG.mandible, 1, 5], ...FIG.skull.map((L) => [L, 2, 5]), ...FIG.teeth.map((L) => [L, 2, 3.4]), ...V.flatMap((v) => v.lines.map((L) => [L, 2, 4.2]))],
+      [[150, 300, 44, 0.7]], V.filter((_, i) => i > 0).map((v) => v.lines[0]));
     // Paare bilden: Umriss zu Umriss, Schraffur zu Schraffur, Rest schrumpft oder wächst an Ort und Stelle
     const shuf = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = (r() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
     const Ac = shuf(A.filter((s) => !s.k)), Ah = shuf(A.filter((s) => s.k)), Bc = shuf(B.filter((s) => !s.k)), Bh = shuf(B.filter((s) => s.k));

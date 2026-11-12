@@ -22,31 +22,33 @@ export function s1(root, opt) {
     return o.S[lo] + (o.S[hi] - o.S[lo]) * ((y - o.my[lo]) / (o.my[hi] - o.my[lo] || 1));
   };
   // Einzelheiten erscheinen, sobald der Stift ihre Höhe erreicht
-  const D = FIG.detail;
-  const det = [[D.brow, 134], [D.eye, 152], [D.ear, 148], [D.earIn, 158], [D.nostril, 197], [D.jaw, 210], [D.scm, 216], [D.mouth, 229], [D.clav, 404]]
-    .map(([L, y]) => ({ y, el: svgEl('path', { d: toPath(L), class: 'ln fine draw', pathLength: 1 }, svg) }));
+  const det = Object.values(FIG.detail)
+    .map((L) => ({ y: Math.min(...L.map((q) => q[1])) + 3, el: svgEl('path', { d: toPath(L), class: 'ln fine draw', pathLength: 1 }, svg) }));
   // Akzente der nächsten Region: Kiefer (Bernstein), Halswirbel (Blau)
   const acc = svgEl('g', { class: 'acc' }, svg);
-  svgEl('path', { d: toPath(FIG.mandible), class: 'an amber draw', pathLength: 1, style: '--i:0' }, acc);
-  FIG.vert.slice(0, 7).forEach((v, i) => v.lines.forEach((L) => svgEl('path', { d: toPath(L), class: 'an blue draw', pathLength: 1, style: `--i:${i + 2}` }, acc)));
+  FIG.skull.forEach((L, i) => svgEl('path', { d: toPath(L), class: 'an blue draw', pathLength: 1, style: `--i:${i * 0.6}` }, acc));
+  FIG.teeth.forEach((L) => svgEl('path', { d: toPath(L), class: 'an blue thin draw', pathLength: 1, style: '--i:6' }, acc));
+  svgEl('path', { d: toPath(FIG.mandible), class: 'an amber draw', pathLength: 1, style: '--i:5' }, acc);
+  FIG.vert.forEach((v, i) => v.lines.forEach((L) => svgEl('path', { d: toPath(L), class: 'an blue draw', pathLength: 1, style: `--i:${i + 7}` }, acc)));
   const tips = [0, 1].map(() => svgEl('circle', { class: 'tip', r: 2 }, svg));
 
-  let W = 0, H = 0, K0, K1, intro = true, penY = 30, last = 0, lastScroll = -1, lastPen = -1, dirty = true;
+  const k = FIG.k, hh = k.chin - k.top + 4;
+  let W = 0, H = 0, K0, K1, intro = true, penY = k.top, last = 0, lastScroll = -1, lastPen = -1, dirty = true;
   function layout() {
     W = stage.clientWidth; H = stage.clientHeight;
     const usable = H - BAR, hb = h1.offsetTop + h1.offsetHeight;
     let s0 = W / 300;
     for (let k = 0; k < 2; k++) {                       // Kopf zwischen Begrüßung und Leittext einpassen
-      first.style.setProperty('--leadw', Math.max(140, W - 14 - 138 * s0 - 34) + 'px');
-      s0 = Math.max(W / 300 * 0.78, Math.min(W / 300, (usable - hb - lead.offsetHeight - 78) / 262));
+      first.style.setProperty('--leadw', Math.max(140, W - 14 - (k.occiput - k.throat) * s0 - 34) + 'px');
+      s0 = Math.max(W / 300 * 0.78, Math.min(W / 300, (usable - hb - lead.offsetHeight - 78) / hh));
     }
-    first.style.setProperty('--leadw', Math.max(140, W - 14 - 138 * s0 - 34) + 'px');
-    first.style.setProperty('--gap', 262 * s0 + 14 + 'px');
-    K0 = { s: s0, ox: W - 14 - 258 * s0, oy: hb + 14 - 30 * s0 };
-    const s1 = s0 * 1.45;                               // Nahansicht Kiefer/Nacken
-    K1 = { s: s1, ox: W - 14 - 216 * s1, oy: 0.44 * H - 300 * s1 };
-    win.style.setProperty('--rtop', K1.oy + 288 * s1 + 14 + 'px');
-    win.style.setProperty('--rw', Math.max(130, W - 14 - 96 * s1 - 44) + 'px');
+    first.style.setProperty('--leadw', Math.max(140, W - 14 - (k.occiput - k.throat) * s0 - 34) + 'px');
+    first.style.setProperty('--gap', hh * s0 + 14 + 'px');
+    K0 = { s: s0, ox: W - 14 - k.occiput * s0, oy: hb + 14 - k.top * s0 };
+    const s1 = s0 * 1.6;                                // Nahansicht Kiefer/Nacken
+    K1 = { s: s1, ox: W - 10 - (k.nape + 6) * s1, oy: 0.4 * H - k.neckY * s1 };
+    win.style.setProperty('--rtop', K1.oy + (k.chin + 6) * s1 + 'px');
+    win.style.setProperty('--rw', Math.max(120, W - 10 - (k.nape + 6 - k.throat) * s1 - 34) + 'px');
     dirty = true;
   }
   const ro = new ResizeObserver(layout); ro.observe(stage); ro.observe(h1);
@@ -59,12 +61,12 @@ export function s1(root, opt) {
     const raw = clamp((0.85 * H - wr.top) / (0.55 * H));
     const cp = opt.reduced ? +(raw > 0.5) : smooth(raw);
     const before = clamp(sy / Math.max(1, wr.top + sy - 0.85 * H));
-    const target = 292 + 60 * before + 250 * cp;
+    const target = k.chin + 42 + 30 * before + 220 * cp;
     if (opt.reduced) penY = target;
     else {                                              // Stift: beim Ankommen ruhig (gut 2 s für den Kopf), beim Scrollen zügig hinterher
       const d = target - penY;
-      if (penY > 288) intro = false;
-      penY += clamp(d, -700 * dt, (intro ? 118 : Math.max(120, Math.abs(d) * 2.2)) * dt);
+      if (penY > k.chin + 38) intro = false;
+      penY += clamp(d, -700 * dt, (intro ? 108 : Math.max(120, Math.abs(d) * 2.2)) * dt);
     }
     if (sy === lastScroll && Math.abs(penY - lastPen) < 0.01 && !dirty) return;
     lastScroll = sy; lastPen = penY; dirty = false;

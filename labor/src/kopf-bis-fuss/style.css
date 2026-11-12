@@ -62,6 +62,7 @@ cite{font:500 .8125rem/1.3 var(--sans);color:var(--mute)}
 .ln{stroke:var(--txt);stroke-width:calc(1.35*var(--u,1px))}
 .ln.fine{stroke-width:calc(.9*var(--u,1px));opacity:.78}
 .an{stroke-width:calc(.95*var(--u,1px))}
+.an.thin{stroke-width:calc(.6*var(--u,1px));opacity:.75}
 .an.amber{stroke:var(--amber)}
 .an.blue{stroke:var(--blue)}
 .draw{stroke-dasharray:1 2;stroke-dashoffset:1.02;transition:stroke-dashoffset .9s cubic-bezier(.4,0,.2,1)}

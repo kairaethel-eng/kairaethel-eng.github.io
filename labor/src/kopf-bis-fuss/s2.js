@@ -12,6 +12,8 @@ export function s2(root, opt) {
   [FIG.front, FIG.back].forEach((L) => svgEl('path', { d: toPath(L), class: 'ln' }, svg));
   [FIG.arm, ...Object.values(FIG.detail)].forEach((L) => svgEl('path', { d: toPath(L), class: 'ln fine' }, svg));
   const acc = svgEl('g', { class: 'xray' }, svg);
+  FIG.skull.forEach((L) => svgEl('path', { d: toPath(L), class: 'an blue' }, acc));
+  FIG.teeth.forEach((L) => svgEl('path', { d: toPath(L), class: 'an blue thin' }, acc));
   svgEl('path', { d: toPath(FIG.mandible), class: 'an amber' }, acc);
   FIG.vert.forEach((v) => v.lines.forEach((L) => svgEl('path', { d: toPath(L), class: 'an blue' }, acc)));
   const ring = {};
@@ -34,18 +36,19 @@ export function s2(root, opt) {
   svgEl('circle', { r: 46, fill: 'url(#lotGlow)' }, bob);
   svgEl('path', { d: 'M-2.5 -24h5v5h-5zM-9 -19h18l-3 22L0 26L-6 3z', class: 'bobshape' }, bob);
 
+  const k = FIG.k;
   let W = 0, H = 0, K0, K1, last = 0, lastScroll = scrollY, th = opt.reduced ? 0 : 0.03, om = 0, drop = opt.reduced ? 1 : 0, born = 0;
   function layout() {
     W = stage.clientWidth; H = stage.clientHeight;
     const usable = H - BAR, lb = lead.offsetTop + lead.offsetHeight;
-    const s0 = Math.min(W / 330, (usable - lb - 52) / 430);
-    K0 = { s: s0, ox: W - 14 - 258 * s0, oy: lb + 34 - 30 * s0 };
-    first.style.setProperty('--ntop', K0.oy + 296 * s0 - lb + 'px');
-    first.style.setProperty('--nw', Math.max(130, W - 14 - 138 * s0 - 36) + 'px');
-    const s1 = s0 * 1.5;
-    K1 = { s: s1, ox: W - 14 - 216 * s1, oy: 0.42 * H - 300 * s1 };
-    win.style.setProperty('--rtop', K1.oy + 288 * s1 + 14 + 'px');
-    win.style.setProperty('--rw', Math.max(130, W - 14 - 96 * s1 - 44) + 'px');
+    const s0 = Math.min(W / 318, (usable - lb - 52) / 372);
+    K0 = { s: s0, ox: W - 14 - k.occiput * s0, oy: lb + 34 - k.top * s0 };
+    first.style.setProperty('--ntop', K0.oy + (k.chin + 8) * s0 - lb + 'px');
+    first.style.setProperty('--nw', Math.max(130, W - 14 - (k.occiput - k.throat) * s0 - 36) + 'px');
+    const s1 = s0 * 1.6;
+    K1 = { s: s1, ox: W - 10 - (k.nape + 6) * s1, oy: 0.38 * H - k.neckY * s1 };
+    win.style.setProperty('--rtop', K1.oy + (k.chin + 6) * s1 + 'px');
+    win.style.setProperty('--rw', Math.max(120, W - 10 - (k.nape + 6 - k.throat) * s1 - 34) + 'px');
     over.setAttribute('viewBox', `0 0 ${W} ${H}`);
   }
   const ro = new ResizeObserver(layout); ro.observe(stage); ro.observe(lead);
@@ -69,15 +72,15 @@ export function s2(root, opt) {
       drop = clamp((t - born - 350) / 1700);
     }
     const lx = X(FIG.mark.ear), restY = Math.min(Y(FIG.mark.shoulder) - 27, H - BAR - 40);
-    const e = 1 - Math.pow(1 - drop, 3), top0 = 10 * cam.s + cam.oy + 30, by = top0 + (restY - top0) * e;
-    const ay = 10 * cam.s + cam.oy, len = Math.max(60, by - ay), bx = lx + Math.sin(th) * len;
+    const e = 1 - Math.pow(1 - drop, 3), top0 = (k.top - 20) * cam.s + cam.oy + 30, by = top0 + (restY - top0) * e;
+    const ay = (k.top - 20) * cam.s + cam.oy, len = Math.max(60, by - ay), bx = lx + Math.sin(th) * len;
     hook.setAttribute('cx', lx.toFixed(1)); hook.setAttribute('cy', ay.toFixed(1));
     string.setAttribute('x1', lx.toFixed(1)); string.setAttribute('y1', ay.toFixed(1)); string.setAttribute('x2', bx.toFixed(2)); string.setAttribute('y2', (by - 24).toFixed(2));
     bob.setAttribute('transform', `translate(${bx.toFixed(2)} ${by.toFixed(2)}) rotate(${(-th * 57.3).toFixed(2)})`);
 
     // Tastpunkte leuchten, wenn das Lot sie erreicht
     const done = drop >= 1;
-    ring.ear.classList.toggle('on', by > Y(FIG.mark.ear));
+    ring.ear.classList.toggle('on', by > Y(FIG.mark.ear) && raw < 0.4);
     ring.shoulder.classList.toggle('on', done);
     note.classList.toggle('on', done);
     const sx = X(FIG.mark.shoulder), sY = Y(FIG.mark.shoulder);
@@ -88,7 +91,8 @@ export function s2(root, opt) {
     region.style.opacity = smooth(clamp((raw - 0.55) / 0.4)) * clamp((wr.bottom - 0.66 * H) / (0.12 * H));
     nums.forEach((n) => {
       const m = FIG.mark[n.k], on = ring[n.k].classList.contains('on');
-      n.el.setAttribute('transform', `translate(${(X(m) - 13 * cam.s).toFixed(1)} ${(Y(m) - 9 * cam.s).toFixed(1)})`);
+      const o = n.k === 'tmj' ? [-13, -8] : [15, 9];
+      n.el.setAttribute('transform', `translate(${(X(m) + o[0] * cam.s).toFixed(1)} ${(Y(m) + o[1] * cam.s).toFixed(1)})`);
       n.el.style.opacity = on ? 1 : 0; n.li.classList.toggle('on', on);
     });
   }
