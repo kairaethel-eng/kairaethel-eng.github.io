@@ -1,0 +1,44 @@
+html{font-size:clamp(16px,calc(8px + .5vw),22px);-webkit-text-size-adjust:100%}
+/* Qualitätsprobe Anatomie (13.11.2026): Glas-Material auf echten Anatomie-Daten. Farben und Schriften wie die Vorschau „Glas“. */
+:root{
+  --ground:#2B2520;--txt:#F0E8D8;--dim:#CDC2AE;--mute:#A09480;--line:rgba(240,232,216,.18);--amber:#E3A043;
+  --sans:"Archivo","Helvetica Neue",Arial,sans-serif;--disp:"Archivo Expanded","Archivo","Helvetica Neue",Arial,sans-serif;--serif:"Libre Caslon Text",Georgia,serif;
+  --gl:max(1.25rem,env(safe-area-inset-left,0px));--gr:max(1.25rem,env(safe-area-inset-right,0px));
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--txt);font:400 1.0625rem/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
+main{position:relative;z-index:1;max-width:30rem;margin:0 auto}
+#gl{position:fixed;z-index:0;top:0;left:0;width:100%;height:100vh;height:100lvh;display:block;pointer-events:none}
+
+.bar{position:fixed;z-index:20;top:0;left:50%;transform:translateX(-50%);width:min(100%,30rem);height:calc(3.5rem + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) var(--gr) 0 var(--gl);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(var(--ground) 55%,rgba(43,37,32,0))}
+.brand{width:3.75rem;height:auto;display:block}
+.lab{font:600 .6875rem/1 var(--disp);letter-spacing:.06em;color:var(--mute)}
+
+h1{margin:0;font:italic 400 clamp(2.5rem,11.4vw,3.125rem)/1.07 var(--serif);letter-spacing:-.012em;text-wrap:balance}
+h2{margin:0 0 .625rem;font:italic 400 1.625rem/1.14 var(--serif);letter-spacing:-.005em;text-wrap:balance}
+.where{margin:0 0 .5rem;font:600 .75rem/1.3 var(--disp);letter-spacing:.05em;color:var(--amber)}
+.first{padding:6.5rem var(--gr) 2.5rem var(--gl)}
+.lead{margin:1.25rem 0 0;max-width:21rem;font-size:1rem;line-height:1.5}
+.cue{margin:1.75rem 0 0;display:flex;align-items:center;gap:.625rem;font:600 .75rem/1 var(--disp);letter-spacing:.05em;color:var(--dim)}
+.cue::after{content:"";width:1px;height:1.75rem;background:linear-gradient(var(--amber),rgba(227,160,67,0))}
+
+/* Tafel: oben die Bühne (die Zeichenfläche dahinter füllt sie), darunter eine kurze Beschriftung */
+.tafel{padding:0 0 3.5rem}
+.stage{height:78vh;height:78svh}
+#t2 .stage{height:58vh;height:58svh}
+.note{padding:1rem var(--gr) 0 var(--gl);border-top:1px solid var(--line);margin:0 var(--gr) 0 var(--gl);padding-inline:0}
+.note p{margin:0 0 .5rem;font-size:.9375rem;line-height:1.5;color:var(--dim);text-wrap:pretty}
+.note .where{color:var(--amber)}
+.block{padding:1rem var(--gr) 4rem var(--gl)}
+.hint{margin:0 0 .75rem;font-size:.8125rem;line-height:1.5;color:var(--mute)}
+.nojs,.nogl{position:relative;z-index:2;max-width:30rem;margin:0 auto;padding:1rem var(--gr) 3rem var(--gl);color:var(--amber)}
+
+/* Umschalter unten: Glas feiner / wie bisher · Netz fein / grob */
+.sw{position:fixed;z-index:20;left:50%;bottom:calc(.5rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:grid;gap:.125rem;padding:.25rem;border:1px solid var(--line);border-radius:1.25rem;background:rgba(33,28,24,.94);font:600 .6875rem/1 var(--disp);letter-spacing:.05em;color:var(--mute);white-space:nowrap}
+.sw[hidden],.sw [hidden]{display:none}
+.sw div{display:grid;grid-template-columns:3rem 5.75rem 5.75rem;align-items:center}
+.sw span{padding-left:.75rem}
+.sw button{min-height:2.5rem;padding:0 .5rem;border:0;border-radius:999px;background:none;color:var(--dim);font:inherit;letter-spacing:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sw button[aria-pressed="true"]{background:var(--amber);color:#1D150A}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+.block.end{padding-bottom:9rem}

@@ -1,1 +1,3 @@
 node_modules/
+# Feine Anatomie-Netze (BodyParts3D 3.0): Lizenz offen, nicht ins öffentliche Repo (Kai 14.11.2026); neu erzeugen mit tools/anatomie.mjs
+src/kopf-bis-fuss/anatomie/*-fein.bin

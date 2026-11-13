@@ -291,3 +291,17 @@ Eigener Bau, **Puls, Fusion, Wurzel und Livegang-Plan unberührt**. Quelle `src/
 
 **Kai 13.11.2026 – Urteil zur ganzen Reise:** „Die gebaute Wirbelsäule sieht mir zu unprofessionell für meine geplante Website aus. Wir müssen komplett umdenken oder alle Möglichkeiten für einen perfekten Anatomie-Bau ausschöpfen.“ → Gerechnete Knochen (`sdf.js`/`bones.js`) sind als Weg **verworfen**; Richtung „Glas“ (Bild-Bühne, Übergang, Kapitel) bleibt. Neuer Plan mit echten Anatomie-Daten bzw. vorab gerenderten Bildern, Reihenfolge und offene Entscheidungen (Lizenz mit Namensnennung, Kosten, Original des Kopf-Bildes): `UEBERGABE.md` ▶ „Anatomie-Neustart“. Chat auf Kais Wunsch hier beendet; Fortsetzung in neuem Chat mit dem Start-Prompt dort.
 
+## Anatomie-Neustart – Schritt 1 „Qualitätsprobe“ (13.11.2026 abends)
+**Entscheidung Kai (13.11.):** Anatomie-Daten von **BodyParts3D** dürfen verwendet werden, Lizenz **CC BY 4.0** („Ja, CC BY 4.0“). Vor einer Veröffentlichung: Namensnennung ins Impressum („BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International“), Fachperson prüft mit. Nichts pushen ohne Go.
+
+**Lizenzlage [B]:** Lizenzseite und README der aktuellen Ausgabe 4.0: CC BY 4.0 seit 27.02.2025 (https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html). Die Dateiköpfe (2013) nennen noch CC BY-SA 2.1 Japan – veraltet, verweisen auf die Lizenzseite. **Offen [O]:** Für die feinere Ausgabe 3.0 nennt deren eigenes README weiter CC BY-SA 2.1 Japan → feine Daten bis zur Klärung nur in der Probe, nicht veröffentlichen.
+
+**Umgesetzt:** `kopf-bis-fuss/probe.html` (Build `kbf-probe`): Wirbelsäule aus echten Daten im Glas-Material, drei Tafeln (neben dem Kopf-Bild · L4 nah · Abschnitt L4–L5), Umschalter Glas „feiner / wie bisher“ und Netz „fein / grob“. Aufbereitung `tools/anatomie.mjs`, Daten `src/kopf-bis-fuss/anatomie/`. Einzelheiten, Befund und offene Punkte: `UEBERGABE.md` ▶ „Anatomie-Neustart“ → „Schritt 1“.
+
+**Verworfen:** Netze nachträglich verfeinern (Loop) – rundet nur, wirkt seifig.
+
+**Entscheidung Kai (14.11.):** „Go Push Arbeitszweig, ohne Netz fein“ → Arbeitszweig `claude/awesome-babbage-2j9ij4` gepusht (nicht `main`); das feine Netz (Ausgabe 3.0, Lizenz offen) bleibt aus dem Repo (`.gitignore`), die Probe im Repo zeigt nur „grob“. Beide Netze zum Vergleich nur in der privaten Vorschau.
+
+**Geprüft [B]** (Container, Software-Grafik): 390×844, 320×568, 375×667 mit „Bewegung reduzieren“, 1440×900; beide Umschalter per Antippen; keine Konsolenfehler, kein Querscrollen, keine externen Abrufe. **Nicht geprüft [O]:** echtes iPhone (Bildrate, Akku).
+
+**Offen / Nächster Schritt:** Kais Urteil mit den Augen (reicht die Echtzeit-Darstellung? welches Glas, welches Netz?). Danach Schritt 2 oder 3 laut Plan; Lizenz der feinen Daten klären.

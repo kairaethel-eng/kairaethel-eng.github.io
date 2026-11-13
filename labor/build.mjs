@@ -30,6 +30,8 @@ const PAGES = {
   'kbf': { out: 'kopf-bis-fuss/index.html', dir: 'kopf-bis-fuss' },
   // Vorschau „Glas“ (Kai 12.11.2026): Röntgen-Glas-Figur (Bild) + 3D-Wirbelsäule (three.js), eigene Seite
   'kbf-glas': { out: 'kopf-bis-fuss/glas.html', dir: 'kopf-bis-fuss/glas' },
+  // Qualitätsprobe Anatomie (13.11.2026): Glas-Material auf echten Anatomie-Daten (BodyParts3D, CC BY 4.0), Netz eingebettet (.bin)
+  'kbf-probe': { out: 'kopf-bis-fuss/probe.html', dir: 'kopf-bis-fuss/probe' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
   'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true, noTermin: true }, // Übergangsseite hat kein Termin-Blatt
@@ -122,6 +124,12 @@ const fontsCss = `
 @font-face{font-family:"Libre Caslon Text";font-style:italic;font-weight:400;font-display:swap;src:url(data:font/woff2;base64,${font('libre-caslon-italic.woff2')}) format("woff2")}
 `;
 
+// Netzdateien, die nicht im Repo liegen (z. B. anatomie/wirbelsaeule-fein.bin, Lizenz offen): fehlt die Datei, wird sie leer eingebunden
+const optionalBin = { name: 'optional-bin', setup(b) {
+  b.onResolve({ filter: /-fein\.bin$/ }, (a) => (existsSync(join(a.resolveDir, a.path)) ? null : { path: a.path, namespace: 'leer' }));
+  b.onLoad({ filter: /.*/, namespace: 'leer' }, () => ({ contents: '', loader: 'binary' }));
+} };
+
 const only = process.argv[2];
 for (const [name, cfg] of Object.entries(PAGES)) {
   if (only && only !== name && !(only === 'live' && name.startsWith('live-'))) continue;
@@ -131,7 +139,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   const res = await build({
     entryPoints: [join(dir, 'main.js')],
     bundle: true, minify: true, format: 'iife', target: 'es2020',
-    write: false, legalComments: 'none',
+    write: false, legalComments: 'none', loader: { '.bin': 'binary' }, plugins: [optionalBin],
   });
   const js = res.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
   let css = readFileSync(join(dir, 'style.css'), 'utf8');
@@ -158,7 +166,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
     }
   }
   if (fragmentDir) {
-    mkdirSync(fragmentDir, { recursive: true });
+    mkdirSync(dirname(join(fragmentDir, cfg.out)), { recursive: true });   // auch für Seiten in Unterordnern (kopf-bis-fuss/…)
     writeFileSync(join(fragmentDir, cfg.out), `${head}\n${body}\n`);
   }
   console.log(`${cfg.out}: ${(full.length / 1024).toFixed(0)} KB (JS ${(js.length / 1024).toFixed(0)} KB)`);

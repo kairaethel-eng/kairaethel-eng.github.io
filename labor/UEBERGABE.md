@@ -1,7 +1,7 @@
-# Übergabe – Stand 13.11.2026 (neu: ▶ Anatomie-Neustart für die Richtung „Glas“ – Kai: gerechnete Wirbelsäule zu unprofessionell, Plan mit echten Anatomie-Daten; davor: Fusion „Hausbesuch · Puls“, Puls · Scan Livegang-Vorbereitung, siehe ▶)
+# Übergabe – Stand 14.11.2026 (neu: ▶ Anatomie-Neustart, **Schritt 1 „Qualitätsprobe“ gebaut** – `kopf-bis-fuss/probe.html`, wartet auf Kais Urteil; Kai: gerechnete Wirbelsäule zu unprofessionell, Plan mit echten Anatomie-Daten; davor: Fusion „Hausbesuch · Puls“, Puls · Scan Livegang-Vorbereitung, siehe ▶)
 
-## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io) – Stand 13.11.2026
-> Lies `labor/CLAUDE.md` und in `labor/UEBERGABE.md` nur den Abschnitt „▶ Anatomie-Neustart“ (mehr nicht laden), dazu in `labor/ENTSCHEIDUNGEN.md` die Abschnitte ab „Neue Richtung ‚Von Kopf bis Fuß‘“. Arbeitsstand liegt auf dem Zweig `claude/focused-rubin-gfdzph` (falls nicht vorhanden: ich lade die ZIP `hop-kopf-bis-fuss-2026-11-13-uebergabe.zip` hoch). Aufgabe: professioneller Anatomie-Bau für die Richtung „Glas“ nach dem Plan dort. Beginne mit der Qualitätsprobe (Schritt 1) und stelle mir zuerst die eine offene Frage zur Lizenz. Nichts pushen ohne mein Go, Handy zuerst, eine Frage auf einmal.
+## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io) – Stand 13.11.2026 abends
+> Lies `labor/CLAUDE.md` und in `labor/UEBERGABE.md` nur den Abschnitt „▶ Anatomie-Neustart“ (mehr nicht laden), dazu in `labor/ENTSCHEIDUNGEN.md` die Abschnitte ab „Neue Richtung ‚Von Kopf bis Fuß‘“. Arbeitsstand liegt auf dem Zweig `claude/awesome-babbage-2j9ij4` (falls nicht vorhanden: ich lade die Sicherung hoch). Schritt 1 (Qualitätsprobe `kopf-bis-fuss/probe.html`) ist gebaut; mein Urteil dazu: <Kais Urteil>. Mach mit dem nächsten Schritt aus dem Abschnitt weiter. Nichts pushen ohne mein Go, Handy zuerst, eine Frage auf einmal.
 
 ## ▶ Anatomie-Neustart (Kai 13.11.2026: „gebaute Wirbelsäule zu unprofessionell – komplett umdenken oder alle Möglichkeiten ausschöpfen, wie der professionellste Engineer und Designer“)
 
@@ -19,7 +19,33 @@
 
 **Hindernisse [B/O]:** Der Cloud-Container erreicht die Datenquellen nicht (zenodo, BodyParts3D-Archiv, z-anatomy, pixabay, NIH: alle gesperrt, geprüft 13.11.) → entweder lädt Kai die Dateien herunter und gibt sie in den Chat/ins Repo, oder die Netzfreigabe der Umgebung wird für genau diese Adressen erweitert (Kais Zustimmung nötig). **Offene Entscheidungen von Kai:** (a) Lizenz mit Namensnennung (CC BY-SA/CC BY) in Ordnung, mit Nachweis im Impressum? Fachperson prüft mit. (b) Bleibt „alles kostenlos“, oder darf ein professionelles Modell/eine Bildserie etwas kosten (vorher Betrag nennen)? (c) Kopf-Bild: Original von Pixabay + Link für den Lizenznachweis.
 
-**Sicherung:** lokale Commits auf `claude/focused-rubin-gfdzph` (letzter: Übergabe 13.11.), **nicht gepusht** (Kai: nichts ohne Go) – ein neuer Cloud-Chat sieht sie nur nach einem Push des Arbeitszweigs oder über die ZIP. Private Vorschauen: Glas https://claude.ai/artifact/Ney2Gz5ydW9LpT59t14HRh · Studien 1–3 https://claude.ai/artifact/B92fTn8xvawC2abw4MB9eW.
+**Sicherung:** Stand bis zur Übergabe 13.11. liegt auf `claude/focused-rubin-gfdzph`. Die Qualitätsprobe liegt auf `claude/awesome-babbage-2j9ij4`, **gepusht am 14.11. mit Kais Go („Go Push Arbeitszweig, ohne Netz fein“)** – nur der Arbeitszweig, `main` und die Testadresse sind unberührt. Das feine Netz ist nicht im Repo (siehe unten). Private Vorschauen: Glas https://claude.ai/artifact/Ney2Gz5ydW9LpT59t14HRh · Studien 1–3 https://claude.ai/artifact/B92fTn8xvawC2abw4MB9eW · Qualitätsprobe https://claude.ai/artifact/MPegGYrzq6dBPBeauEWL3W.
+
+### ✅ Schritt 1 – Qualitätsprobe gebaut (13.11.2026 abends, wartet auf Kais Urteil)
+**Kai (13.11., Lizenzfrage):** „Ja, CC BY 4.0“ – BodyParts3D darf verwendet werden; vor einer Veröffentlichung kommt die Namensnennung ins Impressum, die Fachperson prüft mit.
+
+**Berichtigungen zum Plan oben [B]:**
+- **Lizenz:** Die offizielle Lizenzseite und das README der aktuellen Ausgabe 4.0 nennen seit 27.02.2025 **CC BY 4.0** (nur Namensnennung, keine Weitergabe-Pflicht) – nicht mehr CC BY-SA. Pflichtzeile: „BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International“. Die Köpfe der OBJ-Dateien (Stand 2013) nennen noch CC BY-SA 2.1 Japan und verweisen auf die Lizenzseite → ich stütze mich auf die Lizenzseite. Quelle: https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html.
+- **Netz:** Der Cloud-Container erreicht das Archiv (dbarchive.biosciencedbc.jp) inzwischen direkt; Kai muss nichts hochladen. Die Rohdaten liegen nicht im Repo.
+
+**Gebaut:** `kopf-bis-fuss/probe.html` (Quelle `src/kopf-bis-fuss/probe/`, Build `node build.mjs kbf-probe`, eine Datei, noindex, keine externen Abrufe). **Im Repo: 1,6 MB, nur Netz „grob“** (Kai 14.11.: feines Netz nicht pushen) – der Netz-Umschalter erscheint dann nicht. Die private Vorschau (Artifact) und die an Kai gelieferte Datei vom 13.11. enthalten beide Netze (4,5 MB). Drei Tafeln, nur Scrollen: 1 Kopf-Bild neben der ganzen Wirbelsäule · 2 Lendenwirbel L4 nah, dreht sich · 3 Lendenwirbelsäule + Kreuzbein mit hervorgehobenem Abschnitt L4–L5 (Bernstein, Bandscheibe rot-orange). Unten zwei Umschalter:
+- **Glas:** „feiner“ (Standard, neu: dunkleres Glas, schmale helle Kanten, kleinere Glanzpunkte, schwächerer Schein – näher am Kopf-Bild; `uFine` in `probe/main.js`) oder „wie bisher“ (Material wörtlich aus `glas/main.js`).
+- **Netz:** „fein“ (Standard; BodyParts3D **3.0**, um 95 % ausgedünnt, 444 000 Dreiecke, 2,15 MB) oder „grob“ (BodyParts3D **4.0**, um 99 % ausgedünnt, 124 000 Dreiecke, 635 KB).
+
+**Aufbereitung:** `tools/anatomie.mjs` (Anleitung im Kopf): OBJ lesen, Punkte verschweißen, nach cm umrechnen (BodyParts3D mm, x links, y hinten, z oben → x links, y Höhe über dem Boden, z vorn, wie `bones.js`), je Teil 16-Bit-Punkte + Dreiecke als Differenzen, gzip → `src/kopf-bis-fuss/anatomie/wirbelsaeule.bin` (grob, im Repo) und `wirbelsaeule-fein.bin` (**nicht im Repo**, `.gitignore`; liegt sie beim Bauen im Ordner, bindet der Build sie ein, sonst leer – `optionalBin` in `build.mjs`; neu erzeugen laut Kopf von `tools/anatomie.mjs`, im Cloud-Container per HTTP-Teilabruf aus dem 522-MB-Archiv, da der ganze Download dort ~20 min braucht); Leser `anatomie/load.js` (Normalen werden im Browser gerechnet). 48 Teile: C1–L5, 23 Bandscheiben, Kreuzbein mit Steißbein; alle Netze geschlossen, Flächen zeigen nach außen (geprüft). Die Bandscheibe Th12/L1 steht in 4.0 ohne eigenen Namen unter „intervertebral disk“.
+
+**Befund Claude [B/A]:**
+- Echte Daten tragen: Die Wirbel lesen sich sofort als Anatomie (Fortsätze, Gelenkflächen, Kreuzbeinlöcher); neben dem Kopf-Bild wirkt die Säule nicht mehr gebastelt. Am stärksten: Tafel 3 mit „fein“ + „feiner“.
+- „grob“ reicht für die Gesamtansicht (Tafel 1, kaum Unterschied), wirkt in der Nähe aber glatt und kantig (Tafel 2). „fein“ zeigt Knochenoberfläche.
+- Netz einfach verfeinern (Loop, `SUB=1`) bringt nichts: rundet nur, wirkt seifig → verworfen.
+- Das alte Glas-Material ist für die dichten echten Netze zu milchig/hell; „feiner“ passt besser zum Kopf-Bild [A, Kais Augen entscheiden].
+
+**Offen [O]:**
+- **Lizenz der feinen Daten:** Das README der Ausgabe 3.0 (Ordner `20110915`, Stand 2017) nennt noch CC BY-SA 2.1 Japan; die Downloadseite führt nur 4.0 unter CC BY 4.0. Ob die Lizenzänderung auch für 3.0 gilt, ist nicht belegt. Wege: (a) beim Database Center for Life Science nachfragen, (b) CC BY-SA für die eine Netzdatei annehmen (Namensnennung + die bearbeitete Netzdatei unter gleicher Lizenz weitergeben – betrifft nur die Datei, nicht die Website [A], Fachperson), (c) bei „grob“ (4.0) bleiben. Bis dahin: feine Daten nur in der Probe, nichts davon veröffentlichen.
+- Echtes iPhone nicht geprüft (Bildrate; „fein“ = 444 000 Dreiecke in drei Durchgängen plus Lichtschein). Für die Seite wäre eine mittlere Stufe sinnvoll (aus den feinen Daten gezielt ausdünnen, z. B. `meshopt_simplifier` aus three.js, ~150 000 Dreiecke).
+- Figur in BodyParts3D ist kleiner als das gerechnete Skelett (Scheitel ≈ 164 cm statt 178 cm) → Lagen/Kamera in `glas/main.js` beim Einbau neu einmessen.
+
+**Nächster Schritt nach Kais Urteil:** reicht die Echtzeit-Darstellung → Schritt 2 (Skelett der ganzen Reise aus derselben Quelle inklusive Schädel, Rückenmark/Nerven gibt es dort auch; Netz als eigene Datei nach dem ersten Bildschirm laden statt eingebettet; `bones.js`/`sdf.js` entfallen). Reicht sie nicht → Schritt 3 (dieselben Daten vorab rendern).
 
 ## ▶ Neue Richtung „Von Kopf bis Fuß im echten Zuhause“ – Studien (Auftrag Kai 11.11.2026, wartet auf Kais Urteil)
 Eigener Bau neben Puls/Fusion (beides unberührt): `src/kopf-bis-fuss/` → `node build.mjs kbf` → `kopf-bis-fuss/index.html` (reines SVG, kein three.js, 158 KB). **Nur lokal committet auf dem Arbeitszweig, nicht gepusht, nicht auf der Testadresse** (Kai: nichts ohne Go); Kai hat eine private Vorschau und die Quellen als ZIP.
