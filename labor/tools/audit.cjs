@@ -1,6 +1,8 @@
 // Prüfskript (3.11.2026; Kap. 03 PC seit 7.11. Scanner-Bühne 160svh → Offsets 0.3/0.55): Screenshots je Kapitel, axe-core (WCAG 2.2 AA), Struktur, Tab-Reihenfolge in mehreren Ansichten.
 // Aufruf: cd labor && npm i -D --no-save axe-core && node tools/audit.cjs live/index.html <ausgabeordner> [d,m,t,xl,s,dr]
 // d=1440×900 · dr=dito mit „Bewegung reduzieren“ · m=390×844 · s=320×568 · t=768×1024 · xl=2560×1440. Ergebnis: report.json + PNGs. WAIT=ms je Bild (Standard 6000).
+// Seit 13.11.2026 zeigt die Seite bei Software-Grafik (Container!) Standbilder statt WebGL. Die Werkzeuge hängen deshalb ?gl=1 an (Prüfmodus:
+// WebGL trotz Software-Grafik, keine Qualitätsstufen). GL0=1 lässt das weg (so sieht es ein Besucher ohne Grafikchip).
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs');
 const FILE = path.resolve(process.argv[2]); const OUT = process.argv[3]; fs.mkdirSync(OUT, { recursive: true });
@@ -33,7 +35,7 @@ const report = {};
     const logs = [];
     p.on('pageerror', e => logs.push('PAGEERR ' + e.message));
     p.on('console', m => { if (['error', 'warning'].includes(m.type())) logs.push(m.type().toUpperCase() + ' ' + m.text().slice(0, 300)); });
-    await p.goto('file://' + FILE);
+    await p.goto('file://' + FILE + ((q) => (process.env.GL0 ? q : q ? q + (/[?&]gl=/.test(q) ? '' : '&gl=1') : '?gl=1'))(process.env.QUERY || ''));
     await p.waitForTimeout(WAIT);
     const r = { mode, logs };
     // structure

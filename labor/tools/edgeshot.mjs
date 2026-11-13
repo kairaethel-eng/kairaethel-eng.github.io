@@ -53,7 +53,9 @@ if (process.env.NOGL) await send('Page.addScriptToEvaluateOnNewDocument', { sour
 await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: !desk });
 if (!desk) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
 if (process.env.REDUCED) await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
-await send('Page.navigate', { url: pathToFileURL(path.resolve(file)).href + (process.env.QUERY || '') });
+// Seit 13.11.2026 zeigt die Seite bei Software-Grafik (Container!) Standbilder statt WebGL. Die Werkzeuge hängen deshalb ?gl=1 an (Prüfmodus:
+// WebGL trotz Software-Grafik, keine Qualitätsstufen). GL0=1 lässt das weg (so sieht es ein Besucher ohne Grafikchip).
+await send('Page.navigate', { url: pathToFileURL(path.resolve(file)).href + ((q) => (process.env.GL0 ? q : q ? q + (/[?&]gl=/.test(q) ? '' : '&gl=1') : '?gl=1'))(process.env.QUERY || '') });
 await sleep(+(process.env.FIRST || 4000));
 
 let n = 0;

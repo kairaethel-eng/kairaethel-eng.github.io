@@ -6,6 +6,8 @@
 // Ergebnis: <mode>-NN-<zustand>.png, serv-<mode>-NN.png (alle Leistungs-Motive), sheet-<mode>.png (Kontaktbogen),
 //   report.json und review.md (Befunde je Zustand: Fehler, überlappende/abgeschnittene Texte, Mini-Schrift, Querscrollen, lange Aufgaben).
 // Hinweis: SwiftShader rendert langsam (2–9 fps) → Bewegung/Tempo nicht bewertbar, lange Aufgaben nur relativ vergleichen.
+// Seit 13.11.2026 zeigt die Seite bei Software-Grafik (Container!) Standbilder statt WebGL. Die Werkzeuge hängen deshalb ?gl=1 an (Prüfmodus:
+// WebGL trotz Software-Grafik, keine Qualitätsstufen). GL0=1 lässt das weg (so sieht es ein Besucher ohne Grafikchip).
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs');
 const FILE = path.resolve(process.argv[2] || 'test-4-puls-scan.html');
@@ -97,7 +99,7 @@ function measure() {
     const logs = [];
     p.on('pageerror', (e) => logs.push('PAGEERR ' + e.message));
     p.on('console', (m) => { if (m.type() === 'error') logs.push('ERROR ' + m.text().slice(0, 300)); });
-    await p.goto('file://' + FILE + (process.env.QUERY || ''));
+    await p.goto('file://' + FILE + ((q) => (process.env.GL0 ? q : q ? q + (/[?&]gl=/.test(q) ? '' : '&gl=1') : '?gl=1'))(process.env.QUERY || ''));
     await p.waitForTimeout(WAIT);
     const rep = { states: [], logs };
     let n = 0;
@@ -122,7 +124,7 @@ function measure() {
         const cnt = await p.evaluate(() => document.querySelectorAll('#index li button').length);
         for (let i = 0; i < cnt; i++) {
           const name = await p.evaluate((i) => { const bt = document.querySelectorAll('#index li button')[i]; bt.focus({ preventScroll: true }); return bt.querySelector('.ix-name').textContent; }, i);
-          await p.waitForTimeout(2600);
+          await p.waitForTimeout(MODES[mode].isMobile ? 1900 : 2600); // Handy: nach 2,5 s springt die Seite auf den Eintrag in Bildmitte zurück
           const sf = `serv-${mode}-${String(i).padStart(2, '0')}.png`, stage = await p.$('.serv-stage');
           if (stage) { await stage.screenshot({ path: path.join(OUT, sf), timeout: 60000 }); row.serv.push(`${sf} ${name}`); }
         }

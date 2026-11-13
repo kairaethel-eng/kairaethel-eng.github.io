@@ -28,7 +28,7 @@ const [,, url, label, cpu = '4'] = process.argv;
   });
   const page = await ctx.newPage();
   const cdp = await ctx.newCDPSession(page);
-  await page.goto(url, { waitUntil: 'load' });
+  await page.goto(url + (process.env.GL0 || /[?&]gl=/.test(url) ? '' : (url.includes('?') ? '&' : '?') + 'gl=1'), { waitUntil: 'load' }); // ?gl=1: Prüfmodus (seit 13.11. zeigt die Seite bei Software-Grafik sonst Standbilder)
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: +cpu });
   await page.waitForTimeout(6000);
   const stat = (fr, lt, t0, t1) => {

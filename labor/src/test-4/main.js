@@ -2,12 +2,10 @@
 // eine Abtastlinie verdichtet die groben Partikel zu einer beleuchteten Punktwolke, dann Kamerafahrt.
 // 0 Körper → 1 Bewegung → 2 Wirbelsäule (Scan) → 3 Dach → 4 HOP-Kreise
 import * as THREE from 'three';
-import gsap from 'gsap';
 import Lenis from 'lenis';
 import { bodyPoints, spinePointsGen, housePoints, logoPoints, spineStippleGen, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
 import { praxisScanGen, ROOMS, EYE, P } from './praxis.js';
 import { initAGen as initManuGen, MODES as MANU_MODES } from '../manu/ideaA.js';
-import { glContext } from '../manu/common.js';
 import { initServicesGen } from './services.js';
 import { runSliced } from '../shared/slice.js';
 import { createEgo } from '../ego/tour.js';
@@ -55,6 +53,26 @@ let MINH = VH;
 addEventListener('resize', () => { VW = innerWidth; VH = innerHeight; });
 const isDesktop = () => VW > 920;
 
+// ---------- Takt und Übergänge (13.11., T3): eigener Bildtakt + Mini-Übergang statt gsap (gebraucht wurden nur der Takt und fünf Übergänge) ----------
+const frameFns = []; // Reihenfolge wie bisher: zuerst tick (Seite), dann Lenis
+const tweens = new Set();
+const easeOut = (t) => 1 - (1 - t) * (1 - t), easeExpo = (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
+function tween(obj, key, to, sec, { ease = easeOut, delay = 0, onUpdate } = {}) {
+  tweens.forEach((w) => { if (w.obj === obj && w.key === key) tweens.delete(w); }); // neuer Übergang löst den alten ab
+  tweens.add({ obj, key, to, ease, onUpdate, from: null, dur: sec * 1000, t0: performance.now() + delay * 1000 });
+}
+function runFrame(now) {
+  tweens.forEach((w) => {
+    if (now < w.t0) return;
+    if (w.from === null) w.from = w.obj[w.key];
+    const k = Math.min(1, (now - w.t0) / w.dur);
+    w.obj[w.key] = w.from + (w.to - w.from) * w.ease(k);
+    if (w.onUpdate) w.onUpdate();
+    if (k >= 1) tweens.delete(w);
+  });
+  for (let i = 0; i < frameFns.length; i++) frameFns[i](now);
+}
+
 // ---------- Scrollen ----------
 let lenis = null;
 let sheetOpen = false; // Termin-Blatt offen (Lenis steht, Handy rendert nicht)
@@ -63,20 +81,34 @@ if (!reduced) {
   // Erst nach dem ersten Bild anlegen: Lenis misst die Seite, das erzwänge sonst ein zweites Layout im Start-Task (A1).
   requestAnimationFrame(() => setTimeout(() => {
     lenis = new Lenis({ lerp: 0.055, smoothWheel: true, wheelMultiplier: 0.6 });
-    gsap.ticker.add((t) => lenis.raf(t * 1000));
+    frameFns.push((t) => lenis.raf(t));
   }, 0));
-  gsap.ticker.lagSmoothing(0);
 }
 const scrollToY = (y) => (lenis ? lenis.scrollTo(y, { duration: 1.8 }) : scrollTo({ top: y }));
 $$('a[href^="#"]:not(.skip):not([data-termin]):not(.ego-contact)').forEach((a) => a.addEventListener('click', (e) => { // .skip: Browser-Sprung, damit der Fokus mitgeht (Durchsicht 7.11.)
-  const t = $(a.getAttribute('href')); if (!t) return;
+  const id = a.getAttribute('href'), t = $(id); if (!t) return;
   e.preventDefault(); scrollToY(t.getBoundingClientRect().top + scrollY);
+  // 13.11. (T4): Fokus geht mit zum Ziel (Tastatur, Vorleseprogramme) und die Adresse merkt sich das Kapitel (Link teilen, neu laden)
+  if (!t.hasAttribute('tabindex')) t.setAttribute('tabindex', '-1');
+  t.focus({ preventScroll: true });
+  try { history.replaceState(null, '', id === '#start' ? location.pathname + location.search : id); } catch (err) { /* z. B. file:// in manchen Browsern */ }
 }));
 
 // ---------- Renderer ----------
 const canvas = $('#gl');
 let renderer = null;
-const glCtx = glContext(canvas);
+// 13.11. (T2): Software-Grafik (kein Grafikchip nutzbar: Remote-Desktop, gesperrte Treiber) gilt als „ohne WebGL“ → Standbilder
+// statt weniger Bilder pro Sekunde. ?gl=1 = Prüfmodus der Werkzeuge im Container (dort gibt es nur Software-Grafik);
+// ?gl=2 = Software-Grafik zulassen, Qualitätsstufen bleiben an (zum Testen der Stufen).
+const glQ = new URLSearchParams(location.search).get('gl');
+let glCtx = null;
+try { glCtx = canvas.getContext('webgl2', { alpha: false, antialias: false, depth: true, stencil: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: !glQ }); } catch (e) { /* ohne WebGL 2 */ }
+// Chrome meldet Software-Grafik nicht in jedem Fall über die Abfrage oben → zusätzlich am Namen des Grafiktreibers erkennen
+if (glCtx && !glQ) try {
+  const e = glCtx.getExtension('WEBGL_debug_renderer_info');
+  if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(String(glCtx.getParameter(e ? e.UNMASKED_RENDERER_WEBGL : glCtx.RENDERER)))) { glCtx.getExtension('WEBGL_lose_context')?.loseContext(); glCtx = null; }
+} catch (e) { /* Name nicht lesbar: WebGL bleibt an */ }
+let glDirty = true; // nach dem letzten sichtbaren Bild einmal leer zeichnen, danach ruht die Bühne (T1)
 if (glCtx) try { renderer = new THREE.WebGLRenderer({ canvas, context: glCtx, antialias: false, alpha: false, powerPreference: 'high-performance' }); } catch (e) { /* ohne WebGL bleibt die Seite lesbar */ }
 // Ohne WebGL (oder wenn eine Bühne scheitert): Standbilder statt Partikel, Hinweise weg (A2, CSS html.no-gl)
 const noGl = () => { document.documentElement.classList.remove('seg-rows', 'seg-scan', 'seg-pc'); document.documentElement.classList.add('no-gl'); };
@@ -278,6 +310,7 @@ function resize() {
   if (isDesktop() || VW !== GLW || VH > GLH || VH < GLH * 0.7) GLH = VH;
   GLW = VW;
   camera.aspect = VW / GLH; camera.updateProjectionMatrix();
+  glDirty = true;
   if (renderer) {
     const cv = renderer.domElement, pr = renderer.getPixelRatio();
     // nur bei echter Änderung neu anlegen (gleiche Größe setzen leert sonst die Zeichenfläche → Flackern)
@@ -340,7 +373,7 @@ function measureTension() {
 setInterval(() => {
   if (!touched) return;
   const t = measureTension();
-  gsap.to({ v: tensionShown }, { v: t, duration: 0.5, onUpdate() { tensionShown = this.targets()[0].v; tensionVal.textContent = Math.round(tensionShown); } });
+  { const o = { v: tensionShown }; tween(o, 'v', t, 0.5, { onUpdate() { tensionShown = o.v; tensionVal.textContent = Math.round(tensionShown); } }); }
   tensionBar.style.transform = `scaleX(${t / 100})`;
   if (t === 0 && !calm) { calm = true; meter?.classList.add('is-calm'); if (meterLbl) meterLbl.textContent = 'Entspannt.'; }
 }, 300);
@@ -351,6 +384,7 @@ const txt = title.textContent;
 title.innerHTML = txt.split(' ').map((w) => `<span style="white-space:nowrap">${[...w].map((c) => `<span class="ch" aria-hidden="true">${c}</span>`).join('')}</span>`).join(' ');
 const chars = $$('.ch', title);
 let ptr = { x: -9999, y: -9999 };
+const charMid = new Float32Array(chars.length * 2), charW = new Int16Array(chars.length);
 addEventListener('pointermove', (e) => { ptr = { x: e.clientX, y: e.clientY }; }, { passive: true });
 
 // ---------- Manifest: Wort für Wort ----------
@@ -1504,8 +1538,8 @@ $$('.index li').forEach((li) => {
     $$('.index li.open').forEach((o) => { o.classList.remove('open'); $('button', o).setAttribute('aria-expanded', 'false'); });
     li.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open));
   });
-  b.addEventListener('pointerenter', () => gsap.to(uniforms.uHouse, { value: 1, duration: 0.4 }));
-  b.addEventListener('pointerleave', () => gsap.to(uniforms.uHouse, { value: 0, duration: 0.6 }));
+  b.addEventListener('pointerenter', () => tween(uniforms.uHouse, 'value', 1, 0.4));
+  b.addEventListener('pointerleave', () => tween(uniforms.uHouse, 'value', 0, 0.6));
 });
 
 // ---------- Hausordnung ----------
@@ -2173,13 +2207,33 @@ let lastInput = 0, frameN = 0;
 let lastTick = performance.now(), viaWatchdog = false;
 setInterval(() => {
   if (document.hidden || performance.now() - lastTick < 120) return;
-  viaWatchdog = true; gsap.ticker.tick(); viaWatchdog = false;
+  viaWatchdog = true; runFrame(performance.now()); viaWatchdog = false;
 }, 33);
+// Qualitätsstufen (13.11., T2): bleibt ein Gerät dauerhaft unter ~22 Bildern/s (zwei Messfenster von je 3 s in Folge), sinkt die
+// Auflösung der Hauptbühne – Stufe 1: 1×, Stufe 2: 0,75×. Schwelle bewusst tief: 30 B/s (iPhone im Stromsparmodus) lösen nichts aus.
+// Zurück geht es nicht (kein Pendeln). Stand: <html data-q>. Im Prüfmodus ?gl=1 aus.
+const QW = renderer && glQ !== '1' ? { lvl: 0, sum: 0, n: 0, bad: false, slow: 0 } : null;
+function qualityWatch(gap) {
+  if (document.hidden || gap > 1000) QW.bad = true; // Tabwechsel/Hänger: Fenster zählt nicht
+  QW.sum += gap; QW.n++;
+  if (QW.sum < 3000) return;
+  const avg = QW.sum / QW.n, bad = QW.bad;
+  QW.sum = QW.n = 0; QW.bad = false;
+  if (bad) return;
+  QW.slow = avg > 45 ? QW.slow + 1 : 0;
+  if (QW.slow < 2 || QW.lvl >= 2) return;
+  QW.lvl++; QW.slow = 0;
+  const pr = QW.lvl === 1 ? 1 : 0.75;
+  if (renderer.getPixelRatio() > pr) { renderer.setPixelRatio(pr); glDirty = true; layout(); }
+  document.documentElement.dataset.q = QW.lvl;
+}
 function tick() {
-  lastTick = performance.now();
+  const nowT = performance.now(), gap = nowT - lastTick;
+  lastTick = nowT;
   frameN++;
   if (sheetOpen && !isDesktop()) return; // Handy: Termin-Blatt deckt die Szene ab → nicht rendern (Akku)
   if (egoOpen) return; // Rundgang aus Augenhöhe offen: eigene Bühne zeichnet, die Seite ruht (Akku)
+  if (QW && !viaWatchdog) qualityWatch(gap); // nur messen, solange die Hauptbühne selbst zeichnet (nicht hinter Termin-Blatt/Augenhöhen-Rundgang)
   if (!viaWatchdog && !isDesktop() && morphNow >= 0.6 && performance.now() - lastInput > 1500 && frameN % 2) return; // Hero (Figur sichtbar): immer volle Rate (8.11., Option C)
   timer.update();
   const dt = Math.min(timer.getDelta(), 0.1); // 0,1 statt 0,05 (8.11.): Zeit läuft auch bei 15 B/s (Stromsparmodus) richtig
@@ -2224,14 +2278,15 @@ function tick() {
   uniforms.uFadeMid.value = isDesktop() ? 0.62 : 0.7;
 
   // Titel
-  if (!reduced && morphNow < 0.8) chars.forEach((c, i) => {
-    let w;
-    if (finePointer) {
-      const r = c.getBoundingClientRect(), d = Math.hypot(r.left + r.width / 2 - ptr.x, r.top + r.height / 2 - ptr.y);
-      w = 200 + 600 * smooth(40, 380, d);
-    } else w = 520 + Math.sin(uniforms.uTime.value * 1.6 - i * 0.45) * 280;
-    c.style.setProperty('--w', Math.round(w));
-  });
+  if (!reduced && morphNow < 0.8) {
+    // 13.11. (T5): Buchstaben-Mitten einmal je Bild in einem Zug lesen (vorher: lesen/schreiben im Wechsel = bis zu 9 Layouts je Bild),
+    // Gewicht nur schreiben, wenn es sich ändert
+    if (finePointer) chars.forEach((c, i) => { const r = c.getBoundingClientRect(); charMid[i * 2] = r.left + r.width / 2; charMid[i * 2 + 1] = r.top + r.height / 2; });
+    chars.forEach((c, i) => {
+      const w = Math.round(finePointer ? 200 + 600 * smooth(40, 380, Math.hypot(charMid[i * 2] - ptr.x, charMid[i * 2 + 1] - ptr.y)) : 520 + Math.sin(uniforms.uTime.value * 1.6 - i * 0.45) * 280);
+      if (w !== charW[i]) { charW[i] = w; c.style.setProperty('--w', w); }
+    });
+  }
 
   // Manifest
   const sr = statement.getBoundingClientRect();
@@ -2271,12 +2326,16 @@ function tick() {
     const lift = tb > 0 && houseGone() < 0.999 ? Math.max(0, VH - tb) : 0;
     if (lift !== viewLift || (camera.view && camera.view.enabled && camera.view.fullHeight !== GLH)) { viewLift = lift; if (lift > 0) camera.setViewOffset(VW, GLH, 0, lift, VW, GLH); else camera.clearViewOffset(); }
   }
-  if (renderer && !document.hidden) renderer.render(scene, camera);
+  // 13.11. (T1): ausgeblendete Partikel nicht mehr zeichnen; ist gar nichts zu sehen, ruht die Hauptbühne nach einem leeren Bild
+  points.visible = uniforms.uAlpha.value > 0.004;
+  const anyVis = points.visible || spineGroup.visible || sil.visible || tourPts.visible || !!(dust && dust.visible);
+  if (renderer && !document.hidden && (anyVis || glDirty)) { renderer.render(scene, camera); glDirty = anyVis; }
   if (manu && manu.st.visible && !document.hidden) { manu.update(0, dt); manu.st.renderer.render(manu.st.scene, manu.st.camera); }
   if (!document.hidden) updateServices(dt);
   updateHints(dt);
 }
-gsap.ticker.add(tick);
+frameFns.push(tick);
+requestAnimationFrame(function loop(now) { requestAnimationFrame(loop); runFrame(now); });
 
 
 // ---------- Klickbares kenntlich machen (Go 1.11.2026, Variante A) ----------
@@ -2361,8 +2420,12 @@ function updateHints(dt) {
 // (im ersten Frame, vor dem ersten Bild: gsap liest berechnete Stile – so nur eine Stil-Berechnung, A1)
 if (paused) uniforms.uIntro.value = 1; // angehalten: kein Einflug (Durchsicht 7.11.)
 if (!reduced) requestAnimationFrame(() => {
-  if (!paused) gsap.to(uniforms.uIntro, { value: 1, duration: 3.2, ease: 'expo.out', delay: 0.1 });
-  gsap.from(['.hero .kicker', '.kinetic', '.hero-sub', '.hero .actions', '.meter', '.top'], { opacity: 0, y: 20, duration: 1.1, stagger: 0.06, ease: 'expo.out', delay: 0.2 });
+  if (!paused) tween(uniforms.uIntro, 'value', 1, 3.2, { ease: easeExpo, delay: 0.1 });
+  // Einblenden der Hero-Texte (gleiche Werte und gleicher Endzustand wie vorher mit gsap: opacity 1, transform translate(0,0))
+  ['.hero .kicker', '.kinetic', '.hero-sub', '.hero .actions', '.meter', '.top'].map((q) => $(q)).filter(Boolean).forEach((el, i) => {
+    if (el.animate) el.animate([{ opacity: 0, transform: 'translate(0px, 20px)' }, { opacity: 1, transform: 'translate(0px, 0px)' }], { duration: 1100, delay: 200 + i * 60, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+    el.style.transform = 'translate(0px, 0px)'; el.style.opacity = '1';
+  });
 });
 
 // A4 · Kontakt: E-Mail kopieren, Öffnungsstatus (rein clientseitig, ohne JS bleibt die Zeitenliste)
@@ -2474,3 +2537,6 @@ function fitHero() {
 requestAnimationFrame(() => requestAnimationFrame(fitHero));
 addEventListener('resize', () => requestAnimationFrame(fitHero));
 document.fonts && document.fonts.ready.then(fitHero);
+// Hinweis „hochkant halten“ (Handy quer, 13.11. G4): schließen gilt bis zum Neuladen, gespeichert wird nichts
+$('#turnClose')?.addEventListener('click', () => $('#turnNote')?.classList.add('gone'));
+window.__hop = 1; // Start ist durchgelaufen (sonst zeigt die Seite alle Inhalte ohne Skript-Layout, siehe page.html/style.css „html:not(.js)“)

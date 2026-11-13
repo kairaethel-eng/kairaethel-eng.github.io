@@ -5,6 +5,7 @@ import { build } from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const root = dirname(fileURLToPath(import.meta.url));
 
@@ -40,7 +41,7 @@ const ROOT_LINKS = [[/<div class="labnote"[\s\S]*?<\/div>\r?\n?/g, ''], [/href="
 
 // ---- Livegang: Kopf- und Textersetzungen ----------------------------------------------------
 const LIVE_TITLE = {
-  'index.html': 'HOP – Home of Physiotherapy · Kai Raethel, Schorndorf',
+  'index.html': 'Physiotherapie in Schorndorf · HOP – Home of Physiotherapy, Kai Raethel', // 13.11.: deutsches Suchwort „Physiotherapie“ vorn
   'impressum.html': 'Impressum · HOP – Home of Physiotherapy',
   'datenschutz.html': 'Datenschutz · HOP – Home of Physiotherapy',
 };
@@ -63,6 +64,7 @@ const PRAXIS = {
   address: { '@type': 'PostalAddress', streetAddress: 'Schlichtener Straße 87', postalCode: '73614', addressLocality: 'Schorndorf', addressCountry: 'DE' },
   openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:30', closes: '19:30' }],
   medicalSpecialty: 'Physiotherapy',
+  hasMap: 'https://www.google.com/maps/search/?api=1&query=Schlichtener%20Stra%C3%9Fe%2087%2C%2073614%20Schorndorf', // derselbe Link wie auf der Seite
 };
 function liveHead(head, page) {
   head = head.replace(/<meta name="claude:viewport-fit-sides"[^>]*>\r?\n?/, '');
@@ -90,7 +92,7 @@ function liveHead(head, page) {
     `<meta name="twitter:card" content="summary_large_image">`,
   ];
   if (page === 'index.html') extra.push(`<script type="application/ld+json">${JSON.stringify(PRAXIS)}</script>`);
-  return head.replace(/(<meta name="description"[^>]*>)/, `$1\n${extra.join('\n')}`);
+  return head.replace(/(<meta name="description"[^>]*>)/, (m) => `${m}\n${extra.join('\n')}`);
 }
 function liveBody(body) {
   return body
@@ -142,7 +144,9 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   let head = headPart.replace('/*FONTS*/', () => (cfg.fonts ? FONTS[cfg.fonts]() : fontsCss)).replace('/*CSS*/', () => css);
   let body = bodyPart.replace('<!--JS-->', () => `<script>${js}</script>`);
   if (cfg.live) { head = liveHead(head, cfg.live); body = liveBody(body); }
-  const full = `<!doctype html>\n<html lang="de">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n${head}\n</head>\n<body>\n${body}\n</body>\n</html>\n`;
+  // Build-Stempel (13.11.): Kurz-Hash des Inhalts – gleicher Quelltext = gleicher Stempel; im Browser: document.querySelector('meta[name=hop-build]').content
+  const stamp = cfg.live || name === 'test-4' ? `<meta name="hop-build" content="${createHash('sha256').update(head + body).digest('hex').slice(0, 10)}">\n` : '';
+  const full = `<!doctype html>\n<html lang="de">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n${stamp}${head}\n</head>\n<body>\n${body}\n</body>\n</html>\n`;
   mkdirSync(dirname(join(root, cfg.out)), { recursive: true });
   writeFileSync(join(root, cfg.out), full.replace(/\r\n?/g, '\n'));
   if (cfg.live === 'index.html') {

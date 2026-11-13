@@ -5,6 +5,8 @@
 //   NOGL=1 startet ohne WebGL (Fallback prüfen).
 // Beispiel (Wirbelsäule, alle 5 Abschnitte): node tools/shot.cjs test-4-puls-scan.html z d '#achse|0.75' '#achse|1.38' '#achse|2.27' '#achse|3.16' '#achse|3.8'
 // Bilder landen in OUT (Standard /tmp/shots). Fehler der Seite werden als „ERR …“ ausgegeben.
+// Seit 13.11.2026 zeigt die Seite bei Software-Grafik (Container!) Standbilder statt WebGL. Die Werkzeuge hängen deshalb ?gl=1 an (Prüfmodus:
+// WebGL trotz Software-Grafik, keine Qualitätsstufen). GL0=1 lässt das weg (so sieht es ein Besucher ohne Grafikchip).
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs');
 (async () => {
@@ -17,7 +19,7 @@ const path = require('path'), fs = require('fs');
   const p = await ctx.newPage();
   p.on('pageerror', (e) => console.log('ERR', e.message));
   p.on('console', (m) => { if (m.type() === 'error') console.log('ERR', m.text()); });
-  await p.goto('file://' + path.resolve(file) + (process.env.QUERY || '')); // QUERY='?licht=1' für Vergleichszustände
+  await p.goto('file://' + path.resolve(file) + ((q) => (process.env.GL0 ? q : q ? q + (/[?&]gl=/.test(q) ? '' : '&gl=1') : '?gl=1'))(process.env.QUERY || '')); // QUERY='?licht=1' für Vergleichszustände
   if (process.env.CSS) await p.addStyleTag({ content: process.env.CSS });
   await p.waitForTimeout(3000);
   let n = 0;

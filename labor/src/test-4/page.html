@@ -2,12 +2,14 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="Testseite 4 (Puls · Scan): HOP – Home of Physiotherapy als dunkle Partikel-Inszenierung, Wirbelsäule als gescannte Punktwolke mit Kamerafahrt.">
+<script>document.documentElement.classList.add('js');addEventListener('load',function(){if(!window.__hop)document.documentElement.classList.remove('js')})</script>
 <style>/*FONTS*//*CSS*/</style>
 <!--BODY-->
 <a class="skip" href="#start">Zum Inhalt</a>
 <canvas id="gl" aria-hidden="true"></canvas>
 <div class="grain" aria-hidden="true"></div>
 <div class="hand" id="hand" aria-hidden="true"><span>lösen</span></div>
+<div class="turn-note" id="turnNote"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7.5" y="2.5" width="9" height="19" rx="2"/><path d="M3.5 10a8 8 0 0 1 1.6-3.6M20.5 14a8 8 0 0 1-1.6 3.6"/></svg><span>Bitte hochkant halten – so sehen Sie alles.</span><button type="button" id="turnClose" aria-label="Hinweis schließen">×</button></div>
 
 <nav class="top" id="top">
   <a class="brand" href="#start" aria-label="HOP – Home of Physiotherapy, zum Anfang">
@@ -59,7 +61,7 @@
         <div class="axis-head">
           <p class="kicker"><i>03</i> Achse</p>
           <h2 id="a-title">Jedes Segment<br>erzählt <em>etwas.</em></h2>
-          <p class="axis-hint"><span class="only-desk">Ziehen Sie den runden Knopf am rechten Rand, drehen Sie dort das Mausrad oder wählen Sie einen Abschnitt.</span><span class="only-mob">Scrollen Sie weiter: Jede Karte holt ihren Abschnitt heran.</span><span class="only-scan">Ziehen Sie den Knopf am rechten Rand auf und ab oder tippen Sie dort auf einen Abschnitt.</span></p>
+          <p class="axis-hint"><span class="only-desk">Ziehen Sie den runden Knopf am rechten Rand<span class="only-fine">, drehen Sie dort das Mausrad</span> oder wählen Sie einen Abschnitt.</span><span class="only-mob">Scrollen Sie weiter: Jede Karte holt ihren Abschnitt heran.</span><span class="only-scan">Ziehen Sie den Knopf am rechten Rand auf und ab oder tippen Sie dort auf einen Abschnitt.</span></p>
         </div>
         <div class="segnav" role="group" aria-label="Wirbelsäulen-Abschnitt wählen">
           <button type="button" data-seg="0" class="is-on"><b>C1–C2</b><span>Kopf</span></button>
@@ -131,7 +133,7 @@
         <p class="lead">Treten Sie ein. Ein Rundgang durch die Praxis, bevor Sie zum ersten Mal da sind.</p>
       </div>
           </div>
-          <p class="tour-kicker"><span class="only-desk">Raum anklicken, mit ‹ › oder den Pfeiltasten weitergehen. Oder den Rundgang starten.</span><span class="only-mob">Tippen Sie auf einen Raum oder wischen Sie über das Haus. Oder starten Sie den Rundgang.</span></p>
+          <p class="tour-kicker"><span class="only-desk">Raum anklicken, mit ‹ ›<span class="only-fine"> oder den Pfeiltasten</span> weitergehen. Oder den Rundgang starten.</span><span class="only-mob">Tippen Sie auf einen Raum oder wischen Sie über das Haus. Oder starten Sie den Rundgang.</span></p>
           <div class="tour-ctrl" role="group" aria-label="Rundgang steuern">
             <button type="button" class="t-btn" id="tourPrev" aria-label="Vorheriger Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
             <button type="button" class="t-play" id="tourPlay" aria-pressed="false"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><span>Rundgang starten</span></button>

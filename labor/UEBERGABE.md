@@ -1,9 +1,23 @@
-# Übergabe – Stand 13.11.2026 (neu: Gesamtprüfung Puls 13.11. mit 5 neuen Fehlern G1–G5, wartet auf Kais Go je Punkt; davor: Fusion „Hausbesuch · Puls“ `hausbesuch-puls.html`, wartet auf Kais Sichtprüfung; Kap. 04: Klick-Rundgang zurück, Einflug zur Tür ohne Schnitt, Hinweis an der Raumleiste; Hero-Rauschen iPhone: Option C umgesetzt, Kai bestätigt 9.11.; Scanner am PC + Rundgang aus Augenhöhe umgesetzt; offen: Kais Tests, siehe ▶)
+# Übergabe – Stand 13.11.2026 (neu: Gesamtprüfung Puls 13.11. umgesetzt (G1–G5, T1–T6), wartet auf Kais Sichtprüfung; davor: Fusion „Hausbesuch · Puls“ `hausbesuch-puls.html`, wartet auf Kais Sichtprüfung; Kap. 04: Klick-Rundgang zurück, Einflug zur Tür ohne Schnitt, Hinweis an der Raumleiste; Hero-Rauschen iPhone: Option C umgesetzt, Kai bestätigt 9.11.; Scanner am PC + Rundgang aus Augenhöhe umgesetzt; offen: Kais Tests, siehe ▶)
 
 ## Start-Prompt für einen neuen Chat (Claude Code, Repo kairaethel-eng.github.io)
 > Lies `labor/CLAUDE.md`, `labor/UEBERGABE.md`, `labor/ENTSCHEIDUNGEN.md` und `labor/LIVEGANG.md` (nur Branch `main`). Puls · Scan geht auf hopphysio.de live (GitHub Pages + Domain). Hier meine Punkte: …
 
-## ▶ Gesamtprüfung Puls 13.11.2026 (Auftrag Kai: „wie der professionellste Engineer und Designer“) – nur Prüfung, nichts geändert, **Go je Punkt abwarten**
+## ▶ Gesamtprüfung Puls 13.11.2026 – ✅ umgesetzt am 13.11. (Go Kai: „alles, was hier erledigt werden kann“, Ergebnis vor Kontingent) · wartet auf Kais Sichtprüfung PC + iPhone
+
+**Umgesetzt (nur `src/test-4`, `build.mjs`, `tools/`; gebaut: `test-4-puls-scan.html`, `live/`; Fusion/Hausbesuch/Zuhause/Wurzel unberührt):**
+- **G1** Niedrige PC-Fenster (< 760 px Höhe): Kap. 04 kompakt (Raumliste dreispaltig), „Rundgang starten“/„aus Augenhöhe“ im Bild – gemessen 1366×650: 123 px Luft, 1280×600: 79 px; Kap. 03: Karte 14 px unter den Abschnittsknöpfen, Hinweis sichtbar. 1440×900 unverändert.
+- **G2** Kompakt-Leiste bis 1219 px: Termin-Knopf bei 921–1300 px immer ganz im Bild.
+- **G3** Ohne JavaScript: 6/6 Karten, 5/5 Räume, 12/12 Leistungstexte, 5/5 Paragraphen sichtbar (`html:not(.js)`); greift auch, wenn das Skript beim Start scheitert (`window.__hop`).
+- **G4a** Handy quer: Hinweis „Bitte hochkant halten – so sehen Sie alles.“ unten links, schließbar, nur Touch.
+- **G5** Manuthera am Handy: Bühne → Überschrift → Knöpfe → Erklärzeile → Text; mit Knöpfen + Erklärzeile im Bild sind 87 % der Bühne sichtbar (vorher ~45 %).
+- **T1** Hauptbühne zeichnet in Manuthera, Leistungen, Kontakt nichts mehr (Zeichenaufrufe gezählt: vorher jedes Bild, jetzt 0; beim Zurückscrollen wieder da). **T2** Software-Grafik → Standbilder (im Container bestätigt; `?gl=1` = Prüfmodus der Werkzeuge) und Qualitätsstufen (mit `?gl=2` ausgelöst: Zeichenfläche 2304 → 1440 → 1080 px breit, Bild bleibt stimmig). **T3** gsap raus aus Puls: Skript 787 → 720 KB; Intro-Endzustand identisch zum alten Build. **T4** Grundschrift in %, Kapitel-Links mit Fokus + Adresse, Druckansicht (4 Seiten A4, alle Inhalte). **T5** Hero-Titel: ein Layout je Bild. **T6** Live-Titel mit „Physiotherapie in Schorndorf“ vorn, `hasMap`, Build-Stempel `hop-build`, `LIVEGANG.md` Schritt 4 mit allen 7 Beidateien, JSON-LD wird sicher eingesetzt. Dazu: Maus-Hinweistexte am iPad quer nur noch bei Maus.
+- **Neu:** `tools/sizes.cjs` (16 Prüfzeilen für genau diese Fälle, alle „ok“); `review.cjs`: Motivbilder am Handy mit richtiger Wartezeit.
+- **Regression (Container, SwiftShader):** REGRESSION_PLATZHALTER
+- **Nicht prüfbar hier [O], bitte Kai:** PC (Chrome): Gesamteindruck unverändert? Kap. 04 in einem kleinen Fenster; Mausrad/Scrollgefühl (eigener Takt statt gsap); Wärme/Lüfter im Kontakt-Kapitel. iPhone: Manuthera-Reihenfolge, Hero-Intro, Scrollen, einmal quer halten (Hinweis), Akkuregel unverändert. Ein Android-Handy aus dem Umfeld wäre ein Gewinn (Qualitätsstufen greifen nur dort, wo es ruckelt).
+- **Offen / nicht umgesetzt:** D1–D4 (Kais Inhalte), T3b Dateien trennen (Livegang), T7 `main.js` aufteilen (nach Livegang), `robots.txt`/`sitemap.xml`/`404.html`/GitHub Action (außerhalb `labor/`, eigenes Go), `geo` in den Praxisdaten, 2560×1440 nicht neu gesichtet.
+
+**Ursprünglicher Prüfbericht (Stand vor der Umsetzung):**
 
 Geprüft: `live/index.html` frisch gebaut (byte-gleich zum Repo). Chromium/SwiftShader im Container: Handy 390×844 (kompletter Bildersatz `tools/review.cjs`, 19 Zustände + 12 Motive, 0 Fehler/Überlappungen), PC 1440×900 (Start bis L4), dazu **neu** 1280×600, 1366×650, 1536×730 (typische Laptop-Fenster), Tablet quer 1024×768, Handy quer 844×390, ohne JavaScript, ohne WebGL; Fensterbreiten 921–1366 px ausgemessen. Code-Durchsicht `src/test-4`, `shared`, `ego`, `manu`, `build.mjs` mit Messungen (Bundle-Anteile, Ladevarianten). **Nicht gelaufen:** 2560×1440 und axe (letzter Stand 8.11.), PC-Bildersatz 1440 ab S1 (Lauf unter Last abgebrochen). Grenzen wie immer: kein Grafikchip, kein iPhone/Android → Tempo/Gefühl nicht bewertbar.
 

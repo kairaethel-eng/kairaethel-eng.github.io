@@ -1,7 +1,19 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 7.11.2026 spät · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/`.
+Stand: 13.11.2026 · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/`.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Gesamtprüfung 13.11.2026 – umgesetzt (Go Kai: „alles, was hier erledigt werden kann“, Ergebnis vor Kontingent)
+Befunde und Messwerte: `UEBERGABE.md` ▶ „Gesamtprüfung Puls 13.11.2026“. Alles in `src/test-4` + `build.mjs` + `tools/`; andere Seiten (Fusion, Hausbesuch, Zuhause …) und die Wurzel unberührt.
+- **G1 Niedrige PC-Fenster** (unter 760 px Höhe, z. B. 1366×768-Laptop, Full-HD mit 150 %): Kap. 04 kompakter (Raumliste dreispaltig, kleinere Überschrift) → „Rundgang starten“/„Rundgang aus Augenhöhe“ bleiben im Bild; Kap. 03: Karte steht unter den Abschnittsknöpfen, Hinweis bleibt lesbar. Ab 760 px Höhe unverändert (1440×900 identisch).
+- **G2 Kopfleiste:** Kompakt-Leiste (Kapitel als Aufklappmenü) jetzt bis 1219 px Breite statt 1000 px – vorher war der Termin-Knopf bei 1001–1070 px abgeschnitten.
+- **G3 Ohne JavaScript / Skriptfehler:** alle Karten, Räume, Leistungstexte, Paragraphen stehen lesbar untereinander (`html:not(.js)`; Einzeiler im Kopf setzt `js`, entfernt es wieder, wenn der Start scheitert).
+- **G4 Handy quer: Variante a** – kleiner Hinweis unten links „Bitte hochkant halten – so sehen Sie alles.“ mit × (nur Touch-Geräte quer unter 500 px Höhe; gespeichert wird nichts). Eigenes Querformat-Layout (b) nicht gebaut.
+- **G5 Manuthera am Handy/Tablet:** Reihenfolge Bühne → „Highlight“ → Überschrift → vier Knöpfe → Erklärzeile → Fließtext (vorher Knöpfe erst nach dem Fließtext). PC unverändert.
+- **T1** Ausgeblendete Hauptbühne wird nicht mehr gezeichnet (Manuthera, Leistungen, Kontakt). **T2** Software-Grafik (kein nutzbarer Grafikchip) → Standbilder wie „ohne WebGL“; Qualitätsstufen: dauerhaft unter ~22 Bildern/s → Auflösung der Hauptbühne 1×, dann 0,75× (kein Zurück). **T3** gsap aus Puls entfernt (eigener Bildtakt + Mini-Übergang, −67 KB Skript; Fusion/Hausbesuch nutzen gsap weiter). **T4** Grundschrift in % (achtet die Browser-Schriftgröße), Kapitel-Links setzen Fokus + Adresse (`#achse` …, kein Verlaufseintrag), Druckansicht. **T5** Hero-Titel misst die Buchstaben in einem Zug.
+- **T6** Live-Titel „Physiotherapie in Schorndorf · HOP – Home of Physiotherapy, Kai Raethel“ (deutsches Suchwort vorn; Kai kann das zurückdrehen: `build.mjs` `LIVE_TITLE`), Kartenlink in den Praxisdaten (`hasMap`), Build-Stempel `<meta name="hop-build">`, `LIVEGANG.md` Schritt 4 nennt alle 7 Beidateien.
+- **Hinweistexte iPad quer:** „drehen Sie dort das Mausrad“ / „oder den Pfeiltasten“ nur noch bei Maus.
+- **Bewusst nicht umgesetzt:** D1–D4 (Porträt, Raumfotos, erster Bildschirm am Handy, FAQ – brauchen Kais Inhalte/Entscheidung) · Dateien trennen (T3b, Livegang-Entscheidung) · `robots.txt`/`sitemap.xml`/`404.html`/GitHub Action (liegen außerhalb von `labor/`, eigenes Go) · Aufteilen von `main.js` (T7, nach dem Livegang) · `geo`-Koordinaten in den Praxisdaten (nicht belegt) · ungenutzte `@fontsource`-Pakete (unkritisch).
 
 ## Richtung
 - Favorit: Konzept **Puls** (dunkel, Partikel, Bernstein-Akzente). Seiten 1–3 bleiben nur zum Vergleich.
