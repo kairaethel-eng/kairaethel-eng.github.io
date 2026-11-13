@@ -289,3 +289,5 @@ Eigener Bau, **Puls, Fusion, Wurzel und Livegang-Plan unberührt**. Quelle `src/
 
 **Offen / Nächster Schritt:** Kais Urteil am iPhone (ruckelt es? stimmt die Richtung?). Danach nach Wahl: Kapitel Hände/Werdegang, Fotos und „willkommen“, Termin-Blatt, echte Wartezeit, Original des Kopf-Bildes mit Lizenznachweis.
 
+**Kai 13.11.2026 – Urteil zur ganzen Reise:** „Die gebaute Wirbelsäule sieht mir zu unprofessionell für meine geplante Website aus. Wir müssen komplett umdenken oder alle Möglichkeiten für einen perfekten Anatomie-Bau ausschöpfen.“ → Gerechnete Knochen (`sdf.js`/`bones.js`) sind als Weg **verworfen**; Richtung „Glas“ (Bild-Bühne, Übergang, Kapitel) bleibt. Neuer Plan mit echten Anatomie-Daten bzw. vorab gerenderten Bildern, Reihenfolge und offene Entscheidungen (Lizenz mit Namensnennung, Kosten, Original des Kopf-Bildes): `UEBERGABE.md` ▶ „Anatomie-Neustart“. Chat auf Kais Wunsch hier beendet; Fortsetzung in neuem Chat mit dem Start-Prompt dort.
+
