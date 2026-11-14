@@ -16,6 +16,9 @@ import { edgeOf } from './anatomie.js';
 // Entwurf W (Go Kai 1–4, Punkt 3): Bauteile sichtbar trennen – jeder Wirbel und jede Bandscheibe wird entlang der eigenen
 // Achse leicht gestaucht, so entsteht zwischen Wirbelkörper und Bandscheibe eine dunkle Fuge von je ~GAP cm (wie bei „bisher“)
 const GAP = 0.08;
+function partCenter(M, part) {
+  return part.kind === 'disc' ? M.disc[part.id.slice(1)].c : M.levels.find((l) => l.id === part.id).c;
+}
 function gap(M, part, P) {
   let c, n, s = 1, shift = 0;
   if (part.kind === 'disc') { const D = M.disc[part.id.slice(1)]; c = D.c; n = D.F.n; s = Math.max(0.6, 1 - GAP / (D.t / 2)); }
@@ -46,6 +49,10 @@ function* partsGen(M) {
     for (let i = 0; i < ev.length; i++) ev[i] = edgeOf(M, part, p.fromArray(part.pos, i * 3), q);
     for (let i = 0; i < n; i++) { col[i * 3] = zone; col[i * 3 + 1] = disc ? 1 : 0; col[i * 3 + 2] = ev[part.idx[i]]; }
     ng.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    // Stil „Karte“ (Go Kai 14.11.): Höhenlinien = Abstand zur Mitte des eigenen Wirbels bzw. der eigenen Bandscheibe
+    const pc = partCenter(M, part), fld = new Float32Array(n);
+    for (let i = 0; i < n; i++) fld[i] = Math.hypot(P[i * 3] - pc.x, P[i * 3 + 1] - pc.y, P[i * 3 + 2] - pc.z);
+    ng.userData.fld = fld;
     out.push(ng);
     yield;
   }
@@ -84,6 +91,7 @@ export function* echtStippleGen(M) {
   const P = new Float32Array(total * 3), Nn = new Float32Array(total * 3), Cc = new Float32Array(total * 3);
   let o = 0;
   parts.forEach((g) => { P.set(g.attributes.position.array, o); Nn.set(g.attributes.normal.array, o); Cc.set(g.attributes.color.array, o); o += g.attributes.position.array.length; });
+  const FV = new Float32Array(total); { let q = 0; parts.forEach((g) => { for (const v of g.userData.fld) FV[q++] = v * SC; }); } // Formkoordinaten
   const merged = new THREE.BufferGeometry();
   merged.setAttribute('position', new THREE.BufferAttribute(P, 3));
   merged.setAttribute('normal', new THREE.BufferAttribute(Nn, 3));
@@ -217,22 +225,25 @@ export function* echtStippleGen(M) {
     for (let v = 0; v < nv; v++) { if (!(v & 16383)) yield; av[v] = axialFast((P[v * 3 + 1] - CY) * SC, P[v * 3 + 2] * SC); }
     AV = av;
   }
-  function* makeContoursGen(n, step = 0.032, band = 0.12, diff = true, region = null) {
-    yield* axialVerts();
+  // mode: 'linien' = Ebenen-Schnitt (Go 1–4) · 'karte' = Höhenlinien des Abstandsfelds FV · 'stich' = gefüllt mit Tonwert (keine Linien)
+  function* makeContoursGen(n, step = 0.032, band = 0.12, diff = true, region = null, mode = 'linien') {
+    const field = mode === 'karte' ? FV : null;
+    if (mode === 'karte') step *= 1.15; else if (mode !== 'stich') yield* axialVerts();
+    const AF = field || AV;
     const nF = P.length / 9;
     let cap = nF * 2, SI = new Int32Array(cap * 4), ST = new Float32Array(cap * 2), SW = new Float32Array(cap), ns = 0, W = 0;
     const tick = every(4096), e = [0, 1, 1, 2, 2, 0], hit = [0, 0, 0, 0], ht = [0, 0];
     const rw = (y) => { if (!region) return 1; const { y0, y1, pad } = region; let w = y < y0 ? 1 - (y0 - y) / pad : y > y1 ? 1 - (y - y1) / pad : 1; return w <= 0 ? 0 : w * w * (3 - 2 * w); };
-    for (let f = 0; f < nF; f++) {
+    for (let f = 0; f < nF && mode !== 'stich'; f++) {
       if (tick()) yield;
-      const v0 = f * 3, a0 = AV[v0], a1 = AV[v0 + 1], a2 = AV[v0 + 2];
+      const v0 = f * 3, a0 = AF[v0], a1 = AF[v0 + 1], a2 = AF[v0 + 2];
       const lo = Math.min(a0, a1, a2), hi = Math.max(a0, a1, a2);
       const k0 = Math.ceil(lo / step - 0.5), k1 = Math.floor(hi / step - 0.5);
       if (k1 < k0) continue;
       // fast parallel zu den Ebenen? (A ändert sich über das Dreieck kaum im Verhältnis zu seiner Größe)
       const b = v0 * 3;
       const ex = Math.max(Math.hypot(P[b + 3] - P[b], P[b + 4] - P[b + 1], P[b + 5] - P[b + 2]), Math.hypot(P[b + 6] - P[b + 3], P[b + 7] - P[b + 4], P[b + 8] - P[b + 5]), Math.hypot(P[b] - P[b + 6], P[b + 1] - P[b + 7], P[b + 2] - P[b + 8])) * SC;
-      if (hi - lo < 0.28 * ex) continue;
+      if (!field && hi - lo < 0.28 * ex) continue;
       if (Cc[b + 1] > 0.5) continue; // Bandscheiben: gefülltes Band (unten), keine Linien
       const av = [a0, a1, a2];
       const yMid = ((P[b + 1] + P[b + 4] + P[b + 7]) / 3 - CY) * SC, eMid = (Cc[b + 2] + Cc[b + 5] + Cc[b + 8]) / 3;
@@ -279,8 +290,19 @@ export function* echtStippleGen(M) {
         zone[cnt] = Math.round(C(0)); kind[cnt] = C(1) > 0.5 ? 1 : 0; edge[cnt] = C(2); cnt++;
       }
     }
-    // Körnung (Bandscheiben, Platten): flächengewichtet wie MeshSurfaceSampler, mit Höhenband-Gewicht für die Nahansicht
-    const grain = function* (sel, m) {
+    // einen Punkt auf Dreieck b (baryzentrisch u, w) ausgeben
+    const emit = (b, u, w) => {
+      const t = 1 - u - w, o = cnt * 3;
+      for (let d = 0; d < 3; d++) {
+        pos[o + d] = (P[b + d] * u + P[b + 3 + d] * w + P[b + 6 + d] * t - (d === 1 ? CY : 0)) * SC;
+        nor[o + d] = Nn[b + d] * u + Nn[b + 3 + d] * w + Nn[b + 6 + d] * t;
+      }
+      const nl = Math.hypot(nor[o], nor[o + 1], nor[o + 2]) || 1; nor[o] /= nl; nor[o + 1] /= nl; nor[o + 2] /= nl;
+      zone[cnt] = Math.round(Cc[b] * u + Cc[b + 3] * w + Cc[b + 6] * t); kind[cnt] = Cc[b + 1] > 0.5 ? 1 : 0;
+      edge[cnt] = Cc[b + 2] * u + Cc[b + 5] * w + Cc[b + 8] * t; cnt++;
+    };
+    // Flächen-Verteilung (gewählte Dreiecke, Höhenband-Gewicht der Nahansicht)
+    const faceCum = function* (sel) {
       const fc = new Uint32Array(nF), cum = new Float64Array(nF); let k = 0, acc = 0;
       for (let f = 0; f < nF; f++) {
         if (tick()) yield;
@@ -289,20 +311,45 @@ export function* echtStippleGen(M) {
         const ux = P[b + 3] - P[b], uy = P[b + 4] - P[b + 1], uz = P[b + 5] - P[b + 2], vx = P[b + 6] - P[b], vy = P[b + 7] - P[b + 1], vz = P[b + 8] - P[b + 2];
         acc += Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) * w; fc[k] = f; cum[k++] = acc;
       }
-      if (!k) return;
+      return { fc, cum, k, acc };
+    };
+    const pick = (D) => {
+      const x = Math.random() * D.acc; let lo = 0, hi = D.k - 1;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (D.cum[mid] > x) hi = mid; else lo = mid + 1; }
+      return D.fc[lo] * 9;
+    };
+    // Stil „Stich“ (Go Kai 14.11., A): Knochen gleichmäßig gefüllt (Mindestabstand), dichter im Schatten, Umriss verdichtet –
+    // Licht und Blick fest im Raum der Säule (mittlere Drehung von PC bzw. Handy), Fortsätze lichter (Rangfolge)
+    const stich = function* (m) {
+      const D = yield* faceCum((b) => Cc[b + 1] < 0.5 && (Cc[b + 2] + Cc[b + 5] + Cc[b + 8]) / 3 <= DIFF.plateE);
+      if (!D.k) return;
+      const rmin = Math.sqrt(D.acc / m) * 0.45, r2 = rmin * rmin, grid = poissonGrid(box.min, box.max, rmin, m);
+      let got = 0, tries = 0, miss = 0;
+      while (got < m && cnt < n && tries++ < m * 8 && miss < 4000) {
+        if (!(tries & 2047)) yield;
+        const b = pick(D);
+        let u = Math.random(), w = Math.random(); if (u + w > 1) { u = 1 - u; w = 1 - w; }
+        const t = 1 - u - w;
+        const nx = Nn[b] * u + Nn[b + 3] * w + Nn[b + 6] * t, ny = Nn[b + 1] * u + Nn[b + 4] * w + Nn[b + 7] * t, nz = Nn[b + 2] * u + Nn[b + 5] * w + Nn[b + 8] * t, nl = Math.hypot(nx, ny, nz) || 1;
+        const lam = Math.max(0, (nx * LO[0] + ny * LO[1] + nz * LO[2]) / nl), sil = 1 - Math.abs((nx * VO[0] + nz * VO[2]) / nl);
+        let acc = 0.26 + 0.74 * (1 - lam); acc = Math.max(acc, Math.min(1, (sil - 0.55) / 0.35));
+        if ((Cc[b + 2] + Cc[b + 5] + Cc[b + 8]) / 3 < -0.5) acc *= 0.6;
+        if (Math.random() > acc) continue;
+        const x = P[b] * u + P[b + 3] * w + P[b + 6] * t, y = P[b + 1] * u + P[b + 4] * w + P[b + 7] * t, z = P[b + 2] * u + P[b + 5] * w + P[b + 8] * t;
+        if (!grid.free(x, y, z, r2)) { miss++; continue; }
+        miss = 0; grid.add(x, y, z); emit(b, u, w); got++;
+      }
+    };
+    if (mode === 'stich') yield* stich(nLine);
+    // Körnung (Bandscheiben, Platten): flächengewichtet wie MeshSurfaceSampler, mit Höhenband-Gewicht für die Nahansicht
+    const grain = function* (sel, m) {
+      const D = yield* faceCum(sel);
+      if (!D.k) return;
       for (let j = 0; j < m && cnt < n; j++) {
         if (!(j & 4095)) yield;
-        const x = Math.random() * acc; let lo = 0, hi = k - 1;
-        while (lo < hi) { const mid = (lo + hi) >> 1; if (cum[mid] > x) hi = mid; else lo = mid + 1; }
+        const b = pick(D);
         let u = Math.random(), w = Math.random(); if (u + w > 1) { u = 1 - u; w = 1 - w; }
-        const t = 1 - u - w, b = fc[lo] * 9, o = cnt * 3;
-        for (let d = 0; d < 3; d++) {
-          pos[o + d] = (P[b + d] * u + P[b + 3 + d] * w + P[b + 6 + d] * t - (d === 1 ? CY : 0)) * SC;
-          nor[o + d] = Nn[b + d] * u + Nn[b + 3 + d] * w + Nn[b + 6 + d] * t;
-        }
-        const nl = Math.hypot(nor[o], nor[o + 1], nor[o + 2]) || 1; nor[o] /= nl; nor[o + 1] /= nl; nor[o + 2] /= nl;
-        zone[cnt] = Math.round(Cc[b] * u + Cc[b + 3] * w + Cc[b + 6] * t); kind[cnt] = Cc[b + 1] > 0.5 ? 1 : 0;
-        edge[cnt] = Cc[b + 2] * u + Cc[b + 5] * w + Cc[b + 8] * t; cnt++;
+        emit(b, u, w);
       }
     };
     if (nDisc) yield* grain((b) => Cc[b + 1] > 0.5, nDisc);
@@ -316,8 +363,15 @@ export function* echtStippleGen(M) {
     }
     return { pos, nor, zone, kind, edge, count: cnt, spacing: step };
   }
-  // Vergleich im Browser: ?linien=alt = Zufalls-Abtastung wie bisher
-  const LINES_OLD = typeof location !== 'undefined' && /[?&]linien=alt\b/.test(location.search);
+  // Stil der echten Säule (Go Kai 14.11. „A + B umschaltbar“): ?stil=stich (Standard) · ?stil=karte · ?stil=linien (Stand „1–4“);
+  // ?linien=alt = Zufalls-Abtastung wie bei „bisher“
+  const Q = typeof location !== 'undefined' ? location.search : '';
+  const LINES_OLD = /[?&]linien=alt\b/.test(Q);
+  const STIL = (/[?&]stil=(stich|karte|linien)\b/.exec(Q) || [, 'stich'])[1];
+  // Licht und Blick für den Tonwert im Raum der Säule: Shader-Licht LDIR, Drehung der Säule am PC −π/2 − 0,5, am Handy −π/2 + 0,5
+  const DESK = typeof matchMedia === 'function' && matchMedia('(min-width: 921px)').matches;
+  const ROT = -Math.PI / 2 + (DESK ? -0.5 : 0.5), cR = Math.cos(-ROT), sR = Math.sin(-ROT), Ll = Math.hypot(0.48, 0.72, 0.5);
+  const LO = [(cR * 0.48 + sR * 0.5) / Ll, 0.72 / Ll, (-sR * 0.48 + cR * 0.5) / Ll], VO = [sR, 0, cR];
   const core = new Float32Array(P.length);
   for (let i = 0; i < P.length; i += 3) { core[i] = P[i] * SC; core[i + 1] = (P[i + 1] - CY) * SC; core[i + 2] = P[i + 2] * SC; }
   const coreGeo = new THREE.BufferGeometry();
@@ -335,10 +389,10 @@ export function* echtStippleGen(M) {
     const pts = []; for (let i = 0; i < CURVE_W; i++) pts.push(toShape(rc.curve.getPoint(i / (CURVE_W - 1))));
     curves.push({ pts, zone: ZONES.indexOf(rc.zone), start: best / (CURVE_W - 1), kind: 2, side: rc.side, id: rc.id });
   });
-  const slicesGen = LINES_OLD ? makeSlicesGen : makeContoursGen;
+  const slicesGen = LINES_OLD ? makeSlicesGen : (n, step, band, diff, region) => makeContoursGen(n, step, band, diff, region, STIL);
   const makeGrain = (n) => runSync(makeGrainGen(n)), makeSlices = (...a) => runSync(slicesGen(...a));
   // Punkt 1: Breite der Wirbel im Verhältnis zur Säulenlänge, gerechnet ÷ echt → Faktor für die Nahansicht (gleiche Bildgröße)
   const RB = Object.fromEntries(buildLevels().map((l) => [l.id, l.R])), SCB = 8.2 / LTOT_BISHER;
   const zk = Object.fromEntries(M.out.map((l) => [l.id, RB[l.id] ? (RB[l.id] * SCB) / (l.R * SC) : 1]));
-  return { grain: null, makeGrain, makeSlices, makeGrainGen, makeSlicesGen: slicesGen, coreGeo, curves, levels: sp.levels, SC, CY, echt: true, dScale: M.Ltot / LTOT_BISHER, zk };
+  return { grain: null, makeGrain, makeSlices, makeGrainGen, makeSlicesGen: slicesGen, coreGeo, curves, levels: sp.levels, SC, CY, echt: true, dScale: M.Ltot / LTOT_BISHER, zk, stil: LINES_OLD ? 'alt' : STIL };
 }
