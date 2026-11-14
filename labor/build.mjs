@@ -159,6 +159,8 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   });
   const js = res.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
   let css = readFileSync(join(dir, 'style.css'), 'utf8');
+  // Baustein-CSS einbinden (14.11.2026, Linienhaus): /*@include pfad*/ relativ zum Quellordner der Seite
+  css = css.replace(/\/\*@include ([^*]+?)\*\//g, (m, f) => readFileSync(join(dir, f.trim()), 'utf8'));
   if (cfg.live) css = css.replace(/\/\*[\s\S]*?\*\//g, ''); // Live: Arbeitskommentare („Testseite 4 …“) raus
   if (cfg.live) css = css.replace(/url\(assets\//g, 'url('); // Standbilder (ohne WebGL) liegen neben der Live-Seite
   if (P) css += P.css;
