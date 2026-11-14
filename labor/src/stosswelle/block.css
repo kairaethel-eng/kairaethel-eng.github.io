@@ -85,9 +85,9 @@
   .sw{padding-top:3rem}
   .sw-inner{grid-template-columns:1fr;gap:.625rem}
   .sw-text{display:contents}
-  .sw-stage{order:0}
-  .sw-text > .kicker{order:1;margin-top:.75rem}
-  .sw-text > .sw-h{order:2}
+  .sw-text > .kicker{order:0}
+  .sw-text > .sw-h{order:1}
+  .sw-stage{order:2}
   .sw .sw-modes{order:3;margin-top:.75rem;max-width:none}
   .sw-read{order:4;margin-top:.25rem}
   .sw .lead{order:5;margin-top:.5rem}

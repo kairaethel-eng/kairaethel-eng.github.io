@@ -187,7 +187,7 @@ const uniforms = {
   uTime: { value: 0 }, uMorph: { value: 0 }, uPix: { value: 1 }, uSize: { value: 1 }, uAlpha: { value: 1 },
   uRelax: { value: relaxTex }, uBodyWH: { value: new THREE.Vector2(BODY_W * BODY_SCALE, BODY_H * BODY_SCALE) },
   uXf: { value: [0, 1, 2, 3, 4].map(() => new THREE.Vector4(0, 0, 0, 1)) },
-  uSpineRot: { value: -0.9 }, uCut: { value: 100 }, uRoofH: { value: 0.25 }, uRoofA: { value: 1 },
+  uSpineRot: { value: -0.9 }, uCut: { value: 100 }, uRoofH: { value: 0.25 }, uRoofA: { value: 1 }, uLogo: { value: 0 },
   uBreath: { value: 0 }, uCalm: { value: 0 }, // Atem-Phase, „Entspannt“ (0..1)
   uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 },
   cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') },
@@ -198,7 +198,7 @@ const vert = /* glsl */`
   attribute float aHeat; attribute vec3 pos2; attribute vec3 pos3; attribute float kind3; attribute vec3 pos4; attribute float kind4; attribute vec4 aRand;
   uniform float uSpread, uFadeMid;
   uniform float uBreath, uCalm;
-  uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uRoofH, uRoofA;
+  uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uRoofH, uRoofA, uLogo;
   uniform sampler2D uRelax; uniform vec2 uBodyWH; uniform vec4 uXf[5];
   uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey;
   varying vec3 vCol; varying float vA;
@@ -276,12 +276,25 @@ const vert = /* glsl */`
     p += n * sin(t*3.14159) * (1.2 + aRand.w*1.6) * ws * uSpread;
     // Intro: aus der Tiefe einfliegen
     p += n * (1.-uIntro) * (6. + aRand.x*8.) * ws * uSpread;
+    float s = mix(sA, sB, t);
+    vec3 col = mix(cA, cB, t);
+    float a = mix(.5 + aRand.x*.5, .9, wH) * (1. - uFadeMid*sin(t*3.14159)) * mix(aA, aB, t);
+    // Hausordnung (seit 14.11.2026 nachts direkt nach Kapitel 02): die HOP-Kreise (Form 4) legen sich über die laufende Form
+    // und lösen sich danach in die Wirbelsäule auf – uLogo 0..1, unabhängig von der Kapitelfolge in uMorph
+    if(uLogo > .001){
+      vec3 pL, cL; float sL, aL;
+      shape(4, pL, cL, sL, aL);
+      float tl = smoothstep(st, st+.6, uLogo);
+      pL += vec3(sin(uTime*.5 + aRand.y*6.283), cos(uTime*.42 + aRand.z*6.283), 0.) * .012 * uXf[4].w;
+      p = mix(p, pL, tl) + n * sin(tl*3.14159) * (1.2 + aRand.w*1.6) * mix(ws, uXf[4].w, tl) * uSpread;
+      s = mix(s, sL, tl); col = mix(col, cL, tl);
+      a = mix(a, (.5 + aRand.x*.5) * aL, tl) * (1. - uFadeMid*sin(tl*3.14159));
+    }
     vec4 mv = modelViewMatrix * vec4(p, 1.);
     gl_Position = projectionMatrix * mv;
-    float s = mix(sA, sB, t);
     gl_PointSize = uSize * uPix * s * mix(.5 + aRand.y*.9, .82, wH) * 24. / -mv.z;
-    vCol = mix(cA, cB, t);
-    vA = mix(.5 + aRand.x*.5, .9, wH) * (1. - uFadeMid*sin(t*3.14159)) * uIntro * mix(aA, aB, t);
+    vCol = col;
+    vA = a * uIntro;
   }`;
 const frag = /* glsl */`
   uniform float uAlpha;
@@ -1742,7 +1755,8 @@ function targetMorph() {
   let m = 0;
   if (!chapTop) chapTop = chapters.map((c) => c.getBoundingClientRect().top + scrollY);
   const sy = scrollY;
-  if (!isDesktop()) logoGeo = logoGeo || { list: servList.getBoundingClientRect().bottom + sy, kick: rules.querySelector('.kicker').getBoundingClientRect().top + sy }; // Handy: Listenende + Kicker der Hausordnung (absolut, gemerkt)
+  // Hausordnung (seit 14.11. nachts nach Kapitel 02): Ende des Textes von Kapitel 02 + Kicker der Hausordnung (absolut, gemerkt)
+  logoGeo = logoGeo || { list: statement.parentNode.lastElementChild.getBoundingClientRect().bottom + sy, kick: rules.querySelector('.kicker').getBoundingClientRect().top + sy, rules: rules.getBoundingClientRect().top + sy, axis: axis.getBoundingClientRect().top + sy };
   for (let i = 0; i < chapters.length; i++) {
     const r = { top: chapTop[i] - sy };
     const s = +chapters[i].dataset.stage;
@@ -1753,22 +1767,28 @@ function targetMorph() {
     if (!isDesktop() && prev === 0 && s === 1) t = smooth(vh * 0.03, vh * 0.4, scrollY);
     // Handy: Wirbelsäule → Haus kürzer, damit das Haus fertig in der Bildmitte steht, bevor der Text von Kapitel 04 kommt
     if (!isDesktop() && prev === 2 && s === 3) t = smooth(vh * 0.95, vh * 0.3, r.top);
-    // Handy: Bewegungslinien → Wirbelsäule früher fertig, damit der Scan schon mit der Überschrift entsteht
-    if (!isDesktop() && prev === 1 && s === 2) t = smooth(vh * 0.95, vh * 0.4, r.top);
-    // Handy: Haus → HOP-Logo am Ende der Leistungsliste (nicht erst mit der Hausordnung): fertig, wenn die Liste das Bild verlässt (Go Kai 8.11., Option A)
-    if (!isDesktop() && prev === 3 && s === 4) t = smooth(vh * 1.25, vh * 0.55, logoGeo.list - sy);
+    // Handy: Bewegungslinien → Wirbelsäule früher fertig, damit der Scan schon mit der Überschrift entsteht;
+    // seit 14.11. nachts etwas später begonnen, damit die Wirbelsäule nicht über dem letzten Paragraphen der Hausordnung entsteht
+    if (!isDesktop() && prev === 1 && s === 2) t = smooth(vh * 0.78, vh * 0.3, r.top);
     if (t > 0) m = prev + (s - prev) * t;
   }
   return m;
 }
-// Handy: Logo steht mittig im freien Raum zwischen Listenende (bzw. Leiste) und „§ Die Hausordnung“ und steigt mit dem Text auf
-let logoIn = 0;
+// HOP-Kreise zur Hausordnung (14.11.2026 nachts, Reihenfolge A: Hausordnung steht direkt nach Kapitel 02): die Kreise bilden sich,
+// während die Hausordnung hereinkommt, und lösen sich in die Wirbelsäule auf, sobald Kapitel 03 folgt (Shader: uLogo).
+// Handy wie seit 8.11.: schon am Ende des vorigen Textes fertig, mittig im freien Raum über „§ Die Hausordnung“.
+let logoNow = 0;
+function targetLogo() {
+  const vh = VH, sy = scrollY, d = isDesktop();
+  const kIn = d ? smooth(vh * 0.9, vh * 0.2, logoGeo.rules - sy) : smooth(vh * 1.25, vh * 0.55, logoGeo.list - sy);
+  const kOut = d ? smooth(vh * 0.9, vh * 0.25, logoGeo.axis - sy) : smooth(vh * 0.85, vh * 0.4, logoGeo.axis - sy);
+  return kIn * (1 - kOut);
+}
+// Handy: Logo steht mittig im freien Raum zwischen dem Text von Kapitel 02 (bzw. Leiste) und „§ Die Hausordnung“ und steigt mit dem Text auf
 function logoPlace() {
   const vh = VH, sy = scrollY, lb = logoGeo.list - sy, kt = logoGeo.kick - sy;
-  logoIn = smooth(vh * 0.7, vh * 0.5, lb); // Logo erscheint erst unter der Liste, nie über ihrem Text
   let c = Math.min((Math.max(lb, 78) + kt) / 2, vh * 0.6);
   c = Math.min(Math.max(c, lb + 75), kt - 90);
-  c = Math.max(c, 150);
   const hh = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)), wpp = 2 * hh / GLH;
   uniforms.uXf.value[4].set(0, (GLH / 2 - c) * wpp, 0, 0.32);
 }
@@ -1826,10 +1846,10 @@ dTitle.insertAdjacentHTML('beforebegin', '<svg class="roofline" viewBox="0 0 300
 const roofline = $('.roofline path');
 // Auftrag Z (vorbereitet, NICHT Standard – Kai entscheidet): ?dach=eins blendet die kleine Linie aus, sobald das Hausdach gezeichnet wird (eine Dachlinie statt zwei)
 const ONE_ROOF = /[?&]dach=eins\b/.test(location.search);
-// 05 Tür: Buchstaben setzen Schritt für Schritt auf, danach in Abständen ein kleiner Gang
+// 05 Tür („Die Tür steht offen.“, 14.11. nachts): Buchstaben blenden ruhig ein, „offen.“ schwingt wie ein Türblatt auf und bewegt sich später ab und zu leicht
 const tTitle = $('#t-title');
 splitLetters(tTitle);
-new IntersectionObserver((es, ob) => es.forEach((e) => { if (e.isIntersecting) { tTitle.classList.add('walk'); ob.disconnect(); } }), { threshold: 0.4 }).observe(tTitle);
+new IntersectionObserver((es, ob) => es.forEach((e) => { if (e.isIntersecting) { tTitle.classList.add('open'); ob.disconnect(); } }), { threshold: 0.4 }).observe(tTitle);
 // Leistungen: ein Impuls läuft durch den Namen (Maus darüber bzw. beim Durchscrollen auf dem Handy)
 const ixRows = $$('.index li').map((li) => {
   const name = $('.ix-name', li); splitLetters(name);
@@ -1969,9 +1989,11 @@ function tick() {
   uniforms.uCalm.value += ((calm ? 1 : 0) - uniforms.uCalm.value) * Math.min(1, dt * 0.8);
   uniforms.uBreath.value += paused ? 0 : dt * CALM * (1.15 - uniforms.uCalm.value * 0.45);
   const tm = targetMorph();
-  if (!isDesktop() && logoGeo) logoPlace();
+  if (!isDesktop()) logoPlace();
   morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uMorph.value = morphNow;
+  logoNow += (targetLogo() - logoNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
+  uniforms.uLogo.value = logoNow < 0.002 ? 0 : logoNow;
   manuK = manuVisible();
   swK = swVisible();
   updateAxis(dt);
@@ -1987,10 +2009,10 @@ function tick() {
   let dim = isDesktop() ? smooth(vh * 0.75, vh * 0.25, doorTop) : smooth(vh * 1.3, vh * 0.8, doorTop);
   const dimMax = 1; // Kontakt: Partikel blenden ganz aus (Handy und PC)
   if (!isDesktop()) {
-    if (morphNow > 0.3 && morphNow < 1.6) dim = Math.max(dim, 0.55); // Bewegungslinien leise hinter Text
+    if (morphNow > 0.3 && morphNow < 1.6) dim = Math.max(dim, 0.55 * (1 - logoNow)); // Bewegungslinien leise hinter Text, die HOP-Kreise zur Hausordnung in voller Helligkeit
   }
   if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
-  dim = Math.max(dim, manuK, swK, isDesktop() ? listK : listK * (1 - logoIn)); // Manuthera-Bühne, Stoßwelle und Leistungen: Partikel-Hintergrund blendet ganz aus
+  dim = Math.max(dim, manuK, swK, listK); // Manuthera-Bühne, Stoßwelle und Leistungen: Partikel-Hintergrund blendet ganz aus
   if (licht && lichtK > 0) dim = Math.max(dim, lichtK); // K1: Partikel weichen dem Sonnenstaub
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
   if (!isDesktop()) {
@@ -2022,8 +2044,7 @@ function tick() {
 
   // Hausordnung
   const rr = rules.getBoundingClientRect();
-  const rp = clamp((VH - rr.top) / (rr.height + VH)); // Durchlauf durchs Bild (Abschnitt seit 7.11. nur 1 Bildschirm hoch)
-  if (licht) { const k = smooth(0.4, 1, rp); setLicht(k); if (dust) dust.visible = k > 0.01; }
+  if (licht) { const k = smooth(VH * 1.4, VH * 0.5, doorTop); setLicht(k); if (dust) dust.visible = k > 0.01; } // ?licht=1 hängt seit 14.11. nachts an der Tür (die Hausordnung steht vorn)
   { // Handy + PC (7.11.): automatisch
     const now = performance.now(), step = Math.min(250, now - (LAW.last || now)), vis = rr.top < VH * 0.55 && rr.bottom > VH * 0.45;
     LAW.last = now;
@@ -2037,14 +2058,14 @@ function tick() {
 
   // Navigation
   top.classList.toggle('scrolled', scrollY > 30);
-  const rr2 = rules.getBoundingClientRect();
-  let ci = Math.round(clamp(morphNow, 0, 4));
-  if (!isDesktop() && ci >= 4 && rr2.top > VH * 0.5) ci = 3; // Handy: Logo ist früh fertig, die Leiste zeigt „Dach“ bis die Hausordnung im Bild ist
-  const chapKey = rr2.top < VH * 0.5 && rr2.bottom > VH * 0.5 ? 9 : ci;
-  // Leiste: 01–04, § Hausordnung (Eintrag 4), 05 Tür (Eintrag 5) – Kais Wunsch 2.11.: Hausordnung auch am PC in der Leiste
-  const navIdx = chapKey === 9 ? 4 : ci >= 4 ? 5 : ci;
-  navLinks.forEach((a, k) => a.classList.toggle('on', k === navIdx));
-  if (chapKey !== chapShown) { chapShown = chapKey; chapNow.innerHTML = navLinks[navIdx].innerHTML; }
+  // Leiste (14.11. nachts): Einträge = Kapitel in Seitenreihenfolge (01, 02, §, 03, 04, 05); aktiv ist das Kapitel, das die Bildmitte erreicht hat
+  let navIdx = 0;
+  for (let i = 1; i < chapTop.length; i++) if (chapTop[i] - scrollY < VH * 0.5) navIdx = i;
+  if (navIdx !== chapShown) {
+    chapShown = navIdx;
+    navLinks.forEach((a, k) => a.classList.toggle('on', k === navIdx));
+    chapNow.innerHTML = navLinks[navIdx].innerHTML;
+  }
 
   camera.position.copy(cam.pos); camera.lookAt(cam.target);
   // 13.11. (T1): ausgeblendete Partikel nicht mehr zeichnen; ist gar nichts zu sehen, ruht die Hauptbühne nach einem leeren Bild

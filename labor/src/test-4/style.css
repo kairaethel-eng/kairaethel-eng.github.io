@@ -96,9 +96,14 @@ main{position:relative;z-index:2}
 .laws li.is-on span{animation:breathe 5.5s ease-in-out infinite}
 @keyframes breathe{0%,100%{letter-spacing:-.04em;font-weight:800}50%{letter-spacing:-.012em;font-weight:640}}
 #t-title .lt{opacity:0}
-#t-title.walk .lt{animation:step .75s cubic-bezier(.3,1.4,.5,1) both calc(var(--i) * 70ms),gait 7s ease-in-out calc(1.6s + var(--i) * 90ms) infinite}
-@keyframes step{0%{opacity:0;transform:translateY(-.45em) rotate(-10deg)}60%{opacity:1;transform:translateY(.05em) rotate(2deg)}100%{opacity:1;transform:none}}
-@keyframes gait{0%,10%,100%{opacity:1;transform:none}4%{opacity:1;transform:translateY(-.09em) rotate(-4deg)}7%{opacity:1;transform:translateY(.02em)}}
+#t-title.open .lt{animation:rise .7s var(--ease) both calc(var(--i) * 35ms)}
+#t-title em{display:inline-block;transform-origin:0 55%}
+#t-title.open em{animation:doorOpen 1.5s cubic-bezier(.2,.9,.25,1) both .45s,doorAjar 9s ease-in-out 4s infinite}
+html.paused #t-title .lt{opacity:1;animation:none}
+html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift steht fertig da (vorher blieb sie unsichtbar) */
+@keyframes rise{0%{opacity:0;transform:translateY(.25em)}100%{opacity:1;transform:none}}
+@keyframes doorOpen{0%{transform:perspective(40rem) rotateY(-84deg)}100%{transform:perspective(40rem) rotateY(0)}}
+@keyframes doorAjar{0%,14%,100%{transform:perspective(40rem) rotateY(0)}7%{transform:perspective(40rem) rotateY(-16deg)}}
 .ix-name.wave .lt{animation:wave .7s ease-out calc(var(--i) * 22ms)}
 @keyframes wave{0%,100%{transform:none;color:inherit}35%{transform:translateY(-.16em);color:var(--amber)}}
 /* dunkler Lichthof hinter Text: bleibt über den Partikeln lesbar */
@@ -163,7 +168,7 @@ main{position:relative;z-index:2}
 .note{grid-column:1;grid-row:4;font-size:.75rem;color:var(--mute);margin-top:1rem;max-width:60ch}
 
 /* Dach / Index */
-.roof{padding-block:9.375rem 7.5rem}
+.roof{padding-block:9.375rem 3rem}
 .roof-head{margin-bottom:3.125rem}
 .index{list-style:none;margin:0;padding:0;max-width:min(53.75rem,54vw);border-top:1px solid var(--line);counter-reset:ix}
 .index li{border-bottom:1px solid var(--line)}
@@ -181,7 +186,6 @@ main{position:relative;z-index:2}
 /*@include ../haus-licht/house.css*/
 .lh{position:relative;z-index:2}
 .roof-grid .roof-head{text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
-.lh + .manu{margin-top:clamp(3rem,8vw,6rem)}
 @media (max-width:920px){.roof{padding-top:5.5rem}}
 
 @media (min-width:921px){
@@ -377,7 +381,7 @@ html:not(.js) button.ix-link{display:none}
   .chips li{font-size:.75rem;padding:.375rem .5rem}
   .note{margin-top:1.375rem;font-size:.75rem}
   /* Handy: Text liegt auf einer eigenen dunklen Fläche, die Partikel-Szene bleibt darüber frei */
-  .roof-list{display:flex;flex-direction:column}
+  .roof-list{display:flex;flex-direction:column;padding-top:2.5rem}
   .roof-list .kicker{order:1}
   .roof-list .index{order:3}
   .serv-stage{order:2;position:sticky;top:calc(env(safe-area-inset-top,0px) + 4.25rem);z-index:3;height:30svh;margin:0 calc(-1 * max(var(--gut),5vw)) .5rem;background:linear-gradient(var(--ink) 90%,rgba(10,22,27,0))}
@@ -673,12 +677,15 @@ html:not(.js) .vf-open,html:not(.js) #vorfallSheet{display:none}
 }
 @media (min-width:921px) and (max-height:520px){
 }
-/* G5 · Handy/Tablet: Knöpfe der Manuthera-Liege und ihre Erklärzeile stehen direkt unter Überschrift und Bühne, der lange Text folgt danach */
+/* G5 · Handy/Tablet: Knöpfe der Manuthera-Liege und ihre Erklärzeile stehen direkt unter Überschrift und Bühne, der lange Text folgt danach.
+   Seit 14.11.2026 nachts (Kai): erst Kennzeichnung + Überschrift, dann die Bühne; Bühne nur so hoch, wie die Liege braucht (kein leerer Platz). */
 @media (max-width:920px){
+  .manu{padding-top:3rem}
+  .manu-stage canvas{height:min(56vh,30rem,84vw)}
   .manu-text{display:contents}
-  .manu-stage{order:0}
-  .manu-text > .kicker{order:1;margin-top:.5rem}
-  .manu-text > .manu-h{order:2}
+  .manu-text > .kicker{order:0}
+  .manu-text > .manu-h{order:1}
+  .manu-stage{order:2}
   .manu-modes{order:3;margin-top:.75rem}
   .manu-read{order:4;margin-top:.25rem}
   .manu .lead{order:5;margin-top:.5rem}

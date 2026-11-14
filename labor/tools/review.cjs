@@ -27,6 +27,7 @@ const click = (sel, i = 0) => ({ js: [`(() => { const e = document.querySelector
 const STATES = [
   { id: 'start', ...scroll('top') },
   { id: 'bewegung', ...scroll('#bewegung') },
+  { id: 'hausordnung', ...scroll('#hausordnung') },
   { id: 'achse', ...scroll('#achse', 0.3), slow: 2 },
   ...['C1', 'C5', 'Th1', 'Th7', 'L4', 'S1'].map((n, i) => ({ id: 'achse-' + n, ...click('.scan-stop', i), slow: 1 })),
   // Auftrag Z: Film „Bandscheibenvorfall“ als Blatt aus der Karte L4–L5 (öffnet wie der Knopf)
@@ -34,10 +35,9 @@ const STATES = [
   { id: 'dach', ...scroll('#dach'), slow: 1 },
   { id: 'rundgang', ...click('#next'), slow: 1 }, // Kap. 04 seit 14.11.: Linienhaus, › = nächster Raum (Licht an)
   { id: 'ego', ...click('#egoOpen'), slow: 1.5, after: 'Escape' },
+  { id: 'leistungen', ...scroll('#allTitle', -0.3), serv: true },
   { id: 'manuthera', ...scroll('#manuthera'), slow: 1 },
   { id: 'stosswelle', ...scroll('#stosswelle'), slow: 1 }, // 14.11.: eigener Block in Kap. 04
-  { id: 'leistungen', ...scroll('#allTitle', -0.3), serv: true },
-  { id: 'hausordnung', ...scroll('#hausordnung') },
   { id: 'tuer', ...scroll('#tuer') },
   { id: 'termin', ...click('#tuer [data-termin]'), after: 'Escape' },
   { id: 'fuss', go: 'bottom|0' },

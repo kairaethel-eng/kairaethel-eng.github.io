@@ -1,7 +1,13 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 14.11.2026 spät (Auftrag Z) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 14.11.2026 nachts (Reihenfolge A) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Reihenfolge der Kapitel (Go Kai 14.11.2026 nachts: „Überschrift 1, Empfehlung A“) – umgesetzt, wartet auf Sichtprüfung
+- **Gewählt: A** – 01 Spannung → 02 Bewegung → § Hausordnung → 03 Achse → 04 Dach (Rundgang → Alle Leistungen → Manuthera → Stoßwelle) → 05 Tür. Grund: erst der Mensch (willkommen), dann Kompetenz, das Konkrete direkt vor dem Termin; die Hausordnung stand vorher dort, wo die wenigsten ankommen. Verworfen: B (Kais erste Idee: Hausordnung vor Bewegung, Dach vor Achse, Leistungen vom Haus getrennt).
+- **Schluss-Überschrift:** „Die Tür steht *offen.*“ (Einladung statt Aufgabe). Verworfen: „Der nächste Schritt.“, „Kommen Sie herein.“; alt: „Der erste Schritt.“
+- **HOP-Kreise** bleiben bei der Hausordnung (jetzt vorn), lösen sich in die Wirbelsäule auf; am Schluss kein Logo mehr aus Partikeln [A].
+- **Handy/Tablet (Kai, Bilder 14.11.):** Manuthera und Stoßwelle – erst Überschrift, dann Bühne. Leerer Platz gekürzt (Manuthera-Bühne, Abstände vor Leistungen, Manuthera und Tür).
 
 ## Auftrag Z „Stand jetzt“ (Go Kai 14.11.2026 spät: „alles zusammenführen, prüfen, Fehler beheben“) – umgesetzt, wartet auf Sichtprüfung
 - **Eine Seite mit allem Neuen = Puls** (`src/test-4` → `test-4-puls-scan.html`, Livegang-Vorschau `live/` = „Stand jetzt“). Entwürfe bleiben als Archiv (`labor/index.html`).
