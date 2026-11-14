@@ -1,7 +1,11 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 13.11.2026 · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/`.
+Stand: 14.11.2026 · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/`.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Haus ohne Partikel – Entwurf „Licht im Fenster“ (Go Kai 14.11.2026, umgesetzt, wartet auf Sichtprüfung)
+- Eigene Seite `haus-licht.html` (Quelle `src/haus-licht/`), Puls unverändert. Haus bei Nacht aus Haarlinien, Schnitt wie ein Puppenhaus, fünf Räume unter einem Bernstein-Dach; Raum wählen = Licht an (Bernstein, kein Weiß), PC: Raum wird breiter; Rundgang 5 s je Raum; Handy: unter dem Dach waagrecht wischen (scroll-snap), senkrecht scrollt die Seite. Kein WebGL. Fotos je Raum vorbereitet (`data-photo`).
+- Offen (Kai): Richtung ok? Ersetzt in Puls Röntgenblick-Haus + Klick-Rundgang? „Rundgang aus Augenhöhe“ behalten? Fotos.
 
 ## Gesamtprüfung 13.11.2026 – umgesetzt (Go Kai: „alles, was hier erledigt werden kann“, Ergebnis vor Kontingent)
 Befunde und Messwerte: `UEBERGABE.md` ▶ „Gesamtprüfung Puls 13.11.2026“. Alles in `src/test-4` + `build.mjs` + `tools/`; andere Seiten (Fusion, Hausbesuch, Zuhause …) und die Wurzel unberührt.
