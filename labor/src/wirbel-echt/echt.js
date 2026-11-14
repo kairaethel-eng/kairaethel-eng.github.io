@@ -9,6 +9,8 @@ import { decode, modelGen } from './anatomie.js';
 import { echtStippleGen, echtPointsGen } from './stipple.js';
 
 const DATA = 'assets/wirbelsaeule-echt.bin';
+// Abstand zwischen Wirbeln und Bandscheiben (Kai 14.11., Stil „Stich“): Standard 0,3 cm je Fuge; ?abstand=0 = ohne, ?abstand=0.2 / 0.4 = weniger / mehr
+const SPREAD = (() => { const m = /[?&]abstand=([0-9.]+)/.exec(location.search); const v = m ? parseFloat(m[1]) : 0.3; return isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.3; })();
 const q = new URLSearchParams(location.search).get('wirbel');
 const ECHT = { mode: q === 'bisher' ? 'bisher' : 'echt', failed: false, M: null, N: 0, setMorph: null, morph: {}, ctx: null, cache: {} };
 export { ECHT };
@@ -24,7 +26,7 @@ function getModel() {
   if (!modelP) {
     modelP = fetch(DATA)
       .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
-      .then((buf) => runSliced(modelGen(decode(new Uint8Array(buf)))))
+      .then((buf) => runSliced(modelGen(decode(new Uint8Array(buf)), { spread: SPREAD })))
       .then((M) => { ECHT.M = M; return M; });
   }
   return modelP;

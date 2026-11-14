@@ -135,8 +135,11 @@ const CHAIN = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', ...Array.from({ length:
 const regOf = (id) => (id[0] === 'C' ? 'c' : id[0] === 'T' ? 't' : id[0] === 'L' ? 'l' : 's');
 
 // ---------- Modell ---------- (Generator: Zeitscheiben wie shared/slice.js; model() rechnet am Stück)
-export const model = (data) => runSync(modelGen(data));
-export function* modelGen(data) {
+export const model = (data, opt) => runSync(modelGen(data, opt));
+// opt.spread (cm): Abstand, um den Wirbel und Bandscheiben entlang der Säule auseinanderrücken (Kai 14.11.: „ein wenig Abstand,
+// aber noch eine zusammenhängende Wirbelsäule“); das Kreuzbein bleibt stehen, alles darüber rückt je Fuge um spread entlang der
+// örtlichen Richtung zum Nachbarn nach oben → Krümmung bleibt, Teile werden nicht verformt
+export function* modelGen(data, opt = {}) {
   const P = Object.fromEntries(data.parts.map((p) => [p.id, p]));
   // Ursprung: Mitte der Bandscheiben (x, z), Unterkante der Säule (y)
   let y0 = 1e9, y1 = -1e9;
@@ -144,6 +147,16 @@ export function* modelGen(data) {
   const pre = data.parts.filter((p) => p.kind === 'disc').map((p) => surfaceStats(p.pos, p.idx).c);
   const xm = pre.reduce((s, c) => s + c.x, 0) / pre.length, zm = pre.reduce((s, c) => s + c.z, 0) / pre.length;
   data.parts.forEach((p) => { for (let i = 0; i < p.pos.length; i += 3) { p.pos[i] -= xm; p.pos[i + 1] -= y0; p.pos[i + 2] -= zm; } });
+  const spread = opt.spread || 0;
+  if (spread > 0) {
+    const byId = Object.fromEntries(data.parts.map((p) => [p.id, p])), order = [];
+    CHAIN.forEach((id) => { if (byId[id]) order.push(byId[id]); if (byId['d' + id]) order.push(byId['d' + id]); });
+    const cen = order.map((p) => surfaceStats(p.pos, p.idx).c), off = order.map(() => V());
+    for (let i = order.length - 2; i >= 0; i--) off[i].copy(off[i + 1]).addScaledVector(V().subVectors(cen[i], cen[i + 1]).normalize(), spread);
+    order.forEach((p, i) => { const o = off[i]; for (let k = 0; k < p.pos.length; k += 3) { p.pos[k] += o.x; p.pos[k + 1] += o.y; p.pos[k + 2] += o.z; } });
+    y1 = -1e9; data.parts.forEach((p) => { for (let i = 1; i < p.pos.length; i += 3) y1 = Math.max(y1, p.pos[i]); });
+    y1 += y0; // y1 wird unten wieder um y0 verringert (Ursprung liegt schon bei 0)
+  }
   const Ltot = y1 - y0;
 
   const disc = {}; // Bandscheibe unter dem Wirbel id

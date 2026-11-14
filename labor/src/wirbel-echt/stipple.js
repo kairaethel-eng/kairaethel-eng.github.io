@@ -16,9 +16,6 @@ import { edgeOf } from './anatomie.js';
 // Entwurf W (Go Kai 1–4, Punkt 3): Bauteile sichtbar trennen – jeder Wirbel und jede Bandscheibe wird entlang der eigenen
 // Achse leicht gestaucht, so entsteht zwischen Wirbelkörper und Bandscheibe eine dunkle Fuge von je ~GAP cm (wie bei „bisher“)
 const GAP = 0.08;
-function partCenter(M, part) {
-  return part.kind === 'disc' ? M.disc[part.id.slice(1)].c : M.levels.find((l) => l.id === part.id).c;
-}
 function gap(M, part, P) {
   let c, n, s = 1, shift = 0;
   if (part.kind === 'disc') { const D = M.disc[part.id.slice(1)]; c = D.c; n = D.F.n; s = Math.max(0.6, 1 - GAP / (D.t / 2)); }
@@ -49,10 +46,6 @@ function* partsGen(M) {
     for (let i = 0; i < ev.length; i++) ev[i] = edgeOf(M, part, p.fromArray(part.pos, i * 3), q);
     for (let i = 0; i < n; i++) { col[i * 3] = zone; col[i * 3 + 1] = disc ? 1 : 0; col[i * 3 + 2] = ev[part.idx[i]]; }
     ng.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    // Stil „Karte“ (Go Kai 14.11.): Höhenlinien = Abstand zur Mitte des eigenen Wirbels bzw. der eigenen Bandscheibe
-    const pc = partCenter(M, part), fld = new Float32Array(n);
-    for (let i = 0; i < n; i++) fld[i] = Math.hypot(P[i * 3] - pc.x, P[i * 3 + 1] - pc.y, P[i * 3 + 2] - pc.z);
-    ng.userData.fld = fld;
     out.push(ng);
     yield;
   }
@@ -91,7 +84,6 @@ export function* echtStippleGen(M) {
   const P = new Float32Array(total * 3), Nn = new Float32Array(total * 3), Cc = new Float32Array(total * 3);
   let o = 0;
   parts.forEach((g) => { P.set(g.attributes.position.array, o); Nn.set(g.attributes.normal.array, o); Cc.set(g.attributes.color.array, o); o += g.attributes.position.array.length; });
-  const FV = new Float32Array(total); { let q = 0; parts.forEach((g) => { for (const v of g.userData.fld) FV[q++] = v * SC; }); } // Formkoordinaten
   const merged = new THREE.BufferGeometry();
   merged.setAttribute('position', new THREE.BufferAttribute(P, 3));
   merged.setAttribute('normal', new THREE.BufferAttribute(Nn, 3));
@@ -225,25 +217,24 @@ export function* echtStippleGen(M) {
     for (let v = 0; v < nv; v++) { if (!(v & 16383)) yield; av[v] = axialFast((P[v * 3 + 1] - CY) * SC, P[v * 3 + 2] * SC); }
     AV = av;
   }
-  // mode: 'linien' = Ebenen-Schnitt (Go 1–4) · 'karte' = Höhenlinien des Abstandsfelds FV · 'stich' = gefüllt mit Tonwert (keine Linien)
+  // mode: 'linien' = Ebenen-Schnitt (Go 1–4) · 'stich' = gefüllt mit Tonwert (keine Linien); Stil „Karte“ am 14.11. verworfen (Kai)
   function* makeContoursGen(n, step = 0.032, band = 0.12, diff = true, region = null, mode = 'linien') {
-    const field = mode === 'karte' ? FV : null;
-    if (mode === 'karte') step *= 1.15; else if (mode !== 'stich') yield* axialVerts();
-    const AF = field || AV;
+    if (mode !== 'stich') yield* axialVerts();
+    const AF = AV;
     const nF = P.length / 9;
     let cap = nF * 2, SI = new Int32Array(cap * 4), ST = new Float32Array(cap * 2), SW = new Float32Array(cap), ns = 0, W = 0;
     const tick = every(4096), e = [0, 1, 1, 2, 2, 0], hit = [0, 0, 0, 0], ht = [0, 0];
     const rw = (y) => { if (!region) return 1; const { y0, y1, pad } = region; let w = y < y0 ? 1 - (y0 - y) / pad : y > y1 ? 1 - (y - y1) / pad : 1; return w <= 0 ? 0 : w * w * (3 - 2 * w); };
     for (let f = 0; f < nF && mode !== 'stich'; f++) {
       if (tick()) yield;
-      const v0 = f * 3, a0 = AF[v0], a1 = AF[v0 + 1], a2 = AF[v0 + 2];
+        const v0 = f * 3, a0 = AF[v0], a1 = AF[v0 + 1], a2 = AF[v0 + 2];
       const lo = Math.min(a0, a1, a2), hi = Math.max(a0, a1, a2);
       const k0 = Math.ceil(lo / step - 0.5), k1 = Math.floor(hi / step - 0.5);
       if (k1 < k0) continue;
       // fast parallel zu den Ebenen? (A ändert sich über das Dreieck kaum im Verhältnis zu seiner Größe)
       const b = v0 * 3;
       const ex = Math.max(Math.hypot(P[b + 3] - P[b], P[b + 4] - P[b + 1], P[b + 5] - P[b + 2]), Math.hypot(P[b + 6] - P[b + 3], P[b + 7] - P[b + 4], P[b + 8] - P[b + 5]), Math.hypot(P[b] - P[b + 6], P[b + 1] - P[b + 7], P[b + 2] - P[b + 8])) * SC;
-      if (!field && hi - lo < 0.28 * ex) continue;
+      if (hi - lo < 0.28 * ex) continue;
       if (Cc[b + 1] > 0.5) continue; // Bandscheiben: gefülltes Band (unten), keine Linien
       const av = [a0, a1, a2];
       const yMid = ((P[b + 1] + P[b + 4] + P[b + 7]) / 3 - CY) * SC, eMid = (Cc[b + 2] + Cc[b + 5] + Cc[b + 8]) / 3;
@@ -363,11 +354,11 @@ export function* echtStippleGen(M) {
     }
     return { pos, nor, zone, kind, edge, count: cnt, spacing: step };
   }
-  // Stil der echten Säule (Go Kai 14.11. „A + B umschaltbar“): ?stil=stich (Standard) · ?stil=karte · ?stil=linien (Stand „1–4“);
+  // Stil der echten Säule: ?stil=stich (Standard, Kai 14.11.) · ?stil=linien (Stand „1–4“) – „Karte“ verworfen (Kai 14.11.);
   // ?linien=alt = Zufalls-Abtastung wie bei „bisher“
   const Q = typeof location !== 'undefined' ? location.search : '';
   const LINES_OLD = /[?&]linien=alt\b/.test(Q);
-  const STIL = (/[?&]stil=(stich|karte|linien)\b/.exec(Q) || [, 'stich'])[1];
+  const STIL = (/[?&]stil=(stich|linien)\b/.exec(Q) || [, 'stich'])[1];
   // Licht und Blick für den Tonwert im Raum der Säule: Shader-Licht LDIR, Drehung der Säule am PC −π/2 − 0,5, am Handy −π/2 + 0,5
   const DESK = typeof matchMedia === 'function' && matchMedia('(min-width: 921px)').matches;
   const ROT = -Math.PI / 2 + (DESK ? -0.5 : 0.5), cR = Math.cos(-ROT), sR = Math.sin(-ROT), Ll = Math.hypot(0.48, 0.72, 0.5);
