@@ -8,6 +8,7 @@ import { initAGen as initManuGen, MODES as MANU_MODES } from '../manu/ideaA.js';
 import { initServicesGen } from './services.js';
 import { runSliced } from '../shared/slice.js';
 import { initHouse } from '../haus-licht/house.js';
+import { initStosswelle } from '../stosswelle/welle.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -1778,6 +1779,9 @@ if (manuSec) {
   glWait($('#glManu'));
   whenNear(manuSec, () => runSliced(initManuGen($('#glManu'), manuUi)).then((m) => { manu = m; if (!m) document.documentElement.classList.add('no-gl-manu'); glReady($('#glManu')); }));
 }
+// ---------- Stoßwellen-Therapie (Kapitel 04, nach der Manuthera): Linien-Bühne ohne WebGL, Baustein ../stosswelle ----------
+const swSec = $('#stosswelle');
+const sw = initStosswelle({ root: swSec, isPaused: () => paused, reduced });
 // ---------- Leistungen: Partikel-Bühne mit Motiv je Leistung (Haus tritt hier zurück) ----------
 const servList = $('.roof-list'), servName = $('#servName');
 // Aufbau erst, wenn „Alle Leistungen“ in Reichweite kommt (A1)
@@ -1812,6 +1816,14 @@ let manuK = 0;
 function manuVisible() {
   if (!manuSec) return 0;
   const r = manuSec.getBoundingClientRect(), vh = VH;
+  return smooth(0.15, 0.55, clamp((Math.min(r.bottom, vh) - Math.max(r.top, 0)) / vh));
+}
+
+// dasselbe für den Stoßwellen-Block (liegt zwischen Manuthera und Leistungen)
+let swK = 0;
+function swVisible() {
+  if (!swSec) return 0;
+  const r = swSec.getBoundingClientRect(), vh = VH;
   return smooth(0.15, 0.55, clamp((Math.min(r.bottom, vh) - Math.max(r.top, 0)) / vh));
 }
 
@@ -1864,6 +1876,7 @@ function tick() {
   morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uMorph.value = morphNow;
   manuK = manuVisible();
+  swK = swVisible();
   updateAxis(dt);
   roofPlace();
   uniforms.uRoofA.value = 1 - lh.roofK();
@@ -1880,12 +1893,12 @@ function tick() {
     if (morphNow > 0.3 && morphNow < 1.6) dim = Math.max(dim, 0.55); // Bewegungslinien leise hinter Text
   }
   if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
-  dim = Math.max(dim, manuK, isDesktop() ? listK : listK * (1 - logoIn)); // Manuthera-Bühne und Leistungen: Partikel-Hintergrund blendet ganz aus
+  dim = Math.max(dim, manuK, swK, isDesktop() ? listK : listK * (1 - logoIn)); // Manuthera-Bühne, Stoßwelle und Leistungen: Partikel-Hintergrund blendet ganz aus
   if (licht && lichtK > 0) dim = Math.max(dim, lichtK); // K1: Partikel weichen dem Sonnenstaub
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
   if (!isDesktop()) {
     // Handy: Partikel ohne Verzögerung ausblenden, sobald die Manuthera-Bühne kommt – sonst laufen beim schnellen Wischen Bilder ineinander
-    const out = manuK;
+    const out = Math.max(manuK, swK);
     if (uniforms.uAlpha.value > 1 - out) uniforms.uAlpha.value = 1 - out;
   }
   uniforms.uSize.value = isDesktop() ? 1 : 1.1;
@@ -1942,6 +1955,7 @@ function tick() {
   const anyVis = points.visible || spineGroup.visible || sil.visible || !!(dust && dust.visible);
   if (renderer && !document.hidden && (anyVis || glDirty)) { renderer.render(scene, camera); glDirty = anyVis; }
   if (manu && manu.st.visible && !document.hidden) { manu.update(0, dt); manu.st.renderer.render(manu.st.scene, manu.st.camera); }
+  if (sw && !document.hidden) sw.update();
   if (!document.hidden) updateServices(dt);
   updateHints(dt);
 }
@@ -1968,7 +1982,7 @@ const inView = (el) => { if (!el) return false; const r = el.getBoundingClientRe
   beatBtns.forEach((b) => b.addEventListener('animationend', () => b.classList.remove('beat')));
 }
 {
-  const groups = [$('.segnav'), $('#manuModes'), $('#index')].filter(Boolean);
+  const groups = [$('.segnav'), $('#manuModes'), $('#swModes'), $('#index')].filter(Boolean);
   groups.forEach((g) => $$('button', g).forEach((b, i) => { b.classList.add('sheen'); b.style.setProperty('--si', i); }));
   if (!reduced) {
     const io = new IntersectionObserver((es) => es.forEach((e) => {

@@ -288,6 +288,115 @@
         </div>
       </div>
     </div>
+    <!-- Stoßwellen-Therapie (Go Kai 14.11.2026): Linien-Bühne ohne WebGL, Baustein ../stosswelle (block.css, welle.js) -->
+    <div class="sw" id="stosswelle" data-level="0">
+      <div class="wrap sw-inner">
+        <div class="sw-stage">
+          <div class="sw-fig">
+            <svg class="sw-svg" viewBox="0 0 600 500" role="img" aria-labelledby="swDesc">
+              <desc id="swDesc">Schematische Zeichnung: Ein Stoßwellengerät ist über ein Kabel mit einem Handstück verbunden. Das Handstück sitzt auf der Haut. Von der Auflagestelle breiten sich Druckwellen kreisförmig durch Haut und Unterhaut bis zum Sehnenansatz am Knochen aus und werden mit der Tiefe schwächer.</desc>
+              <defs>
+                <clipPath id="swBelow"><path d="M0 272C150 260 450 260 600 272V500H0Z"/></clipPath>
+                <radialGradient id="swGlow"><stop offset="0" stop-color="#E09A35" stop-opacity=".3"/><stop offset=".55" stop-color="#E09A35" stop-opacity=".09"/><stop offset="1" stop-color="#E09A35" stop-opacity="0"/></radialGradient>
+              </defs>
+              <!-- Gewebe -->
+              <g clip-path="url(#swBelow)"><circle class="sw-glow" cx="400" cy="264" r="210" fill="url(#swGlow)"/></g>
+              <path class="sw-fill sw-fill-t" d="M0 326C150 320 300 326 384 352C412 361 434 376 448 394L398 405C384 395 362 387 338 380C262 358 140 352 0 356Z"/>
+              <path class="sw-fill sw-fill-b" d="M318 500C326 452 358 416 404 404C452 392 536 402 600 430V500Z"/>
+              <path class="sw-l sw-skin sw-draw" d="M0 272C150 260 450 260 600 272"/>
+              <path class="sw-l sw-soft sw-draw" d="M0 279C150 267 450 267 600 279"/>
+              <path class="sw-l sw-dash sw-fade" d="M0 306C160 297 440 298 600 308"/>
+              <path class="sw-l sw-tendon sw-draw" d="M0 326C150 320 300 326 384 352C412 361 434 376 448 394"/>
+              <path class="sw-l sw-soft sw-draw" d="M0 341C146 336 282 342 362 366C390 375 412 386 426 400"/>
+              <path class="sw-l sw-tendon sw-draw" d="M0 356C140 352 262 358 338 380C362 387 384 395 398 405"/>
+              <path class="sw-l sw-bone sw-draw" d="M318 500C326 452 358 416 404 404C452 392 536 402 600 430"/>
+              <path class="sw-l sw-soft sw-draw" d="M352 470C366 440 392 426 424 422"/>
+              <path class="sw-l sw-soft sw-draw" d="M450 420C500 414 556 424 600 446"/>
+              <path class="sw-l sw-soft sw-draw" d="M392 500C408 470 446 452 500 452C540 452 574 462 600 474"/>
+              <!-- Druckwellen (welle.js bewegt sie; ohne JavaScript steht dieses Bild) -->
+              <g class="sw-waves" clip-path="url(#swBelow)">
+                <circle cx="400" cy="264" r="34" style="opacity:.85"/>
+                <circle cx="400" cy="264" r="78" style="opacity:.55"/>
+                <circle cx="400" cy="264" r="122" style="opacity:.32"/>
+                <circle cx="400" cy="264" r="166" style="opacity:.14"/>
+                <circle cx="400" cy="264" r="0" style="opacity:0"/>
+                <circle cx="400" cy="264" r="0" style="opacity:0"/>
+                <circle cx="400" cy="264" r="0" style="opacity:0"/>
+                <circle cx="400" cy="264" r="0" style="opacity:0"/>
+              </g>
+              <circle class="sw-target" cx="426" cy="399" r="6"/>
+              <ellipse class="sw-flash" cx="400" cy="267" rx="15" ry="3.5"/>
+              <!-- Gerät -->
+              <g class="sw-dev" transform="translate(34 50) rotate(-4)">
+                <path class="sw-l sw-draw" d="M14 0H200a14 14 0 0 1 14 14V96a14 14 0 0 1-14 14H14a14 14 0 0 1-14-14V14A14 14 0 0 1 14 0z"/>
+                <path class="sw-l sw-soft sw-draw" d="M50 8h114a6 6 0 0 1 6 6v82a6 6 0 0 1-6 6H50a6 6 0 0 1-6-6V14a6 6 0 0 1 6-6z"/>
+                <path class="sw-l sw-draw" d="M58 18h98v44H58z"/>
+                <rect class="sw-bar" x="66" y="42" width="9" height="14"/>
+                <rect class="sw-bar" x="80" y="34" width="9" height="22"/>
+                <rect class="sw-bar" x="94" y="26" width="9" height="30"/>
+                <path class="sw-l sw-beat" d="M112 44h8l4-13 5 23 4-10h14"/>
+                <circle class="sw-l sw-draw" cx="78" cy="82" r="9"/>
+                <circle class="sw-l sw-draw" cx="136" cy="82" r="9"/>
+                <path class="sw-l sw-tick" id="swTick" d="M78 82V75"/>
+                <path class="sw-l sw-soft" d="M136 82l5-5"/>
+                <path class="sw-l sw-soft sw-draw" d="M12 117H202"/>
+              </g>
+              <path class="sw-l sw-cable sw-draw" d="M246 126C292 170 340 160 354 104C366 54 442 32 453 70C456 81 446 89 437 96"/>
+              <!-- Handstück (Spitze = Auflagestelle) -->
+              <g transform="translate(400 264) rotate(12)"><g class="sw-hp" id="swHp">
+                <path class="sw-l sw-draw" d="M-22-32V-138C-22-146-17-152-10-154H10C17-152 22-146 22-138V-32z"/>
+                <path class="sw-l sw-draw" d="M-10-154L-6-172H6L10-154"/>
+                <path class="sw-l sw-soft sw-draw" d="M-22-88H22M-22-94H22"/>
+                <path class="sw-l sw-soft sw-draw" d="M-12-44V-66M-6-44V-66M0-44V-66M6-44V-66M12-44V-66"/>
+                <path class="sw-l sw-draw" d="M-18-32H18V-24H-18z"/>
+                <path class="sw-l sw-cap sw-draw" d="M-15-24V-9C-15-2-8 0 0 0C8 0 15-2 15-9V-24z"/>
+              </g></g>
+            </svg>
+            <span class="sw-lab" style="right:0;top:51.6%" aria-hidden="true">Haut</span>
+            <span class="sw-lab" style="right:0;top:58.6%" aria-hidden="true">Unterhaut</span>
+            <span class="sw-lab" style="left:0;top:73.5%" aria-hidden="true">Sehne</span>
+            <span class="sw-lab" style="right:0;top:91.5%" aria-hidden="true">Knochen</span>
+            <span class="sw-lab sw-lab-hi" aria-hidden="true">Sehnenansatz</span>
+            <p class="sw-hint">Schematisch · Impulse verlangsamt dargestellt</p>
+          </div>
+        </div>
+        <div class="sw-text">
+          <p class="kicker hi"><b class="dot" aria-hidden="true"></b> Neu in der Praxis · Behandlung 1</p>
+          <h2 id="sw-title" class="sw-h">Impuls für <em>Impuls.</em></h2>
+          <p class="lead">Die radiale Stoßwellen-Therapie arbeitet mit kurzen mechanischen Druckimpulsen. Das Handstück gibt sie über die Haut an das Gewebe darunter weiter, an Sehnenansätze und verspannte Muskulatur. Stärke und Takt stelle ich auf Sie ein und passe sie während der Behandlung laufend an.</p>
+          <div class="manu-modes sw-modes" id="swModes" role="group" aria-label="Stärke der Impulse zeigen">
+            <button type="button" aria-pressed="false"><span>Sanft</span><i></i></button>
+            <button type="button" aria-pressed="false"><span>Mittel</span><i></i></button>
+            <button type="button" aria-pressed="false"><span>Kräftig</span><i></i></button>
+          </div>
+          <p class="manu-read sw-read" id="swRead" aria-live="polite"></p>
+        </div>
+      </div>
+      <div class="wrap sw-more">
+        <ol class="sw-steps">
+          <li><i aria-hidden="true">01</i><h3>Erst der Befund.</h3><p>Ich untersuche, woher Ihre Beschwerden kommen, und sage Ihnen ehrlich, ob die Stoßwelle dazu passt.</p></li>
+          <li><i aria-hidden="true">02</i><h3>Dann die Impulse.</h3><p>Etwas Kontaktgel, dann führe ich das Handstück über die betroffene Stelle. Das dauert wenige Minuten.</p></li>
+          <li><i aria-hidden="true">03</i><h3>Immer mit Bewegung.</h3><p>Die Stoßwelle steht nie allein. Sie ist ein Baustein Ihrer Therapie, zusammen mit Handgriffen und Übungen.</p></li>
+        </ol>
+        <div class="sw-info">
+          <div class="sw-where">
+            <h3 class="sw-sub">Wo sie häufig eingesetzt wird</h3>
+            <ul class="chips"><li>Ferse und Fußsohle</li><li>Achillessehne</li><li>Ellenbogen</li><li>Schulter</li><li>Kniescheibensehne</li><li>Verspannte Muskulatur</li></ul>
+            <p class="sw-fit">Ob sie in Ihrem Fall sinnvoll ist, zeigt der Befund.</p>
+            <div class="actions"><a class="btn" href="#tuer" data-termin aria-haspopup="dialog">Termin buchen</a></div>
+            <p class="sw-dev-line">Gerät: Zimmer enPuls 2.0 · radiale Stoßwelle · elektromagnetisch, ohne Kompressor</p>
+          </div>
+          <div class="sw-faq">
+            <h3 class="sw-sub">Häufige Fragen</h3>
+            <details class="sw-q" name="sw-faq"><summary>Wie fühlt sich das an?</summary><p>Wie ein schnelles Klopfen. An empfindlichen Stellen ist es deutlich zu spüren, lässt sich aber fein dosieren. Sie sagen, was geht, ich stelle nach.</p></details>
+            <details class="sw-q" name="sw-faq"><summary>Wie viele Termine brauche ich?</summary><p>Üblich sind mehrere Sitzungen im Abstand von etwa einer Woche. Wie viele es bei Ihnen sind, besprechen wir nach dem Befund und schauen von Termin zu Termin, wie Ihr Körper reagiert.</p></details>
+            <details class="sw-q" name="sw-faq"><summary>Was kostet die Behandlung?</summary><p>Die Stoßwelle ist bei mir eine Selbstzahlerleistung. Gesetzliche Krankenkassen übernehmen sie in der Physiotherapie in der Regel nicht, private Versicherungen je nach Tarif. Den Preis nenne ich Ihnen, bevor wir beginnen.</p></details>
+            <details class="sw-q" name="sw-faq"><summary>Für wen ist sie nicht geeignet?</summary><p>Zum Beispiel in der Schwangerschaft, bei Gerinnungsstörungen oder blutverdünnenden Medikamenten sowie bei Tumoren oder Entzündungen im Behandlungsgebiet. Das kläre ich vor der ersten Behandlung mit Ihnen.</p></details>
+          </div>
+        </div>
+        <p class="sw-note">Vereinfachte Orientierung, ersetzt keine ärztliche Diagnose. Bitte lassen Sie Beschwerden immer zuerst ärztlich abklären.</p>
+      </div>
+    </div>
     <div class="wrap roof-list">
       <p class="kicker" id="allTitle"><i>04</i> Alle Leistungen</p>
       <ol class="index" id="index">
@@ -297,7 +406,7 @@
         <li><button type="button" aria-expanded="false"><span class="ix-name">Schmerztherapie</span><span class="ix-tag">Individuell</span></button><div class="ix-body"><p>Schmerz hat immer eine Geschichte. Ich suche die Ursache und kombiniere manuelle Techniken, Übungen und Aufklärung zu einem Plan, der zu Ihrem Alltag passt.</p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">CMD-Therapie</span><span class="ix-tag">Spezialisierung</span></button><div class="ix-body"><p>Bei Kieferschmerz, Knirschen, Knacken oder eingeschränkter Mundöffnung behandle ich Kiefergelenk und Kaumuskulatur, oft abgestimmt mit Ihrem Zahnarzt. Die HWS wird immer mitbetrachtet.</p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">Atlas-Axis-Therapie</span><span class="ix-tag">Sanft</span></button><div class="ix-body"><p>Die beiden obersten Halswirbel steuern feinste Kopfbewegungen. Mit sehr sanften, präzisen Impulsen löse ich Spannungen in diesem sensiblen Bereich.</p></div></li>
-        <li><button type="button" aria-expanded="false"><span class="ix-name">Stoßwellen-Therapie</span><span class="ix-tag">Modern</span></button><div class="ix-body"><p>Radiale Druckwellen regen die Durchblutung direkt am Sehnenansatz an. Klassische Einsatzgebiete: Ferse, Achillessehne, Ellenbogen, Schulter.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Stoßwellen-Therapie</span><span class="ix-tag ix-hi"><b class="dot" aria-hidden="true"></b>Neu</span></button><div class="ix-body"><p>Kurze mechanische Druckimpulse, über ein Handstück auf Sehnenansätze und verspannte Muskulatur gegeben. Häufig eingesetzt an Ferse, Achillessehne, Ellenbogen und Schulter. Selbstzahlerleistung.<a class="ix-link" href="#stosswelle">Stoßwelle ansehen <span aria-hidden="true">↑</span></a></p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">Traktion im Schlingentisch</span><span class="ix-tag">Entlastung</span></button><div class="ix-body"><p>Im Schlingentisch wird Ihr Körper teilweise schwerelos. Unter sanftem Zug entspannen Bandscheiben, Gelenke und Muskulatur.</p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">Osteopathische Ansätze</span><span class="ix-tag">Ganzheitlich</span></button><div class="ix-body"><p>Faszien, Gelenke und innere Strukturen beeinflussen sich gegenseitig. Mit sanften Techniken folge ich den Spannungsketten bis zur Ursache.</p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">Thermische Behandlung</span><span class="ix-tag">Fango · Kälte</span></button><div class="ix-body"><p>Tiefenwärme aus der Fangopackung lockert die Muskulatur und bereitet sie auf die Behandlung vor. Kälte dämpft akute Reizungen und Schwellungen. Je nach Beschwerde das passende Mittel.</p></div></li>

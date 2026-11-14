@@ -296,6 +296,7 @@ canvas.gl-wait{opacity:0}
 .paused .room-more{animation:none}
 @media (prefers-reduced-motion: reduce){.room-more{animation:none}}
 /* Leistungen: Manuthera-Eintrag */
+/*@include ../stosswelle/block.css*/
 .ix-hi{display:inline-flex;align-items:center;gap:.5rem;color:var(--amber)!important}
 .ix-link{display:block;margin-top:.875rem;width:max-content;max-width:100%;font:700 .75rem/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;text-decoration:none;color:var(--amber);border-bottom:1px solid rgba(224,154,53,.5);padding:.375rem 0}
 .ix-link:hover{color:var(--txt)}
