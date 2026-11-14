@@ -241,3 +241,4 @@ Arbeitszweig → `labor/` auf `main`. Wurzel unberührt.
 **Auftrag W – Nachtrag 4 (Kai 14.11.):** Stil „Karte“ verworfen (entfernt), „Stich“ bleibt Standard. Neu: Wirbel und Bandscheiben rücken je Fuge um 0,3 cm auseinander (Säule bleibt zusammenhängend); Vergleich per Adresse `?abstand=0 | 0.2 | 0.4`. Offen: Kais Urteil am iPhone.
 
 **Auftrag W – Nachtrag 5 (Go Kai 14.11. „Mischung aus A und B“):** Abstand 0,4 cm (Kais Wahl) gilt an der HWS, größere Wirbel bekommen anteilig mehr (gedämpft, LWS ~0,67 cm), Bandscheiben quer 8 % schmaler – Fugen oben und unten gleich deutlich. Offen: Kais Urteil am iPhone.
+**Kai 14.11. (iPhone): „Super“** – Stand Nachtrag 5 bestätigt. Nächster Schritt nur mit eigenem Go: Tausch in Puls, Namensnennung in Fußzeile + Impressum, Standbild neu.
