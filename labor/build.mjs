@@ -135,14 +135,21 @@ function applyPatches(text, list, what) {
   }
   return text;
 }
-const patchPlugin = (P, dir) => ({
-  name: 'patch',
-  setup(b) {
-    b.onLoad({ filter: /main\.js$/ }, (args) => (args.path === join(dir, 'main.js')
-      ? { contents: applyPatches(readFileSync(args.path, 'utf8'), P.js, 'main.js'), loader: 'js', resolveDir: dir }
-      : undefined));
-  },
-});
+// P.js → <dir>/main.js, P.src = { 'datei.js': [...] } → weitere Dateien in <dir> (z. B. shapes.js)
+const patchPlugin = (P, dir) => {
+  const files = { 'main.js': P.js, ...(P.src || {}) };
+  return {
+    name: 'patch',
+    setup(b) {
+      b.onLoad({ filter: /\.js$/ }, (args) => {
+        for (const [f, list] of Object.entries(files)) {
+          if (args.path === join(dir, f)) return { contents: applyPatches(readFileSync(args.path, 'utf8'), list, f), loader: 'js', resolveDir: dir };
+        }
+        return undefined;
+      });
+    },
+  };
+};
 
 const only = process.argv[2];
 for (const [name, cfg] of Object.entries(PAGES)) {

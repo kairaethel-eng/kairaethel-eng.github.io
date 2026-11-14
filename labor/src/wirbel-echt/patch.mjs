@@ -27,12 +27,50 @@ export const js = [
   warmShaders();
 }));`,
   `// Entwurf W: Wirbelsäule austauschbar („bisher“ = gerechnet, „echt“ = BodyParts3D), siehe src/wirbel-echt/echt.js
+// Entwurf W (Go Kai 14.11., B): Handy-Nahansicht – der aktive Abschnitt bekommt eine eigene, dichte Punktwolke (gleiche Schichten,
+// ~20 000 Punkte im Höhenband der Haltestelle, weicher Rand), je Form und Haltestelle einmal gerechnet und aufbewahrt;
+// Ein-/Ausblenden über drawRange (Punkte liegen zufällig → die Dichte wächst gleichmäßig)
+const DENSE = { obj: null, idx: -1, k: 0, busy: false, N: 20000 };
+function denseRegion(i) {
+  let y0 = 1e9, y1 = -1e9, hm = 0;
+  STOPS[i].ids.forEach((id) => {
+    const lv = det.levels.find((l) => l.id === id), y = (lv.center.y - CY) * SC, h = (lv.h / 2 + lv.disc) * SC;
+    y0 = Math.min(y0, y - h); y1 = Math.max(y1, y + h); hm = Math.max(hm, lv.h * SC);
+  });
+  return { y0, y1, pad: Math.min(0.5, Math.max(0.12, hm * 0.9)) };
+}
+function denseTick(dt, want) {
+  const D = DENSE;
+  if (!det || !bones) return;
+  if (D.obj && want !== D.idx) { D.k = Math.max(0, D.k - dt * 5); if (D.k === 0) { spineGroup.remove(D.obj); D.obj = null; D.idx = -1; } }
+  else if (D.obj) D.k = reduced ? 1 : Math.min(1, D.k + dt * 1.6);
+  if (D.obj) D.obj.geometry.setDrawRange(0, Math.round(D.obj.userData.n * D.k * D.k * (3 - 2 * D.k)));
+  if (want < 0 || D.obj || D.busy) return;
+  const cache = det.dense || (det.dense = {});
+  if (cache[want]) { D.obj = cache[want]; D.idx = want; D.k = 0; D.obj.geometry.setDrawRange(0, 0); spineGroup.add(D.obj); return; }
+  D.busy = true;
+  const d0 = det;
+  runSliced(d0.makeSlicesGen(D.N, 0.032, 0.12, true, denseRegion(want))).then((sl) => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(sl.pos, 3));
+    g.setAttribute('normal', new THREE.BufferAttribute(sl.nor, 3));
+    g.setAttribute('aZone', new THREE.BufferAttribute(sl.zone, 1));
+    g.setAttribute('aKind', new THREE.BufferAttribute(sl.kind, 1));
+    g.setAttribute('aEdge', new THREE.BufferAttribute(sl.edge, 1));
+    g.setDrawRange(0, 0);
+    const m = boneMat.clone();
+    m.uniforms = { ...sU, uStip: { value: 1 }, uMaxSize: { value: 2.6 } };
+    const pts = new THREE.Points(g, m);
+    pts.frustumCulled = false; pts.userData.n = sl.count;
+    cache[want] = pts;
+  }).finally(() => { D.busy = false; });
+}
 function spineSwap(d, sl) {
   det = d; SC = d.SC; CY = d.CY;
   sU.uDiff.value = 1; // differenziert (Handy 7.11., PC 7.11.)
   // Kameraabstand je Haltestelle ist in Einheiten der gerechneten Säule angegeben → für „echt“ umrechnen
   STOPS.forEach((s) => { if (s.d0 === undefined) s.d0 = s.d; s.d = s.d0 * (d.dScale || 1); });
-  spineGroup.clear();
+  spineGroup.clear(); DENSE.obj = null; DENSE.idx = -1; // dichte Wolke gehört zur alten Form
   if (!d.objs) {
     const core = new THREE.Mesh(d.coreGeo, coreMat);
     core.frustumCulled = false;
@@ -54,7 +92,33 @@ whenNear($('#achse'), () => ECHT.start({
   slices: (d) => d.makeSlicesGen(N_SLICE, isDesktop() ? 0.024 : 0.032, 0.12, true),
 }));
 window.__wv = { det: () => det, peri: () => periCurve, STOPS, camera, uniforms }; // Prüfhilfe (Konsole)`],
+  ["  uDiff: { value: 0 }, uFine: { value: 0 },",
+    "  uDiff: { value: 0 }, uFine: { value: 0 }, uSharp: { value: isDesktop() ? 0 : 1 }, // Entwurf W (A): Handy schärfer"],
+  ["uScanAmt, uDiff, uFine, uDiscMode; uniform vec4 uXf;",
+    "uScanAmt, uDiff, uFine, uDiscMode, uSharp; uniform vec4 uXf;"],
+  ["          col = cBone * (.2 + .8 * lam) * mix(.58, 1.2, sil) + cBlue * rim * .12;",
+    "          col = uSharp > .5 // Entwurf W (A): Umriss hell, Fläche zum Betrachter dunkler – wie eine anatomische Strichzeichnung\n            ? cBone * (.14 + .86 * lam) * mix(.34, 1.45, smoothstep(.1, .7, sil)) + cBlue * rim * .1\n            : cBone * (.2 + .8 * lam) * mix(.58, 1.2, sil) + cBlue * rim * .12;"],
+  ["      gl_PointSize = clamp(uStip / -mv.z * sz, 1., uMaxSize) * (1. + g * .8 + sc * .7);",
+    "      gl_PointSize = clamp(uStip / -mv.z * sz * (uSharp > .5 ? .86 : 1.), 1., uMaxSize) * (1. + g * .8 + sc * .7);"],
+  ["  ghostMat.uniforms = { ...sU, uGhost: { value: 0.42 } };",
+    "  ghostMat.uniforms = { ...sU, uGhost: { value: isDesktop() ? 0.42 : 0.24 } }; // Entwurf W (A): Handy weniger Rückenmark durch den Knochen"],
+  ["    ZM.k = reduced ? (settle ? 1 : 0) : ZM.k + ((settle ? 1 : 0) - ZM.k) * (1 - Math.exp(-dt * (settle ? 2.6 : 7)));\n  }\n",
+    "    ZM.k = reduced ? (settle ? 1 : 0) : ZM.k + ((settle ? 1 : 0) - ZM.k) * (1 - Math.exp(-dt * (settle ? 2.6 : 7)));\n  }\n  denseTick(dt, !pc && settle && ZM.k > 0.5 ? ZM.idx : -1); // Entwurf W (B)\n"],
+  ["(bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);\n  // Band unter der Linie",
+    "(bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);\n  if (DENSE.obj && bones) DENSE.obj.material.uniforms.uStip.value = bones.pts.material.uniforms.uStip.value * 0.8; // Entwurf W (B)\n  // Band unter der Linie"],
 ];
+
+// src/test-4/shapes.js (B: Abtastung in einem Höhenband – dieselbe Änderung steht direkt in stipple.js)
+export const src = {
+  'shapes.js': [
+    ["  function* makeSlicesGen(n, step = 0.042, band = 0.16, diff = false) {",
+      "  // Entwurf W (Go Kai 14.11., B): Abtastung nur in einem Höhenband (Formkoordinaten) mit weichem Rand → Verdichtung der Handy-Nahansicht\n  function* regionDist({ y0, y1, pad }) {\n    const nF = P.length / 9, face = new Uint32Array(nF), cum = new Float64Array(nF);\n    let k = 0, acc = 0;\n    for (let f = 0; f < nF; f++) {\n      if (!(f & 16383)) yield;\n      const a = f * 9, yc = ((P[a + 1] + P[a + 4] + P[a + 7]) / 3 - CY) * SC;\n      let wg = yc < y0 ? 1 - (y0 - yc) / pad : yc > y1 ? 1 - (yc - y1) / pad : 1;\n      if (wg <= 0) continue;\n      wg = wg * wg * (3 - 2 * wg);\n      const ux = P[a + 3] - P[a], uy = P[a + 4] - P[a + 1], uz = P[a + 5] - P[a + 2], vx = P[a + 6] - P[a], vy = P[a + 7] - P[a + 1], vz = P[a + 8] - P[a + 2];\n      acc += Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) * 0.5 * wg;\n      face[k] = f; cum[k++] = acc;\n    }\n    return { face: face.subarray(0, k), cum: cum.subarray(0, k) };\n  }\n  function* makeSlicesGen(n, step = 0.042, band = 0.16, diff = false, region = null) {"],
+    ["    const dist = sampler.distribution, nF = dist.length, tot = dist[nF - 1];",
+      "    const RG = region ? yield* regionDist(region) : null;\n    const dist = RG ? RG.cum : sampler.distribution, nF = dist.length, tot = dist[nF - 1];"],
+    ["      const t = 1 - u - w, a = lo * 9;",
+      "      const t = 1 - u - w, a = (RG ? RG.face[lo] : lo) * 9;"],
+  ],
+};
 
 // src/test-4/page.html
 export const page = [

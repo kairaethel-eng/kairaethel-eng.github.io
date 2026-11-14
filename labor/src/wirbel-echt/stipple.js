@@ -134,10 +134,27 @@ export function* echtStippleGen(M) {
     const a0 = AG[k] + (AG[k + 1] - AG[k]) * wz, a1 = AG[k + GZ] + (AG[k + GZ + 1] - AG[k + GZ]) * wz;
     return a0 + (a1 - a0) * wy;
   };
-  function* makeSlicesGen(n, step = 0.042, band = 0.16, diff = false) {
+  // Entwurf W (Go Kai 14.11., B): Abtastung nur in einem Höhenband (Formkoordinaten) mit weichem Rand → Verdichtung der Handy-Nahansicht
+  function* regionDist({ y0, y1, pad }) {
+    const nF = P.length / 9, face = new Uint32Array(nF), cum = new Float64Array(nF);
+    let k = 0, acc = 0;
+    for (let f = 0; f < nF; f++) {
+      if (!(f & 16383)) yield;
+      const a = f * 9, yc = ((P[a + 1] + P[a + 4] + P[a + 7]) / 3 - CY) * SC;
+      let wg = yc < y0 ? 1 - (y0 - yc) / pad : yc > y1 ? 1 - (yc - y1) / pad : 1;
+      if (wg <= 0) continue;
+      wg = wg * wg * (3 - 2 * wg);
+      const ux = P[a + 3] - P[a], uy = P[a + 4] - P[a + 1], uz = P[a + 5] - P[a + 2], vx = P[a + 6] - P[a], vy = P[a + 7] - P[a + 1], vz = P[a + 8] - P[a + 2];
+      acc += Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) * 0.5 * wg;
+      face[k] = f; cum[k++] = acc;
+    }
+    return { face: face.subarray(0, k), cum: cum.subarray(0, k) };
+  }
+  function* makeSlicesGen(n, step = 0.042, band = 0.16, diff = false, region = null) {
     yield* axialGrid();
     const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), zone = new Float32Array(n), kind = new Float32Array(n), edge = new Float32Array(n);
-    const dist = sampler.distribution, nF = dist.length, tot = dist[nF - 1];
+    const RG = region ? yield* regionDist(region) : null;
+    const dist = RG ? RG.cum : sampler.distribution, nF = dist.length, tot = dist[nF - 1];
     const tick = every(4096);
     let i = 0, tries = 0;
     while (i < n && tries++ < n * 12) {
@@ -147,7 +164,7 @@ export function* echtStippleGen(M) {
       while (lo < hi) { const mid = (lo + hi) >> 1; if (dist[mid] > x) hi = mid; else lo = mid + 1; }
       let u = Math.random(), w = Math.random();
       if (u + w > 1) { u = 1 - u; w = 1 - w; }
-      const t = 1 - u - w, a = lo * 9;
+      const t = 1 - u - w, a = (RG ? RG.face[lo] : lo) * 9;
       const y = (P[a + 1] * u + P[a + 4] * w + P[a + 7] * t - CY) * SC, z = (P[a + 2] * u + P[a + 5] * w + P[a + 8] * t) * SC;
       let A = axialFast(y, z);
       const f = A / step - Math.floor(A / step);
