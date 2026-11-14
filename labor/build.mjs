@@ -4,7 +4,7 @@
 import { build } from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -29,6 +29,9 @@ const PAGES = {
   'fusion': { out: 'hausbesuch-puls.html' },
   // Auftrag H (14.11.2026): Haus ohne Partikel, Entwurf „Licht im Fenster“ – reines SVG + CSS, kein WebGL
   'haus-licht': { out: 'haus-licht.html' },
+  // Auftrag W (14.11.2026): Puls mit echter Wirbelsäule (BodyParts3D) + Umschalter „bisher / echt“; Puls-Quellen unverändert,
+  // Eingriffe nur beim Bauen (src/wirbel-echt/patch.mjs), Daten als eigene Datei assets/wirbelsaeule-echt.bin
+  'wirbel-echt': { out: 'wirbelsaeule-echt.html', dir: 'test-4', patch: 'wirbel-echt' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
   'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true, noTermin: true }, // Übergangsseite hat kein Termin-Blatt
@@ -122,22 +125,45 @@ const fontsCss = `
 @font-face{font-family:"Libre Caslon Text";font-style:italic;font-weight:400;font-display:swap;src:url(data:font/woff2;base64,${font('libre-caslon-italic.woff2')}) format("woff2")}
 `;
 
+// Entwurfsseiten aus einer fremden Quelle (cfg.patch): Ersetzungen müssen genau einmal treffen, sonst Abbruch
+function applyPatches(text, list, what) {
+  text = text.replace(/\r\n?/g, '\n'); // Windows-Klon (CRLF): Suchtexte sind mit LF geschrieben
+  for (const [from, to] of list) {
+    const n = text.split(from).length - 1;
+    if (n !== 1) throw new Error(`Patch ${what}: Suchtext ${n}× gefunden (erwartet 1): ${from.slice(0, 80)}…`);
+    text = text.replace(from, () => to);
+  }
+  return text;
+}
+const patchPlugin = (P, dir) => ({
+  name: 'patch',
+  setup(b) {
+    b.onLoad({ filter: /main\.js$/ }, (args) => (args.path === join(dir, 'main.js')
+      ? { contents: applyPatches(readFileSync(args.path, 'utf8'), P.js, 'main.js'), loader: 'js', resolveDir: dir }
+      : undefined));
+  },
+});
+
 const only = process.argv[2];
 for (const [name, cfg] of Object.entries(PAGES)) {
   if (only && only !== name && !(only === 'live' && name.startsWith('live-'))) continue;
   // Live-Seiten nur ausdrücklich bauen (npm run build baut nur das Labor)
   if (!only && cfg.live) continue;
   const dir = join(root, 'src', cfg.dir || name);
+  const P = cfg.patch ? await import(pathToFileURL(join(root, 'src', cfg.patch, 'patch.mjs')).href) : null;
   const res = await build({
     entryPoints: [join(dir, 'main.js')],
     bundle: true, minify: true, format: 'iife', target: 'es2020',
     write: false, legalComments: 'none',
+    plugins: P ? [patchPlugin(P, dir)] : [],
   });
   const js = res.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
   let css = readFileSync(join(dir, 'style.css'), 'utf8');
   if (cfg.live) css = css.replace(/\/\*[\s\S]*?\*\//g, ''); // Live: Arbeitskommentare („Testseite 4 …“) raus
   if (cfg.live) css = css.replace(/url\(assets\//g, 'url('); // Standbilder (ohne WebGL) liegen neben der Live-Seite
+  if (P) css += P.css;
   let tpl = readFileSync(join(dir, cfg.page || 'page.html'), 'utf8');
+  if (P) tpl = applyPatches(tpl, P.page, 'page.html');
   if (cfg.root) ROOT_LINKS.forEach(([re, to]) => { tpl = tpl.replace(re, to); });
   // Datenschutz § 4 Online-Terminbuchung (<!--TERMIN-->…): ohne Termin-Blatt heraus, folgende §§ eins zurück
   if (cfg.noTermin) tpl = tpl.replace(/[ \t]*<!--TERMIN-->[\s\S]*?<!--\/TERMIN-->\r?\n?/g, '').replace(/<i>§ ([5-9])<\/i>/g, (m, n) => `<i>§ ${n - 1}</i>`);
