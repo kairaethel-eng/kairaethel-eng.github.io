@@ -1,7 +1,15 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 14.11.2026 · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/`.
+Stand: 14.11.2026 spät (Auftrag Z) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Auftrag Z „Stand jetzt“ (Go Kai 14.11.2026 spät: „alles zusammenführen, prüfen, Fehler beheben“) – umgesetzt, wartet auf Sichtprüfung
+- **Eine Seite mit allem Neuen = Puls** (`src/test-4` → `test-4-puls-scan.html`, Livegang-Vorschau `live/` = „Stand jetzt“). Entwürfe bleiben als Archiv (`labor/index.html`).
+- **Wirbelsäule = „echt“** (BodyParts3D, Stil „Stich“, Abstand 0,4 cm HWS, Bandscheiben 8 % schmaler, Handy schärfer + dichte Nahansicht) fest in Puls; Umschalter und Adress-Schalter entfallen; die gerechnete Säule bleibt nur Rückfall (Datei lädt nicht → „bisher“, neuer Versuch beim nächsten Betreten von Kap. 03). Datei lädt erst nach dem Hero. Namensnennung CC BY 4.0 im Fuß + Impressum § 9 (nicht in der Übergangsseite).
+- **Film „Bandscheibenvorfall“ [A, Empfehlung der Film-Sitzung]:** Knopf in der Karte L4–L5 (PC + Handy-Scanner-Karte) und Link „Film: Bandscheibenvorfall“ im Leistungseintrag „Traktion im Schlingentisch“ öffnen ein Blatt wie das Termin-Blatt; Baustein unverändert, Aufbau erst beim Öffnen. Texte/Warnsatz/Quellen 1:1 aus dem Entwurf.
+- **N4/N5 [A]:** PC – Nervenbahn im aktiven Abschnitt kräftiger durch den Knochen, „Typisch“ mit dunklem Grund; Handy – Aufzug deckender.
+- **Vorbereitet, nicht entschieden:** zwei Dachlinien in Kap. 04 → Vergleich `?dach=eins` (kleine Linie verschwindet, sobald das Hausdach gezeichnet wird).
+- **Offen (Kai):** siehe `UEBERGABE.md` ▶▶ AUFTRAG Z ▶ Fragen an Kai; Livegang-Reihenfolge `LIVEGANG.md` ▶ Aufgabenliste.
 
 ## Stoßwellen-Therapie als eigene Rubrik (Go Kai 14.11.2026 „Go A“ + „fest integrieren“, umgesetzt, wartet auf Sichtprüfung)
 - **Gewählt: A** – eigener Highlight-Block wie die Manuthera, direkt in Puls Kap. 04 (nach der Manuthera, vor „Alle Leistungen“), im Linienstil in Bernstein ohne Partikel: links die Zeichnung (Gerät, Kabel, Handstück auf der Haut, Druckwellen bis zum Sehnenansatz), rechts Text und drei Stärken „Sanft · Mittel · Kräftig“. Darunter Ablauf in drei Schritten, Einsatzgebiete, vier Fragen, Termin-Knopf. Verworfen: B (nur Listeneintrag ausbauen), C (eigene Unterseite – später aus A ableitbar).

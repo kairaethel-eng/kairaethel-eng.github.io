@@ -249,6 +249,7 @@ main{position:relative;z-index:2}
 .foot{display:flex;flex-wrap:wrap;gap:.625rem 1.875rem;justify-content:space-between;margin-top:6.875rem;padding-top:1.875rem;padding-bottom:2.5rem;border-top:1px solid var(--line);font-size:.8125rem;color:var(--mute)}
 .foot a{color:var(--dim)}
 .foot .lab{color:var(--amber);font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:.75rem}
+.foot .credit a{white-space:nowrap}
 .foot .credit{flex-basis:100%;font-size:.75rem;line-height:1.5;color:var(--mute)} /* Namensnennung BodyParts3D (CC BY 4.0, Auftrag Z) */
 
 @media (max-width:1219px){ /* Kompakt-Leiste bis 1219 px (13.11., G2): darunter braucht die volle Leiste 1071 px und der Termin-Knopf wurde abgeschnitten */
@@ -301,6 +302,8 @@ canvas.gl-wait{opacity:0}
 .ix-hi{display:inline-flex;align-items:center;gap:.5rem;color:var(--amber)!important}
 .ix-link{display:block;margin-top:.875rem;width:max-content;max-width:100%;font:700 .75rem/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;text-decoration:none;color:var(--amber);border-bottom:1px solid rgba(224,154,53,.5);padding:.375rem 0}
 .ix-link:hover{color:var(--txt)}
+button.ix-link{appearance:none;background:none;border-width:0 0 1px;border-radius:0;cursor:pointer} /* Auftrag Z: Film „Bandscheibenvorfall“ auch aus „Alle Leistungen“ (Schlingentisch) */
+html:not(.js) button.ix-link{display:none}
 @media (max-width:920px){
   .manu-inner{grid-template-columns:1fr;gap:.625rem}
   .manu-stage{order:-1;height:auto}

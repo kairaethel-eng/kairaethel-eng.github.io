@@ -18,7 +18,7 @@ const MODES = {
   xl: { viewport: { width: 2560, height: 1440 } },
 };
 const STEPS = {
-  d:  ['top|0','#bewegung|0','#achse|0.3','#achse|0.55','#dach|0','#manuthera|0','#allTitle|0','#hausordnung|0.5','#tuer|0'],
+  d:  ['top|0','#bewegung|0','#achse|0.3','#achse|0.55','#dach|0','#manuthera|0','#stosswelle|0','#allTitle|0','#hausordnung|0.5','#tuer|0'],
   dr: ['top|0','#achse|0.3','#dach|0'],
   m:  ['top|0','#bewegung|0','#achse|0.3','#achse|1.5','#achse|3','#dach|0','#manuthera|0','#allTitle|0','#hausordnung|0.5','#tuer|0'],
   s:  ['top|0','#dach|0','#allTitle|0','#tuer|0'],
@@ -35,7 +35,7 @@ const report = {};
     const logs = [];
     p.on('pageerror', e => logs.push('PAGEERR ' + e.message));
     p.on('console', m => { if (['error', 'warning'].includes(m.type())) logs.push(m.type().toUpperCase() + ' ' + m.text().slice(0, 300)); });
-    await p.goto('file://' + FILE + ((q) => (process.env.GL0 ? q : q ? q + (/[?&]gl=/.test(q) ? '' : '&gl=1') : '?gl=1'))(process.env.QUERY || ''));
+    await p.goto((process.env.URL || 'file://' + FILE) + ((q) => (process.env.GL0 ? q : q ? q + (/[?&]gl=/.test(q) ? '' : '&gl=1') : '?gl=1'))(process.env.QUERY || '')); // URL=http://… (Auftrag Z): über einen Server, damit die echte Wirbelsäule lädt
     await p.waitForTimeout(WAIT);
     const r = { mode, logs };
     // structure
@@ -84,6 +84,15 @@ const report = {};
       await p.screenshot({ path: f, timeout: 120000 });
       r.shots.push(f + (ok ? '' : ' (selector missing)'));
     }
+    // Auftrag Z: axe im offenen Film-Blatt (nur das Blatt, Film gebaut)
+    r.axeFilm = await p.evaluate(async () => {
+      if (!window.__vf || !window.__vf.open) return 'kein Film';
+      window.__vf.open({ preventDefault() {}, currentTarget: document.querySelector('.vf-open') });
+      await new Promise((ok) => setTimeout(ok, 6000));
+      const res = await axe.run(document.querySelector('#vorfallSheet'), { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa', 'best-practice'] } });
+      document.querySelector('#vorfallSheet').close();
+      return res.violations.map((v) => ({ id: v.id, impact: v.impact, n: v.nodes.length, nodes: v.nodes.slice(0, 3).map((x) => x.target.join(' ')) }));
+    });
     // axe at bottom (contact + list expanded)
     await p.evaluate(() => { const bt = document.querySelector('#index button'); if (bt) bt.click(); });
     await p.waitForTimeout(800);
@@ -93,7 +102,7 @@ const report = {};
     r.seconds = Math.round((Date.now() - t0) / 1000);
     report[mode] = r;
     fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(report, null, 1));
-    console.log('done', mode, r.seconds + 's', 'logs:', logs.length, 'axeTop:', axeTop.length, 'axeBottom:', axeBottom.length);
+    console.log('done', mode, r.seconds + 's', 'logs:', logs.length, 'axeTop:', axeTop.length, 'axeBottom:', axeBottom.length, 'axeFilm:', JSON.stringify(r.axeFilm));
     await ctx.close();
   }
   await b.close();

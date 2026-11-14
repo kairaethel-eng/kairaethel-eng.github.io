@@ -1824,6 +1824,8 @@ splitLetters(aTitle).forEach((l) => { l.style.setProperty('--dy', rnd2(0.32).toF
 const dTitle = $('#d-title'), roofLetters = splitLetters(dTitle);
 dTitle.insertAdjacentHTML('beforebegin', '<svg class="roofline" viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true"><path d="M2 38 L150 3 L298 38" pathLength="1"/></svg>');
 const roofline = $('.roofline path');
+// Auftrag Z (vorbereitet, NICHT Standard – Kai entscheidet): ?dach=eins blendet die kleine Linie aus, sobald das Hausdach gezeichnet wird (eine Dachlinie statt zwei)
+const ONE_ROOF = /[?&]dach=eins\b/.test(location.search);
 // 05 Tür: Buchstaben setzen Schritt für Schritt auf, danach in Abständen ein kleiner Gang
 const tTitle = $('#t-title');
 splitLetters(tTitle);
@@ -1841,6 +1843,7 @@ function livingHeadlines() {
   aTitle.style.setProperty('--mis', smooth(vh * 0.3, vh * 0.85, aTitle.getBoundingClientRect().top).toFixed(3));
   const dt2 = dTitle.getBoundingClientRect().top, k = 1 - smooth(vh * 0.45, vh * 0.92, dt2);
   roofline.style.strokeDashoffset = (1 - smooth(0.05, 0.75, k)).toFixed(3);
+  if (ONE_ROOF) roofline.parentNode.style.opacity = (1 - lh.roofK()).toFixed(3);
   roofLetters.forEach((l, i) => { const lp = clamp(k * 1.7 - i * 0.03); l.style.transform = lp >= 1 ? '' : `translateY(${(-(1 - lp) * 0.45).toFixed(3)}em)`; l.style.opacity = (0.25 + 0.75 * lp).toFixed(3); });
   if (!isDesktop()) {
     const now = performance.now();
@@ -2079,7 +2082,8 @@ const inView = (el) => { if (!el) return false; const r = el.getBoundingClientRe
 }
 {
   const groups = [$('.segnav'), $('#manuModes'), $('#swModes'), $('#index')].filter(Boolean);
-  groups.forEach((g) => $$('button', g).forEach((b, i) => { b.classList.add('sheen'); b.style.setProperty('--si', i); }));
+  // #index: nur die Einträge, nicht der Film-Link im Text (Auftrag Z)
+  groups.forEach((g) => $$(g.id === 'index' ? 'li > button' : 'button', g).forEach((b, i) => { b.classList.add('sheen'); b.style.setProperty('--si', i); }));
   if (!reduced) {
     const io = new IntersectionObserver((es) => es.forEach((e) => {
       if (!e.isIntersecting || paused) return;

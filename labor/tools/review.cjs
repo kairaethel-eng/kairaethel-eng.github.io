@@ -1,6 +1,6 @@
 // Detailprüfung (7.11.2026, Kai: „komplette Seite auf Details prüfen“) – fester Bildersatz aller Zustände + Messungen je Bild.
 // Ergänzt tools/audit.cjs (axe, Struktur, Tab-Reihenfolge); Ablauf und Bewertung: labor/PRUEFUNG.md.
-// Aufruf: cd labor && node tools/review.cjs <seite.html> <ausgabeordner> [d,m,xl,s,dr]
+// Aufruf: cd labor && node tools/review.cjs <seite.html> <ausgabeordner> [d,m,xl,s,dr]   (URL=http://127.0.0.1:8765/live/index.html → über Server)
 //   d = PC 1440×900 · xl = 2560×1440 · m = Handy 390×844 · s = 320×568 · dr = PC „Bewegung reduzieren“. Standard: d,m,xl
 //   WAIT=ms Grundwartezeit je Bild (Standard 4000; Wirbelsäule/Kamerafahrten automatisch ×2,5), QUERY='?…' hängt an die Adresse.
 // Ergebnis: <mode>-NN-<zustand>.png, serv-<mode>-NN.png (alle Leistungs-Motive), sheet-<mode>.png (Kontaktbogen),
@@ -29,10 +29,13 @@ const STATES = [
   { id: 'bewegung', ...scroll('#bewegung') },
   { id: 'achse', ...scroll('#achse', 0.3), slow: 2 },
   ...['C1', 'C5', 'Th1', 'Th7', 'L4', 'S1'].map((n, i) => ({ id: 'achse-' + n, ...click('.scan-stop', i), slow: 1 })),
+  // Auftrag Z: Film „Bandscheibenvorfall“ als Blatt aus der Karte L4–L5 (öffnet wie der Knopf)
+  { id: 'film', js: ["(() => { if (!window.__vf || !window.__vf.open) return false; window.__vf.open({ preventDefault() {}, currentTarget: document.querySelector('.vf-open') }); return true; })()"], slow: 2, after: 'Escape' },
   { id: 'dach', ...scroll('#dach'), slow: 1 },
   { id: 'rundgang', ...click('#next'), slow: 1 }, // Kap. 04 seit 14.11.: Linienhaus, › = nächster Raum (Licht an)
   { id: 'ego', ...click('#egoOpen'), slow: 1.5, after: 'Escape' },
   { id: 'manuthera', ...scroll('#manuthera'), slow: 1 },
+  { id: 'stosswelle', ...scroll('#stosswelle'), slow: 1 }, // 14.11.: eigener Block in Kap. 04
   { id: 'leistungen', ...scroll('#allTitle', -0.3), serv: true },
   { id: 'hausordnung', ...scroll('#hausordnung') },
   { id: 'tuer', ...scroll('#tuer') },
@@ -98,7 +101,7 @@ function measure() {
     const logs = [];
     p.on('pageerror', (e) => logs.push('PAGEERR ' + e.message));
     p.on('console', (m) => { if (m.type() === 'error') logs.push('ERROR ' + m.text().slice(0, 300)); });
-    await p.goto('file://' + FILE + ((q) => (process.env.GL0 ? q : q ? q + (/[?&]gl=/.test(q) ? '' : '&gl=1') : '?gl=1'))(process.env.QUERY || ''));
+    await p.goto((process.env.URL || 'file://' + FILE) + ((q) => (process.env.GL0 ? q : q ? q + (/[?&]gl=/.test(q) ? '' : '&gl=1') : '?gl=1'))(process.env.QUERY || '')); // URL=http://… (Auftrag Z): über einen Server, damit die echte Wirbelsäule lädt
     await p.waitForTimeout(WAIT);
     const rep = { states: [], logs };
     let n = 0;
@@ -120,9 +123,9 @@ function measure() {
       const row = { id: st.id, file: f, ok, ...m, errors: logs.slice(nLog) };
       if (st.serv) { // alle Leistungs-Motive als Ausschnitt der Bühne
         row.serv = [];
-        const cnt = await p.evaluate(() => document.querySelectorAll('#index li button').length);
+        const cnt = await p.evaluate(() => document.querySelectorAll('#index li > button').length);
         for (let i = 0; i < cnt; i++) {
-          const name = await p.evaluate((i) => { const bt = document.querySelectorAll('#index li button')[i]; bt.focus({ preventScroll: true }); return bt.querySelector('.ix-name').textContent; }, i);
+          const name = await p.evaluate((i) => { const bt = document.querySelectorAll('#index li > button')[i]; bt.focus({ preventScroll: true }); return bt.querySelector('.ix-name').textContent; }, i);
           await p.waitForTimeout(MODES[mode].isMobile ? 1900 : 2600); // Handy: nach 2,5 s springt die Seite auf den Eintrag in Bildmitte zurück
           const sf = `serv-${mode}-${String(i).padStart(2, '0')}.png`, stage = await p.$('.serv-stage');
           if (stage) { await stage.screenshot({ path: path.join(OUT, sf), timeout: 60000 }); row.serv.push(`${sf} ${name}`); }
