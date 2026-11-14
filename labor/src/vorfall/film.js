@@ -87,10 +87,10 @@ const VS_ST = HASH + LIGHT + PUSH + /* glsl */`
     float face = abs(dot(n, V)), ends = 1.;
     if (aKind < 1.5) { col = (cBone * (.2 + .92 * lam) + cBlue * rim * .2) * (1. - .34 * uOpen); }
     else if (aKind < 2.5) { // Nervensack: läuft oben und unten aus
-      col = cDura * (.26 + .74 * lam) * (.5 + .5 * face) + cBlue * rim * .12; sz = .86;
+      col = cDura * (.3 + .74 * lam) * (.5 + .5 * face); sz = .86;
       ends = smoothstep(-4.9, -3.3, position.y) * (1. - smoothstep(2.5, 3.9, position.y));
     } else {
-      col = cNerve * (.3 + .7 * lam) * (.42 + .58 * face); sz = .86;
+      col = cNerve * (.42 + .62 * lam) * (.5 + .5 * face); sz = .86;
       ends = smoothstep(0., .06, s) * (1. - smoothstep(.86, 1., s));
       float flow = pow(fract(s * 2.2 - uTime * .32 + (aKind > 4.5 ? .37 * aKind : 0.)), 12.);
       col += cSignal * flow * .4;
@@ -302,7 +302,7 @@ export function initVorfall({ root, isPaused = () => false }) {
     uLift: { value: 0 }, uOpen: { value: 0 }, uCutY: { value: 0 }, uTime: { value: 0 }, uStip: { value: 1 }, uMaxSize: { value: 8 }, uScan: { value: -99 },
     uPush: { value: 0 }, uAlarm: { value: 0 }, uHitS: { value: 0.3 }, uBlob: { value: new THREE.Vector3() }, uPushDir: { value: new THREE.Vector3() },
     uProt: { value: 0 }, uProl: { value: 0 }, uHeal: { value: 0 }, uPulse: { value: 0 }, uPulseR: { value: 0 }, uInset: { value: 0.02 }, uSize: { value: 1 },
-    cBone: { value: C('#F3EADA') }, cBlue: { value: C('#5AA2D6') }, cNerve: { value: C('#DCE9EE') }, cDura: { value: C('#9FB4BD') }, cSignal: { value: C('#DDF1FF') },
+    cBone: { value: C('#F3EADA') }, cBlue: { value: C('#5AA2D6') }, cNerve: { value: C('#EDA63A') }, cDura: { value: C('#B9822D') }, cSignal: { value: C('#FFE6B8') }, // Kai 14.11.: alle Nerven in Bernstein
     cAlarm: { value: C('#E0583C') }, cAmber: { value: C('#E59A2F') }, cHot: { value: C('#FFD9A0') }, cDisc: { value: C('#3E8FBD') }, cDiscHi: { value: C('#7CC3EA') }, cCore: { value: C('#0E1C22') },
   };
   const UA = { ...U, uStip: { value: 1 } }; // Faserring: eigene Punktgröße
