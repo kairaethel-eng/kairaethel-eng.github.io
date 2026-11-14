@@ -207,7 +207,7 @@ main{position:relative;z-index:2}
 .ncall{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .6s var(--ease);white-space:nowrap;padding:.375rem .6875rem;border-radius:.875rem;background:rgba(10,22,27,.74);border:1px solid rgba(207,232,250,.2);backdrop-filter:blur(.3125rem);-webkit-backdrop-filter:blur(.3125rem);box-shadow:0 .25rem 1.125rem rgba(4,10,13,.45);font:600 .8438rem/1.3 var(--sans);letter-spacing:.03em;color:#DCEFFB}
 .ncall-exit{color:var(--amber);border-color:rgba(224,154,53,.35);font-size:.75rem;letter-spacing:.16em;text-transform:uppercase}
 .ncall-ziel{font:italic 400 1.1875rem/1.15 var(--serif);letter-spacing:0;color:var(--txt);border-color:rgba(90,162,214,.4)}
-.ncall-typ{width:21.25rem;white-space:normal;text-align:center;font:500 .8438rem/1.45 var(--sans);letter-spacing:.01em;color:#B4C4C9;background:rgba(10,22,27,.5);border:0;box-shadow:none}
+.ncall-typ{width:21.25rem;white-space:normal;text-align:center;font:500 .8438rem/1.45 var(--sans);letter-spacing:.01em;color:#B4C4C9;background:rgba(10,22,27,.84);border:1px solid rgba(207,232,250,.12);border-radius:.5rem;box-shadow:none} /* N4 (Auftrag Z): dunkler Grund – steht bei L4–L5/S1 über dem echten, größeren Kreuzbein */
 .nlines{position:fixed;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;overflow:visible}
 .nlines line{stroke:rgba(207,232,250,.5);stroke-width:1;opacity:0;transition:opacity .6s var(--ease)}
 .nlines line:first-child{stroke:rgba(224,154,53,.55)}
@@ -249,6 +249,7 @@ main{position:relative;z-index:2}
 .foot{display:flex;flex-wrap:wrap;gap:.625rem 1.875rem;justify-content:space-between;margin-top:6.875rem;padding-top:1.875rem;padding-bottom:2.5rem;border-top:1px solid var(--line);font-size:.8125rem;color:var(--mute)}
 .foot a{color:var(--dim)}
 .foot .lab{color:var(--amber);font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:.75rem}
+.foot .credit{flex-basis:100%;font-size:.75rem;line-height:1.5;color:var(--mute)} /* Namensnennung BodyParts3D (CC BY 4.0, Auftrag Z) */
 
 @media (max-width:1219px){ /* Kompakt-Leiste bis 1219 px (13.11., G2): darunter braucht die volle Leiste 1071 px und der Termin-Knopf wurde abgeschnitten */
   .top{gap:1rem}
@@ -457,6 +458,7 @@ canvas.gl-wait{opacity:0}
 /* Ziehstreifen = Aufzug: Haltestellen links (Knöpfe), Rinne + Griff rechts; nur hier wird gezogen, links scrollt die Seite */
 .scan-rail{position:fixed;right:0;z-index:2;display:none;touch-action:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;border-radius:.875rem 0 0 .875rem;border:1px solid rgba(224,154,53,.22);border-right:0;background:linear-gradient(90deg,rgba(10,22,27,.55),rgba(224,154,53,.08))}
 .scan-rail.on{display:block}
+@media (max-width:920px){.scan-rail{background:linear-gradient(90deg,rgba(10,22,27,.84),rgba(18,28,30,.9))}} /* N5 (Auftrag Z): Handy deckender – Beschriftung Th1/Th7 lag über hellen Knochenpunkten der breiteren echten Säule */
 .scan-rail{cursor:grab}.scan-rail:active{cursor:grabbing}.scan-stop{cursor:pointer}
 .scan-stop{position:absolute;left:.25rem;width:2.125rem;height:1.75rem;margin-top:-.875rem;padding:0;border:0;border-radius:.875rem;background:transparent;color:#A8BABF;font:600 .6875rem/1 var(--sans);letter-spacing:.04em;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .3s,background .3s}
 .scan-stop.is-on{color:var(--amber);background:rgba(224,154,53,.14)}

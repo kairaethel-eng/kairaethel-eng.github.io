@@ -54,6 +54,14 @@ const seen = (sel) => { const a = [...document.querySelectorAll(sel)]; return a.
     const r = await p.evaluate(`(${seen})('.seg-card') + ' ' + (${seen})('#lhRoot .card') + ' ' + (${seen})('.ix-body') + ' ' + (${seen})('.laws li')`);
     const hh = await p.evaluate(() => Math.round(document.querySelector('.seg-cards').getBoundingClientRect().height) + '/' + Math.round(document.querySelector('.axis-head').getBoundingClientRect().height));
     say(r === '6/6 5/5 12/12 5/5' && parseInt(hh) > 400, 'Druckansicht: alle Inhalte sichtbar (Karten nicht weggeschnitten)', r + ' · Höhe Karten/Kopf ' + hh); await p.close(); }
+  { // N2 (Auftrag Z): echte Wirbelsäule lädt neben der Seite (file:// kann keine Datei abrufen → kleiner Server auf den Ordner der Seite)
+    const http = require('http'), fs = require('fs'), dir = path.dirname(path.resolve(process.argv[2] || 'live/index.html')), page = path.basename(process.argv[2] || 'live/index.html');
+    const srv = http.createServer((q, r) => { const f = path.join(dir, decodeURIComponent(q.url.split('?')[0])); if (!f.startsWith(dir) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.writeHead(404); r.end(); return; } r.writeHead(200); fs.createReadStream(f).pipe(r); });
+    await new Promise((ok) => srv.listen(0, '127.0.0.1', ok)); const port = srv.address().port;
+    const p = await (await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })).newPage(); p.on('pageerror', (e) => errs.push(e.message));
+    await p.goto(`http://127.0.0.1:${port}/${page}?gl=1`); await p.waitForTimeout(2500); await p.evaluate(() => scrollTo(0, innerHeight)); await p.waitForTimeout(800); await to(p, '#achse', 0.3);
+    let st = ''; for (let i = 0; i < 60; i++) { await p.waitForTimeout(500); st = await p.evaluate(() => window.__echt ? window.__echt.state + '/' + window.__echt.mode : 'fehlt'); if (/^ok/.test(st)) break; }
+    say(st === 'ok/echt', 'Echte Wirbelsäule geladen (über lokalen Server)', st); await p.close(); srv.close(); }
   say(!errs.length, 'Keine Skriptfehler', errs.slice(0, 3).join(' | '));
   await b.close(); console.log(fails ? `\n${fails} FEHLER` : '\nalles ok'); process.exit(fails ? 1 : 0);
 })();

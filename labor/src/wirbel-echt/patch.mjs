@@ -1,3 +1,6 @@
+// ⚠ STILLGELEGT seit Auftrag Z (14.11.2026 spät): diese Eingriffe stehen jetzt direkt in src/test-4 (ohne Umschalter).
+// Das Build-Ziel 'wirbel-echt' ist in build.mjs auskommentiert; die Suchtexte treffen nicht mehr. Nur noch als Nachweis,
+// wie die Entwurfsseite wirbelsaeule-echt.html (Archiv) gebaut wurde. Löschen nur mit Kais Go.
 // Auftrag W (14.11.2026): Entwurfsseite wirbelsaeule-echt.html = Puls (src/test-4) + diese Eingriffe, nur beim Bauen.
 // Die Quellen von Puls bleiben unverändert. Jeder Suchtext muss in der Quelle GENAU EINMAL vorkommen, sonst bricht der
 // Build ab (dann hat sich Puls geändert → Eingriff hier nachziehen). Beim späteren Tausch in Puls (eigenes Go) sind genau

@@ -362,11 +362,9 @@ export function* echtStippleGen(M) {
     }
     return { pos, nor, zone, kind, edge, count: cnt, spacing: step };
   }
-  // Stil der echten Säule: ?stil=stich (Standard, Kai 14.11.) · ?stil=linien (Stand „1–4“) – „Karte“ verworfen (Kai 14.11.);
-  // ?linien=alt = Zufalls-Abtastung wie bei „bisher“
-  const Q = typeof location !== 'undefined' ? location.search : '';
-  const LINES_OLD = /[?&]linien=alt\b/.test(Q);
-  const STIL = (/[?&]stil=(stich|linien)\b/.exec(Q) || [, 'stich'])[1];
+  // Stil der echten Säule: „Stich“ (Kai 14.11.; in Puls fest seit Auftrag Z – die Adress-Schalter ?stil/?linien entfallen;
+  // „linien“ bleibt als Code für spätere Vergleiche, ist aber nicht mehr erreichbar)
+  const LINES_OLD = false, STIL = 'stich';
   // Licht und Blick für den Tonwert im Raum der Säule: Shader-Licht LDIR, Drehung der Säule am PC −π/2 − 0,5, am Handy −π/2 + 0,5
   const DESK = typeof matchMedia === 'function' && matchMedia('(min-width: 921px)').matches;
   const ROT = -Math.PI / 2 + (DESK ? -0.5 : 0.5), cR = Math.cos(-ROT), sR = Math.sin(-ROT), Ll = Math.hypot(0.48, 0.72, 0.5);

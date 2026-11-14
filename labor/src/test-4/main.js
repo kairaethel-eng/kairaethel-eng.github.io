@@ -8,6 +8,7 @@ import { initAGen as initManuGen, MODES as MANU_MODES } from '../manu/ideaA.js';
 import { initServicesGen } from './services.js';
 import { runSliced } from '../shared/slice.js';
 import { initHouse } from '../haus-licht/house.js';
+import { ECHT } from '../wirbel-echt/echt.js';
 import { initStosswelle } from '../stosswelle/welle.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
@@ -152,7 +153,8 @@ geo.setAttribute('aHeat', new THREE.BufferAttribute(body.heat, 1));
 // Startzeit (A1, Go 4.11.2026): der Hero braucht nur die Körper-Wolke. Das Morph-Ziel Wirbelsäule wird nach dem
 // ersten Bild in Zeitscheiben gerechnet (bis dahin hält die Wolke die Körperform), die Detailbühnen je Kapitel.
 geo.setAttribute('pos2', new THREE.BufferAttribute(body.pos.slice(), 3));
-if (renderer) runSliced(spinePointsGen(N)).then((sp) => { geo.attributes.pos2.array.set(sp.pos); geo.attributes.pos2.needsUpdate = true; });
+ECHT.initMorph(N, (p) => { geo.attributes.pos2.array.set(p); geo.attributes.pos2.needsUpdate = true; });
+if (renderer) runSliced(spinePointsGen(N)).then((sp) => ECHT.morphReady('bisher', sp.pos));
 // Kapitel erst bauen, wenn es in Reichweite kommt (anderthalb Bildschirme vorher)
 const whenNear = (el, fn) => {
   if (!el || !renderer) return; // ohne WebGL nichts rechnen
@@ -428,13 +430,13 @@ const sU = {
   uTime: uniforms.uTime, uRot: uniforms.uSpineRot, uCut: uniforms.uCut, uXf: { value: uniforms.uXf.value[2] },
   uZone: { value: -10 }, uZoneAmt: { value: 0 }, uOn: { value: 0 }, uStip: { value: 1 }, uPix: uniforms.uPix,
   uPeri: { value: 0 }, uPeriStart: { value: 0 }, uScan: { value: 100 }, uScanAmt: { value: 0 }, // Scanner (Handy, 6.11.)
-  uDiff: { value: 0 }, uFine: { value: 0 }, // Handy 7.11.: Wirbelsäule differenziert, Nerv fein (PC vorgemerkt)
+  uDiff: { value: 0 }, uFine: { value: 0 }, uSharp: { value: isDesktop() ? 0 : 1 }, uEcht: { value: 0 }, // Wirbelsäule echt (A): Handy schärfer; uEcht: Schattierung der echten Säule (Punkt 4) // Handy 7.11.: Wirbelsäule differenziert, Nerv fein (PC vorgemerkt)
   uDiscMode: { value: DISC_MODE }, cDiscA: { value: C('#E0583C') }, // Bandscheiben (7.11. spät): 0 aktiv rot-orange · 1 alle · 2 alt blau
   cBone: { value: C('#F3EADA') }, cDisc: { value: C('#86AFC9') }, cDiscD: { value: C('#4FA8D6') }, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue,
   cSignal: { value: C('#DDF1FF') }, cCore: { value: C('#0E1C22') },
 };
 const GLSL_COMMON = /* glsl */`
-  uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart, uScan, uScanAmt, uDiff, uFine, uDiscMode; uniform vec4 uXf;
+  uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart, uScan, uScanAmt, uDiff, uFine, uDiscMode, uSharp, uEcht; uniform vec4 uXf;
   uniform vec3 cBone, cDisc, cDiscD, cDiscA, cAmber, cBlue, cSignal, cCore;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
   const vec3 LDIR = vec3(.48, .72, .5);`;
@@ -486,10 +488,19 @@ const boneMat = new THREE.ShaderMaterial({
           sz = .9;
         } else {
           float plate = aEdge < 0. ? 0. : smoothstep(.74, .9, aEdge);
-          col = cBone * (.2 + .8 * lam) * mix(.58, 1.2, sil) + cBlue * rim * .12;
+          col = uSharp > .5 // Wirbelsäule echt (A): Umriss hell, Fläche zum Betrachter dunkler – wie eine anatomische Strichzeichnung
+            ? cBone * (.14 + .86 * lam) * mix(.34, 1.45, smoothstep(.1, .7, sil)) + cBlue * rim * .1
+            : cBone * (.2 + .8 * lam) * mix(.58, 1.2, sil) + cBlue * rim * .12;
           col = mix(col, cBone * 1.3 + vec3(.08, .05, 0.), plate * .85);
           sz = aEdge < 0. ? .78 : 1. + plate * .2;
           if (aEdge < 0.) col *= .78;
+          if (uEcht > .5) { // Wirbelsäule echt (Go Kai 1–4, Punkt 4): Rangfolge – Wirbelkörper hell mit hellem Umriss, Platten am hellsten,
+            // Bogen und Fortsätze gedämpft und feiner (im aktiven Abschnitt färbt sie unten das Bernstein ein)
+            float s2 = smoothstep(.15, .75, sil);
+            col = cBone * (.3 + .7 * lam) * mix(.62, 1.35, s2) + cBlue * rim * .1;
+            col = mix(col, cBone * 1.35 + vec3(.1, .06, 0.), plate * .9);
+            if (aEdge < -.5) { col *= .48 + .52 * on; sz = .7; } else sz = 1. + plate * .25;
+          }
         }
       }
       if (uDiff > .5 && aKind > .5) col *= 1. + on * (uDiscMode < .5 ? .25 : .5); // Bandscheibe: im Abschnitt heller (Standard: rot-orange statt blau)
@@ -501,7 +512,7 @@ const boneMat = new THREE.ShaderMaterial({
       vCol = col; vVis = step(uCut, p.y) * uOn;
       vec4 mv = viewMatrix * vec4(p, 1.);
       gl_Position = projectionMatrix * mv;
-      gl_PointSize = clamp(uStip / -mv.z * sz, 1., uMaxSize) * (1. + g * .8 + sc * .7);
+      gl_PointSize = clamp(uStip / -mv.z * sz * (uSharp > .5 ? .86 : 1.), 1., uMaxSize) * (1. + g * .8 + sc * .7);
     }`,
   fragmentShader: /* glsl */`
     varying vec3 vCol; varying float vVis;
@@ -564,7 +575,7 @@ function addNerves() {
   const nerveMat = new THREE.ShaderMaterial({
     uniforms: sU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: GLSL_COMMON + /* glsl */`
-      uniform sampler2D uCurves, uPeriTex; uniform float uRows;
+      uniform sampler2D uCurves, uPeriTex; uniform float uRows, uGhostV;
       attribute float aRow, aPhase, aSpeed, aKind, aZone, aStart; attribute vec3 aOff;
       varying vec3 vCol; varying float vA;
       vec3 curveAt(sampler2D tex, float row, float rows, float t){
@@ -578,7 +589,7 @@ function addNerves() {
       void main(){
         float t = fract(aPhase + uTime * aSpeed);
         float S1 = fract(uTime * .3), S2 = fract(uTime * .3 + .5);
-        vec3 p; float base, pk;
+        vec3 p; float base, pk, boost = 0.;
         if (aKind < 1.5) {                         // Rückenmark
           p = rotY(curveAt(uCurves, aRow, uRows, t) + aOff, uRot) * uXf.w + uXf.xyz;
           pk = max(packet(S1 - t, 700.), packet(S2 - t, 700.));
@@ -586,6 +597,7 @@ function addNerves() {
         } else if (aKind < 2.5) {                  // Nervenwurzel
           p = rotY(curveAt(uCurves, aRow, uRows, t) + aOff, uRot) * uXf.w + uXf.xyz;
           float on = (1. - step(.5, abs(aZone - uZone))) * uZoneAmt;
+          boost = on;
           float r1 = (S1 - aStart) * 4., r2 = (S2 - aStart) * 4.;
           pk = max(packet(r1 - t, 60.) * step(0., r1) * step(r1, 1.4), packet(r2 - t, 60.) * step(0., r2) * step(r2, 1.4));
           pk *= mix(.28, 1.5, on);
@@ -597,6 +609,7 @@ function addNerves() {
           base = .4 * uPeri;
         } else {                                   // Handy (7.11.): schmaler Nerv, viele schnelle Impulse nach außen
           p = curveAt(uPeriTex, 0., 1., t) + aOff * uXf.w * .4;
+          boost = 1.;
           float w = fract(t * 9. - uTime * 4.5);
           pk = pow(w, 10.) * 1.5 * uPeri;          // steile Front, kurzer Nachlauf
           base = .5 * uPeri;
@@ -610,6 +623,10 @@ function addNerves() {
         bool fine = aKind > 2.5 && uFine > .5;
         gl_PointSize = fine ? clamp(uPix * (.75 + pk * .9) * 15. / -mv.z, 1., 3.6) : clamp(uPix * (1.05 + pk * 1.4) * 15. / -mv.z, 1., 7.);
         vCol = col; vA = vis * clamp(base + pk, 0., 1.4);
+        // N4 (Auftrag Z, nur PC): im Durchschein-Durchgang (uGhostV) die aktive Wurzel und die Versorgungsbahn kräftiger –
+        // sonst beginnt die Bahn hinter dem echten, größeren Kreuzbein „in der Luft“ (L4–L5, S1)
+        vA *= 1. + uGhostV * boost * 1.3;
+        gl_PointSize *= 1. + uGhostV * boost * .7;
       }`,
     fragmentShader: /* glsl */`
       uniform float uGhost;
@@ -620,12 +637,13 @@ function addNerves() {
         #include <colorspace_fragment>
       }`,
   });
-  nerveMat.uniforms = { ...sU, uGhost: { value: 1 } };
+  nerveMat.uniforms = { ...sU, uGhost: { value: 1 }, uGhostV: { value: 0 } };
   const nerves = new THREE.Points(nGeo, nerveMat);
   nerves.frustumCulled = false;
   // zweiter Durchgang: Nerven schimmern gedämpft durch den Knochen (sonst verschwände das Rückenmark im Wirbelkanal)
   const ghostMat = nerveMat.clone();
-  ghostMat.uniforms = { ...sU, uGhost: { value: 0.42 } }; ghostMat.depthTest = false;
+  ghostMat.uniforms = { ...sU, uGhost: { value: isDesktop() ? 0.42 : 0.24 }, uGhostV: { value: isDesktop() ? 1 : 0 } }; ghostMat.depthTest = false; // Wirbelsäule echt (A): Handy weniger Rückenmark durch den Knochen
+  // (Auftrag Z: im Entwurf W stand dieser Kommentar vor „depthTest = false“ → der Durchschein war dort ganz aus; behoben)
   const nervesGhost = new THREE.Points(nGeo, ghostMat);
   nervesGhost.frustumCulled = false;
   spineGroup.add(nervesGhost, nerves);
@@ -648,18 +666,81 @@ function warmShaders() {
   };
   if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 1500 }); else setTimeout(run, 300);
 }
-whenNear($('#achse'), () => runSliced(spineStippleGen(0, false)).then((d) => {
+// Wirbelsäule „echt“ (BodyParts3D, Auftrag W; in Puls seit Auftrag Z 14.11.) – die gerechnete („bisher“) bleibt Rückfall, wenn die Datei nicht lädt; siehe src/wirbel-echt/echt.js
+// Wirbelsäule echt (Go Kai 14.11., B): Handy-Nahansicht – der aktive Abschnitt bekommt eine eigene, dichte Punktwolke (gleiche Schichten,
+// ~20 000 Punkte im Höhenband der Haltestelle, weicher Rand), je Form und Haltestelle einmal gerechnet und aufbewahrt;
+// Ein-/Ausblenden über drawRange (Punkte liegen zufällig → die Dichte wächst gleichmäßig)
+const ZOOM0 = []; // Nahansicht-Faktoren je Haltestelle wie in Puls (Punkt 1)
+const DENSE = { obj: null, idx: -1, k: 0, busy: false, N: 20000 };
+function denseRegion(i) {
+  let y0 = 1e9, y1 = -1e9, hm = 0;
+  STOPS[i].ids.forEach((id) => {
+    const lv = det.levels.find((l) => l.id === id), y = (lv.center.y - CY) * SC, h = (lv.h / 2 + lv.disc) * SC;
+    y0 = Math.min(y0, y - h); y1 = Math.max(y1, y + h); hm = Math.max(hm, lv.h * SC);
+  });
+  return { y0, y1, pad: Math.min(0.5, Math.max(0.12, hm * 0.9)) };
+}
+function denseTick(dt, want) {
+  const D = DENSE;
+  if (!det || !bones) return;
+  if (D.obj && want !== D.idx) { D.k = Math.max(0, D.k - dt * 5); if (D.k === 0) { spineGroup.remove(D.obj); D.obj = null; D.idx = -1; } }
+  else if (D.obj) D.k = reduced ? 1 : Math.min(1, D.k + dt * 1.6);
+  if (D.obj) D.obj.geometry.setDrawRange(0, Math.round(D.obj.userData.n * D.k * D.k * (3 - 2 * D.k)));
+  if (want < 0 || D.obj || D.busy) return;
+  const cache = det.dense || (det.dense = {});
+  if (cache[want]) { D.obj = cache[want]; D.idx = want; D.k = 0; D.obj.geometry.setDrawRange(0, 0); spineGroup.add(D.obj); return; }
+  D.busy = true;
+  const d0 = det;
+  runSliced(d0.makeSlicesGen(D.N, 0.032, 0.12, true, denseRegion(want))).then((sl) => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(sl.pos, 3));
+    g.setAttribute('normal', new THREE.BufferAttribute(sl.nor, 3));
+    g.setAttribute('aZone', new THREE.BufferAttribute(sl.zone, 1));
+    g.setAttribute('aKind', new THREE.BufferAttribute(sl.kind, 1));
+    g.setAttribute('aEdge', new THREE.BufferAttribute(sl.edge, 1));
+    g.setDrawRange(0, 0);
+    const m = boneMat.clone();
+    m.uniforms = { ...sU, uStip: { value: 1 }, uMaxSize: { value: 2.6 } };
+    const pts = new THREE.Points(g, m);
+    pts.frustumCulled = false; pts.userData.n = sl.count;
+    cache[want] = pts;
+  }).finally(() => { D.busy = false; });
+}
+function spineSwap(d, sl) {
   det = d; SC = d.SC; CY = d.CY;
   sU.uDiff.value = 1; // differenziert (Handy 7.11., PC 7.11.)
-  return runSliced(d.makeSlicesGen(N_SLICE, isDesktop() ? 0.024 : 0.032, 0.12, true));
-}).then((sl) => {
-  const core = new THREE.Mesh(det.coreGeo, coreMat);
-  core.frustumCulled = false;
-  bones = boneStyle('slices', sl);
-  spineGroup.add(core, bones.pts);
-  addNerves();
+  // Kameraabstand je Haltestelle ist in Einheiten der gerechneten Säule angegeben → für „echt“ umrechnen
+  // Punkt 1 (Go Kai 1–4): Nahansicht nach der Wirbelbreite – echte Wirbel sind im Verhältnis zur Säule ~1,5× schmaler,
+  // daher je Haltestelle um zk (Mittel der Wirbel, 1…1,5) näher heran: gleiche Bildgröße wie „bisher“ (PC: STOPS.d, Handy: ZOOM)
+  if (!ZOOM0.length) ZOOM0.push(...ZOOM);
+  STOPS.forEach((s, i) => {
+    if (s.d0 === undefined) s.d0 = s.d;
+    const k = d.zk ? Math.min(1.5, Math.max(1, s.ids.reduce((a, id) => a + (d.zk[id] || 1), 0) / s.ids.length)) : 1;
+    s.d = s.d0 * (d.dScale || 1) / (1 + (k - 1) * 0.7); ZOOM[i] = ZOOM0[i] * (1 + (k - 1) * 0.5); // abgeschwächt: PC 70 % (Schilder), Handy 50 % (Karte, Aufzug)
+  });
+  sU.uEcht.value = d.echt ? 1 : 0; // Punkt 4: Schattierung mit Rangfolge nur für „echt“
+  spineGroup.clear(); DENSE.obj = null; DENSE.idx = -1; // dichte Wolke gehört zur alten Form
+  if (!d.objs) {
+    const core = new THREE.Mesh(d.coreGeo, coreMat);
+    core.frustumCulled = false;
+    delete STYLES.slices;
+    const b = boneStyle('slices', sl);
+    spineGroup.add(core, b.pts);
+    addNerves(); // legt eigene Kurven-Textur an (sU.uCurves/uRows)
+    d.objs = { kids: spineGroup.children.slice(), bones: b, uC: sU.uCurves, uR: sU.uRows };
+  } else {
+    spineGroup.add(...d.objs.kids); sU.uCurves = d.objs.uC; sU.uRows = d.objs.uR;
+  }
+  bones = d.objs.bones;
+  ML.key = null; ML.tipKey = null; periCurve = null; // Zeilen, Andockpunkte und Versorgungsbahn neu messen
   warmShaders();
+}
+whenNear($('#achse'), () => ECHT.start({
+  swap: spineSwap,
+  bisher: () => spineStippleGen(0, false),
+  slices: (d) => d.makeSlicesGen(N_SLICE, isDesktop() ? 0.024 : 0.032, 0.12, true),
 }));
+window.__wv = { det: () => det, peri: () => periCurve, STOPS, camera, uniforms }; // Prüfhilfe (Konsole)
 
 // Versorgungsbahn: vom Wurzel-Ende des aktiven Abschnitts bis zum Zielgebiet, mit Beschriftung
 const PERI = {
@@ -1352,6 +1433,7 @@ function updateScan(dt, r, inSec) {
     if (settle) ZM.idx = seg;
     ZM.k = reduced ? (settle ? 1 : 0) : ZM.k + ((settle ? 1 : 0) - ZM.k) * (1 - Math.exp(-dt * (settle ? 2.6 : 7)));
   }
+  denseTick(dt, !pc && settle && ZM.k > 0.5 ? ZM.idx : -1); // Wirbelsäule echt (B)
   if (near) {
     let zx = OV.x, zy = OV.y, zw = OV.w;
     if (det && ZM.k > 0.001 && pc) {
@@ -1399,6 +1481,7 @@ function updateScan(dt, r, inSec) {
   uniforms.uCut.value = solid <= 0 ? 100 : THREE.MathUtils.lerp(topY + 0.05, botY - 0.05, solid);
   spineGroup.visible = solid > 0; sU.uOn.value = solid > 0 ? 1 : 0;
   if (bones) bones.pts.material.uniforms.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * GLH * 0.5 / tanH * X.w * (bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);
+  if (DENSE.obj && bones) DENSE.obj.material.uniforms.uStip.value = bones.pts.material.uniforms.uStip.value * 0.8; // Wirbelsäule echt (B)
   // Band unter der Linie: Lage in der Übersicht → in Wirbelsäulen-Einheiten → aktuelle (ggf. herangezoomte) Lage
   sU.uScan.value = y >= 0 && OV.w > 0 ? ((screenToWorldY(y) - OV.y) / OV.w) * X.w + X.y : 100;
   sU.uScanAmt.value += ((ready ? 1 - 0.7 * zoomE : 0) - sU.uScanAmt.value) * Math.min(1, dt * 6);

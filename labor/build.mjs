@@ -29,15 +29,16 @@ const PAGES = {
   'fusion': { out: 'hausbesuch-puls.html' },
   // Auftrag H (14.11.2026): Haus ohne Partikel, Entwurf „Licht im Fenster“ – reines SVG + CSS, kein WebGL
   'haus-licht': { out: 'haus-licht.html' },
-  // Auftrag W (14.11.2026): Puls mit echter Wirbelsäule (BodyParts3D) + Umschalter „bisher / echt“; Puls-Quellen unverändert,
-  // Eingriffe nur beim Bauen (src/wirbel-echt/patch.mjs), Daten als eigene Datei assets/wirbelsaeule-echt.bin
-  'wirbel-echt': { out: 'wirbelsaeule-echt.html', dir: 'test-4', patch: 'wirbel-echt' },
+  // Auftrag W (14.11.2026): Entwurf „Puls mit echter Wirbelsäule + Umschalter bisher/echt“ – seit Auftrag Z (14.11. spät) steht die
+  // echte Wirbelsäule direkt in Puls (src/test-4 + Baustein src/wirbel-echt). Das Ziel ist STILLGELEGT (Suchtexte in patch.mjs treffen
+  // nicht mehr); wirbelsaeule-echt.html bleibt als gebautes Archiv stehen. Löschen nur mit Kais Go.
+  // 'wirbel-echt': { out: 'wirbelsaeule-echt.html', dir: 'test-4', patch: 'wirbel-echt' },
   // Bandscheibenvorfall-Film (14.11.2026, Auftrag Kai): Entwurf zu Kap. 03 (L4–L5), Baustein src/vorfall/film.js, Daten eingebettet (tools/vorfall-daten.mjs)
   'vorfall': { out: 'bandscheibenvorfall.html' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
   'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true, noTermin: true }, // Übergangsseite hat kein Termin-Blatt
-  'start-imp': { out: '../impressum.html', dir: 'recht', page: 'impressum.html', root: true },
+  'start-imp': { out: '../impressum.html', dir: 'recht', page: 'impressum.html', root: true, noEcht: true }, // Übergangsseite zeigt keine Wirbelsäule → ohne Namensnennung BodyParts3D
   // Livegang: Puls · Scan als Startseite + Rechtsseiten, ohne Labor-Reste, mit Favicon, Link-Vorschau, Praxisdaten
   'live': { out: `${liveDir}/index.html`, dir: 'test-4', live: 'index.html' },
   'live-imp': { out: `${liveDir}/impressum.html`, dir: 'recht', page: 'impressum.html', root: true, live: 'impressum.html' },
@@ -164,6 +165,8 @@ for (const [name, cfg] of Object.entries(PAGES)) {
     entryPoints: [join(dir, 'main.js')],
     bundle: true, minify: true, format: 'iife', target: 'es2020',
     write: false, legalComments: 'none',
+    // Pfad der Beidateien für Skripte (14.11., N2): Labor assets/…, Live flach neben der Seite (wie die Standbilder im CSS)
+    define: { HOP_ASSETS: JSON.stringify(cfg.live ? '' : 'assets/') },
     plugins: P ? [patchPlugin(P, dir)] : [],
   });
   const js = res.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
@@ -179,6 +182,9 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   // Datenschutz § 4 Online-Terminbuchung (<!--TERMIN-->…): ohne Termin-Blatt heraus, folgende §§ eins zurück
   if (cfg.noTermin) tpl = tpl.replace(/[ \t]*<!--TERMIN-->[\s\S]*?<!--\/TERMIN-->\r?\n?/g, '').replace(/<i>§ ([5-9])<\/i>/g, (m, n) => `<i>§ ${n - 1}</i>`);
   else tpl = tpl.replace(/<!--\/?TERMIN-->/g, '');
+  // Namensnennung BodyParts3D (<!--ECHT-->…): nur wo die echte Wirbelsäule gezeigt wird; Übergangsseite (start-imp) ohne
+  if (cfg.noEcht) tpl = tpl.replace(/[ \t]*<!--ECHT-->[\s\S]*?<!--\/ECHT-->\r?\n?/g, '');
+  else tpl = tpl.replace(/<!--\/?ECHT-->/g, '');
   const [headPart, bodyPart] = tpl.split('<!--BODY-->');
   let head = headPart.replace('/*FONTS*/', () => (cfg.fonts ? FONTS[cfg.fonts]() : fontsCss)).replace('/*CSS*/', () => css);
   let body = bodyPart.replace('<!--JS-->', () => `<script>${js}</script>`);
@@ -191,7 +197,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   if (cfg.live === 'index.html') {
     // Bilder für Link-Vorschau und Home-Bildschirm (Quelle labor/assets/, erzeugt aus der Seite selbst)
     // + Standbilder für Browser ohne WebGL (A2): eigene Dateien, nicht eingebettet
-    for (const img of ['og.jpg', 'apple-touch-icon.png', 'still-hero.webp', 'still-achse.webp', 'still-dach.webp', 'still-manu.webp', 'hop-physiotherapie.vcf']) {
+    for (const img of ['og.jpg', 'apple-touch-icon.png', 'still-hero.webp', 'still-achse.webp', 'still-dach.webp', 'still-manu.webp', 'hop-physiotherapie.vcf', 'wirbelsaeule-echt.bin']) {
       const src = join(root, 'assets', img);
       if (existsSync(src)) copyFileSync(src, join(root, liveDir, img)); else console.warn(`⚠ fehlt: assets/${img}`);
     }
