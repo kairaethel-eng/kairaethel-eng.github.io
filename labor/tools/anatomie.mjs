@@ -8,7 +8,7 @@
 //   fein (Ausgabe 3.0, um 95 % ausgedünnt, ~15 000 Dreiecke je Lendenwirbel; ⚠ das README dieser Ausgabe nennt noch
 //     CC BY-SA 2.1 Japan – vor einer Veröffentlichung klären, siehe ENTSCHEIDUNGEN.md):
 //     https://dbarchive.biosciencedbc.jp/data/bodyparts3d/20110915/BodyParts3D_3.0_obj_95.zip (522 MB; Dateien heißen <FMA-Nummer>.obj)
-//     + parts_list_e.txt (zwei Spalten: FMA-Nummer, Name)
+//     + parts_list_e.txt (zwei Spalten: FMA-Nummer, Name); einzelne Dateien ohne den ganzen Download: tools/zipget.py
 //     OUT=wirbelsaeule-fein.bin QUELLE='… 3.0 …' node tools/anatomie.mjs <obj-Ordner> parts_list_e.txt
 // SUB=1 verfeinert die Netze einmal (Loop) – ausprobiert und verworfen: rundet nur, bringt keine Einzelheiten.
 // Ergebnis: src/kopf-bis-fuss/anatomie/<OUT> (gzip; Kopf als JSON, Punkte 16 Bit, Dreiecke als Differenzen).

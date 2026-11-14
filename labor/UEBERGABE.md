@@ -21,6 +21,12 @@
 
 **Sicherung:** Stand bis zur Übergabe 13.11. liegt auf `claude/focused-rubin-gfdzph`. Die Qualitätsprobe liegt auf `claude/awesome-babbage-2j9ij4`, **gepusht am 14.11. mit Kais Go („Go Push Arbeitszweig, ohne Netz fein“)** – nur der Arbeitszweig, `main` und die Testadresse sind unberührt. Das feine Netz ist nicht im Repo (siehe unten). Private Vorschauen: Glas https://claude.ai/artifact/Ney2Gz5ydW9LpT59t14HRh · Studien 1–3 https://claude.ai/artifact/B92fTn8xvawC2abw4MB9eW · Qualitätsprobe https://claude.ai/artifact/MPegGYrzq6dBPBeauEWL3W.
 
+### ⏹ Chat-Ende 14.11.2026 – Stand und Fundorte (Kai: „prüfen und alles sichern“)
+- **Wo liegt was [B]:** Die ganze Richtung „Glas“ (Studien, `glas.html`, Qualitätsprobe, dieser Abschnitt) liegt **nur auf dem Arbeitszweig `claude/awesome-babbage-2j9ij4`** (GitHub, Stand = dieser Commit), **nicht auf `main`**. ⚠ Diesen Zweig auf GitHub **nicht löschen** – der Satz in `CLAUDE.md` „Arbeitszweige sind nach dem Push identisch mit `main`“ gilt hier nicht. `main` ist seit 9.11. eigene Wege gegangen (14.11.: Linienhaus „Licht im Fenster“, Auftrag W = Wirbelsäule aus denselben BodyParts3D-Daten im Partikel-Stil für Puls); beim späteren Zusammenführen überschneiden sich `CLAUDE.md`, `ENTSCHEIDUNGEN.md`, `UEBERGABE.md`, `build.mjs`.
+- **Offen:** Kais Urteil zur Qualitätsprobe (reicht die Echtzeit-Darstellung → Schritt 2, sonst Schritt 3) – und ob die Richtung „Glas“ neben Puls weiterverfolgt wird. Lizenz der feinen Daten (Ausgabe 3.0) ungeklärt.
+- **Feines Netz:** nicht im Repo. Sicherung bei Kai als ZIP `hop-anatomie-probe-2026-11-14-sicherung.zip` (feine Netzdatei, Probe mit beiden Netzen als eine Datei, Anleitung); sonst neu erzeugen (`tools/zipget.py` + `tools/anatomie.mjs`). Datei nach `src/kopf-bis-fuss/anatomie/wirbelsaeule-fein.bin` legen → Build zeigt den Netz-Umschalter. ⚠ Danach `probe.html` nicht committen, solange die Lizenz offen ist (die gebaute Seite enthält das Netz dann eingebettet).
+- **Datenschutz (Kais Frage 13.11.) [B]:** Von der Seite gehen wegen der Anatomie-Daten keine Daten an Dritte (alles eingebettet, kein Abruf beim Anbieter); nötig ist nur die Namensnennung im Impressum.
+
 ### ✅ Schritt 1 – Qualitätsprobe gebaut (13.11.2026 abends, wartet auf Kais Urteil)
 **Kai (13.11., Lizenzfrage):** „Ja, CC BY 4.0“ – BodyParts3D darf verwendet werden; vor einer Veröffentlichung kommt die Namensnennung ins Impressum, die Fachperson prüft mit.
 
