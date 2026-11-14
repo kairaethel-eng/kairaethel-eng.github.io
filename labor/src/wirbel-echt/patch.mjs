@@ -30,6 +30,7 @@ export const js = [
 // Entwurf W (Go Kai 14.11., B): Handy-Nahansicht – der aktive Abschnitt bekommt eine eigene, dichte Punktwolke (gleiche Schichten,
 // ~20 000 Punkte im Höhenband der Haltestelle, weicher Rand), je Form und Haltestelle einmal gerechnet und aufbewahrt;
 // Ein-/Ausblenden über drawRange (Punkte liegen zufällig → die Dichte wächst gleichmäßig)
+const ZOOM0 = []; // Nahansicht-Faktoren je Haltestelle wie in Puls (Punkt 1)
 const DENSE = { obj: null, idx: -1, k: 0, busy: false, N: 20000 };
 function denseRegion(i) {
   let y0 = 1e9, y1 = -1e9, hm = 0;
@@ -69,7 +70,15 @@ function spineSwap(d, sl) {
   det = d; SC = d.SC; CY = d.CY;
   sU.uDiff.value = 1; // differenziert (Handy 7.11., PC 7.11.)
   // Kameraabstand je Haltestelle ist in Einheiten der gerechneten Säule angegeben → für „echt“ umrechnen
-  STOPS.forEach((s) => { if (s.d0 === undefined) s.d0 = s.d; s.d = s.d0 * (d.dScale || 1); });
+  // Punkt 1 (Go Kai 1–4): Nahansicht nach der Wirbelbreite – echte Wirbel sind im Verhältnis zur Säule ~1,5× schmaler,
+  // daher je Haltestelle um zk (Mittel der Wirbel, 1…1,5) näher heran: gleiche Bildgröße wie „bisher“ (PC: STOPS.d, Handy: ZOOM)
+  if (!ZOOM0.length) ZOOM0.push(...ZOOM);
+  STOPS.forEach((s, i) => {
+    if (s.d0 === undefined) s.d0 = s.d;
+    const k = d.zk ? Math.min(1.5, Math.max(1, s.ids.reduce((a, id) => a + (d.zk[id] || 1), 0) / s.ids.length)) : 1;
+    s.d = s.d0 * (d.dScale || 1) / (1 + (k - 1) * 0.7); ZOOM[i] = ZOOM0[i] * (1 + (k - 1) * 0.5); // abgeschwächt: PC 70 % (Schilder), Handy 50 % (Karte, Aufzug)
+  });
+  sU.uEcht.value = d.echt ? 1 : 0; // Punkt 4: Schattierung mit Rangfolge nur für „echt“
   spineGroup.clear(); DENSE.obj = null; DENSE.idx = -1; // dichte Wolke gehört zur alten Form
   if (!d.objs) {
     const core = new THREE.Mesh(d.coreGeo, coreMat);
@@ -93,9 +102,9 @@ whenNear($('#achse'), () => ECHT.start({
 }));
 window.__wv = { det: () => det, peri: () => periCurve, STOPS, camera, uniforms }; // Prüfhilfe (Konsole)`],
   ["  uDiff: { value: 0 }, uFine: { value: 0 },",
-    "  uDiff: { value: 0 }, uFine: { value: 0 }, uSharp: { value: isDesktop() ? 0 : 1 }, // Entwurf W (A): Handy schärfer"],
+    "  uDiff: { value: 0 }, uFine: { value: 0 }, uSharp: { value: isDesktop() ? 0 : 1 }, uEcht: { value: 0 }, // Entwurf W (A): Handy schärfer; uEcht: Schattierung der echten Säule (Punkt 4)"],
   ["uScanAmt, uDiff, uFine, uDiscMode; uniform vec4 uXf;",
-    "uScanAmt, uDiff, uFine, uDiscMode, uSharp; uniform vec4 uXf;"],
+    "uScanAmt, uDiff, uFine, uDiscMode, uSharp, uEcht; uniform vec4 uXf;"],
   ["          col = cBone * (.2 + .8 * lam) * mix(.58, 1.2, sil) + cBlue * rim * .12;",
     "          col = uSharp > .5 // Entwurf W (A): Umriss hell, Fläche zum Betrachter dunkler – wie eine anatomische Strichzeichnung\n            ? cBone * (.14 + .86 * lam) * mix(.34, 1.45, smoothstep(.1, .7, sil)) + cBlue * rim * .1\n            : cBone * (.2 + .8 * lam) * mix(.58, 1.2, sil) + cBlue * rim * .12;"],
   ["      gl_PointSize = clamp(uStip / -mv.z * sz, 1., uMaxSize) * (1. + g * .8 + sc * .7);",
@@ -106,6 +115,8 @@ window.__wv = { det: () => det, peri: () => periCurve, STOPS, camera, uniforms }
     "    ZM.k = reduced ? (settle ? 1 : 0) : ZM.k + ((settle ? 1 : 0) - ZM.k) * (1 - Math.exp(-dt * (settle ? 2.6 : 7)));\n  }\n  denseTick(dt, !pc && settle && ZM.k > 0.5 ? ZM.idx : -1); // Entwurf W (B)\n"],
   ["(bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);\n  // Band unter der Linie",
     "(bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);\n  if (DENSE.obj && bones) DENSE.obj.material.uniforms.uStip.value = bones.pts.material.uniforms.uStip.value * 0.8; // Entwurf W (B)\n  // Band unter der Linie"],
+  ["          if (aEdge < 0.) col *= .78;\n",
+    "          if (aEdge < 0.) col *= .78;\n          if (uEcht > .5) { // Entwurf W (Go Kai 1–4, Punkt 4): Rangfolge – Wirbelkörper hell mit hellem Umriss, Platten am hellsten,\n            // Bogen und Fortsätze gedämpft und feiner (im aktiven Abschnitt färbt sie unten das Bernstein ein)\n            float s2 = smoothstep(.15, .75, sil);\n            col = cBone * (.3 + .7 * lam) * mix(.62, 1.35, s2) + cBlue * rim * .1;\n            col = mix(col, cBone * 1.35 + vec3(.1, .06, 0.), plate * .9);\n            if (aEdge < -.5) { col *= .48 + .52 * on; sz = .7; } else sz = 1. + plate * .25;\n          }\n"],
 ];
 
 // src/test-4/shapes.js (B: Abtastung in einem Höhenband – dieselbe Änderung steht direkt in stipple.js)

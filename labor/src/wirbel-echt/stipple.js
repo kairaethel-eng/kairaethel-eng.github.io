@@ -13,6 +13,22 @@ const LTOT_BISHER = buildLevels().reduce((s, l) => s + l.h + l.disc, 0);
 import { runSync, every, poissonGrid, bounds } from '../shared/slice.js';
 import { edgeOf } from './anatomie.js';
 
+// Entwurf W (Go Kai 1–4, Punkt 3): Bauteile sichtbar trennen – jeder Wirbel und jede Bandscheibe wird entlang der eigenen
+// Achse leicht gestaucht, so entsteht zwischen Wirbelkörper und Bandscheibe eine dunkle Fuge von je ~GAP cm (wie bei „bisher“)
+const GAP = 0.08;
+function gap(M, part, P) {
+  let c, n, s = 1, shift = 0;
+  if (part.kind === 'disc') { const D = M.disc[part.id.slice(1)]; c = D.c; n = D.F.n; s = Math.max(0.6, 1 - GAP / (D.t / 2)); }
+  else {
+    const L = M.levels.find((l) => l.id === part.id); n = L.F.n;
+    if (L.id === 'S') { c = L.c; shift = -GAP; } else { c = L.c; s = Math.max(0.8, 1 - GAP / (L.h / 2)); }
+  }
+  for (let i = 0; i < P.length; i += 3) {
+    const d = (P[i] - c.x) * n.x + (P[i + 1] - c.y) * n.y + (P[i + 2] - c.z) * n.z, m = shift - d * (1 - s);
+    P[i] += n.x * m; P[i + 1] += n.y * m; P[i + 2] += n.z * m;
+  }
+}
+
 // Teile als ungeteilte Dreiecke mit Normale (geglättet) und Farbe (r = Zone, g = Art, b = Kante) – wie tag() in shapes.js
 function* partsGen(M) {
   const out = [], p = new THREE.Vector3(), q = new THREE.Vector3();
@@ -24,6 +40,7 @@ function* partsGen(M) {
     g.setAttribute('position', new THREE.BufferAttribute(part.pos, 3)); g.setIndex(new THREE.BufferAttribute(part.idx, 1));
     g.computeVertexNormals();
     const ng = g.toNonIndexed(), P = ng.attributes.position.array, n = P.length / 3, col = new Float32Array(n * 3);
+    gap(M, part, P);
     // Kante je Ecke einmal je Punkt der Teil-Datei rechnen (Ecken teilen sich Punkte)
     const ev = new Float32Array(part.pos.length / 3);
     for (let i = 0; i < ev.length; i++) ev[i] = edgeOf(M, part, p.fromArray(part.pos, i * 3), q);
@@ -187,6 +204,120 @@ export function* echtStippleGen(M) {
     }
     return { pos, nor, zone, kind, edge, count: i, spacing: step };
   }
+  // ---- Entwurf W (Go Kai 1–4, Punkt 2): echte Konturlinien ----
+  // Jedes Dreieck wird mit den Schnittebenen geschnitten (dieselben Ebenen senkrecht zur Mittellinie wie axial()); die Punkte
+  // liegen gleichmäßig auf den Schnittlinien → durchgehende Ringe auch auf der unebenen echten Form. Flächen, die fast parallel
+  // zu den Ebenen liegen (Deck-/Grundplatten), schneiden nicht sauber → ausgelassen (dort bleibt die Fuge dunkel).
+  // Gleiche Schnittstelle wie makeSlicesGen (n, step, band, diff, region); band wird nicht gebraucht.
+  let AV = null;
+  function* axialVerts() {
+    if (AV) return;
+    yield* axialGrid();
+    const nv = P.length / 3, av = new Float32Array(nv);
+    for (let v = 0; v < nv; v++) { if (!(v & 16383)) yield; av[v] = axialFast((P[v * 3 + 1] - CY) * SC, P[v * 3 + 2] * SC); }
+    AV = av;
+  }
+  function* makeContoursGen(n, step = 0.032, band = 0.12, diff = true, region = null) {
+    yield* axialVerts();
+    const nF = P.length / 9;
+    let cap = nF * 2, SI = new Int32Array(cap * 4), ST = new Float32Array(cap * 2), SW = new Float32Array(cap), ns = 0, W = 0;
+    const tick = every(4096), e = [0, 1, 1, 2, 2, 0], hit = [0, 0, 0, 0], ht = [0, 0];
+    const rw = (y) => { if (!region) return 1; const { y0, y1, pad } = region; let w = y < y0 ? 1 - (y0 - y) / pad : y > y1 ? 1 - (y - y1) / pad : 1; return w <= 0 ? 0 : w * w * (3 - 2 * w); };
+    for (let f = 0; f < nF; f++) {
+      if (tick()) yield;
+      const v0 = f * 3, a0 = AV[v0], a1 = AV[v0 + 1], a2 = AV[v0 + 2];
+      const lo = Math.min(a0, a1, a2), hi = Math.max(a0, a1, a2);
+      const k0 = Math.ceil(lo / step - 0.5), k1 = Math.floor(hi / step - 0.5);
+      if (k1 < k0) continue;
+      // fast parallel zu den Ebenen? (A ändert sich über das Dreieck kaum im Verhältnis zu seiner Größe)
+      const b = v0 * 3;
+      const ex = Math.max(Math.hypot(P[b + 3] - P[b], P[b + 4] - P[b + 1], P[b + 5] - P[b + 2]), Math.hypot(P[b + 6] - P[b + 3], P[b + 7] - P[b + 4], P[b + 8] - P[b + 5]), Math.hypot(P[b] - P[b + 6], P[b + 1] - P[b + 7], P[b + 2] - P[b + 8])) * SC;
+      if (hi - lo < 0.28 * ex) continue;
+      if (Cc[b + 1] > 0.5) continue; // Bandscheiben: gefülltes Band (unten), keine Linien
+      const av = [a0, a1, a2];
+      const yMid = ((P[b + 1] + P[b + 4] + P[b + 7]) / 3 - CY) * SC, eMid = (Cc[b + 2] + Cc[b + 5] + Cc[b + 8]) / 3;
+      let wt = rw(yMid);
+      if (diff && eMid < -0.5) wt *= 0.6; // Bogen/Fortsätze lichter (Rangfolge, Punkt 4)
+      if (wt <= 0) continue;
+      for (let k = k0; k <= k1; k++) {
+        const L = (k + 0.5) * step; let m = 0;
+        for (let q = 0; q < 6 && m < 2; q += 2) {
+          const i = e[q], j = e[q + 1], ai = av[i] - L, aj = av[j] - L;
+          if ((ai < 0) !== (aj < 0)) { hit[m * 2] = v0 + i; hit[m * 2 + 1] = v0 + j; ht[m] = ai / (ai - aj); m++; }
+        }
+        if (m < 2) continue;
+        let len = 0;
+        for (let c = 0; c < 3; c++) {
+          const p0 = P[hit[0] * 3 + c] + (P[hit[1] * 3 + c] - P[hit[0] * 3 + c]) * ht[0], p1 = P[hit[2] * 3 + c] + (P[hit[3] * 3 + c] - P[hit[2] * 3 + c]) * ht[1];
+          len += (p1 - p0) * (p1 - p0);
+        }
+        len = Math.sqrt(len) * SC;
+        if (ns >= cap) { cap *= 2; const a = new Int32Array(cap * 4); a.set(SI); SI = a; const t = new Float32Array(cap * 2); t.set(ST); ST = t; const w = new Float32Array(cap); w.set(SW); SW = w; }
+        SI.set(hit, ns * 4); ST[ns * 2] = ht[0]; ST[ns * 2 + 1] = ht[1]; SW[ns] = len * wt; W += len * wt; ns++;
+      }
+    }
+    const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), zone = new Float32Array(n), kind = new Float32Array(n), edge = new Float32Array(n);
+    // Anteile wie „bisher“ (gemessen: 29 % Bandscheiben-Körnung, 19 % Plattenband): Bandscheiben als gefülltes Farbband,
+    // Deck-/Grundplatten zusätzlich gekörnt (helles Band), der Rest als Konturlinien
+    const nDisc = diff ? Math.round(n * 0.28) : 0, nPlate = diff ? Math.round(n * 0.14) : 0, nLine = n - nDisc - nPlate;
+    const sp = W / nLine; let cnt = 0;
+    const at = (arr, i, j, t, c) => arr[i * 3 + c] + (arr[j * 3 + c] - arr[i * 3 + c]) * t;
+    for (let s2 = 0; s2 < ns && cnt < nLine; s2++) {
+      if (!(s2 & 4095)) yield;
+      const m = SW[s2] / sp, c2 = Math.floor(m + Math.random());
+      if (!c2) continue;
+      const i0 = SI[s2 * 4], j0 = SI[s2 * 4 + 1], i1 = SI[s2 * 4 + 2], j1 = SI[s2 * 4 + 3], t0 = ST[s2 * 2], t1 = ST[s2 * 2 + 1];
+      for (let c = 0; c < c2 && cnt < nLine; c++) {
+        const u = (c + 0.5 + (Math.random() - 0.5) * 0.5) / c2, o = cnt * 3;
+        for (let d = 0; d < 3; d++) {
+          const A0 = at(P, i0, j0, t0, d), A1 = at(P, i1, j1, t1, d);
+          pos[o + d] = (A0 + (A1 - A0) * u - (d === 1 ? CY : 0)) * SC;
+          const N0 = at(Nn, i0, j0, t0, d), N1 = at(Nn, i1, j1, t1, d); nor[o + d] = N0 + (N1 - N0) * u;
+        }
+        const nl = Math.hypot(nor[o], nor[o + 1], nor[o + 2]) || 1; nor[o] /= nl; nor[o + 1] /= nl; nor[o + 2] /= nl;
+        const C = (d) => { const A0 = at(Cc, i0, j0, t0, d), A1 = at(Cc, i1, j1, t1, d); return A0 + (A1 - A0) * u; };
+        zone[cnt] = Math.round(C(0)); kind[cnt] = C(1) > 0.5 ? 1 : 0; edge[cnt] = C(2); cnt++;
+      }
+    }
+    // Körnung (Bandscheiben, Platten): flächengewichtet wie MeshSurfaceSampler, mit Höhenband-Gewicht für die Nahansicht
+    const grain = function* (sel, m) {
+      const fc = new Uint32Array(nF), cum = new Float64Array(nF); let k = 0, acc = 0;
+      for (let f = 0; f < nF; f++) {
+        if (tick()) yield;
+        const b = f * 9; if (!sel(b)) continue;
+        const w = rw(((P[b + 1] + P[b + 4] + P[b + 7]) / 3 - CY) * SC); if (w <= 0) continue;
+        const ux = P[b + 3] - P[b], uy = P[b + 4] - P[b + 1], uz = P[b + 5] - P[b + 2], vx = P[b + 6] - P[b], vy = P[b + 7] - P[b + 1], vz = P[b + 8] - P[b + 2];
+        acc += Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) * w; fc[k] = f; cum[k++] = acc;
+      }
+      if (!k) return;
+      for (let j = 0; j < m && cnt < n; j++) {
+        if (!(j & 4095)) yield;
+        const x = Math.random() * acc; let lo = 0, hi = k - 1;
+        while (lo < hi) { const mid = (lo + hi) >> 1; if (cum[mid] > x) hi = mid; else lo = mid + 1; }
+        let u = Math.random(), w = Math.random(); if (u + w > 1) { u = 1 - u; w = 1 - w; }
+        const t = 1 - u - w, b = fc[lo] * 9, o = cnt * 3;
+        for (let d = 0; d < 3; d++) {
+          pos[o + d] = (P[b + d] * u + P[b + 3 + d] * w + P[b + 6 + d] * t - (d === 1 ? CY : 0)) * SC;
+          nor[o + d] = Nn[b + d] * u + Nn[b + 3 + d] * w + Nn[b + 6 + d] * t;
+        }
+        const nl = Math.hypot(nor[o], nor[o + 1], nor[o + 2]) || 1; nor[o] /= nl; nor[o + 1] /= nl; nor[o + 2] /= nl;
+        zone[cnt] = Math.round(Cc[b] * u + Cc[b + 3] * w + Cc[b + 6] * t); kind[cnt] = Cc[b + 1] > 0.5 ? 1 : 0;
+        edge[cnt] = Cc[b + 2] * u + Cc[b + 5] * w + Cc[b + 8] * t; cnt++;
+      }
+    };
+    if (nDisc) yield* grain((b) => Cc[b + 1] > 0.5, nDisc);
+    if (nPlate) yield* grain((b) => Cc[b + 1] < 0.5 && (Cc[b + 2] + Cc[b + 5] + Cc[b + 8]) / 3 > DIFF.plateE, nPlate);
+    // mischen: die Nahansicht blendet über drawRange ein (Anfang zuerst) → alle Arten gleichmäßig verteilt
+    for (let i = cnt - 1; i > 0; i--) {
+      if (!(i & 16383)) yield;
+      const j = (Math.random() * (i + 1)) | 0;
+      for (let d = 0; d < 3; d++) { let t = pos[i * 3 + d]; pos[i * 3 + d] = pos[j * 3 + d]; pos[j * 3 + d] = t; t = nor[i * 3 + d]; nor[i * 3 + d] = nor[j * 3 + d]; nor[j * 3 + d] = t; }
+      let t = zone[i]; zone[i] = zone[j]; zone[j] = t; t = kind[i]; kind[i] = kind[j]; kind[j] = t; t = edge[i]; edge[i] = edge[j]; edge[j] = t;
+    }
+    return { pos, nor, zone, kind, edge, count: cnt, spacing: step };
+  }
+  // Vergleich im Browser: ?linien=alt = Zufalls-Abtastung wie bisher
+  const LINES_OLD = typeof location !== 'undefined' && /[?&]linien=alt\b/.test(location.search);
   const core = new Float32Array(P.length);
   for (let i = 0; i < P.length; i += 3) { core[i] = P[i] * SC; core[i + 1] = (P[i + 1] - CY) * SC; core[i + 2] = P[i + 2] * SC; }
   const coreGeo = new THREE.BufferGeometry();
@@ -204,6 +335,10 @@ export function* echtStippleGen(M) {
     const pts = []; for (let i = 0; i < CURVE_W; i++) pts.push(toShape(rc.curve.getPoint(i / (CURVE_W - 1))));
     curves.push({ pts, zone: ZONES.indexOf(rc.zone), start: best / (CURVE_W - 1), kind: 2, side: rc.side, id: rc.id });
   });
-  const makeGrain = (n) => runSync(makeGrainGen(n)), makeSlices = (...a) => runSync(makeSlicesGen(...a));
-  return { grain: null, makeGrain, makeSlices, makeGrainGen, makeSlicesGen, coreGeo, curves, levels: sp.levels, SC, CY, echt: true, dScale: M.Ltot / LTOT_BISHER };
+  const slicesGen = LINES_OLD ? makeSlicesGen : makeContoursGen;
+  const makeGrain = (n) => runSync(makeGrainGen(n)), makeSlices = (...a) => runSync(slicesGen(...a));
+  // Punkt 1: Breite der Wirbel im Verhältnis zur Säulenlänge, gerechnet ÷ echt → Faktor für die Nahansicht (gleiche Bildgröße)
+  const RB = Object.fromEntries(buildLevels().map((l) => [l.id, l.R])), SCB = 8.2 / LTOT_BISHER;
+  const zk = Object.fromEntries(M.out.map((l) => [l.id, RB[l.id] ? (RB[l.id] * SCB) / (l.R * SC) : 1]));
+  return { grain: null, makeGrain, makeSlices, makeGrainGen, makeSlicesGen: slicesGen, coreGeo, curves, levels: sp.levels, SC, CY, echt: true, dScale: M.Ltot / LTOT_BISHER, zk };
 }
