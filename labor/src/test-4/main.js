@@ -1952,6 +1952,8 @@ function tick() {
   camera.position.copy(cam.pos); camera.lookAt(cam.target);
   // 13.11. (T1): ausgeblendete Partikel nicht mehr zeichnen; ist gar nichts zu sehen, ruht die Hauptbühne nach einem leeren Bild
   points.visible = uniforms.uAlpha.value > 0.004;
+  // 14.11. (N1): Kap. 04 – steht die Form „Dachlinie“ und ist sie nach dem Zeichnen des Linienhauses vergangen, gibt es nichts zu sehen
+  if (Math.abs(morphNow - 3) < 0.02 && uniforms.uRoofA.value < 0.004) points.visible = false;
   const anyVis = points.visible || spineGroup.visible || sil.visible || !!(dust && dust.visible);
   if (renderer && !document.hidden && (anyVis || glDirty)) { renderer.render(scene, camera); glDirty = anyVis; }
   if (manu && manu.st.visible && !document.hidden) { manu.update(0, dt); manu.st.renderer.render(manu.st.scene, manu.st.camera); }
