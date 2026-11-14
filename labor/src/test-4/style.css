@@ -621,6 +621,32 @@ html.sheet-open{overflow:hidden}
 @media (max-width:400px){.sheet-alt .btn{flex:1 1 100%}}
 @media (prefers-reduced-motion:reduce){.sheet[open]{animation:none}}
 html.paused .sheet[open]{animation:none}
+/* Film „Bandscheibenvorfall“ als Blatt (Auftrag Z 14.11.2026): Baustein src/vorfall/film.css, Blatt breiter als das Termin-Blatt */
+/*@include ../vorfall/film.css*/
+.vf-sheet{width:min(78rem,100vw);background:var(--ink)}
+.vf-sheet .sheet-in{display:block}
+.vf-sheet .sheet-head{margin-bottom:1rem}
+.vf-sheet .sheet-head h2{font-size:clamp(2rem,3.6vw,3.25rem)}
+.vf-sheet .vf-lead{margin-bottom:1.5rem;max-width:56ch}
+.vf-sheet .vf-stage{height:min(calc((min(78rem,100vw) - 4.5rem) * .5), calc(100svh - 20rem));min-height:20rem} /* Leiste mit Abschnitten bleibt am PC im ersten Bild */
+.vf-sheet .vf-facts{margin-top:2.5rem}
+.vf-src{margin-top:1.25rem;font-size:.8125rem;color:var(--mute);max-width:86ch}
+.vf-src + .vf-src{margin-top:.5rem}
+.vf-open{appearance:none;display:inline-flex;align-items:center;gap:.625rem;min-height:2.75rem;margin-top:.875rem;padding:.375rem 1rem .375rem .5rem;border-radius:1.375rem;border:1px solid rgba(224,154,53,.6);background:rgba(224,154,53,.1);color:var(--txt);font:600 .8125rem/1.2 var(--sans);letter-spacing:.02em;cursor:pointer;transition:background .2s,border-color .2s}
+.vf-open:hover{background:rgba(224,154,53,.2);border-color:var(--amber)}
+.vf-open svg{flex:none;width:1.875rem;height:1.875rem;padding:.5rem .4375rem .5rem .5625rem;border-radius:50%;background:var(--amber);fill:var(--ink)}
+.vf-open small{font:italic 400 .875rem/1 var(--serif);letter-spacing:0;color:var(--amber)}
+.seg-card .vf-open{flex-basis:auto}
+.scan-chips.is-on .vf-open{pointer-events:auto}
+.scan-chips .vf-open{margin-top:.625rem;min-height:2.75rem;font-size:.75rem;padding-right:.75rem}
+.scan-chips .vf-open small{display:none}
+@media (max-width:920px){
+  .vf-sheet{width:100%}
+  .vf-sheet .sheet-head h2{font-size:clamp(1.75rem,8vw,2.5rem)}
+  .vf-sheet .vf-stage{height:auto;min-height:0}
+  .vf-sheet .vf-lead{font-size:1rem;margin-bottom:1rem}
+}
+html:not(.js) .vf-open,html:not(.js) #vorfallSheet{display:none}
 /* Rundgang aus Augenhöhe (Kapitel 04, Go Kai 7.11. „1B+ 2a/a 3a 4 ja“): Knopf neben „Rundgang starten“ + Vollbild-Dialog
    (eigene WebGL-Bühne, Fahrt aus src/ego/tour.js; Aufbau wie die Testseite rundgang-ego.html) */
 @media (max-width:920px){

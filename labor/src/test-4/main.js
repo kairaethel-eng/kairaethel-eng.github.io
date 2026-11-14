@@ -10,6 +10,7 @@ import { runSliced } from '../shared/slice.js';
 import { initHouse } from '../haus-licht/house.js';
 import { ECHT } from '../wirbel-echt/echt.js';
 import { initStosswelle } from '../stosswelle/welle.js';
+import { initVorfall } from '../vorfall/film.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -77,6 +78,8 @@ function runFrame(now) {
 // ---------- Scrollen ----------
 let lenis = null;
 let sheetOpen = false; // Termin-Blatt offen (Lenis steht, Handy rendert nicht)
+const VF = { film: null, opener: null, open: null }; // Film-Blatt (siehe unten)
+let vfOpen = false; // Film „Bandscheibenvorfall“ offen (Auftrag Z): deckt die Seite ab → Hauptbühne ruht (PC + Handy)
 if (!reduced) {
   // ruhiges Scrollen: Mausrad langsamer, weiches Nachgleiten (Scrollbalken bleibt direkt).
   // Erst nach dem ersten Bild anlegen: Lenis misst die Seite, das erzwänge sonst ein zweites Layout im Start-Task (A1).
@@ -921,7 +924,14 @@ function mobMeasure(zoneKey) {
     h.className = 'sc-h'; h.textContent = card && $('h3', card) ? $('h3', card).textContent.trim() : ''; head.append(no, h);
     list.className = 'sc-c'; list.replaceChildren(...(ML.compact ? [] : chipTxt).map((t) => { const s = document.createElement('span'); s.textContent = t; return s; }));
     const typ = document.createElement('p'); typ.className = 'sc-typ'; typ.textContent = typCard;
-    chipsEl.replaceChildren(head, typ, list);
+    // Film-Knopf (Auftrag Z): sichtbare Kopie nur für Finger/Maus – der echte Knopf steht in der (für Vorleseprogramme lesbaren) Karte
+    let vfBtn = null;
+    if (zoneKey === 'l45' && VF.open) {
+      vfBtn = document.createElement('button'); vfBtn.type = 'button'; vfBtn.className = 'vf-open'; vfBtn.tabIndex = -1;
+      vfBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bandscheibenvorfall ansehen</span>';
+      vfBtn.addEventListener('click', VF.open);
+    }
+    chipsEl.replaceChildren(head, typ, list, ...(vfBtn ? [vfBtn] : []));
     chipsEl.classList.toggle('sc-small', ML.compact > 1); // Stufe 2: kleinere Schrift
     // ~60 % Breite (Kai 7.11.: Wirbelsäule rechts daneben besser sichtbar), nie in den Ziehstreifen
     chipsEl.style.width = Math.min(Math.max(Math.round(VW * 0.6), 200), VW - pad - RAIL_W - 8, 480) + 'px'; ML.chH = chipsEl.offsetHeight;
@@ -978,7 +988,7 @@ function updateCalloutsMob(zoneKey, on, prog, opt = null) {
     el.style.opacity = vis ? 1 : 0; el.style.transitionDuration = dur;
     if (i < 4) nl[i].style.opacity = nring[i].style.opacity = vis && (!opt || opt.lines) ? 1 : 0;
   });
-  chipsEl.style.opacity = sc && show && prog > (opt ? opt.chip : MTH[4] + 0.06) ? 1 : 0; chipsEl.style.transitionDuration = dur;
+  { const on = !!(sc && show && prog > (opt ? opt.chip : MTH[4] + 0.06)); chipsEl.style.opacity = on ? 1 : 0; chipsEl.classList.toggle('is-on', on); } chipsEl.style.transitionDuration = dur; // is-on: Film-Knopf nur sichtbar tippbar
   if (!show) return;
   ncalls.forEach((el, i) => { el.style.transform = `translate(${ML.x}px, ${(i < 4 ? ML.ys[i] : ML.typY).toFixed(1)}px)`; });
   if (sc) chipsEl.style.transform = `translate(${ML.x}px, ${ML.chipsY.toFixed(1)}px)`;
@@ -1499,7 +1509,7 @@ function updateScan(dt, r, inSec) {
     if (zKey && det) updatePeri(zKey);
     if (settle && zKey) { if (TX.zone !== zKey) { TX.zone = zKey; TX.t0 = performance.now(); } } else TX.zone = null;
     updateCallouts(zKey, TX.zone ? Math.min(0.9, (performance.now() - TX.t0) / 1000 * 0.25) : 0, silOn > 0.5);
-    chipsEl.style.opacity = 0;
+    chipsEl.style.opacity = 0; chipsEl.classList.remove('is-on');
   } else {
     if (zKey && det) updatePeri(zKey);
     scanTexts(zKey, settle);
@@ -1543,7 +1553,7 @@ function updateAxis(dt) {
   // noch nicht fertig gerechnet: grobe Partikel bleiben, danach fahren Scan und Kamera sanft nach
   spineK = bones ? ramp(spineK, dt) : 0;
   if (desk ? pcScan() : scanOn()) { updateScan(dt, r, inSec); return; } // Handy: Scanner (6.11.), PC: Hybrid-Scanner (7.11.)
-  scanUI.classList.remove('on'); scanRail.classList.remove('on'); chipsEl.style.opacity = 0; sU.uScanAmt.value = 0;
+  scanUI.classList.remove('on'); scanRail.classList.remove('on'); chipsEl.style.opacity = 0; chipsEl.classList.remove('is-on'); sU.uScanAmt.value = 0;
   if (SCAN.cleared) { SCAN.cleared = false; if (axisHead) axisHead.style.opacity = ''; if (axisNote) axisNote.style.transform = ''; NOTE.shift = 0; }
   if (desk) { axisWant = null; spineGroup.visible = false; sil.visible = false; return; } // PC ohne WebGL: Karte per segnav, keine Fahrt
   const X = uniforms.uXf.value[2];
@@ -1946,6 +1956,7 @@ function tick() {
   lastTick = nowT;
   frameN++;
   if (sheetOpen && !isDesktop()) return; // Handy: Termin-Blatt deckt die Szene ab → nicht rendern (Akku)
+  if (vfOpen) return; // Film-Blatt offen: eigene Bühne, die Seite ruht (Akku)
   if (lh.egoOpen()) return; // Rundgang aus Augenhöhe offen: der Dialog deckt alles ab, die Seite ruht (Akku)
   if (QW && !viaWatchdog) qualityWatch(gap); // nur messen, solange die Hauptbühne selbst zeichnet (nicht hinter Termin-Blatt/Augenhöhen-Rundgang)
   if (!viaWatchdog && !isDesktop() && morphNow >= 0.6 && performance.now() - lastInput > 1500 && frameN % 2) return; // Hero (Figur sichtbar): immer volle Rate (8.11., Option C)
@@ -2216,6 +2227,40 @@ if (!reduced) requestAnimationFrame(() => {
     $$('[data-termin]').forEach((a) => a.addEventListener('click', open));
   }
 }
+
+// Film „Bandscheibenvorfall“ (Auftrag Z 14.11.2026, Empfehlung der Film-Sitzung [A]): Knopf in der Karte L4–L5 (PC-Karte, am Handy
+// zusätzlich in der Scanner-Karte) öffnet ein Blatt wie das Termin-Blatt. Der Baustein film.js wird erst beim ersten Öffnen aufgebaut
+// (Rechnung in Zeitscheiben, eigene WebGL-Bühne); startet selbst, außer bei „Bewegung anhalten/reduzieren“; ohne WebGL fünf Standbilder.
+// Schließen: ×, Esc, Klick auf den Rand → Film hält an, Fokus zurück zum Knopf.
+{
+  const dlg = document.getElementById('vorfallSheet');
+  if (dlg && typeof dlg.showModal === 'function') {
+    const xBtn = document.getElementById('vfClose');
+    const open = (e) => {
+      e.preventDefault();
+      if (dlg.open) return;
+      VF.opener = e.currentTarget;
+      document.documentElement.classList.add('sheet-open');
+      lenis?.stop();
+      vfOpen = true;
+      dlg.showModal();
+      xBtn.focus();
+      if (!VF.film) VF.film = initVorfall({ root: document.getElementById('vorfall'), isPaused: () => paused }) || { pause() {} };
+    };
+    dlg.addEventListener('close', () => {
+      document.documentElement.classList.remove('sheet-open');
+      lenis?.start();
+      vfOpen = false; glDirty = true;
+      VF.film?.pause?.();
+      VF.opener?.focus({ preventScroll: true });
+    });
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+    xBtn.addEventListener('click', () => dlg.close());
+    VF.open = open;
+    $$('[data-vorfall]').forEach((b) => b.addEventListener('click', open));
+  }
+}
+window.__vf = VF; // Prüfhilfe (Konsole): __vf.film.state(), __vf.film.seek(t)
 
 // Handy: Figur in die Bühne unter dem Titel einpassen (#heroStage) – nach dem ersten Bild messen (kein Layout beim Start, A1)
 function fitHero() {
