@@ -1,14 +1,13 @@
 // Testseite 4 · „Puls · Scan“ – wie „Puls + Achse“, die Wirbelsäule bleibt aber im Partikel-Stil:
 // eine Abtastlinie verdichtet die groben Partikel zu einer beleuchteten Punktwolke, dann Kamerafahrt.
-// 0 Körper → 1 Bewegung → 2 Wirbelsäule (Scan) → 3 Dach → 4 HOP-Kreise
+// 0 Körper → 1 Bewegung → 2 Wirbelsäule (Scan) → 3 Dachlinie (fließt ins Linienhaus, seit 14.11.2026) → 4 HOP-Kreise
 import * as THREE from 'three';
 import Lenis from 'lenis';
-import { bodyPoints, spinePointsGen, housePoints, logoPoints, spineStippleGen, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
-import { praxisScanGen, ROOMS, EYE, P } from './praxis.js';
+import { bodyPoints, spinePointsGen, logoPoints, spineStippleGen, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
 import { initAGen as initManuGen, MODES as MANU_MODES } from '../manu/ideaA.js';
 import { initServicesGen } from './services.js';
 import { runSliced } from '../shared/slice.js';
-import { createEgo } from '../ego/tour.js';
+import { initHouse } from '../haus-licht/house.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -133,7 +132,19 @@ if (renderer) {
 
 // ---------- Partikel ----------
 const N = isDesktop() ? 64000 : 26000;
-const body = bodyPoints(N), house = housePoints(N), logo = logoPoints(N);
+// Form 3 (seit 14.11.2026, Go Kai „2a“): Bernstein-Dachlinie statt Partikel-Haus. Giebel x −1…1, First bei y = 1 (Höhe per
+// uRoofH passend zum SVG-Dach), dichter Kern auf der Linie, ein Teil als feiner Hof; kind = Abstand zur Linie (0 … 1)
+function roofLinePoints(n) {
+  const pos = new Float32Array(n * 3), kind = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const s = Math.random() * 2 - 1, halo = Math.random() < 0.18, g = () => (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
+    const d = (halo ? 0.06 : 0.008) * g();
+    pos[i * 3] = s; pos[i * 3 + 1] = 1 - Math.abs(s) + d; pos[i * 3 + 2] = (halo ? 0.05 : 0.01) * g();
+    kind[i] = halo ? 1 : 0;
+  }
+  return { pos, kind };
+}
+const body = bodyPoints(N), house = roofLinePoints(N), logo = logoPoints(N);
 const geo = new THREE.BufferGeometry();
 geo.setAttribute('position', new THREE.BufferAttribute(body.pos, 3));
 geo.setAttribute('aHeat', new THREE.BufferAttribute(body.heat, 1));
@@ -170,7 +181,7 @@ const uniforms = {
   uTime: { value: 0 }, uMorph: { value: 0 }, uPix: { value: 1 }, uSize: { value: 1 }, uAlpha: { value: 1 },
   uRelax: { value: relaxTex }, uBodyWH: { value: new THREE.Vector2(BODY_W * BODY_SCALE, BODY_H * BODY_SCALE) },
   uXf: { value: [0, 1, 2, 3, 4].map(() => new THREE.Vector4(0, 0, 0, 1)) },
-  uSpineRot: { value: -0.9 }, uCut: { value: 100 }, uHouseRot: { value: -0.55 }, uRoofLift: { value: 0 },
+  uSpineRot: { value: -0.9 }, uCut: { value: 100 }, uRoofH: { value: 0.25 }, uRoofA: { value: 1 },
   uBreath: { value: 0 }, uCalm: { value: 0 }, // Atem-Phase, „Entspannt“ (0..1)
   uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 },
   cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') },
@@ -181,7 +192,7 @@ const vert = /* glsl */`
   attribute float aHeat; attribute vec3 pos2; attribute vec3 pos3; attribute float kind3; attribute vec3 pos4; attribute float kind4; attribute vec4 aRand;
   uniform float uSpread, uFadeMid;
   uniform float uBreath, uCalm;
-  uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uHouseRot, uRoofLift;
+  uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uRoofH, uRoofA;
   uniform sampler2D uRelax; uniform vec2 uBodyWH; uniform vec4 uXf[5];
   uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey;
   varying vec3 vCol; varying float vA;
@@ -221,11 +232,10 @@ const vert = /* glsl */`
       float band = exp(-pow((pos2.y - (3.6 - mod(uTime*1.6, 9.)))*2.2, 2.));
       col = mix(cBone, cBlue, band*.8);
     } else if(i==3){
-      p = pos3; if (kind3 > .5 && kind3 < 1.5) p.y += uRoofLift;
-      p = rotY(p, uHouseRot);
-      col = kind3 < .5 ? cBone : kind3 < 1.5 ? mix(cAmber, cBone, .2) : kind3 < 2.5 ? cGreen : cPetrol*.9;
-      col *= 1. + uHouse*.6;
-      sz = kind3 > 2.5 ? .7 : 1.;
+      // Dachlinie: liegt genau auf dem SVG-Dach (uXf[3] aus roofPlace), vergeht, während das Dach gezeichnet wird (uRoofA)
+      p = vec3(pos3.x, pos3.y * uRoofH, pos3.z);
+      col = mix(cAmber, cBone, kind3 * .45);
+      sz = kind3 > .5 ? .7 : .95; al = uRoofA;
     } else {
       float br = 1. + sin(uTime*1.2 + pos4.x*.8)*.04;
       p = pos4 * vec3(br, br, 1.) + jitter(.01, 2.);
@@ -298,7 +308,7 @@ function layout() {
     if (heroFit) { const wpp = 8.19 / GLH, hw2 = (heroFit.bot - heroFit.top) * wpp; X[0].set(0, (GLH / 2 - (heroFit.top + heroFit.bot) / 2) * wpp, 0, Math.min(0.8, hw2 / 7.75)); } // Figur zwischen Leiste und Kicker (4.11.)
     X[1].set(0, 0, 0, 1.25);           // 1A: Bewegungslinien über den ganzen Bildschirm
     X[2].set(0, 1.65, 0, 0.28);        // 4A: Wirbelsäule in der oberen Bildhälfte
-    X[3].set(0, 2.5, 0, 0.42);         // 2B: wird beim Scrollen zum Emblem (siehe roofEmblem)
+    X[3].set(0, 2.5, 0, 0.42);         // Dachlinie: Platzhalter, roofPlace legt sie aufs SVG-Dach
     X[4].set(0, 2.15, 0, 0.32);        // 3: tiefer und kleiner, frei von der Leiste
   }
   uniforms.uPix.value = renderer ? renderer.getPixelRatio() * (GLH / 900) * (d ? 1 : 1.25) : 1;
@@ -630,7 +640,7 @@ scene.add(spineGroup);
 function warmShaders() {
   if (!renderer || !isDesktop()) return;
   const run = () => {
-    const hid = [spineGroup, tourPts].filter((o) => !o.visible);
+    const hid = [spineGroup].filter((o) => !o.visible);
     hid.forEach((o) => { o.visible = true; });
     try { renderer.compile(scene, camera); } catch (e) { /* egal */ }
     hid.forEach((o) => { o.visible = false; });
@@ -1051,7 +1061,7 @@ segBtns.forEach((b) => b.addEventListener('click', () => {
 // sobald die Kamera steht, und lebt nur im unteren Bildteil → beim Weiterscrollen bleibt der Abschnitt über
 // der Kartenoberkante → Karte blendet oben aus. Nach der letzten Karte: ganze Wirbelsäule groß in der Mitte,
 // stehen lassen, dann löst sie sich nach oben auf und das Haus entsteht in der Bildmitte.
-const axisNote = $('#achse .note'), dachSec = $('#dach'), roofIntro = $('#tour .roof-intro');
+const axisNote = $('#achse .note'), dachSec = $('#dach');
 const MOB_X2 = { x: 0, y: 1.65, s: 0.28 }; // = layout() Handy (4A)
 let camArrive = 0, gateK = 1, dotsStuck = 0;
 const dotsBox = $('.seg-dots');
@@ -1538,8 +1548,6 @@ $$('.index li').forEach((li) => {
     $$('.index li.open').forEach((o) => { o.classList.remove('open'); $('button', o).setAttribute('aria-expanded', 'false'); });
     li.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open));
   });
-  b.addEventListener('pointerenter', () => tween(uniforms.uHouse, 'value', 1, 0.4));
-  b.addEventListener('pointerleave', () => tween(uniforms.uHouse, 'value', 0, 0.6));
 });
 
 // ---------- Hausordnung ----------
@@ -1671,402 +1679,26 @@ function logoPlace() {
   uniforms.uXf.value[4].set(0, (GLH / 2 - c) * wpp, 0, 0.32);
 }
 
-// ---------- Kapitel 04: Rundgang durch die Praxis (Punktwolke im Partikel-Haus) ----------
-const tourEl = $('#tour'), roomCards = $$('.room-card'), roomBtns = $$('.roomnav button'), roomDots = $$('.room-dots button');
-// Einrichtung „gestochen“: Scan-Linien (Wände, Boden, Kanten) leuchten, Möbel sind Körper mit Kern
-// Aufbau erst, wenn #dach in Reichweite kommt (A1); danach blenden Linien und Möbel ein (tU.uReady)
-let prx = null;
-const tU = {
-  uTime: uniforms.uTime, uPix: uniforms.uPix, uRot: uniforms.uHouseRot, uXf: { value: uniforms.uXf.value[3] },
-  uCut: { value: -10 }, uOn: { value: 0 }, uRoom: { value: -1 }, uFade: { value: 1 }, uStip: { value: 1 }, uReady: { value: 0 }, uDim: { value: 1 },
-  cBone: uniforms.cBone, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue, cGreen: uniforms.cGreen, cPetrol: uniforms.cPetrol, cCore: { value: C('#0E1C22') },
-};
-const T_COMMON = /* glsl */`
-  attribute float aKind, aRoom;
-  uniform float uTime, uPix, uRot, uCut, uOn, uRoom, uFade, uStip, uReady, uDim; uniform vec4 uXf;
-  uniform vec3 cBone, cAmber, cBlue, cGreen, cPetrol, cCore;
-  vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
-  float roomGain(){ float act = 1. - step(.5, abs(aRoom - uRoom)); return uRoom < -.5 ? 1. : mix(.42, 1.2, act); }`;
-const tourPts = new THREE.Group();
-tourPts.visible = false;
-scene.add(tourPts);
-function buildTour() {
-  // 1) Scan-Linien: leuchtend, gleichmäßig (Wände, Boden, Kanten)
-  const tourLines = new THREE.Points(prx.lines, new THREE.ShaderMaterial({
-    uniforms: tU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    vertexShader: T_COMMON + /* glsl */`
-      varying vec3 vCol; varying float vA;
-      void main(){
-        vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
-        vec3 col = aKind < .5 ? cPetrol * .85 : aKind < 1.5 ? cBone * .34 : cBone * 1.05; // 3C 7.11.: Wandzeilen zurück, Kanten vor
-        col *= roomGain();
-        float g = exp(-pow((position.y - uCut) * 14., 2.));
-        col = mix(col, cAmber * 1.4, g);
-        vec4 mv = viewMatrix * vec4(p, 1.);
-        gl_Position = projectionMatrix * mv;
-        float d = -mv.z, dn = d / uXf.w;
-        gl_PointSize = clamp(uPix * (aKind > 5.5 ? 1.5 : aKind > .5 ? 1. : 1.1) * 9. / d, 1., 3.5) * (1. + g);
-        // nahe Wände und Kanten ausblenden (Schnittbild), sonst stehen sie als helle Streifen im Bild
-        float nearFade = aKind > .5 ? smoothstep(.7, 1.9, dn) : smoothstep(.2, .85, dn);
-        vA = step(position.y, uCut) * uOn * uFade * (aKind < .5 ? .5 : aKind < 1.5 ? .55 : .95) * nearFade * uReady;
-        vCol = col;
-      }`,
-    fragmentShader: /* glsl */`
-      varying vec3 vCol; varying float vA;
-      void main(){ float d = length(gl_PointCoord - .5); gl_FragColor = vec4(vCol, smoothstep(.5, .12, d) * vA);
-        #include <colorspace_fragment>
-      }`,
-  }));
-  // 2) Möbel: gestochene Punkte (deckend, beleuchtet) …
-  const tourFurn = new THREE.Points(prx.furn, new THREE.ShaderMaterial({
-    uniforms: tU,
-    vertexShader: T_COMMON + /* glsl */`
-      varying vec3 vCol; varying float vVis;
-      void main(){
-        vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
-        vec3 n = normalize(rotY(normal, uRot));
-        vec3 V = normalize(cameraPosition - p);
-        float lam = max(dot(n, normalize(vec3(.4, .8, .5))), 0.), rim = pow(1. - abs(dot(n, V)), 3.);
-        vec3 base = aKind < 2.5 ? cBone : aKind < 3.5 ? cGreen : aKind < 4.5 ? cAmber : aKind < 5.5 ? mix(cPetrol * 1.7, cBlue, .3) : cBone;
-        vec3 col = base * (.16 + .64 * lam) + base * rim * 1.1 + cBlue * rim * .1; // 3C 7.11.: Umriss heller als die Fläche (differenziert)
-        col *= roomGain() * (.25 + .75 * uFade) * uReady * uDim; // uDim: Handy vor dem Betreten gedämpft
-        float g = exp(-pow((position.y - uCut) * 14., 2.));
-        col = mix(col, cAmber * 1.4, g);
-        vec4 mv = viewMatrix * vec4(p, 1.);
-        gl_Position = projectionMatrix * mv;
-        float d = -mv.z, dn = d / uXf.w;
-        gl_PointSize = clamp(uStip / d, 1., 3.6) * (1. + g * .6);
-        // nah an der Kamera: Punkte lösen sich auf (zufällig, statt hart abzuschneiden)
-        float h = fract(sin(dot(position.xz, vec2(12.9898, 78.233)) + position.y * 37.7) * 43758.5453);
-        vVis = step(position.y, uCut) * uOn * step(h, smoothstep(.25, .8, dn));
-        vCol = col;
-      }`,
-    fragmentShader: /* glsl */`
-      varying vec3 vCol; varying float vVis;
-      void main(){ float d = length(gl_PointCoord - .5); if (vVis < .5 || d > .5) discard;
-        gl_FragColor = vec4(vCol * (1. - smoothstep(.2, .5, d) * .45), 1.);
-        #include <colorspace_fragment>
-      }`,
-  }));
-  // … 3) auf dunklem Kern (verdeckt Rückseiten, macht die Möbel zu Körpern)
-  const tourCore = new THREE.Mesh(prx.core, new THREE.ShaderMaterial({
-    uniforms: tU,
-    vertexShader: T_COMMON + /* glsl */`
-      varying float vY, vD, vL;
-      void main(){
-        vec3 p = rotY(position - normal * .006, uRot) * uXf.w + uXf.xyz;
-        vL = max(dot(normalize(rotY(normal, uRot)), normalize(vec3(.4, .8, .5))), 0.);
-        vY = position.y;
-        vec4 mv = viewMatrix * vec4(p, 1.); vD = -mv.z / uXf.w;
-        gl_Position = projectionMatrix * mv;
-      }`,
-    fragmentShader: /* glsl */`
-      uniform float uCut, uOn; uniform vec3 cCore, cBone; varying float vY, vD, vL;
-      void main(){ if (vY > uCut || uOn < .5 || vD < .45) discard;
-        gl_FragColor = vec4(cCore + cBone * vL * .04, 1.);
-        #include <colorspace_fragment>
-      }`,
-  }));
-  [tourLines, tourFurn, tourCore].forEach((o) => { o.frustumCulled = false; tourPts.add(o); });
-}
-// einmal rechnen; der Rundgang aus Augenhöhe (Dialog) nutzt dieselbe Punktwolke (prxP)
-let prxP = null;
-const buildPrx = () => prxP || (prxP = runSliced(praxisScanGen(isDesktop() ? 85000 : 32000, isDesktop() ? 1 : 0.62)).then((r) => { prx = r; buildTour(); warmShaders(); return r; }));
-whenNear($('#dach'), buildPrx);
-
-// Raum-Beschriftungen im Raum
-// Schilder im Haus (Stil wie Design „Zuhause“): Nummer, Raum, darunter was dort wartet
-const ROOM_SUB = ['Ankommen', 'Wohnzimmer', 'Manuelle Therapie & mehr', 'Manuthera', 'Bewegung'];
-const tagHTML = (no, label, sub, cta) => `<i>${no}</i><span><b>${label}</b><small class="s-norm">${sub}</small>${cta ? `<small class="s-cta">${cta}</small>` : ''}</span>`;
-const roomTags = ROOMS.map((r, i) => {
-  const el = document.createElement('div'); el.className = 'room-tag' + (i === 3 ? ' hi' : ''); el.setAttribute('aria-hidden', 'true');
-  el.innerHTML = tagHTML(String(i + 1).padStart(2, '0'), i === 3 ? 'Manuthera' : r.short, ROOM_SUB[i], i === 3 ? '▶ in Bewegung ansehen' : ''); document.body.appendChild(el);
-  el.addEventListener('pointerenter', () => (hoverRoom = i)); el.addEventListener('pointerleave', () => (hoverRoom = -1));
-  // Im Röntgenblick ist Raum 04 ein Knopf direkt zur Manuthera-Bühne, im Rundgang ein normales Raum-Schild
-  el.addEventListener('click', () => { if (el.classList.contains('cta')) { const t = $('#manuthera'); if (t) scrollToY(t.getBoundingClientRect().top + scrollY); } else goRoom(i); });
-  const [x, y, w, h] = r.r; const [cx, cz] = P(x + w / 2, y + h / 2);
-  return { el, p: new V3(cx, EYE + 0.55, cz) };
+// ---------- Kapitel 04 (seit 14.11.2026, Go Kai „2a“): Linienhaus „Licht im Fenster“ statt Partikel-Haus ----------
+// Baustein src/haus-licht/house.js + house.css (gleich wie die Entwurfsseite haus-licht.html): SVG-Haus bei Nacht, Licht je
+// Raum, Rundgang, Rundgang aus Augenhöhe (Dialog, Zeichnung → Foto → später Scan) – kein WebGL. Die Partikel der Wirbelsäule
+// fließen beim Hereinscrollen in die Bernstein-Dachlinie (Form 3 folgt der Lage des SVG-Dachs) und vergehen, während die
+// Linie gezeichnet wird. Die Dachlinie über der Überschrift zeichnet weiter livingHeadlines (headLine: false).
+// Entfallen: praxis.js-Punktwolke, Röntgenblick, Raum-Schilder, Klick-Rundgang in 3D, Partikel-Augenhöhe (src/ego).
+const lh = initHouse({
+  root: $('#lhRoot'), isPaused: () => paused, headLine: false,
+  canDraw: () => !renderer || reduced || morphNow > 2.86, // erst zeichnen, wenn die Partikel an der Dachlinie angekommen sind
+  onDialog: (open) => { if (open) lenis?.stop(); else lenis?.start(); },
+  goto: (h) => { const t = $(h); if (t) scrollToY(t.getBoundingClientRect().top + scrollY); },
 });
-// Manuthera-Knopf am rechten Rand von Behandlung 2 (ragt nach rechts aus dem Haus, überdeckt keine anderen Schilder)
-const manuCtaP = (() => { const [x, z] = P(404, 136); return new V3(x, EYE + 0.05, z); })();
-// Zusatz-Schild im Röntgenblick: Tür → Kontakt (Wirbelsäule hat ihr eigenes Kapitel 03, das Modell steht nur im Raum)
-const extraTags = [
-  { no: '00', label: 'Tür', sub: 'Termin & Kontakt', at: (() => { const [x, z] = P(199, 272); return new V3(x, -3 + 0.5, z + 0.12); })(), to: '#tuer' },
-].map((t) => {
-  const el = document.createElement('div'); el.className = 'room-tag extra'; el.setAttribute('aria-hidden', 'true');
-  el.innerHTML = tagHTML(t.no, t.label, t.sub); document.body.appendChild(el);
-  el.addEventListener('click', () => { const tg = $(t.to); if (tg) scrollToY(tg.getBoundingClientRect().top + scrollY); });
-  return { el, p: t.at };
-});
-// Kamera-Stationen in Form-Koordinaten [Grundriss x, Grundriss y, Höhe]
-const TS = (px, py, y) => { const [x, z] = P(px, py); return new V3(x, y, z); };
-const TOUR = {
-  entry: { pos: TS(199, 330, -2.0), tgt: TS(199, 150, -2.3) },
-  rooms: [
-    { pos: TS(160, 132, EYE), tgt: TS(58, 44, EYE - 0.22) },
-    { pos: TS(160, 150, EYE), tgt: TS(56, 250, EYE - 0.22) },
-    { pos: TS(238, 88, EYE), tgt: TS(340, 40, EYE - 0.2) },
-    { pos: TS(238, 172, EYE), tgt: TS(340, 130, EYE - 0.2) },
-    { pos: TS(238, 266, EYE), tgt: TS(376, 204, EYE - 0.2) },
-  ],
-  bird: { pos: TS(210, 330, 2.6), tgt: TS(210, 128, -3) },
-};
-const TOUR_ROT = -0.3;
-const toWorld = (v) => { const X = uniforms.uXf.value[3]; return v.clone().applyAxisAngle(new V3(0, 1, 0), uniforms.uHouseRot.value).multiplyScalar(X.w).add(new V3(X.x, X.y, X.z)); };
-function tourPose(st) {
-  const T = toWorld(st.tgt), Pw = toWorld(st.pos), desk = isDesktop(), X = uniforms.uXf.value[3];
-  // in den Räumen weiter zurück und etwas höher (Puppenhaus-Blick); nahe Wände blenden aus
-  const inRoom = TOUR.rooms.includes(st), dir = Pw.clone().sub(T);
-  if (inRoom) dir.y += 0.42 * X.w;
-  const d = dir.length() * (inRoom ? (desk ? 1.85 : 3.0) : 1);
-  return frame(T, dir, d * (desk && inRoom ? 1.12 : 1), desk ? 0.68 : 0.5, desk ? 0.5 : 0.3);
-}
-let roomOn = -1;
-function setRoom(i) {
-  if (i === roomOn) return; roomOn = i;
-  [roomCards, roomBtns, roomDots].forEach((list) => list.forEach((el, k) => el.classList.toggle('is-on', k === i)));
-}
-// Rundgang ohne Scrollen: Räume per Klick, Pfeil, Wischen oder Pfeiltaste; „Rundgang starten“ fährt selbst
-// tourIdx: -1 draußen (Übersicht/Röntgenblick), 0–4 Räume, 5 Grundriss von oben
-let tourIdx = -1, insideK = 0, viaEntry = 0, autoTour = false, autoT = 0;
-const tourPlay = $('#tourPlay'), tourProg = $('#tourProg');
-const TOUR_STEP = reduced ? 6.5 : 5, TOUR_BIRD = 3.5;
-function tourInView() { const r = tourEl.getBoundingClientRect(); return r.top < VH * 0.5 && r.bottom > VH * 0.5; }
-function bringTourIntoView() { const r = tourEl.getBoundingClientRect(); if (Math.abs(r.top) > 4 && !(r.top <= 0 && r.bottom >= VH)) scrollToY(r.top + scrollY + 2); }
-function setAuto(on) {
-  autoTour = on; autoT = 0;
-  tourEl.classList.toggle('auto', on);
-  if (tourPlay) { tourPlay.setAttribute('aria-pressed', on ? 'true' : 'false'); tourPlay.querySelector('span').textContent = on ? 'Rundgang anhalten' : 'Rundgang starten'; }
-}
-function goRoom(i, fromAuto) {
-  i = Math.max(-1, Math.min(5, i));
-  if (tourIdx < 0 && i >= 0) viaEntry = reduced ? 0 : 0.9; // erst durch die Tür
-  tourIdx = i;
-  tourEl.classList.toggle('in', i >= 0);
-  if (!fromAuto) setAuto(false);
-  if (i >= 0) bringTourIntoView();
-}
-function tourStep(d) { goRoom(tourIdx < 0 ? (d > 0 ? 0 : 4) : tourIdx + d > 5 ? -1 : tourIdx + d); }
-roomBtns.forEach((b) => b.addEventListener('click', () => goRoom(+b.dataset.room)));
-roomDots.forEach((d) => d.addEventListener('click', () => goRoom(+d.dataset.room)));
-$('#tourPrev')?.addEventListener('click', () => tourStep(-1));
-$('#tourNext')?.addEventListener('click', () => tourStep(1));
-$('#tourExit')?.addEventListener('click', () => goRoom(-1));
-tourPlay?.addEventListener('click', () => { if (autoTour) setAuto(false); else { goRoom(0, true); setAuto(true); } });
-addEventListener('keydown', (e) => {
-  if (egoOpen || !tourInView() || e.altKey || e.ctrlKey || e.metaKey || /input|textarea|select/i.test(document.activeElement?.tagName || '')) return;
-  if (e.key === 'ArrowRight') { e.preventDefault(); tourStep(1); }
-  else if (e.key === 'ArrowLeft') { e.preventDefault(); tourStep(-1); }
-  else if (e.key === 'Escape' && tourIdx >= 0) goRoom(-1);
-});
-// Wischen über das Haus (Handy): waagerecht = Raum wechseln, senkrecht bleibt Scrollen
-{ let x0 = null, y0 = 0; const st = $('.tour-sticky');
-  st?.addEventListener('touchstart', (e) => { if (e.target.closest('a,button')) return; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
-  st?.addEventListener('touchend', (e) => { if (x0 === null) return; const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) tourStep(dx < 0 ? 1 : -1); }, { passive: true }); }
-let tourWant = null, tourHide = 0, xray = 0, dragRot = 0, hoverRoom = -1;
-// Handy: Röntgenblick ruhiger (Linien 25 %, Haus-Umriss blass), bis man den Rundgang betritt – der Text von Kapitel 04 liegt darüber
-let tourEngaged = false, xrayCalm = 1, viewLift = 0;
-// Schild „Manuthera“ an der Liege in Raum 04 (Röntgenblick und Rundgang, PC und Handy)
-const manuTag = document.createElement('a');
-manuTag.className = 'manu-tag'; manuTag.href = '#manuthera'; manuTag.setAttribute('aria-label', 'Manuthera ansehen');
-manuTag.innerHTML = '<b class="dot" aria-hidden="true"></b>Manuthera <span aria-hidden="true">↓</span>';
-($('main') || document.body).appendChild(manuTag);
-manuTag.addEventListener('click', (e) => { e.preventDefault(); const t = $('#manuthera'); if (t) scrollToY(t.getBoundingClientRect().top + scrollY); });
-const manuTagP = (() => { const [x, z] = P(320, 136); return new V3(x, EYE - 0.22, z); })();
-let manuTagVis = 0;
-// rechte Kante der linken Textspalte im Rundgang (PC); Schilder im Raum bleiben rechts davon
-function textColRight() {
-  if (!isDesktop()) return -1e9;
-  const r = $('.roomnav')?.getBoundingClientRect();
-  return r && r.width ? r.right + 16 : -1e9;
-}
-function placeManuTag() {
-  const w = toWorld(manuTagP); w.project(camera);
-  const sx = (w.x * 0.5 + 0.5) * VW;
-  const vis = manuTagVis * (w.z < 1 && Math.abs(w.x) < 0.92 && Math.abs(w.y) < 0.85 && sx - manuTag.offsetWidth / 2 > textColRight() ? 1 : 0) * (1 - manuK);
-  manuTag.style.opacity = vis.toFixed(2);
-  manuTag.classList.toggle('on', vis > 0.3);
-  manuTag.tabIndex = vis > 0.3 ? 0 : -1; // unsichtbar auch nicht per Tastatur erreichbar
-  if (vis > 0) manuTag.style.transform = `translate(${((w.x * 0.5 + 0.5) * VW).toFixed(1)}px, ${((-w.y * 0.5 + 0.5) * GLH - 30).toFixed(1)}px) translate(-50%, -100%)`;
-}
-// Haus mit gedrückter Maus drehen (PC, Röntgenblick)
-{ let down = null; addEventListener('pointerdown', (e) => { if (!egoOpen && xray > 0.4 && e.pointerType === 'mouse' && e.clientX > VW * 0.45 && !e.target.closest('a,button,.room-tag')) down = e.clientX; });
-  addEventListener('pointermove', (e) => { if (down !== null) { dragRot += (e.clientX - down) * 0.006; down = e.clientX; } });
-  addEventListener('pointerup', () => (down = null)); }
-function xrayPose() {
-  const X = uniforms.uXf.value[3], desk = isDesktop();
-  return frame(toWorld(new V3(0, -1.75, 0.1)), new V3(0.18, 0.62, 1), (desk ? 20 : ROOF_D) * X.w, desk ? 0.69 : 0.5, desk ? 0.56 : roofFy());
-}
-// Handy (Kai 7.11., 2A): Überschrift oben, Knöpfe unten – das Haus steht in der freien Fläche dazwischen. Gerechnet in der
-// Lage „Bühne steht“ (relativ zur Bühnen-Oberkante), damit das Haus beim Hereinscrollen nicht mitwandert.
-const tourStickyEl = $('.tour-sticky'), tourKickerEl = $('#tour .tour-kicker');
-let roofFyV = 0.3, roofFyT = 0, roofMid = 0; // roofMid: Mitte der freien Fläche (px ab Bühnen-Oberkante)
-function roofFy() {
-  const now = performance.now();
-  if (now - roofFyT > 500 && tourStickyEl && roofIntro && tourKickerEl) {
-    roofFyT = now;
-    const st = tourStickyEl.getBoundingClientRect().top, ib = roofIntro.getBoundingClientRect().bottom - st, kt = tourKickerEl.getBoundingClientRect().top - st;
-    if (kt > ib + 40) { roofMid = (ib + kt) / 2; roofFyV = clamp(roofMid / GLH + ROOF_FY_OFF, 0.3, 0.75); }
-  }
-  return roofFyV;
-}
-const ROOF_D = 34; // Handy: Abstand so, dass das ganze Haus unter der Überschrift steht (vorher 17 = Räume groß)
-const ROOF_FY_OFF = 0.05; // Bezugspunkt liegt im unteren Teil des Hauses → etwas tiefer, damit das Dach frei bleibt
-// Handy: nach dem Rundgang (bis die Manuthera-Bühne vorbei ist) kein Haus/Röntgenblick mehr – 0 … 1
-function houseGone() {
-  const vh = MINH, tb = tourEl.getBoundingClientRect().bottom, mb = manuSec ? manuSec.getBoundingClientRect().bottom : 0;
-  return (1 - smooth(vh * 0.55, vh * 0.98, tb)) * smooth(vh * 0.1, vh * 0.5, mb); // blendet aus, sobald die Knöpfe hochwandern
-}
-// ---------- Kapitel 04: Rundgang aus Augenhöhe (Go Kai 7.11. „1B+ 2a/a 3a 4 ja“) ----------
-// Eigene Vollbild-Bühne als <dialog> (Fahrt aus src/ego/tour.js, wie die Testseite rundgang-ego.html). Angelegt im Leerlauf,
-// sobald die Hausansicht steht (sonst beim ersten Klick), nutzt die fertige Praxis-Punktwolke (prxP).
-// Übergang (Go Kai 8.11. „a B“, ersetzt den Anflug B+): der Dialog öffnet sofort mit genau der Kamera der Seite (Pose, 35°,
-// Bildausschnitt) über durchsichtigem Hintergrund und fliegt selbst in einem Zug bis an die Tür (ego.intro) – kein Schnitt.
-// Esc/„Übersicht“/Zurück-Taste schließen → gleiche Scroll-Stelle, wieder Röntgenblick.
-// „Bewegung reduzieren“/„Ohne Fahrt“: kein Flug, nur Überblenden; „Bewegung anhalten“: „Ohne Fahrt“ vorausgewählt.
-const egoDlg = $('#ego'), egoBtn = $('#egoOpen'), egoLoading = $('#egoLoading');
-let ego = null, egoOpen = false, egoSkipPop = false, egoAfter = null, egoWarm = false;
-// Einflug (Go Kai 8.11. „a B“): Pose der Haupt-Kamera in Grundriss-Koordinaten (Umkehrung von toWorld)
-let egoWarmUp = () => {};
-const toForm = (w) => { const X = uniforms.uXf.value[3]; return w.clone().sub(new V3(X.x, X.y, X.z)).divideScalar(X.w).applyAxisAngle(new V3(0, 1, 0), -uniforms.uHouseRot.value); };
-let egoMake = () => null;
-if (egoDlg && egoBtn) {
-  $('#egoHint').textContent = finePointer ? 'Ziehen = umschauen · Pfeiltasten = weiter' : 'Ziehen = umschauen';
-  // Bühne anlegen (im Leerlauf vorab, sonst beim ersten Klick); Praxis übergeben und Shader übersetzen, damit der Einflug nicht hakt
-  egoMake = () => {
-    if (ego || egoBtn.hidden) return ego;
-    ego = createEgo({
-      canvas: $('#egoGl'), keys: egoDlg, mobile: !isDesktop(), reduced, still: paused,
-      ui: {
-        cap: $('#egoCap'), capNo: $('#egoNo'), capKick: $('#egoKick'), capTitle: $('#egoTitle'), capText: $('#egoText'), contact: $('#egoContact'),
-        prev: $('#egoPrev'), play: $('#egoPlay'), next: $('#egoNext'), optStill: $('#egoStill'), optCalm: $('#egoCalm'), optBig: $('#egoBig'),
-        hint: $('#egoHint'), veil: $('#egoVeil'),
-      },
-    });
-    if (!ego) { egoBtn.hidden = true; return null; } // zweite WebGL-Bühne nicht möglich → Knopf weg, Klick-Rundgang bleibt
-    if (prx) { ego.setPrx(prx); ego.warm(); }
-    return ego;
-  };
-  // fly: Einflug aus der aktuellen Hausansicht (sonst nur Überblenden – „Bewegung reduzieren“, „Ohne Fahrt“, Praxis noch im Aufbau)
-  const egoShow = (fly) => {
-    if (!egoMake()) return;
-    if (!ego.ready && prx) ego.setPrx(prx);
-    ego.reset();
-    if (fly && ego.ready) ego.intro({ pos: toForm(camera.position), look: toForm(cam.target), fov: camera.fov, fullW: VW, fullH: GLH, offY: viewLift, viewH: VH, lum: isDesktop() ? 0.7 : 0.5 }); // Röntgenblick der Seite ist gedämpfter als der Rundgang → hell werden während des Flugs
-    egoOpen = true;
-    document.documentElement.classList.add('ego-open');
-    if (lenis) lenis.stop();
-    egoDlg.showModal();
-    try { history.pushState({ hopEgo: 1 }, ''); } catch (e) { /* ohne Verlauf */ }
-    ego.start();
-    if (!ego.ready) {
-      egoLoading.hidden = false;
-      buildPrx().then((r) => { ego.setPrx(r); egoLoading.hidden = true; }).catch(() => { egoLoading.textContent = 'Fehler beim Aufbau.'; });
-    }
-  };
-  // Vorab anlegen, sobald die Hausansicht steht und niemand scrollt (Leerlauf) – nicht schon beim Laden (Startzeit)
-  egoWarmUp = () => {
-    if (egoWarm || ego || !prx || egoBtn.hidden) return;
-    egoWarm = true;
-    (window.requestIdleCallback || ((f) => setTimeout(f, 200)))(() => egoMake(), { timeout: 1500 });
-  };
-  egoBtn.addEventListener('click', () => {
-    if (egoOpen || !renderer) return;
-    houseUsed = true;
-    const inRoom = tourIdx >= 0;
-    if (inRoom) goRoom(-1);
-    egoShow(!inRoom && !reduced && xray > 0.3);
-  });
-  const egoClose = (fromPop) => {
-    if (!egoOpen) return;
-    egoOpen = false;
-    ego.stop();
-    if (egoDlg.open) egoDlg.close();
-    document.documentElement.classList.remove('ego-open');
-    if (lenis) lenis.start();
-    if (!fromPop && history.state && history.state.hopEgo) { egoSkipPop = true; history.back(); } // eigener Verlaufseintrag weg
-    else if (egoAfter) { const f = egoAfter; egoAfter = null; requestAnimationFrame(f); }
-    egoBtn.focus({ preventScroll: true });
-  };
-  $('#egoClose').addEventListener('click', () => egoClose());
-  egoDlg.addEventListener('close', () => egoClose()); // Esc (Browser schließt den Dialog selbst)
-  addEventListener('popstate', () => {
-    if (egoSkipPop) { egoSkipPop = false; if (egoAfter) { const f = egoAfter; egoAfter = null; requestAnimationFrame(f); } return; }
-    if (egoOpen) egoClose(true); // Zurück-Taste / Wischgeste am Handy
-  });
-  // „Bis bald“ → Termin & Kontakt: Dialog zu, dann zur Tür (Kapitel 05) – erst nach dem Rücksprung im Verlauf
-  $('#egoContact').addEventListener('click', (e) => {
-    e.preventDefault();
-    egoAfter = () => { const t = $('#tuer'); if (t) scrollToY(t.getBoundingClientRect().top + scrollY); };
-    egoClose();
-  });
-}
-function updateTour(dt) {
-  manuTagVis = 0;
-  const r = tourEl.getBoundingClientRect(), vh = VH, desk = isDesktop();
-  const near = r.top < vh && r.bottom > 0 && morphNow > 2.6 && morphNow < 3.4;
-  if (tourIdx >= 0 && !tourInView()) goRoom(-1); // weggescrollt → wieder draußen
-  // Rundgang-Film
-  if (autoTour && tourIdx >= 0 && !paused) {
-    autoT += dt;
-    const dur = tourIdx === 5 ? TOUR_BIRD : TOUR_STEP;
-    if (tourProg) tourProg.style.width = (((tourIdx + Math.min(1, autoT / dur)) / 6) * 100).toFixed(1) + '%';
-    if (autoT > dur) { autoT = 0; if (tourIdx < 5) goRoom(tourIdx + 1, true); else { setAuto(false); goRoom(-1); } }
-  } else if (tourProg && !autoTour) tourProg.style.width = '0%';
-  // Scan hinein/hinaus (Boden → Decke)
-  const want = near && tourIdx >= 0 ? 1 : 0;
-  insideK = reduced ? want : insideK + (want - insideK) * (1 - Math.exp(-dt * (want ? 1.5 : 2.6)));
-  const inside = near ? insideK : 0;
-  // Röntgenblick (PC): von außen leuchtet das Innere durch das Haus, das Dach schwebt angehoben
-  // Handy: erst steht das Haus groß in der Bildmitte; der Röntgenblick (Haus oben) kommt mit dem Text von unten
-  const pvIn = desk ? smooth(2.55, 2.95, morphNow) : Math.min(smooth(2.7, 2.95, morphNow), smooth(MINH * 1.02, MINH * 0.72, roofIntro.getBoundingClientRect().top));
-  const pv = morphNow > 2.55 && morphNow < 3.45 ? pvIn * (1 - smooth(3.05, 3.45, morphNow)) * (1 - inside) * (1 - manuK) * (1 - listK) * (desk ? 1 : 1 - houseGone()) : 0;
-  xray = pv;
-  if (tourIdx >= 0) tourEngaged = true; else if (!tourInView()) tourEngaged = false;
-  xrayCalm += ((desk || tourEngaged ? 1 : 0.6) - xrayCalm) * (1 - Math.exp(-dt * 3)); // Handy 7.11.: Text steht über dem Haus, nicht mehr darauf → weniger dämpfen (vorher 0.25)
-  tU.uCut.value = inside > 0.001 ? -3.05 + inside * 1.9 : (pv > 0 ? -1.0 : -10);
-  tU.uOn.value = inside > 0.001 || pv > 0 ? 1 : 0; tourPts.visible = inside > 0.001 || pv > 0;
-  tU.uFade.value = inside > 0.001 ? Math.max(inside, pv * 0.55 * xrayCalm) : pv * 0.55 * xrayCalm;
-  tU.uDim.value = Math.max(inside, 0.2 + 0.8 * xrayCalm); // Möbel mitdämpfen (PC: xrayCalm = 1 → unverändert)
-  tU.uReady.value = prx ? ramp(tU.uReady.value, dt) : 0;
-  if (prx) tU.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * GLH * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * prx.spacing * uniforms.uXf.value[3].w * 0.62;
-  uniforms.uRoofLift.value += (Math.max(pv * 1.3, inside * 1.1) - uniforms.uRoofLift.value) * 0.08;
-  tourHide = Math.min(1, inside * 1.4);
-  // Hausdrehung festhalten, solange wir drinnen sind
-  const free = Math.sin(uniforms.uTime.value * 0.2) * 0.45 - 0.55 + dragRot;
-  uniforms.uHouseRot.value = THREE.MathUtils.lerp(free, TOUR_ROT, smooth(0, 0.6, inside));
-  if (tourIdx < 0) {
-    // Röntgenblick: Kamera leicht von oben (wie im Design „Zuhause“), damit sich die Schilder nicht überlagern
-    tourWant = pv > 0.3 ? xrayPose() : null; // Augenhöhe: der Dialog übernimmt diese Kamera und fliegt selbst (Go Kai 8.11. „a B“)
-    if (pv > 0.6 && performance.now() - lastInput > 1200) egoWarmUp();
-    if (pv > 0.3) { // Räume, Tür und Modell als anklickbare Schilder
-      tU.uRoom.value = hoverRoom;
-      const place = (t, i, p, right) => { const w = toWorld(p); w.project(camera); t.el.classList.add('click'); t.el.classList.toggle('on', i === hoverRoom); t.el.style.opacity = pv; t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * VW}px, ${(-w.y * 0.5 + 0.5) * GLH}px) translate(${right ? '-12%' : '-50%'}, -50%)`; };
-      roomTags.forEach((t, i) => { t.el.classList.toggle('cta', i === 3); place(t, i, i === 3 ? manuCtaP : t.p.clone().setY(EYE + 0.2), i === 3); });
-      extraTags.forEach((t) => place(t, -9, t.p));
-    } else { tU.uRoom.value = -1; [...roomTags, ...extraTags].forEach((t) => { t.el.classList.remove('click'); t.el.style.opacity = 0; }); }
-    return;
-  }
-  roomTags.forEach((t) => t.el.classList.remove('click', 'cta'));
-  extraTags.forEach((t) => { t.el.classList.remove('click'); t.el.style.opacity = 0; });
-  // Kamera: erst durch die Tür, dann zum Raum (die Kamera gleitet weich hinüber)
-  if (viaEntry > 0) viaEntry -= dt;
-  const room = tourIdx <= 4 ? tourIdx : -1;
-  const st = viaEntry > 0 ? tourPose(TOUR.entry) : tourPose(tourIdx === 5 ? TOUR.bird : TOUR.rooms[tourIdx]);
-  setRoom(room); // Grundriss von oben: keine Raumkarte
-  tU.uRoom.value = room;
-  manuTagVis = room === 3 ? smooth(0.85, 1, inside) : 0;
-  tourWant = st;
-  // Beschriftungen (nie über der linken Textspalte mit Raum-Knöpfen und Karte)
-  const colR = textColRight();
-  roomTags.forEach((t, i) => {
-    const w = toWorld(t.p); w.project(camera);
-    const sx = (w.x * 0.5 + 0.5) * VW;
-    const vis = desk && inside > 0.9 && w.z < 1 && Math.abs(w.x) < 0.95 && Math.abs(w.y) < 0.9 && sx - t.el.offsetWidth / 2 > colR;
-    t.el.style.opacity = vis ? (i === room ? 1 : 0.55) : 0;
-    t.el.classList.toggle('on', i === room);
-    if (vis) t.el.style.transform = `translate(${(w.x * 0.5 + 0.5) * VW}px, ${(-w.y * 0.5 + 0.5) * GLH}px) translate(-50%, -50%)`;
-  });
+const tourWant = null; // die Kamera der Partikel-Szene fährt in Kapitel 04 nicht mehr
+// Form 3 auf das SVG-Dach legen: Bildschirm-Pixel → Welt (Ebene z = 0, Übersichtskamera wie logoPlace)
+function roofPlace() {
+  if (morphNow < 2.02 || morphNow > 3.98) return;
+  const g = lh.roofScreen(); if (!g) return;
+  const hh = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)), wpp = 2 * hh / GLH, half = Math.max(1, (g.r - g.l) / 2);
+  uniforms.uXf.value[3].set(((g.l + g.r) / 2 - VW / 2) * wpp, (GLH / 2 - g.bot) * wpp, 0, half * wpp);
+  uniforms.uRoofH.value = (g.bot - g.top) / half;
 }
 
 // ---------- Lebende Überschriften ----------
@@ -2122,20 +1754,7 @@ function livingHeadlines() {
   }
 }
 
-// ---------- Dach (Handy): Haus wird beim Scrollen zum kleinen Emblem oben rechts ----------
 const roofHead = $('#allTitle');
-function roofEmblem() {
-  const vh = VH, a = VW / GLH;
-  const hh = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)), hw = hh * a;
-  const k = smooth(vh * 0.62, vh * 0.12, roofHead.getBoundingClientRect().top);
-  const navW = (78 / GLH) * 2 * hh; // Leistenhöhe in Welt-Einheiten
-  // groß: Haus mittig unter der Leiste, Breite ≈ 86 % des Bildes (Auftrag 1, 4.11.; vorher y 2.5, s 0.42 = oben)
-  const bs = Math.min(0.52, (hw * 2 * 0.86) / 7.1);
-  const big = { x: 0, y: 0.16 + 0.55 * bs + ((GLH - MINH) / 2) * (2 * hh / GLH), s: bs }, small = { x: hw - 0.48, y: hh - navW - 0.42, s: 0.085 };
-  uniforms.uXf.value[3].set(big.x + (small.x - big.x) * k, big.y + (small.y - big.y) * k, 0, big.s + (small.s - big.s) * k);
-  emblemK = k;
-}
-let emblemK = 0;
 
 // ---------- Manuthera (Kapitel 04, nach dem Rundgang): eigene Bühne, rendert nur, wenn sichtbar ----------
 const manuSec = $('#manuthera');
@@ -2232,7 +1851,7 @@ function tick() {
   lastTick = nowT;
   frameN++;
   if (sheetOpen && !isDesktop()) return; // Handy: Termin-Blatt deckt die Szene ab → nicht rendern (Akku)
-  if (egoOpen) return; // Rundgang aus Augenhöhe offen: eigene Bühne zeichnet, die Seite ruht (Akku)
+  if (lh.egoOpen()) return; // Rundgang aus Augenhöhe offen: der Dialog deckt alles ab, die Seite ruht (Akku)
   if (QW && !viaWatchdog) qualityWatch(gap); // nur messen, solange die Hauptbühne selbst zeichnet (nicht hinter Termin-Blatt/Augenhöhen-Rundgang)
   if (!viaWatchdog && !isDesktop() && morphNow >= 0.6 && performance.now() - lastInput > 1500 && frameN % 2) return; // Hero (Figur sichtbar): immer volle Rate (8.11., Option C)
   timer.update();
@@ -2246,9 +1865,9 @@ function tick() {
   uniforms.uMorph.value = morphNow;
   manuK = manuVisible();
   updateAxis(dt);
-  updateTour(dt);
-  placeManuTag();
-  { // Kamera: Rundgang > Wirbelsäule > Übersicht
+  roofPlace();
+  uniforms.uRoofA.value = 1 - lh.roofK();
+  { // Kamera: Wirbelsäule > Übersicht
     const want = tourWant || axisWant || OVERVIEW, k = reduced ? 1 : 1 - Math.exp(-dt * 2.2);
     cam.pos.lerp(want.pos, k); cam.target.lerp(want.target, k);
   }
@@ -2261,19 +1880,16 @@ function tick() {
     if (morphNow > 0.3 && morphNow < 1.6) dim = Math.max(dim, 0.55); // Bewegungslinien leise hinter Text
   }
   if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
-  dim = Math.max(dim, tourHide, xray * (0.4 + (1 - xrayCalm) * 0.75)); // im Rundgang/Röntgenblick tritt das äußere Partikel-Haus zurück (Handy vor dem Betreten stärker)
   dim = Math.max(dim, manuK, isDesktop() ? listK : listK * (1 - logoIn)); // Manuthera-Bühne und Leistungen: Partikel-Hintergrund blendet ganz aus
   if (licht && lichtK > 0) dim = Math.max(dim, lichtK); // K1: Partikel weichen dem Sonnenstaub
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
   if (!isDesktop()) {
-    // Handy: Partikel-Haus ohne Verzögerung ausblenden, sobald der Rundgang vorbei ist bzw. die Manuthera-Bühne kommt –
-    // sonst laufen beim schnellen Wischen Haus und Liege ineinander
-    const out = Math.max(manuK, houseGone());
+    // Handy: Partikel ohne Verzögerung ausblenden, sobald die Manuthera-Bühne kommt – sonst laufen beim schnellen Wischen Bilder ineinander
+    const out = manuK;
     if (uniforms.uAlpha.value > 1 - out) uniforms.uAlpha.value = 1 - out;
   }
-  uniforms.uSize.value = isDesktop() ? 1 : 1.1 - (morphNow > 2.5 && morphNow < 3.5 ? emblemK * 0.45 : 0);
+  uniforms.uSize.value = isDesktop() ? 1 : 1.1;
   uniforms.uSpread.value = reduced ? 0 : isDesktop() ? 0.32 : 0.28;
-  if (!isDesktop()) roofEmblem();
   livingHeadlines();
   uniforms.uFadeMid.value = isDesktop() ? 0.62 : 0.7;
 
@@ -2321,14 +1937,9 @@ function tick() {
   if (chapKey !== chapShown) { chapShown = chapKey; chapNow.innerHTML = navLinks[navIdx].innerHTML; }
 
   camera.position.copy(cam.pos); camera.lookAt(cam.target);
-  { // Handy: Ende des Rundgangs – die Szene scrollt mit Text und Knöpfen nach oben weg (Bildausschnitt verschieben)
-    const tb = isDesktop() ? -1 : tourEl.getBoundingClientRect().bottom;
-    const lift = tb > 0 && houseGone() < 0.999 ? Math.max(0, VH - tb) : 0;
-    if (lift !== viewLift || (camera.view && camera.view.enabled && camera.view.fullHeight !== GLH)) { viewLift = lift; if (lift > 0) camera.setViewOffset(VW, GLH, 0, lift, VW, GLH); else camera.clearViewOffset(); }
-  }
   // 13.11. (T1): ausgeblendete Partikel nicht mehr zeichnen; ist gar nichts zu sehen, ruht die Hauptbühne nach einem leeren Bild
   points.visible = uniforms.uAlpha.value > 0.004;
-  const anyVis = points.visible || spineGroup.visible || sil.visible || tourPts.visible || !!(dust && dust.visible);
+  const anyVis = points.visible || spineGroup.visible || sil.visible || !!(dust && dust.visible);
   if (renderer && !document.hidden && (anyVis || glDirty)) { renderer.render(scene, camera); glDirty = anyVis; }
   if (manu && manu.st.visible && !document.hidden) { manu.update(0, dt); manu.st.renderer.render(manu.st.scene, manu.st.camera); }
   if (!document.hidden) updateServices(dt);
@@ -2357,7 +1968,7 @@ const inView = (el) => { if (!el) return false; const r = el.getBoundingClientRe
   beatBtns.forEach((b) => b.addEventListener('animationend', () => b.classList.remove('beat')));
 }
 {
-  const groups = [$('.segnav'), $('.roomnav'), $('#manuModes'), $('#index')].filter(Boolean);
+  const groups = [$('.segnav'), $('#manuModes'), $('#index')].filter(Boolean);
   groups.forEach((g) => $$('button', g).forEach((b, i) => { b.classList.add('sheen'); b.style.setProperty('--si', i); }));
   if (!reduced) {
     const io = new IntersectionObserver((es) => es.forEach((e) => {
@@ -2377,11 +1988,9 @@ const mkHint = (txt, parent) => {
 // bis zur ersten richtigen Benutzung; auf Touch-Geräten als dunkle Pille (lesbar über den Partikeln).
 // Senkrecht wischen scrollt überall (auch über der Figur); bedient wird seitlich, durch Antippen oder am Ziehstreifen (Kap. 03).
 const hintBody = mkHint(finePointer ? 'Maus über den Körper' : 'Seitlich streichen');
-const hintHouse = mkHint(isDesktop() ? 'Ziehen zum Drehen' : 'Raum antippen'); // Handy: zeigt auf die Raumleiste darunter (Wischen steht im Satz über der Leiste)
-const roomDotsEl = $('.room-dots');
 const hintManu = manuSec ? mkHint(finePointer ? 'Ziehen zum Drehen' : 'Seitlich wischen', $('.manu-stage')) : null;
-[hintBody, hintHouse, hintManu].forEach((h) => h && h.classList.add('th-pill')); // 6A (7.11.): auch am PC dunkle Pille (vorher nur Touch)
-let houseUsed = false, manuUsed = false, xrayT = 0, manuT = 0, rotSeen = dragRot;
+[hintBody, hintManu].forEach((h) => h && h.classList.add('th-pill')); // 6A (7.11.): auch am PC dunkle Pille (vorher nur Touch)
+let manuUsed = false, manuT = 0;
 // Hinweis gilt erst als erledigt, wenn wirklich seitlich gewischt/gezogen wurde (nicht schon beim Antippen oder Scrollen)
 { let mx = null, my = 0; const gm = $('#glManu');
   gm?.addEventListener('pointerdown', (e) => { mx = e.clientX; my = e.clientY; });
@@ -2395,23 +2004,6 @@ function updateHints(dt) {
   const showBody = !touched && morphNow < 0.25 && now - t0Hints > 3500 && scrollY < VH * 0.3;
   hintBody.classList.toggle('on', showBody);
   if (showBody) hintBody.style.transform = desk ? `translate(${VW * 0.6}px, ${VH * 0.6}px) translate(-50%,-50%)` : `translate(${VW - 12}px, ${heroFit ? heroFit.top + (heroFit.bot - heroFit.top) * 0.3 - scrollY : VH * 0.24}px) translate(-100%,-50%)`; // rechts neben der Figur (Pille bleibt im Bild)
-  // Haus: PC im Röntgenblick (ziehen), Handy vor dem Betreten (wischen/antippen)
-  if (dragRot !== rotSeen || tourIdx >= 0) houseUsed = true;
-  // Handy: sobald die Praxis-Ansicht steht (nicht erst, wenn der Rundgang halb im Bild ist), nach ~1 s
-  const houseReady = xray > 0.6 && tourIdx < 0 && (desk || (morphNow > 2.7 && morphNow < 3.3));
-  xrayT = houseReady ? xrayT + dt : 0;
-  const showHouse = !houseUsed && xrayT > (desk ? 3 : 1);
-  hintHouse.classList.toggle('on', showHouse);
-  hintHouse.classList.toggle('th-tap', !desk);
-  // Handy (Go Kai 8.11. „b A“): Pille direkt über der Raumleiste (statt mitten auf dem Haus), Spitze zeigt auf die Punkte;
-  // solange sie steht, ersetzt sie den gleichlautenden Satz darüber, und die Punkte pulsieren nacheinander (Tür → Training)
-  const dotsOn = showHouse && !desk && roomDotsEl && roomDotsEl.offsetParent;
-  tourEl.classList.toggle('hint-on', !!dotsOn);
-  if (roomDotsEl) roomDotsEl.classList.toggle('pulse', !!dotsOn);
-  if (showHouse) {
-    if (dotsOn) { const r = roomDotsEl.getBoundingClientRect(); hintHouse.style.transform = `translate(${(r.left + r.width / 2).toFixed(1)}px, ${(r.top - 10).toFixed(1)}px) translate(-50%,-100%)`; }
-    else hintHouse.style.transform = `translate(${VW * 0.72}px, ${VH * 0.84}px) translate(-50%,-50%)`;
-  }
   // Manuthera-Liege
   if (hintManu) { manuT = manuK > 0.8 ? manuT + dt : 0; hintManu.classList.toggle('on', !manuUsed && manuT > 1.5); }
 }

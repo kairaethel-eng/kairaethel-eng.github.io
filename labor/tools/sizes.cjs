@@ -7,7 +7,7 @@ const GL = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-
 let fails = 0; const say = (ok, name, info = '') => { if (!ok) fails++; console.log((ok ? 'ok     ' : 'FEHLER ') + name + (info ? '  · ' + info : '')); };
 const to = (p, sel, k = 0) => p.evaluate(([q, o]) => { const y = document.querySelector(q).getBoundingClientRect().top + scrollY; scrollTo(0, y + o * innerHeight); }, [sel, k]);
 const cut = () => { const vh = innerHeight, out = [];
-  for (const e of document.querySelectorAll('.btn,.t-play,.t-btn,.t-ego,.roomnav button,.segnav button,#achse .note,.seg-card.is-on,.room-card.is-on,.chips li')) {
+  for (const e of document.querySelectorAll('.btn,.t-play,.t-btn,.t-ego,.segnav button,#achse .note,.seg-card.is-on,.chips li')) {
     if (!e.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue; const r = e.getBoundingClientRect();
     if (r.height && r.top < vh && r.bottom > vh + 2) out.push((e.textContent || '').trim().slice(0, 20) + ' +' + Math.round(r.bottom - vh)); }
   return out; };
@@ -20,11 +20,12 @@ const seen = (sel) => { const a = [...document.querySelectorAll(sel)]; return a.
     await to(p, '#achse', 0.3); await p.waitForTimeout(3000); await p.evaluate(() => document.querySelectorAll('.scan-stop')[4].click()); await p.waitForTimeout(4000);
     const a = await p.evaluate(cut), gap = await p.evaluate(() => Math.round(document.querySelector('.seg-card.is-on').getBoundingClientRect().top - document.querySelector('.segnav').getBoundingClientRect().bottom));
     say(!a.length && gap >= 0, `${w}×${h} Kap. 03: nichts abgeschnitten, Karte unter den Abschnittsknöpfen`, a.join(' | ') + ' Abstand ' + gap + ' px');
-    await to(p, '#dach', 0.3); await p.waitForTimeout(2500);
-    const d = await p.evaluate(cut), play = await p.evaluate(() => Math.round(innerHeight - document.querySelector('#tourPlay').getBoundingClientRect().bottom));
-    say(!d.length && play >= 8, `${w}×${h} Kap. 04 Übersicht: „Rundgang starten“ im Bild`, d.join(' | ') + ' Luft unten ' + play + ' px');
-    await p.evaluate(() => document.querySelector('#tourNext').click()); await p.waitForTimeout(2500);
-    const r = await p.evaluate(cut); say(!r.length, `${w}×${h} Kap. 04 Raum: nichts abgeschnitten`, r.join(' | '));
+    // Kap. 04 seit 14.11. Linienhaus: Überschrift oben im Bild → Haus ganz im Bild, „Rundgang starten“ + „Augenhöhe“ erreichbar
+    await p.evaluate(() => { const r = document.querySelector('#lhRoot').getBoundingClientRect(); scrollTo(0, r.top + scrollY - 80); }); await p.waitForTimeout(2500);
+    const d = await p.evaluate(() => { const vh = innerHeight, b = (q) => Math.round(vh - document.querySelector(q).getBoundingClientRect().bottom); return { house: b('#house'), play: b('#play'), ego: b('#egoOpen') }; });
+    say(d.house >= 0 && d.play >= 8 && d.ego >= 8, `${w}×${h} Kap. 04: Haus, „Rundgang starten“ und „Augenhöhe“ im Bild`, JSON.stringify(d));
+    await p.evaluate(() => document.querySelector('#next').click()); await p.waitForTimeout(1500);
+    const r = await p.evaluate(cut); say(!r.length, `${w}×${h} Kap. 04 Raum gewechselt: keine Knöpfe abgeschnitten`, r.join(' | '));
     await p.close();
   }
   { const p = await open({ viewport: { width: 1024, height: 768 } }); const bad = []; // G2
@@ -44,13 +45,13 @@ const seen = (sel) => { const a = [...document.querySelectorAll(sel)]; return a.
     say(await p.evaluate(() => getComputedStyle(document.querySelector('#turnNote')).display) === 'flex', 'Handy quer: Hinweis „hochkant halten“ sichtbar');
     await p.evaluate(() => document.querySelector('#turnClose').click()); say(await p.evaluate(() => getComputedStyle(document.querySelector('#turnNote')).display) === 'none', 'Handy quer: Hinweis lässt sich schließen'); await p.close(); }
   { const p = await open({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, javaScriptEnabled: false }); // G3
-    const r = await p.evaluate(`(${seen})('.seg-card') + ' ' + (${seen})('.room-card') + ' ' + (${seen})('.ix-body') + ' ' + (${seen})('.laws li')`);
+    const r = await p.evaluate(`(${seen})('.seg-card') + ' ' + (${seen})('#lhRoot .card') + ' ' + (${seen})('.ix-body') + ' ' + (${seen})('.laws li')`);
     say(r === '6/6 5/5 12/12 5/5', 'Ohne JavaScript: Karten, Räume, Leistungstexte, Paragraphen sichtbar', r); await p.close(); }
   { const p = await open({ viewport: { width: 1280, height: 720 } }, ''); // T2: Besucher ohne Grafikchip
     const c = await p.evaluate(() => document.documentElement.className + ' | ' + getComputedStyle(document.querySelector('.still-hero')).backgroundImage.slice(0, 5));
     say(/no-gl/.test(c) && /url/.test(c), 'Software-Grafik (ohne ?gl=1): Standbilder statt WebGL', c); await p.close(); }
   { const p = await open({ viewport: { width: 794, height: 1123 } }); await p.emulateMedia({ media: 'print' }); await p.waitForTimeout(400); // T4 Druck
-    const r = await p.evaluate(`(${seen})('.seg-card') + ' ' + (${seen})('.room-card') + ' ' + (${seen})('.ix-body') + ' ' + (${seen})('.laws li')`);
+    const r = await p.evaluate(`(${seen})('.seg-card') + ' ' + (${seen})('#lhRoot .card') + ' ' + (${seen})('.ix-body') + ' ' + (${seen})('.laws li')`);
     const hh = await p.evaluate(() => Math.round(document.querySelector('.seg-cards').getBoundingClientRect().height) + '/' + Math.round(document.querySelector('.axis-head').getBoundingClientRect().height));
     say(r === '6/6 5/5 12/12 5/5' && parseInt(hh) > 400, 'Druckansicht: alle Inhalte sichtbar (Karten nicht weggeschnitten)', r + ' · Höhe Karten/Kopf ' + hh); await p.close(); }
   say(!errs.length, 'Keine Skriptfehler', errs.slice(0, 3).join(' | '));

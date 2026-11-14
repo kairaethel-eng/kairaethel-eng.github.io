@@ -6,8 +6,9 @@
 // src/test-4/main.js
 export const js = [
   // 1) Baustein für die echten Daten und den Umschalter
-  ["import { createEgo } from '../ego/tour.js';",
-    "import { createEgo } from '../ego/tour.js';\nimport { ECHT } from '../wirbel-echt/echt.js';"],
+  // (Anker seit 14.11.: Puls importiert statt ../ego/tour.js jetzt das Linienhaus, Kap. 04 „2a“)
+  ["import { initHouse } from '../haus-licht/house.js';",
+    "import { initHouse } from '../haus-licht/house.js';\nimport { ECHT } from '../wirbel-echt/echt.js';"],
   // 2) Morph-Ziel der Hauptbühne: die grobe Wolke folgt der gewählten Form
   ["if (renderer) runSliced(spinePointsGen(N)).then((sp) => { geo.attributes.pos2.array.set(sp.pos); geo.attributes.pos2.needsUpdate = true; });",
     "ECHT.initMorph(N, (p) => { geo.attributes.pos2.array.set(p); geo.attributes.pos2.needsUpdate = true; });\n" +

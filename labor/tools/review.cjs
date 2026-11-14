@@ -30,8 +30,7 @@ const STATES = [
   { id: 'achse', ...scroll('#achse', 0.3), slow: 2 },
   ...['C1', 'C5', 'Th1', 'Th7', 'L4', 'S1'].map((n, i) => ({ id: 'achse-' + n, ...click('.scan-stop', i), slow: 1 })),
   { id: 'dach', ...scroll('#dach'), slow: 1 },
-  { id: 'rundgang', ...click('#tourNext'), slow: 1 },
-  { id: 'rundgang-aus', ...click('#tourExit') },
+  { id: 'rundgang', ...click('#next'), slow: 1 }, // Kap. 04 seit 14.11.: Linienhaus, › = nächster Raum (Licht an)
   { id: 'ego', ...click('#egoOpen'), slow: 1.5, after: 'Escape' },
   { id: 'manuthera', ...scroll('#manuthera'), slow: 1 },
   { id: 'leistungen', ...scroll('#allTitle', -0.3), serv: true },

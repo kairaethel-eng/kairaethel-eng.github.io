@@ -122,70 +122,150 @@
   </section>
 
   <section class="chapter roof" id="dach" data-stage="3" aria-labelledby="d-title">
-    <div class="tour" id="tour" aria-label="Rundgang durch die Praxis">
-      <div class="tour-sticky">
-        <div class="still still-dach" aria-hidden="true"></div>
-        <div class="wrap tour-inner">
-          <div class="roof-intro">
+    <!-- Kapitel 04 seit 14.11.2026 (Go Kai „2a“): Linienhaus „Licht im Fenster“ statt Partikel-Haus + Klick-Rundgang.
+         Baustein src/haus-licht/house.js + house.css (gleich wie Entwurfsseite haus-licht.html), kein WebGL. -->
+    <div class="lh" id="lhRoot">
+    <div class="wrap roof-grid">
       <div class="roof-head">
         <p class="kicker"><i>04</i> Dach</p>
         <h2 id="d-title">Alles unter<br><em>einem</em> Dach.</h2>
         <p class="lead">Treten Sie ein. Ein Rundgang durch die Praxis, bevor Sie zum ersten Mal da sind.</p>
+        <p class="hint" id="lhHint"><span class="only-fine">Raum anklicken, mit ‹ › oder den Pfeiltasten weitergehen. Oder den Rundgang starten – auch aus Augenhöhe.</span><span class="only-touch">Wischen Sie unter dem Dach von Raum zu Raum oder tippen Sie auf einen Raum. Oder starten Sie den Rundgang – auch aus Augenhöhe.</span></p>
       </div>
+
+      <div class="house" id="house">
+        <svg class="roof-svg" id="roofSvg" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
+          <path class="r-roof" id="rRoof" d="M0 118 L500 2 L1000 118"/>
+          <path class="r-chim" id="rChim" d="M730 55 V22 H752 V61"/>
+          <g class="r-hop" id="rHop"><circle cx="472" cy="78" r="11"/><circle cx="500" cy="78" r="11"/><circle cx="528" cy="78" r="11"/></g>
+        </svg>
+        <div class="storey" id="storey">
+          <i class="ln ln-ceil" aria-hidden="true"></i><i class="ln ln-floor" aria-hidden="true"></i>
+          <div class="rooms" id="rooms" role="group" aria-label="Räume der Praxis – Licht anschalten">
+            <!-- Fotos später: data-photo="assets/raum-empfang.webp" o. ä. an den Raum setzen (dunkel/warm getönt per CSS) -->
+            <button type="button" class="room" data-room="0" aria-controls="card0">
+              <span class="rm-glow" aria-hidden="true"></span>
+              <svg class="rm-win" viewBox="0 0 40 48" aria-hidden="true"><path class="w-pane" d="M4 4h32v36H4z"/><path d="M20 4v36M4 22h32"/><path d="M1 44h38"/></svg>
+              <svg class="rm-lamp" viewBox="0 0 40 60" aria-hidden="true"><path d="M20 0v30"/><path d="M8 42c0-7 5-12 12-12s12 5 12 12z"/><path class="l-bulb" d="M17 44a3 3 0 0 0 6 0"/></svg>
+              <svg class="rm-art" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                <!-- Tür (offen, links) -->
+                <path d="M8 119V30h36v89"/><path class="a-hot" d="M8 30l18 10v76l-18 3"/><path d="M21 76h3"/>
+                <!-- Tresen -->
+                <path d="M66 119V64h106v55"/><path d="M60 64h118"/><path d="M60 60h118"/><path d="M78 76h82M78 92h82"/>
+                <!-- Bildschirm + Pflanze auf dem Tresen -->
+                <path d="M96 42h28v16H96z"/><path d="M110 58v2"/>
+                <path d="M152 60l-3-10h14l-3 10"/><path class="a-leaf" d="M156 50c-6-6-8-14-4-20M156 50c2-8 7-12 12-13M156 50c-1-9 1-15 5-19"/>
+              </svg>
+              <span class="rm-lab"><i>01</i><span>Empfang</span></span>
+            </button>
+            <button type="button" class="room" data-room="1" aria-controls="card1">
+              <span class="rm-glow" aria-hidden="true"></span>
+              <svg class="rm-win" viewBox="0 0 40 48" aria-hidden="true"><path class="w-pane" d="M4 4h32v36H4z"/><path d="M20 4v36M4 22h32"/><path d="M1 44h38"/></svg>
+              <svg class="rm-lamp" viewBox="0 0 40 60" aria-hidden="true"><path d="M20 0v30"/><path d="M8 42c0-7 5-12 12-12s12 5 12 12z"/><path class="l-bulb" d="M17 44a3 3 0 0 0 6 0"/></svg>
+              <svg class="rm-art" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                <!-- Beistelltisch mit Tasse -->
+                <path d="M10 88h26"/><path d="M23 88v31M15 119h16"/><path d="M18 88v-7h8v7"/><path d="M26 82c3 0 3 4 0 4"/>
+                <!-- Sofa -->
+                <path d="M50 92V66c0-5 4-8 9-8h82c5 0 9 3 9 8v26"/>
+                <path d="M42 112V90c0-5 3-7 8-7s8 2 8 7v8h84v-8c0-5 3-7 8-7s8 2 8 7v22z"/>
+                <path d="M58 90h84"/><path d="M100 90v8"/><path d="M48 112v7M152 112v7"/>
+                <!-- Pflanze im Topf -->
+                <path d="M170 119l-3-20h22l-3 20z"/><path class="a-leaf" d="M178 99c-8-10-12-26-6-40M178 99c2-14 8-24 16-28M178 99c-2-16 1-30 8-42M178 99c-10-6-16-14-17-24"/>
+              </svg>
+              <span class="rm-lab"><i>02</i><span>Wartebereich</span></span>
+            </button>
+            <button type="button" class="room" data-room="2" aria-controls="card2">
+              <span class="rm-glow" aria-hidden="true"></span>
+              <svg class="rm-win" viewBox="0 0 40 48" aria-hidden="true"><path class="w-pane" d="M4 4h32v36H4z"/><path d="M20 4v36M4 22h32"/><path d="M1 44h38"/></svg>
+              <svg class="rm-lamp" viewBox="0 0 40 60" aria-hidden="true"><path d="M20 0v30"/><path d="M8 42c0-7 5-12 12-12s12 5 12 12z"/><path class="l-bulb" d="M17 44a3 3 0 0 0 6 0"/></svg>
+              <svg class="rm-art" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                <!-- Wirbelsäulen-Modell auf Ständer -->
+                <path d="M22 119h20M32 119V96"/><path class="a-hot" d="M32 96c-4-8 4-14 0-22s4-14 0-22c-2-4-1-8 1-10"/><path d="M28 90h8M27 82h9M28 74h8M27 66h9M28 58h8"/><path d="M30 40a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/>
+                <!-- Liege -->
+                <path d="M56 78h106c3 0 5 2 5 5s-2 5-5 5H56c-3 0-5-2-5-5s2-5 5-5z"/><path d="M60 78l-6-8h18"/>
+                <path d="M78 88l34 31M144 88l-34 31"/><path d="M70 119h80"/>
+                <!-- Hocker -->
+                <path d="M172 92h20"/><path d="M182 92v22M174 119l8-5 8 5"/>
+              </svg>
+              <span class="rm-lab"><i>03</i><span>Behandlung 1</span></span>
+            </button>
+            <button type="button" class="room hi" data-room="3" aria-controls="card3">
+              <span class="rm-glow" aria-hidden="true"></span>
+              <svg class="rm-win" viewBox="0 0 40 48" aria-hidden="true"><path class="w-pane" d="M4 4h32v36H4z"/><path d="M20 4v36M4 22h32"/><path d="M1 44h38"/></svg>
+              <svg class="rm-lamp" viewBox="0 0 40 60" aria-hidden="true"><path d="M20 0v30"/><path d="M8 42c0-7 5-12 12-12s12 5 12 12z"/><path class="l-bulb" d="M17 44a3 3 0 0 0 6 0"/></svg>
+              <svg class="rm-art" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                <!-- Manuthera: Kopf-, Brust- und Beckenteil einzeln geneigt, Säule, Fußplatte -->
+                <path class="a-hot" d="M28 66l36 8c2 1 2 4 0 5l-36-7c-3-1-3-6 0-6z"/>
+                <path class="a-hot" d="M70 74h44c3 0 4 2 4 4s-1 4-4 4H70c-3 0-4-2-4-4s1-4 4-4z"/>
+                <path class="a-hot" d="M124 82l42-10c3 0 4 5 1 6l-42 10c-3 0-4-5-1-6z"/>
+                <path d="M62 78l6 0M118 80l6 2"/>
+                <path d="M86 82v10h28V84"/><path d="M92 92v19M108 92v19"/><path d="M66 111h68v8H66z"/>
+                <!-- Hocker -->
+                <path d="M172 98h18"/><path d="M181 98v16M174 119l7-5 7 5"/>
+              </svg>
+              <span class="rm-lab"><i>04</i><span>Behandlung 2 <b class="dot" aria-hidden="true"></b></span></span>
+            </button>
+            <button type="button" class="room" data-room="4" aria-controls="card4">
+              <span class="rm-glow" aria-hidden="true"></span>
+              <svg class="rm-win" viewBox="0 0 40 48" aria-hidden="true"><path class="w-pane" d="M4 4h32v36H4z"/><path d="M20 4v36M4 22h32"/><path d="M1 44h38"/></svg>
+              <svg class="rm-lamp" viewBox="0 0 40 60" aria-hidden="true"><path d="M20 0v30"/><path d="M8 42c0-7 5-12 12-12s12 5 12 12z"/><path class="l-bulb" d="M17 44a3 3 0 0 0 6 0"/></svg>
+              <svg class="rm-art" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                <!-- Sprossenwand -->
+                <path d="M16 119V8M52 119V8"/><path d="M16 18h36M16 30h36M16 42h36M16 54h36M16 66h36M16 78h36M16 90h36M16 102h36"/>
+                <!-- Gymnastikball -->
+                <path class="a-hot" d="M78 99a20 20 0 1 0 40 0a20 20 0 1 0 -40 0"/><path d="M82 90c10 6 22 6 32 0"/>
+                <!-- Matte + Hantel -->
+                <path d="M126 116h66v3h-66z"/>
+                <path d="M144 106h20M140 101v10M144 99v14M164 99v14M168 101v10"/>
+              </svg>
+              <span class="rm-lab"><i>05</i><span>Training</span></span>
+            </button>
           </div>
-          <p class="tour-kicker"><span class="only-desk">Raum anklicken, mit ‹ ›<span class="only-fine"> oder den Pfeiltasten</span> weitergehen. Oder den Rundgang starten.</span><span class="only-mob">Tippen Sie auf einen Raum oder wischen Sie über das Haus. Oder starten Sie den Rundgang.</span></p>
-          <div class="tour-ctrl" role="group" aria-label="Rundgang steuern">
-            <button type="button" class="t-btn" id="tourPrev" aria-label="Vorheriger Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-            <button type="button" class="t-play" id="tourPlay" aria-pressed="false"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><span>Rundgang starten</span></button>
-            <button type="button" class="t-btn" id="tourNext" aria-label="Nächster Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
-            <button type="button" class="t-ego" id="egoOpen" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg><span>Rundgang aus Augenhöhe</span></button>
-            <button type="button" class="t-exit" id="tourExit">Übersicht</button>
-            <div class="tour-prog" aria-hidden="true"><i id="tourProg"></i></div>
-          </div>
-          <div class="roomnav" role="group" aria-label="Raum wählen">
-          <button type="button" data-room="0" class="is-on"><b>01</b><span>Empfang</span><small>Ankommen</small></button>
-          <button type="button" data-room="1"><b>02</b><span>Wartebereich</span><small>Wohnzimmer</small></button>
-          <button type="button" data-room="2"><b>03</b><span>Behandlung 1</span><small>Manuelle Therapie &amp; mehr</small></button>
-          <button type="button" data-room="3" class="hi" title="Highlight: Manuthera"><b>04</b><span>Behandlung 2</span><small>Manuthera ▸</small></button>
-          <button type="button" data-room="4"><b>05</b><span>Training</span><small>Bewegung</small></button>
-          </div>
-          <div class="room-dots" role="group" aria-label="Raum wählen"><span>Tür</span><button type="button" data-room="0" aria-label="Empfang" class="is-on"></button><button type="button" data-room="1" aria-label="Wartebereich"></button><button type="button" data-room="2" aria-label="Behandlung 1"></button><button type="button" data-room="3" aria-label="Behandlung 2 mit Manuthera" class="hi"></button><button type="button" data-room="4" aria-label="Training"></button><span>Training</span></div>
-          <div class="room-cards" id="roomCards" aria-live="polite">
-          <article class="room-card is-on" data-room="0">
-            <p class="room-no"><i>01</i> Empfang</p>
-            <h3>Empfang &amp; Ankommen</h3>
-            <p>Die Tür ist offen, der Weg ist kurz: Hier werden Sie mit Namen begrüßt, nicht mit Nummer aufgerufen. Jacke ablegen, durchatmen, ankommen.</p>
-            <p class="room-hint">Gast statt Patient.</p>
-          </article>
-          <article class="room-card" data-room="1">
-            <p class="room-no"><i>02</i> Wartebereich</p>
-            <h3>Wartebereich wie ein Wohnzimmer</h3>
-            <p>Eher Wohnzimmer als Wartezimmer: bequeme Sitze, Wasser und Kaffee, kurze Wartezeiten. Ein Ort, an dem niemand auf die Uhr schauen muss.</p>
-            <p class="room-hint">Zeit statt Taktung.</p>
-          </article>
-          <article class="room-card" data-room="2">
-            <p class="room-no"><i>03</i> Behandlung 1</p>
-            <h3>Behandlungsraum 1</h3>
-            <p>Ruhe und Tageslicht. Hier ist Zeit für Befund, Behandlung und alle Ihre Fragen, hinter geschlossener Tür und ohne Durchgangsverkehr.</p>
-            <ul class="chips"><li>Manuelle Therapie</li><li>CMD</li><li>Atlas-Axis</li><li>Osteopathische Ansätze</li><li>Schmerztherapie</li><li>Wärme · Kälte</li><li>Reizstrom</li><li>Stoßwelle</li></ul>
-          </article>
-          <article class="room-card" data-room="3">
-            <p class="room-no"><i>04</i> Behandlung 2</p>
-            <h3>Behandlungsraum 2 · Manuthera</h3>
-            <p>Hier steht die Lojer Manuthera 242, eine moderne Therapieliege für mobilisierende Behandlungen der Wirbelsäule und großer Gelenke.</p>
-            <ul class="chips"><li>Lojer Manuthera</li><li>Manuelle Therapie</li></ul>
-            <a class="room-more" href="#manuthera"><b class="dot" aria-hidden="true"></b>Manuthera ansehen <span aria-hidden="true">↓</span></a>
-          </article>
-          <article class="room-card" data-room="4">
-            <p class="room-no"><i>05</i> Training</p>
-            <h3>Trainingsfläche</h3>
-            <p>Aktiv werden: Geräte, Übungen und Ihr persönliches Programm für zuhause. Angeleitet und begleitet, nicht allein gelassen.</p>
-            <ul class="chips"><li>Krankengymnastik</li><li>Sport-Physiotherapie</li><li>Schlingentisch</li></ul>
-          </article>
-          </div>
-          <p class="note">Schematischer Grundriss. Später ersetzbar durch einen echten 3D-Scan der Praxis.</p>
         </div>
       </div>
+
+      <div class="tour-ctrl" role="group" aria-label="Rundgang steuern">
+        <button type="button" class="t-btn" id="prev" aria-label="Vorheriger Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button type="button" class="t-play" id="play" aria-pressed="false"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><span id="playTxt">Rundgang starten</span></button>
+        <button type="button" class="t-btn" id="next" aria-label="Nächster Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+        <button type="button" class="t-ego" id="egoOpen" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg><span>Rundgang aus Augenhöhe</span></button>
+        <div class="tour-prog" aria-hidden="true"><i id="prog"></i></div>
+      </div>
+
+      <div class="cards" id="cards" aria-live="polite">
+        <article class="card is-on" data-room="0" id="card0">
+          <p class="room-no"><i>01</i> Empfang</p>
+          <h3>Empfang &amp; Ankommen</h3>
+          <p>Die Tür ist offen, der Weg ist kurz: Hier werden Sie mit Namen begrüßt, nicht mit Nummer aufgerufen. Jacke ablegen, durchatmen, ankommen.</p>
+          <p class="room-hint">Gast statt Patient.</p>
+        </article>
+        <article class="card" data-room="1" id="card1">
+          <p class="room-no"><i>02</i> Wartebereich</p>
+          <h3>Wartebereich wie ein Wohnzimmer</h3>
+          <p>Eher Wohnzimmer als Wartezimmer: bequeme Sitze, Wasser und Kaffee, kurze Wartezeiten. Ein Ort, an dem niemand auf die Uhr schauen muss.</p>
+          <p class="room-hint">Zeit statt Taktung.</p>
+        </article>
+        <article class="card" data-room="2" id="card2">
+          <p class="room-no"><i>03</i> Behandlung 1</p>
+          <h3>Behandlungsraum 1</h3>
+          <p>Ruhe und Tageslicht. Hier ist Zeit für Befund, Behandlung und alle Ihre Fragen, hinter geschlossener Tür und ohne Durchgangsverkehr.</p>
+          <ul class="chips"><li>Manuelle Therapie</li><li>CMD</li><li>Atlas-Axis</li><li>Osteopathische Ansätze</li><li>Schmerztherapie</li><li>Wärme · Kälte</li><li>Reizstrom</li><li>Stoßwelle</li></ul>
+        </article>
+        <article class="card" data-room="3" id="card3">
+          <p class="room-no"><i>04</i> Behandlung 2</p>
+          <h3>Behandlungsraum 2 · Manuthera</h3>
+          <p>Hier steht die Lojer Manuthera 242, eine moderne Therapieliege für mobilisierende Behandlungen der Wirbelsäule und großer Gelenke.</p>
+          <ul class="chips"><li>Lojer Manuthera</li><li>Manuelle Therapie</li></ul>
+          <a class="room-more" href="#manuthera"><b class="dot" aria-hidden="true"></b>Manuthera ansehen <span aria-hidden="true">↓</span></a>
+        </article>
+        <article class="card" data-room="4" id="card4">
+          <p class="room-no"><i>05</i> Training</p>
+          <h3>Trainingsfläche</h3>
+          <p>Aktiv werden: Geräte, Übungen und Ihr persönliches Programm für zuhause. Angeleitet und begleitet, nicht allein gelassen.</p>
+          <ul class="chips"><li>Krankengymnastik</li><li>Sport-Physiotherapie</li><li>Schlingentisch</li></ul>
+        </article>
+      </div>
+    </div>
     </div>
     <div class="manu" id="manuthera">
       <div class="wrap manu-inner">
@@ -304,33 +384,24 @@
     <p class="sheet-foot"><a href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener">Kalender in neuem Fenster öffnen</a></p>
   </div>
 </dialog>
-<!-- Rundgang aus Augenhöhe (Kapitel 04, Go Kai 7.11. „1B+ 2a/a 3a 4 ja“): eigene Vollbild-Bühne als Dialog, Quelle src/ego/tour.js -->
-<dialog class="ego" id="ego" aria-labelledby="egoLabel">
-  <canvas class="ego-gl" id="egoGl" aria-hidden="true"></canvas>
-  <div class="ego-veil" id="egoVeil" aria-hidden="true"></div>
-  <div class="ego-ui">
-    <div class="ego-bar">
-      <button type="button" class="ego-back" id="egoClose"><span aria-hidden="true">‹</span> Übersicht</button>
-      <h2 class="ego-tag" id="egoLabel">Rundgang aus Augenhöhe</h2>
+<!-- Rundgang aus Augenhöhe (Variante 3A, 14.11.2026): Raum für Raum in Zentralperspektive, Zeichnung → Foto → später Scan -->
+<dialog class="ego" id="ego" aria-labelledby="egoTitle">
+  <div class="ego-stage" id="egoStage"></div>
+  <div class="ego-top">
+    <p class="ego-kicker" id="egoTitle">Rundgang aus Augenhöhe</p>
+    <p class="ego-count" aria-hidden="true"><i id="egoNo">01</i> / 05</p>
+    <button type="button" class="ego-close" id="egoClose" aria-label="Rundgang schließen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="ego-panel" id="egoPanel">
+    <div class="ego-text" id="egoText" aria-live="polite"></div>
+    <div class="ego-nav">
+      <button type="button" class="t-btn" id="egoPrev" aria-label="Vorheriger Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="ego-dots" id="egoDots" role="group" aria-label="Raum wählen">
+        <button type="button" aria-label="Empfang"></button><button type="button" aria-label="Wartebereich"></button><button type="button" aria-label="Behandlung 1"></button><button type="button" class="hi" aria-label="Behandlung 2 mit Manuthera"></button><button type="button" aria-label="Training"></button>
+      </div>
+      <button type="button" class="t-btn" id="egoNext" aria-label="Nächster Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     </div>
-    <p class="ego-loading" id="egoLoading" role="status" hidden>Praxis wird aufgebaut …</p>
-    <section class="ego-cap" id="egoCap" aria-live="polite">
-      <p class="ego-kicker"><i id="egoNo">00</i> <span id="egoKick">Tür</span></p>
-      <h3 id="egoTitle">Die Tür</h3>
-      <p class="ego-text" id="egoText"></p>
-      <a class="ego-contact" id="egoContact" href="#tuer" hidden>Termin &amp; Kontakt <span aria-hidden="true">→</span></a>
-    </section>
-    <div class="ego-ctl" role="group" aria-label="Rundgang steuern">
-      <button type="button" id="egoPrev" aria-label="Zurück">‹</button>
-      <button type="button" id="egoPlay" class="go" autofocus>▶ Rundgang starten</button>
-      <button type="button" id="egoNext" aria-label="Weiter">›</button>
-    </div>
-    <div class="ego-opts" role="group" aria-label="Darstellung">
-      <button type="button" id="egoStill" aria-pressed="false">Ohne Fahrt</button>
-      <button type="button" id="egoCalm" aria-pressed="false">Ruhig</button>
-      <button type="button" id="egoBig" aria-pressed="false">Größere Punkte</button>
-    </div>
-    <p class="ego-hint" id="egoHint">Ziehen = umschauen</p>
+    <p class="ego-hint"><span class="only-fine">‹ › oder Pfeiltasten · Esc schließt</span><span class="only-touch">Seitlich wischen für den nächsten Raum</span></p>
   </div>
 </dialog>
 <!--JS-->

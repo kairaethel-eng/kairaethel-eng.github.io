@@ -4,7 +4,8 @@
 // aria-current), Rundgang (5 s je Raum), Handy: waagrecht wischen mit Einrasten (natives scroll-snap – senkrecht scrollt
 // immer die Seite), Rundgang aus Augenhöhe (Dialog, Zeichnung aus ego.js; Schichten Zeichnung → Foto → später Scan).
 // opt: root (Element um Überschrift/Haus/Karten), isPaused() („Bewegung anhalten“), headLine:false (die Dachlinie über der
-// Überschrift zeichnet die Seite selbst), onDialog(open) (z. B. Lenis anhalten), goto(hash) (Sprungziel aus dem Dialog).
+// Überschrift zeichnet die Seite selbst), onDialog(open) (z. B. Lenis anhalten), goto(hash) (Sprungziel aus dem Dialog),
+// canDraw() (Zeichnen aufschieben, bis die Seite bereit ist).
 import { renderRoom } from './ego.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -100,6 +101,14 @@ if (instant()) { drawState = 'done'; setRoom0Later(); } else {
   allDrawEls().forEach(prep);
 }
 function setRoom0Later() { queueMicrotask(() => { if (cur < 0) setRoom(0, { scroll: false }); }); }
+
+// opt.canDraw(): die Seite kann das Zeichnen aufschieben (Puls: erst, wenn die Partikel an der Dachlinie angekommen sind)
+let drawWait = 0;
+function drawWhenReady() {
+  if (drawState !== 'prep' || drawWait) return;
+  if (!opt.canDraw || opt.canDraw()) { drawHouse(); return; }
+  drawWait = setInterval(() => { if (opt.canDraw()) { clearInterval(drawWait); drawWait = 0; drawHouse(); } }, 120);
+}
 
 // ---------- Licht an: Raum wählen ----------
 let cur = -1;
@@ -218,7 +227,7 @@ playBtn.addEventListener('click', () => { if (tour.on) holdTour(); else if (tour
 let houseVisible = false;
 new IntersectionObserver((es) => es.forEach((e) => {
   houseVisible = e.isIntersecting;
-  if (e.isIntersecting && e.intersectionRatio >= 0.3) drawHouse();
+  if (e.isIntersecting && e.intersectionRatio >= 0.3) drawWhenReady();
 }), { threshold: [0, 0.3, 0.6] }).observe(house);
 if (headLine) new IntersectionObserver((es, ob) => es.forEach((e) => { if (e.isIntersecting) { drawHead(); ob.disconnect(); } }), { threshold: 0.6 }).observe(headLine.parentNode);
 
@@ -295,7 +304,7 @@ function egoOpen(i) {
   ego.view.classList.remove('lit'); egoLight(v, 950);
   egoNext.focus({ preventScroll: true });
 }
-function egoClose() {
+function egoClose(after) {
   if (!dlg.open) return;
   const done = () => {
     if (!dlg.open) return;
@@ -303,12 +312,13 @@ function egoClose() {
     if (opt.onDialog) opt.onDialog(false);
     if (mqMob.matches) centerRoom(ego.i, false);
     (ego.opener && ego.opener.isConnected ? ego.opener : egoOpenBtn).focus({ preventScroll: true });
+    if (typeof after === 'function') requestAnimationFrame(after); // z. B. Sprung zur Manuthera – erst wenn die Seite wieder scrollt
   };
   const a = anim(dlg, [{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: 'linear' });
   if (a) a.finished.then(done, done); else done();
 }
 egoOpenBtn.addEventListener('click', () => egoOpen(cur < 0 ? 0 : cur));
-$('#egoClose').addEventListener('click', egoClose);
+$('#egoClose').addEventListener('click', () => egoClose());
 dlg.addEventListener('cancel', (e) => { e.preventDefault(); egoClose(); });
 egoPrev.addEventListener('click', () => egoShow(ego.i - 1, -1));
 egoNext.addEventListener('click', () => (ego.i === N - 1 ? egoClose() : egoShow(ego.i + 1, 1)));
@@ -339,8 +349,8 @@ new ResizeObserver(() => {
 // Links in der Dialog-Karte (z. B. „Manuthera ansehen“ in Puls): erst schließen, dann springen
 egoText.addEventListener('click', (e) => {
   const a = e.target.closest('a[href^="#"]'); if (!a) return;
-  e.preventDefault(); const h = a.getAttribute('href'); egoClose();
-  setTimeout(() => (opt.goto ? opt.goto(h) : document.querySelector(h)?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' })), 300);
+  e.preventDefault(); const h = a.getAttribute('href');
+  egoClose(() => (opt.goto ? opt.goto(h) : document.querySelector(h)?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' })));
 });
 
 // Für die Seite: Lage der Dachlinie auf dem Bildschirm (Partikel fließen hinein) und wie weit sie gezeichnet ist (0..1)
@@ -355,6 +365,6 @@ return {
   state: () => ({ cur, drawState, tour: { ...tour }, paused: isPaused(), mob: mqMob.matches, W }),
   set: (i) => setRoom(i), photo, roofScreen, roofK, visible: () => houseVisible,
   egoOpen: () => dlg.open,
-  ego: { open: (i = 0) => egoOpen(i), show: (i) => egoShow(i, 1), close: egoClose, state: () => ({ i: ego.i, open: dlg.open, lit: !!ego.view?.classList.contains('lit') }) },
+  ego: { open: (i = 0) => egoOpen(i), show: (i) => egoShow(i, 1), close: () => egoClose(), state: () => ({ i: ego.i, open: dlg.open, lit: !!ego.view?.classList.contains('lit') }) },
 };
 }

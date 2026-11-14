@@ -5,6 +5,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
 ## Haus ohne Partikel – Entwurf „Licht im Fenster“ (Go Kai 14.11.2026, umgesetzt, wartet auf Sichtprüfung)
 - Eigene Seite `haus-licht.html` (Quelle `src/haus-licht/`), Puls unverändert. Haus bei Nacht aus Haarlinien, Schnitt wie ein Puppenhaus, fünf Räume unter einem Bernstein-Dach; Raum wählen = Licht an (Bernstein, kein Weiß), PC: Raum wird breiter; Rundgang 5 s je Raum; Handy: unter dem Dach waagrecht wischen (scroll-snap), senkrecht scrollt die Seite. Kein WebGL. Fotos je Raum vorbereitet (`data-photo`).
+- **Go Kai 14.11. „alle Empfehlungen“ – umgesetzt:** (3A) Rundgang aus Augenhöhe im Linienstil (Raum für Raum in Zentralperspektive, SVG, Foto-/Scan-Schicht je Station). (2a) **Puls Kap. 04 = Linienhaus** statt Partikel-Haus/Röntgenblick/Klick-Rundgang/Partikel-Augenhöhe; die Partikel der Wirbelsäule fließen in die Bernstein-Dachlinie, dann zeichnet sich das Haus. Linienhaus ist ein Baustein (`src/haus-licht/house.js/.css`) für Entwurfsseite und Puls. Fotos + Scan bringt Kai am Wochenende (Scan per iPhone, Dienst: Empfehlung siehe Übergabe).
 - **Kai 14.11.:** Richtung „top“. **2a:** In Puls ersetzt das Linienhaus Röntgenblick-Haus + Klick-Rundgang (Partikel der Wirbelsäule fließen in die Dachlinie) – umsetzen, wenn der Augenhöhen-Rundgang steht. Rundgang aus Augenhöhe im Linienstil ausbauen (Variante offen, Frage: später echter Raum-/Möbel-Scan). Raumfotos kommen am 15.11.
 
 ## Gesamtprüfung 13.11.2026 – umgesetzt (Go Kai: „alles, was hier erledigt werden kann“, Ergebnis vor Kontingent)

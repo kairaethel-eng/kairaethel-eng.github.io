@@ -177,43 +177,15 @@ main{position:relative;z-index:2}
 .index li.open .ix-body{grid-template-rows:1fr}
 .index li.open .ix-body p{padding-bottom:1.5rem}
 
-/* Rundgang durch die Praxis (Kapitel 04) */
-.roof-intro{margin-bottom:0}
-.roof-intro .lead{margin-top:1.375rem}
-.tour{height:160vh;position:relative}
-.tour-sticky{position:sticky;top:0;height:100svh;overflow:hidden;touch-action:pan-y;background:linear-gradient(90deg,rgba(10,22,27,.82) 0%,rgba(10,22,27,.5) 32%,rgba(10,22,27,0) 52%)}
-.tour-inner{height:100%;display:grid;grid-template-columns:minmax(0,29.375rem) 1fr;grid-template-rows:auto auto auto auto 1fr auto;column-gap:2.5rem;padding-top:6rem;padding-bottom:1.5rem}
-.tour-inner .roof-intro{grid-column:1;grid-row:1;margin-bottom:1.125rem}
-.tour-inner .roof-head h2{font-size:clamp(2.125rem,3.4vw,3.375rem)}
-.tour-inner .roof-head .lead{margin-top:.75rem;font-size:1rem}
-.tour-inner .roof-head .kicker{margin-bottom:.875rem}
-.roofline{margin-bottom:.375rem}
-.tour-kicker{grid-column:1;grid-row:2;font-size:.875rem;color:var(--dim)}
-.roomnav{grid-column:1;grid-row:3;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.375rem;margin-top:1rem}
-.roomnav button{appearance:none;background:rgba(16,34,42,.6);border:1px solid rgba(237,232,220,.16);border-radius:.1875rem;color:var(--txt);padding:.55rem .7rem;cursor:pointer;display:grid;grid-template-columns:1.9rem minmax(0,1fr);align-items:baseline;gap:.1rem .4rem;text-align:left;transition:border-color .3s,background .3s}
-.roomnav b{grid-row:span 2;font:italic 400 1.125rem/1 var(--serif);color:var(--dim)}
-.roomnav span{font:700 .8125rem/1.15 var(--sans);letter-spacing:.02em;overflow-wrap:anywhere}
-.roomnav small{font-size:.75rem;line-height:1.2;color:var(--dim)}
-.roomnav button:last-child:nth-child(odd){grid-column:span 2}
-.roomnav button:hover{border-color:rgba(237,232,220,.4)}
-.roomnav button.is-on{border-color:var(--amber);background:rgba(224,154,53,.12)}
-.roomnav button.is-on b,.roomnav button.hi b,.roomnav button.hi small{color:var(--amber)}
-.room-dots{display:none}
-.room-cards{grid-column:1;grid-row:5;position:relative;align-self:start;margin-top:1.625rem;min-height:15rem}
-.room-card{position:absolute;inset:0 0 auto 0;opacity:0;visibility:hidden;transform:translateY(1.375rem);transition:opacity .5s var(--ease),transform .7s var(--ease),visibility 0s .55s}
-.room-card.is-on{opacity:1;visibility:visible;transform:none;transition:opacity .6s var(--ease) .08s,transform .8s var(--ease) .08s,visibility 0s}
-.room-no{display:flex;align-items:baseline;gap:.625rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:.75rem}
-.room-no i{font:italic 400 2.125rem/1 var(--serif);letter-spacing:0;color:var(--amber)}
-.room-card h3{font-family:var(--disp);font-weight:800;font-size:clamp(1.5rem,2.2vw,2rem);letter-spacing:-.02em;line-height:1.05;margin-bottom:.875rem}
-.room-card > p{color:var(--dim);font-size:1rem;line-height:1.55;max-width:44ch;margin-bottom:1rem}
-.room-hint{font:italic 400 1.125rem/1.3 var(--serif)!important;color:var(--amber)!important}
-.tour-inner .note{grid-row:6}
+/* Kapitel 04 seit 14.11.2026 (Go Kai „2a“): Linienhaus „Licht im Fenster“ statt Partikel-Haus – Baustein src/haus-licht */
+/*@include ../haus-licht/house.css*/
+.lh{position:relative;z-index:2}
+.roof-grid .roof-head{text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
+.lh + .manu{margin-top:clamp(3rem,8vw,6rem)}
+@media (max-width:920px){.roof{padding-top:5.5rem}}
+
 @media (min-width:921px){
-  .tour.in .roof-intro,.tour.in .tour-kicker,.tour.in .tour-inner .note{display:none}
-  .tour:not(.in) .room-cards{opacity:0;visibility:hidden;transition:opacity .3s,visibility 0s .3s}
 }
-/* Rundgang-Steuerung (ohne Scrollen) */
-.tour-ctrl{grid-column:1;grid-row:4;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-top:.875rem}
 .t-btn{width:2.75rem;height:2.75rem;border-radius:50%;border:1px solid rgba(237,232,220,.25);background:rgba(16,34,42,.6);color:var(--txt);display:grid;place-items:center;cursor:pointer;transition:border-color .3s,background .3s}
 .t-btn:hover{border-color:var(--amber);background:rgba(224,154,53,.12)}
 .t-btn svg{width:1.125rem;height:1.125rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -222,31 +194,6 @@ main{position:relative;z-index:2}
 .t-play svg{width:.875rem;height:.875rem}
 .t-play .i-play{fill:currentColor}
 .t-play .i-pause{display:none;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
-.tour.auto .t-play .i-pause{display:block}
-.tour.auto .t-play .i-play{display:none}
-.t-exit{height:2.75rem;padding:0 .875rem;border-radius:1.375rem;border:1px solid var(--line);background:transparent;color:var(--dim);font:600 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s,color .3s}
-.t-exit:hover{color:var(--txt)}
-.tour.in .t-exit{opacity:1;pointer-events:auto}
-.tour-prog{flex-basis:100%;height:2px;margin-top:.25rem;background:rgba(237,232,220,.12);opacity:0;transition:opacity .3s}
-.tour.auto .tour-prog{opacity:1}
-.tour-prog i{display:block;height:100%;width:0;background:var(--amber);transition:width .2s linear}
-.room-tag{position:fixed;left:0;top:0;z-index:3;pointer-events:none;cursor:pointer;display:flex;align-items:center;gap:.55rem;padding:.45rem .75rem .45rem .55rem;border-radius:1.25rem;border:1px solid rgba(237,232,220,.22);background:rgba(10,22,27,.84);color:var(--txt);white-space:nowrap;text-align:left;opacity:0;transition:opacity .5s,border-color .3s,background .3s}
-.room-tag i{font:italic 400 1.125rem/1 var(--serif);color:var(--amber)}
-.room-tag span{display:flex;flex-direction:column;gap:2px}
-.room-tag b{font:700 .8125rem/1 var(--sans);letter-spacing:.12em;text-transform:uppercase}
-.room-tag small{font-size:.8125rem;color:var(--dim);line-height:1.1}
-.room-tag.click{pointer-events:auto}
-.room-tag.click:hover,.room-tag.on{border-color:var(--amber);background:rgba(224,154,53,.16)}
-.room-tag.hi{border-color:var(--amber);box-shadow:0 0 1.375rem rgba(224,154,53,.35)}
-.room-tag.hi::after{content:"";position:absolute;right:-3px;top:-3px;width:.5rem;height:.5rem;border-radius:50%;background:var(--amber);box-shadow:0 0 .625rem rgba(224,154,53,.8)}
-.room-tag.extra i{font-size:1rem}
-.room-tag .s-cta{display:none}
-.room-tag.cta{background:var(--amber);border-color:var(--amber);color:#14110A;animation:glow 2.6s ease-out infinite}
-.room-tag.cta i,.room-tag.cta small{color:#14110A}
-.room-tag.cta .s-cta{display:block;font-weight:700}
-.room-tag.cta .s-norm{display:none}
-.room-tag.cta::after{display:none}
-.room-tag.cta:hover{background:#F0AE4E}
 .paused .room-tag.cta{animation:none}
 .roof-list{padding-top:clamp(3.75rem,8vw,6.875rem);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);column-gap:clamp(2rem,4vw,5rem);align-items:start}
 .roof-list .kicker{grid-column:1/-1}
@@ -348,15 +295,6 @@ canvas.gl-wait{opacity:0}
 @keyframes glow{0%{box-shadow:0 0 0 0 rgba(224,154,53,.55)}70%{box-shadow:0 0 0 .75rem rgba(224,154,53,0)}100%{box-shadow:0 0 0 0 rgba(224,154,53,0)}}
 .paused .room-more{animation:none}
 @media (prefers-reduced-motion: reduce){.room-more{animation:none}}
-/* Raum 04 als Highlight markiert */
-.roomnav button.hi{position:relative;border-color:rgba(224,154,53,.45)}
-.roomnav button.hi::after{content:"";position:absolute;top:.4375rem;right:.4375rem;width:.4375rem;height:.4375rem;border-radius:50%;background:var(--amber);box-shadow:0 0 .625rem rgba(224,154,53,.8)}
-.room-dots button.hi{box-shadow:0 0 0 2px rgba(224,154,53,.55)}
-/* Schild „Manuthera“ im 3D-Raum */
-.manu-tag{position:fixed;left:0;top:0;z-index:4;display:flex;align-items:center;gap:.5625rem;padding:.5625rem .875rem;border-radius:1.125rem;background:rgba(10,22,27,.78);border:1px solid var(--amber);color:var(--amber);font:700 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .4s,background .3s,color .3s;box-shadow:0 0 1.5rem rgba(224,154,53,.35)}
-.manu-tag.on{pointer-events:auto}
-.manu-tag:hover{background:var(--amber);color:#14110A}
-.manu-tag::after{content:"";position:absolute;left:50%;top:100%;width:1px;height:1.625rem;background:linear-gradient(var(--amber),rgba(224,154,53,0))}
 /* Leistungen: Manuthera-Eintrag */
 .ix-hi{display:inline-flex;align-items:center;gap:.5rem;color:var(--amber)!important}
 .ix-link{display:block;margin-top:.875rem;width:max-content;max-width:100%;font:700 .75rem/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;text-decoration:none;color:var(--amber);border-bottom:1px solid rgba(224,154,53,.5);padding:.375rem 0}
@@ -433,51 +371,12 @@ canvas.gl-wait{opacity:0}
   .chips{gap:.375rem}
   .chips li{font-size:.75rem;padding:.375rem .5rem}
   .note{margin-top:1.375rem;font-size:.75rem}
-  .roof{padding-top:48svh}
   /* Handy: Text liegt auf einer eigenen dunklen Fläche, die Partikel-Szene bleibt darüber frei */
   .roof-list{display:flex;flex-direction:column}
   .roof-list .kicker{order:1}
   .roof-list .index{order:3}
   .serv-stage{order:2;position:sticky;top:calc(env(safe-area-inset-top,0px) + 4.25rem);z-index:3;height:30svh;margin:0 calc(-1 * max(var(--gut),5vw)) .5rem;background:linear-gradient(var(--ink) 90%,rgba(10,22,27,0))}
   .serv-name{bottom:12%;font-size:1.0625rem} /* im deckenden Teil des Verlaufs, sonst liegt der Name über den Leistungsnamen */
-  /* Rundgang (Handy): Szene oben, Raum-Karten laufen untereinander durch */
-  .tour{height:150svh}
-  .tour-sticky{position:sticky;top:0;height:100svh;overflow:hidden;background:linear-gradient(0deg,rgba(10,22,27,.96) 0%,rgba(10,22,27,.8) 36%,rgba(10,22,27,0) 60%)}
-  .tour-inner{display:flex;flex-direction:column;height:100%;padding-top:calc(env(safe-area-inset-top,0px) + 4.375rem);padding-bottom:.875rem}
-  .tour-inner .roof-head h2{font-size:clamp(1.75rem,8vw,2.375rem)}
-  .tour-inner .roof-head .lead{font-size:.9062rem;margin-top:.5rem}
-  .tour.in .roof-head .lead,.tour.in .tour-kicker{display:none}
-  .tour.in .roof-head h2{display:none}
-  .tour-inner .roof-intro{order:1}
-  .tour:not(.in) .roof-intro{margin-top:0} /* Kai 7.11. (2A): Überschrift oben, Haus darunter, Knöpfe unten */
-  .tour:not(.in) .tour-kicker{margin-top:auto}
-  .tour:not(.in) .tour-inner{padding-top:calc(env(safe-area-inset-top,0px) + 5.75rem)} /* „04 Dach“ frei von der Kopfleiste */
-  .tour-kicker{order:2}
-  .room-dots{order:3}
-  .tour-ctrl{order:4}
-  .room-cards{order:5}
-  .tour-kicker{font-size:.8125rem;margin-top:.5rem}
-  .roomnav{display:none}
-  .room-dots{position:static;display:flex;align-items:center;justify-content:center;gap:1.125rem;margin:.875rem auto 0;width:max-content;padding:.5rem .875rem;border-radius:1.25rem;background:rgba(10,22,27,.72);border:1px solid var(--line)}
-  .room-dots span{font:italic 400 .8125rem/1 var(--serif);color:var(--mute)}
-  .room-dots button{appearance:none;border:0;padding:0;width:.5rem;height:.5rem;border-radius:.25rem;background:var(--mute);transition:width .4s var(--ease),background .3s;cursor:pointer;position:relative}
-  .room-dots button::before{content:"";position:absolute;inset:-8px}
-  .room-dots button.is-on{width:1.625rem;background:var(--amber)}
-  .tour:not(.in) .room-dots button.is-on{width:.5rem;background:var(--mute)}
-  .tour-ctrl{justify-content:center;margin-top:.75rem}
-  .tour.in .room-dots{margin-top:auto}
-  .room-cards{display:block;min-height:0;margin-top:.75rem}
-  .tour:not(.in) .room-cards{display:none}
-  .room-card{display:none;position:relative;inset:auto;visibility:visible;opacity:1;transform:none;margin:0;padding:.875rem 1rem 1rem;background:rgba(14,30,37,.97);border:1px solid rgba(224,154,53,.55);border-radius:.375rem}
-  .room-card.is-on{display:block;animation:cardIn .5s var(--ease)}
-  @keyframes cardIn{from{opacity:0;transform:translateY(.75rem)}to{opacity:1;transform:none}}
-  .room-card h3{font-size:1.1875rem;margin-bottom:.5rem}
-  .room-card > p{font-size:.875rem;margin-bottom:.625rem}
-  .tour-inner .note{display:none}
-  .room-no i{font-size:1.625rem}
-  .tour-inner .note{margin-top:1.375rem;font-size:.75rem}
-  .room-tag{display:none} /* Handy: Räume über Punkte und Karten, das kleine Haus wäre mit Schildern zu voll */
-  .roof-head{padding-right:2.5rem}
   .door{background:linear-gradient(rgba(10,22,27,0),var(--ink) 8rem);padding-top:5.5rem}
   .rules-sticky{align-items:flex-end;padding-bottom:9svh}
   .law-prog{margin-top:1.5rem;max-width:16rem}
@@ -613,7 +512,7 @@ html.paused .btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}
 .ix-plus::before,.ix-plus::after{content:"";position:absolute;left:0;right:0;top:50%;height:1.5px;margin-top:-.75px;background:var(--amber);border-radius:1px}
 .ix-plus::after{transform:rotate(90deg)}
 .index button[aria-expanded="true"] .ix-plus{transform:rotate(135deg)}
-.btn:active,.t-play:active,.t-btn:active,.room-more:active,.segnav button:active,.roomnav button:active,.manu-modes button:active,.chap-now:active,.motion-btn:active,.style-switch button:active{transform:scale(.97)}
+.btn:active,.t-play:active,.t-btn:active,.room-more:active,.segnav button:active,.manu-modes button:active,.chap-now:active,.motion-btn:active,.style-switch button:active{transform:scale(.97)}
 /* Stufe 3: Wisch-Hinweis über Bildern zum Anfassen */
 .touch-hint{position:fixed;z-index:6;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:.5rem;pointer-events:none;opacity:0;transition:opacity .6s;font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--amber);white-space:nowrap;text-shadow:0 0 .75rem rgba(10,22,27,.95),0 0 .25rem rgba(10,22,27,.95)}
 .touch-hint.on{opacity:1}
@@ -628,16 +527,7 @@ html.paused .btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}
 .touch-hint.th-tap .th-dot{animation:thTap 1.6s ease-out infinite}
 .touch-hint.th-tap::after{content:"";position:absolute;left:50%;bottom:-.3125rem;width:.5625rem;height:.5625rem;margin-left:-.28rem;background:rgba(10,22,27,.95);border-right:1px solid rgba(224,154,53,.45);border-bottom:1px solid rgba(224,154,53,.45);transform:rotate(45deg)}
 @keyframes thTap{0%,55%,100%{transform:scale(1);box-shadow:0 0 1rem rgba(224,154,53,.5)}15%{transform:scale(.72);box-shadow:0 0 0 0 rgba(224,154,53,.7)}40%{box-shadow:0 0 0 .5rem rgba(224,154,53,0)}}
-.tour-kicker{transition:opacity .4s}
-.tour.hint-on .tour-kicker{opacity:0}
-.room-dots.pulse{border-color:rgba(224,154,53,.6);transition:border-color .4s}
-.room-dots.pulse button{animation:dotPulse 2.6s ease-in-out infinite}
-.room-dots.pulse button:nth-of-type(2){animation-delay:.18s}
-.room-dots.pulse button:nth-of-type(3){animation-delay:.36s}
-.room-dots.pulse button:nth-of-type(4){animation-delay:.54s}
-.room-dots.pulse button:nth-of-type(5){animation-delay:.72s}
 @keyframes dotPulse{0%,45%,100%{background:var(--mute);box-shadow:0 0 0 0 rgba(224,154,53,0)}15%{background:var(--amber);box-shadow:0 0 0 .3125rem rgba(224,154,53,.3)}}
-@media (prefers-reduced-motion:reduce){.room-dots.pulse button{animation:none}}
 @keyframes thSwayS{0%,100%{transform:translateX(-1.25rem)}50%{transform:translateX(1.25rem)}}
 .th-track{position:relative;display:block;width:4.75rem;height:1.5rem}
 .th-track::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:linear-gradient(90deg,rgba(224,154,53,0),rgba(224,154,53,.65),rgba(224,154,53,0))}
@@ -660,12 +550,11 @@ html.paused .btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}
 /* Ohne WebGL (A2, Go 4.11.2026; z. B. iOS-Lockdown-Modus): je Kapitel ein Standbild statt Partikel,
    Hinweise zum Anfassen und die Spannungsanzeige entfallen. Bilder laden nur in diesem Fall (CSS-Hintergrund). */
 .still,.nogl-note{display:none}
-html.no-gl #gl,html.no-gl .hand,html.no-gl .meter,html.no-gl .touch-hint,html.no-gl .hero-sub .only-fine,html.no-gl .hero-sub .only-touch,html.no-gl .axis-hint,html.no-gl .tour-kicker,html.no-gl .manu-hint,html.no-gl .manu-stage canvas,html.no-gl .serv-stage{display:none}
+html.no-gl #gl,html.no-gl .hand,html.no-gl .meter,html.no-gl .touch-hint,html.no-gl .hero-sub .only-fine,html.no-gl .hero-sub .only-touch,html.no-gl .axis-hint,html.no-gl .manu-hint,html.no-gl .manu-stage canvas,html.no-gl .serv-stage{display:none}
 html.no-gl .still{display:block;position:absolute;pointer-events:none;background:no-repeat center/contain}
 html.no-gl .nogl-note{display:block;margin:-1rem 0 2rem;font-size:.875rem;color:var(--dim)}
 html.no-gl .still-hero{background-image:url(assets/still-hero.webp);right:11vw;top:3rem;bottom:0;width:23vw}
 html.no-gl .still-achse{background-image:url(assets/still-achse.webp);right:18.5vw;top:4.4rem;bottom:0;width:15vw}
-html.no-gl .still-dach{background-image:url(assets/still-dach.webp);right:0;top:4rem;bottom:0;width:59vw;background-position:right center}
 html.no-gl .manu-stage{min-height:min(56vh,30rem)}
 html.no-gl .still-manu{background-image:url(assets/still-manu.webp);inset:0}
 /* Nur eine Nebenbühne ohne WebGL (Durchsicht 7.11.): Manuthera zeigt ihr Standbild, Leistungs-Bühne blendet aus – Hauptseite bleibt bewegt */
@@ -673,7 +562,7 @@ html.no-gl-manu .manu-stage{min-height:min(56vh,30rem)}
 html.no-gl-manu .still-manu{display:block;position:absolute;pointer-events:none;background:url(assets/still-manu.webp) no-repeat center/contain;inset:0}
 html.no-gl-manu #glManu,html.no-gl-manu .manu-hint,html.no-gl-serv .serv-stage{display:none}
 @media (max-width:920px){
-  html.no-gl .still-hero,html.no-gl .still-achse,html.no-gl .still-dach{left:0;right:0;width:auto;top:4.5rem;bottom:auto;height:38svh;background-position:center}
+  html.no-gl .still-hero,html.no-gl .still-achse{left:0;right:0;width:auto;top:4.5rem;bottom:auto;height:38svh;background-position:center}
   /* Handy: Kapitel 03 scrollt als Liste → Bild bleibt oben stehen, Karten laufen darüber */
   html.no-gl .still-achse{position:sticky;top:7rem;height:34svh;margin-bottom:-34svh}
 }
@@ -731,75 +620,14 @@ html.sheet-open{overflow:hidden}
 html.paused .sheet[open]{animation:none}
 /* Rundgang aus Augenhöhe (Kapitel 04, Go Kai 7.11. „1B+ 2a/a 3a 4 ja“): Knopf neben „Rundgang starten“ + Vollbild-Dialog
    (eigene WebGL-Bühne, Fahrt aus src/ego/tour.js; Aufbau wie die Testseite rundgang-ego.html) */
-.t-ego{display:inline-flex;align-items:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:1.375rem;border:1px solid var(--amber);background:rgba(10,22,27,.55);color:var(--txt);font:700 .75rem/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .3s,transform .3s var(--ease)}
-.t-ego:hover{background:rgba(224,154,53,.16);transform:translateY(-1px)}
-.t-ego svg{width:1.125rem;height:1.125rem;fill:none;stroke:var(--amber);stroke-width:1.8;stroke-linejoin:round}
-.tour.in .t-ego,html.no-gl .t-ego,.t-ego[hidden]{display:none}
-@media (min-width:921px){.tour:not(.in) .tour-ctrl{grid-column:1/-1}} /* PC: Knopf rechts neben ‹ Rundgang starten › (Zeile darf in die freie Fläche unter dem Haus) */
 @media (max-width:920px){
-  .tour-ctrl .tour-prog{order:5}
-  .tour-ctrl .t-ego{order:6;margin-top:.25rem} /* Handy: eigene Zeile unter ‹ Rundgang starten › */
-  .tour:not(.in) .t-exit{display:none} /* unsichtbar belegte er sonst eine eigene Zeile (Lücke über dem Augenhöhe-Knopf) */
 }
 @media (max-width:359px){ /* 320 px: ‹ › brechen sonst um und schieben den Augenhöhe-Knopf aus dem Bild; Räume bleiben über Punkte/Wischen erreichbar */
-  .tour:not(.in) .tour-ctrl .t-btn{display:none}
 }
-html.ego-open{overflow:hidden;scrollbar-gutter:stable}
-.ego{--e-ink:#0A161B;--e-txt:#EDE8DC;--e-dim:#B0BFC3;--e-line:rgba(237,232,220,.14);position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:var(--e-ink);color:var(--e-txt);overflow:hidden;touch-action:pinch-zoom;overscroll-behavior:contain}
-.ego[open]{animation:egoIn .35s ease-out}
-.ego::backdrop{background:transparent} /* Go Kai 8.11. „a B“: kein Schwarz zwischen Haus und Rundgang – die Seite (stehendes Bild) bleibt sichtbar, der Dialog blendet darüber */
-@keyframes egoIn{from{opacity:0}to{opacity:1}}
-.ego-gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
-.ego-gl:active{cursor:grabbing}
-.ego-veil{position:absolute;inset:0;background:var(--e-ink);opacity:0;pointer-events:none;transition:opacity .2s}
-.ego-veil.on{opacity:1}
-.ego-ui{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
-.ego-ui>*{pointer-events:auto}
-.ego-bar{margin-bottom:auto;display:flex;align-items:center;gap:1rem;padding:.875rem max(1.25rem,3vw)}
-.ego-back{appearance:none;border:1px solid var(--e-line);border-radius:1.375rem;background:rgba(16,34,42,.82);color:var(--e-txt);font:600 .8125rem/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;min-height:2.75rem;padding:0 1rem;cursor:pointer;white-space:nowrap}
-.ego-back:hover{border-color:var(--amber)}
-.ego-tag{margin:0 0 0 auto;font:600 .75rem/1.2 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--amber);text-align:right}
-.ego-loading{position:absolute;left:0;right:0;top:45%;text-align:center;color:var(--e-dim);margin:0;pointer-events:none}
-.ego-cap{margin:0 max(1.25rem,3vw);max-width:34rem;padding:1rem 1.25rem;border-radius:.375rem;background:rgba(10,22,27,.88);-webkit-backdrop-filter:blur(.5rem);backdrop-filter:blur(.5rem);border:1px solid var(--e-line);transition:opacity .5s,visibility 0s;pointer-events:none}
-.ego-cap.hide{opacity:0;visibility:hidden;transition:opacity .5s,visibility 0s .5s}
-.ego-kicker{margin:0 0 .5rem;font:600 .875rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--e-txt)}
-.ego-kicker i{font:italic 400 1.25rem/1 var(--serif);letter-spacing:0;color:var(--amber);text-transform:none;margin-right:.25rem}
-.ego-cap h3{margin:0 0 .5rem;font:800 clamp(1.375rem,3.4vw,2rem)/1.05 var(--disp);letter-spacing:-.02em;color:var(--e-txt)}
-.ego-text{margin:0;font-size:1.125rem;line-height:1.5;color:var(--e-txt)}
-.ego-contact{pointer-events:auto;display:inline-flex;align-items:center;gap:.375rem;min-height:2.75rem;margin-top:.5rem;color:var(--amber);font:700 .8125rem/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;text-decoration:none}
-.ego-contact[hidden]{display:none}
-.ego-contact:hover{text-decoration:underline;text-underline-offset:.25em}
-.ego-ctl{display:flex;justify-content:center;align-items:center;gap:.75rem;padding:.875rem 1rem .5rem}
-.ego-ctl button{min-height:3rem;min-width:3rem;border-radius:1.5rem;border:1px solid var(--e-line);background:rgba(16,34,42,.7);color:var(--e-txt);font:700 1.25rem/1 var(--sans);cursor:pointer}
-.ego-ctl button:disabled{opacity:.45;cursor:default}
-.ego-ctl .go{padding:0 1.5rem;border-radius:3px;background:var(--amber);border-color:var(--amber);color:#14110A;font:700 .8125rem/1 var(--sans);letter-spacing:.15em;text-transform:uppercase}
-.ego-opts{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem;padding:0 1rem 1.25rem}
-.ego-opts button{min-height:2.75rem;padding:0 .875rem;border-radius:1.375rem;border:1px solid var(--e-line);background:rgba(16,34,42,.82);color:var(--e-dim);font:600 .875rem/1 var(--sans);cursor:pointer}
-.ego-opts button[aria-pressed=true]{background:var(--e-txt);border-color:var(--e-txt);color:#14110A}
-.ego-opts button:disabled{opacity:.75;cursor:default}
-.ego button:focus-visible,.ego a:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
-.ego-hint{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 4.25rem);text-align:center;margin:0;font-size:.875rem;letter-spacing:.04em;color:var(--e-dim);pointer-events:none;transition:opacity .6s}
-.ego-hint.gone{opacity:0}
-@media (prefers-reduced-motion:reduce){.ego[open]{animation-duration:.12s}.ego-veil{transition-duration:.12s}}
-@media (max-width:700px){.ego-cap{margin:0 1rem;padding:.75rem 1rem}.ego-opts button{padding:0 .625rem}.ego-bar{padding:.75rem 1rem}.ego-ctl{gap:.5rem}.ego-ctl .go{padding:0 .875rem;letter-spacing:.08em;white-space:nowrap}}
-@media (max-width:359px){.ego-ctl{gap:.375rem}.ego-ctl button{min-width:2.75rem;min-height:2.75rem}.ego-ctl .go{min-height:3rem;padding:0 .5rem;letter-spacing:.02em;font-size:.75rem}} /* 320 px: Startknopf passt in die Zeile */
 
 /* ===== Gesamtprüfung 13.11.2026 (Go Kai) ===== */
 /* G1 · PC, niedrige Fenster (Laptop 1366×768, Full-HD mit 150 % → ~1280×600): Kap. 04 kompakter, damit „Rundgang starten“ im Bild bleibt */
 @media (min-width:921px) and (max-height:760px){
-  .tour-inner{padding-top:5.25rem;padding-bottom:1rem}
-  .tour-inner .roof-intro{margin-bottom:.625rem}
-  .tour-inner .roof-head{margin-bottom:0}
-  .tour-inner .roof-head .kicker{margin-bottom:.5rem}
-  .tour-inner .roof-head h2{font-size:clamp(1.75rem,2.7vw,2.5rem)}
-  .tour-inner .roof-head .lead{margin-top:.5rem;font-size:.9375rem}
-  .roomnav{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:.625rem}
-  .roomnav button{padding:.45rem .55rem;grid-template-columns:1.5rem minmax(0,1fr)}
-  .roomnav button:last-child:nth-child(odd){grid-column:span 2}
-  .tour-ctrl{margin-top:.625rem}
-  .room-cards{margin-top:1rem;min-height:0}
-  .room-card h3{margin-bottom:.5rem}
-  .room-card > p{font-size:.9375rem;line-height:1.5;margin-bottom:.625rem}
   /* Kap. 03: Karte rückt unter die Abschnittsknöpfe statt in sie hinein, Hinweis bleibt lesbar */
   .axis-inner{padding-top:5.25rem;padding-bottom:1rem}
   .axis-head h2{font-size:clamp(1.875rem,3vw,2.75rem);margin-bottom:.5rem}
@@ -812,7 +640,6 @@ html.ego-open{overflow:hidden;scrollbar-gutter:stable}
   .axis-inner .note{margin-top:.5rem}
 }
 @media (min-width:921px) and (max-height:520px){
-  .tour-inner .roof-head .lead,.tour-kicker{display:none}
 }
 /* G5 · Handy/Tablet: Knöpfe der Manuthera-Liege und ihre Erklärzeile stehen direkt unter Überschrift und Bühne, der lange Text folgt danach */
 @media (max-width:920px){
@@ -834,14 +661,12 @@ html.ego-open{overflow:hidden;scrollbar-gutter:stable}
 /* T4 · Kapitel-Links setzen den Fokus aufs Ziel: kein Rahmen um das ganze Kapitel */
 main [tabindex="-1"]:focus{outline:none}
 /* G3 · Ohne JavaScript (oder wenn das Skript beim Start scheitert): alle Inhalte stehen lesbar untereinander. Mit Skript greift nichts davon. */
-html:not(.js) .seg-card,html:not(.js) .room-card,html:not(.js) .laws li{position:static;opacity:1;visibility:visible;transform:none;filter:none;margin-bottom:1.75rem}
+html:not(.js) .seg-card,html:not(.js) .laws li{position:static;opacity:1;visibility:visible;transform:none;filter:none;margin-bottom:1.75rem}
 html:not(.js) .seg-card dl{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;margin:0 0 1rem}
-html:not(.js) .seg-cards,html:not(.js) .room-cards,html:not(.js) .laws{min-height:0;opacity:1;visibility:visible}
-html:not(.js) .axis,html:not(.js) .tour{height:auto}
-html:not(.js) .axis-sticky,html:not(.js) .tour-sticky,html:not(.js) .rules-sticky{position:static;height:auto;min-height:0;overflow:visible}
-html:not(.js) .axis-inner,html:not(.js) .tour-inner{display:block;height:auto}
-html:not(.js) .tour:not(.in) .room-cards{display:block;opacity:1;visibility:visible}
-html:not(.js) .room-card{display:block}
+html:not(.js) .seg-cards,html:not(.js) .laws{min-height:0;opacity:1;visibility:visible}
+html:not(.js) .axis{height:auto}
+html:not(.js) .axis-sticky,html:not(.js) .rules-sticky{position:static;height:auto;min-height:0;overflow:visible}
+html:not(.js) .axis-inner{display:block;height:auto}
 html:not(.js) .ix-body{grid-template-rows:1fr}
 html:not(.js) .ix-body p{padding-bottom:1.5rem}
 html:not(.js) #gl,html:not(.js) .hand,html:not(.js) .meter,html:not(.js) .hero-stage,html:not(.js) .hero-more,html:not(.js) .only-fine,html:not(.js) .only-touch,html:not(.js) .axis-hint,html:not(.js) .segnav,html:not(.js) .seg-dots,html:not(.js) .tour-kicker,html:not(.js) .tour-ctrl,html:not(.js) .roomnav,html:not(.js) .room-dots,html:not(.js) .manu-stage,html:not(.js) .manu-modes,html:not(.js) .serv-stage,html:not(.js) .law-prog,html:not(.js) .motion-btn,html:not(.js) .chap-now,html:not(.js) .index button::after,html:not(.js) .scan-rail{display:none}
@@ -850,11 +675,11 @@ html:not(.js) .index button{cursor:default}
 @media print{
   :root{--txt:#111;--dim:#333;--mute:#555;--line:#ccc;--amber:#8a5a00}
   body{background:#fff;color:#111}
-  #gl,.grain,.hand,.top,.skip,.meter,.hero-stage,.hero-more,.still,.axis-hint,.segnav,.seg-dots,.scan-rail,.tour-kicker,.tour-ctrl,.roomnav,.room-dots,.manu-stage,.manu-modes,.serv-stage,.law-prog,.touch-hint,.turn-note,.only-fine,.only-touch,dialog,.btn,#copyMail{display:none!important}
-  .chapter,.wrap,.axis,.tour,.axis-sticky,.tour-sticky,.rules-sticky,.axis-inner,.tour-inner,.manu,.roof,.door{position:static!important;display:block!important;height:auto!important;min-height:0!important;overflow:visible!important;padding-top:.5rem!important;padding-bottom:.5rem!important;background:none!important}
-  .seg-card,.room-card,.laws li{position:static!important;opacity:1!important;visibility:visible!important;transform:none!important;filter:none!important;margin-bottom:1rem;break-inside:avoid;border:0!important;background:none!important}
-  .seg-cards,.room-cards,.laws{min-height:0!important;opacity:1!important;visibility:visible!important}
-  .tour .room-cards,.room-card{display:block!important}
+  #gl,.grain,.hand,.top,.skip,.meter,.hero-stage,.hero-more,.still,.axis-hint,.segnav,.seg-dots,.scan-rail,.tour-ctrl,.roof-grid .hint,.ego,.manu-stage,.manu-modes,.serv-stage,.law-prog,.touch-hint,.turn-note,.only-fine,.only-touch,dialog,.btn,#copyMail{display:none!important}
+  .chapter,.wrap,.axis,.axis-sticky,.rules-sticky,.axis-inner,.manu,.roof,.door{position:static!important;display:block!important;height:auto!important;min-height:0!important;overflow:visible!important;padding-top:.5rem!important;padding-bottom:.5rem!important;background:none!important}
+  .seg-card,.card,.laws li{position:static!important;opacity:1!important;visibility:visible!important;transform:none!important;filter:none!important;margin-bottom:1rem;break-inside:avoid;border:0!important;background:none!important}
+  .seg-cards,.cards,.laws{min-height:0!important;opacity:1!important;visibility:visible!important}
+  .cards{display:block!important}
   .seg-card dl{position:static!important;width:auto!important;height:auto!important;clip:auto!important;white-space:normal!important;overflow:visible!important}
   .ix-body{grid-template-rows:1fr!important}
   h1,h2,.kinetic,.laws span,.laws b{font-size:1.75rem!important;line-height:1.15!important;color:#111!important;max-width:none!important}
@@ -864,9 +689,9 @@ html:not(.js) .index button{cursor:default}
   .facts{break-inside:avoid}
   *{text-shadow:none!important;box-shadow:none!important;animation:none!important;transition:none!important}
   h1 *,h2 *,h3 *{transform:none!important;opacity:1!important}
-  h1,h2,h3,.kicker,.lead,.axis-head,.roof-head,.roof-intro,.sign,.note,.manu-read{opacity:1!important;transform:none!important;max-width:none!important}
+  h1,h2,h3,.kicker,.lead,.axis-head,.roof-head,.sign,.note,.manu-read{opacity:1!important;transform:none!important;max-width:none!important}
   .nogl-note,.paused-note,.seg-cards::after{display:none!important}
-  .seg-cards,.seg-card,.room-cards,.room-card{padding:0!important;margin-top:0!important;max-width:none!important}
+  .seg-cards,.seg-card,.cards,.card{padding:0!important;margin-top:0!important;max-width:none!important}
   .manu-text{display:block!important}
   .seg-cards,.axis-head{position:static!important;width:auto!important;height:auto!important;max-height:none!important;clip:auto!important;white-space:normal!important;overflow:visible!important}
   #achse .note::before{display:none!important}
