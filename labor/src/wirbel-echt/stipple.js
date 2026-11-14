@@ -16,15 +16,23 @@ import { edgeOf } from './anatomie.js';
 // Entwurf W (Go Kai 1–4, Punkt 3): Bauteile sichtbar trennen – jeder Wirbel und jede Bandscheibe wird entlang der eigenen
 // Achse leicht gestaucht, so entsteht zwischen Wirbelkörper und Bandscheibe eine dunkle Fuge von je ~GAP cm (wie bei „bisher“)
 const GAP = 0.08;
+// Kai 14.11. („Mischung aus A und B“): Bandscheiben quer um 8 % schmaler – gemessen stehen sie an BWS/LWS 15–25 % über den
+// Wirbelkörper hinaus und verdecken von der Seite die Fuge; halb ausgeglichen, damit die Form anatomisch bleibt
+const DISC_RAD = 0.92;
 function gap(M, part, P) {
   let c, n, s = 1, shift = 0;
-  if (part.kind === 'disc') { const D = M.disc[part.id.slice(1)]; c = D.c; n = D.F.n; s = Math.max(0.6, 1 - GAP / (D.t / 2)); }
+  let rad = 1;
+  if (part.kind === 'disc') { const D = M.disc[part.id.slice(1)]; c = D.c; n = D.F.n; s = Math.max(0.6, 1 - GAP / (D.t / 2)); rad = DISC_RAD; }
   else {
     const L = M.levels.find((l) => l.id === part.id); n = L.F.n;
     if (L.id === 'S') { c = L.c; shift = -GAP; } else { c = L.c; s = Math.max(0.8, 1 - GAP / (L.h / 2)); }
   }
   for (let i = 0; i < P.length; i += 3) {
     const d = (P[i] - c.x) * n.x + (P[i + 1] - c.y) * n.y + (P[i + 2] - c.z) * n.z, m = shift - d * (1 - s);
+    if (rad !== 1) { // quer zur Achse um die Mitte verschmälern (Bandscheibe)
+      const ax = c.x + n.x * d, ay = c.y + n.y * d, az = c.z + n.z * d;
+      P[i] = ax + (P[i] - ax) * rad; P[i + 1] = ay + (P[i + 1] - ay) * rad; P[i + 2] = az + (P[i + 2] - az) * rad;
+    }
     P[i] += n.x * m; P[i + 1] += n.y * m; P[i + 2] += n.z * m;
   }
 }

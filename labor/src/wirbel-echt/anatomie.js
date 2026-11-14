@@ -136,7 +136,7 @@ const regOf = (id) => (id[0] === 'C' ? 'c' : id[0] === 'T' ? 't' : id[0] === 'L'
 
 // ---------- Modell ---------- (Generator: Zeitscheiben wie shared/slice.js; model() rechnet am Stück)
 export const model = (data, opt) => runSync(modelGen(data, opt));
-// opt.spread (cm): Abstand, um den Wirbel und Bandscheiben entlang der Säule auseinanderrücken (Kai 14.11.: „ein wenig Abstand,
+// opt.spread (cm, an der Halswirbelsäule; größere Wirbel mehr): Abstand, um den Wirbel und Bandscheiben entlang der Säule auseinanderrücken (Kai 14.11.: „ein wenig Abstand,
 // aber noch eine zusammenhängende Wirbelsäule“); das Kreuzbein bleibt stehen, alles darüber rückt je Fuge um spread entlang der
 // örtlichen Richtung zum Nachbarn nach oben → Krümmung bleibt, Teile werden nicht verformt
 export function* modelGen(data, opt = {}) {
@@ -152,7 +152,15 @@ export function* modelGen(data, opt = {}) {
     const byId = Object.fromEntries(data.parts.map((p) => [p.id, p])), order = [];
     CHAIN.forEach((id) => { if (byId[id]) order.push(byId[id]); if (byId['d' + id]) order.push(byId['d' + id]); });
     const cen = order.map((p) => surfaceStats(p.pos, p.idx).c), off = order.map(() => V());
-    for (let i = order.length - 2; i >= 0; i--) off[i].copy(off[i + 1]).addScaledVector(V().subVectors(cen[i], cen[i + 1]).normalize(), spread);
+    // Kai 14.11. („Mischung aus A und B“): der Abstand wächst mit der Wirbelgröße – spread gilt für die Halswirbelsäule
+    // (Wirbelabstand ~1,57 cm), größere Wirbel bekommen mehr, gedämpft mit Exponent 0,75 (LWS ~1,7×, BWS ~1,4×)
+    const bone = order.map((p) => p.kind !== 'disc');
+    const segLen = (i) => { // Abstand der Wirbelmitten um die Fuge i | i+1
+      let a = i; while (a > 0 && !bone[a]) a--;
+      let b = i + 1; while (b < order.length - 1 && !bone[b]) b++;
+      return Math.min(3.4, Math.max(1.2, cen[a].distanceTo(cen[b]) * (order[b].id === 'S' || order[a].id === 'S' ? 0.55 : 1)));
+    };
+    for (let i = order.length - 2; i >= 0; i--) off[i].copy(off[i + 1]).addScaledVector(V().subVectors(cen[i], cen[i + 1]).normalize(), spread * Math.pow(segLen(i) / 1.57, 0.75));
     order.forEach((p, i) => { const o = off[i]; for (let k = 0; k < p.pos.length; k += 3) { p.pos[k] += o.x; p.pos[k + 1] += o.y; p.pos[k + 2] += o.z; } });
     y1 = -1e9; data.parts.forEach((p) => { for (let i = 1; i < p.pos.length; i += 3) y1 = Math.max(y1, p.pos[i]); });
     y1 += y0; // y1 wird unten wieder um y0 verringert (Ursprung liegt schon bei 0)
