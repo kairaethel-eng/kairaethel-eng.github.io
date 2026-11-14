@@ -4,11 +4,14 @@
 // Alles ist eine reine Funktion der Filmzeit t (stateAt, camAt) – deshalb lässt sich der Film anhalten, spulen und als
 // Standbild zeigen. Aufruf: initVorfall({ root, isPaused }) → { play, pause, seek, state } (Debug: window.__vorfall).
 // Erwartet in root: .vf-stage (leer) und ol.vf-steps > li > b + span (Titel + Satz je Abschnitt; einzige Textquelle).
+// Fokus (Puls, Film auf der Hauptbühne): auto: false = kein Selbststart (die Seite startet ihn), onEnd = Rückruf am Filmende,
+// view(t) = Lage des Segments auf dem Bildschirm (Mitte, Maßstab, Blickwinkel, Scan-Linie) – daran richtet Puls seine Wirbelsäule aus.
 import * as THREE from 'three';
 import { stage, toScreen, C, FRAG } from '../manu/common.js';
 import { stippleGen, coreOfGen, stipSize } from '../manu/stipple.js';
 import { runSliced } from '../shared/slice.js';
 import { buildSegment } from './segment.js';
+import { META } from './daten.js';
 
 const FOV = 30;
 export const CH_T = [0, 6.5, 13, 19.5, 28.5], T_END = 37;
@@ -16,6 +19,10 @@ export const KEY_T = [4.6, 11.6, 18.7, 25.2, 32.4]; // aussagekräftiges Standbi
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const sm = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 const PULSES = [13.5, 15.2, 16.9, 19.9];
+// Segment im Film (cm): Abstand der Wirbelmitten L5→L4, Neigung dieser Achse in der Seitenansicht (rad), Dicke der Bandscheibe –
+// daran richtet Puls das Segment seiner Wirbelsäule aus (Fokus: Übergabe an den Film)
+const _dy = META.L4.c[1] - META.L5.c[1], _dz = META.L4.c[2] - META.L5.c[2];
+export const SEG = { len: Math.hypot(META.L4.c[0] - META.L5.c[0], _dy, _dz), tilt: Math.atan2(_dz, _dy), disc: META.disc.t };
 
 // ---------- Zustand des Films zur Zeit t ----------
 export function stateAt(t) {
@@ -215,7 +222,7 @@ const VS_NUC = /* glsl */`
     vA = smoothstep(.2, .8, uOpen) * fade * tw * (.62 + uPulse * .1) * (position.y > uScan ? 0. : 1.);
   }`;
 
-export function initVorfall({ root, isPaused = () => false }) {
+export function initVorfall({ root, isPaused = () => false, auto = true, onEnd = null }) {
   const $ = (s, r = root) => r.querySelector(s);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const Q = new URLSearchParams(location.search), glQ = Q.get('gl'), tQ = Q.get('t');
@@ -290,7 +297,7 @@ export function initVorfall({ root, isPaused = () => false }) {
     const show = (i) => { cur = i; t = KEY_T[i]; stageEl.dataset.still = String(i + 1); for (let k = 0; k < N; k++) fills[k].style.transform = `scaleX(${k <= i ? 1 : 0})`; setChap(i); };
     chBtns.forEach((b, i) => b.addEventListener('click', () => show(i)));
     show(tQ ? chapOf(+tQ) : 0);
-    return { play() {}, pause() {}, seek: (x) => show(chapOf(x)), keys: KEY_T, state: () => ({ t, playing: false, gl: false, chap: cur, ready: true }) };
+    return { play() {}, pause() {}, seek: (x) => show(chapOf(x)), view: () => null, done: Promise.resolve(0), keys: KEY_T, state: () => ({ t, playing: false, gl: false, chap: cur, ready: true }) };
   }
 
   // ---------- Bühne ----------
@@ -426,7 +433,7 @@ export function initVorfall({ root, isPaused = () => false }) {
     const dt = Math.min(0.1, (now - last) / 1000); last = now;
     const g = isPaused(); if (g && !gp && playing) pause(); gp = g;
     if (!ready || !st.visible) return;
-    if (playing) { t += dt; dirty = true; if (t >= T_END) { t = T_END; playing = false; ended = true; ui(); } }
+    if (playing) { t += dt; dirty = true; if (t >= T_END) { t = T_END; playing = false; ended = true; ui(); if (onEnd) onEnd(); } }
     if (!dirty) return;
     dirty = false; apply();
   }
@@ -451,10 +458,27 @@ export function initVorfall({ root, isPaused = () => false }) {
     if (e.target.closest('.vf-bar') && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { e.preventDefault(); const i = clamp(chapOf(t) + (e.key === 'ArrowRight' ? 1 : -1), 0, N - 1); chBtns[i].focus(); chBtns[i].click(); }
   });
   // von selbst starten, sobald der Film gut im Bild ist; außerhalb anhalten
-  new IntersectionObserver(([e]) => {
+  if (auto) new IntersectionObserver(([e]) => {
     if (e.isIntersecting) { if (ready && !started && !reduced && !isPaused() && tQ === null) play(); else if (autoPaused) play(); }
     else if (playing) { pause(); autoPaused = true; }
   }, { threshold: 0.55 }).observe(stageEl);
+
+  // Lage des Segments im Fenster zur Filmzeit tt (auch vor dem Aufbau gültig): Mitte zwischen L4 und L5, Bildpunkte je cm,
+  // Blickwinkel (Azimut °), Bildschirmhöhe der Scan-Linie (Aufbau in den ersten Sekunden; danach null)
+  const vcam = new THREE.PerspectiveCamera(FOV, 1, 1, 200), vv = new Float32Array(6), vp = new THREE.Vector3();
+  const MID = new THREE.Vector3().fromArray(META.L4.c).add(new THREE.Vector3().fromArray(META.L5.c)).multiplyScalar(0.5);
+  function view(tt = t) {
+    if (!st.w) return null;
+    camAt(tt, vv);
+    const fit = fitOf(), az = THREE.MathUtils.degToRad(vv[0]), elv = THREE.MathUtils.degToRad(vv[1]), R = vv[2] * fit;
+    vcam.aspect = st.aspect; vcam.updateProjectionMatrix();
+    vcam.position.set(vv[3] + Math.sin(az) * Math.cos(elv) * R, vv[4] + Math.sin(elv) * R, vv[5] + Math.cos(az) * Math.cos(elv) * R);
+    vcam.lookAt(vv[3], vv[4], vv[5]); vcam.updateMatrixWorld(true);
+    const r = canvas.getBoundingClientRect();
+    const px = (x, y, z) => { vp.set(x, y, z).project(vcam); return [r.left + (vp.x * 0.5 + 0.5) * r.width, r.top + (-vp.y * 0.5 + 0.5) * r.height]; };
+    const c = px(MID.x, MID.y, MID.z), u = px(MID.x, MID.y + 1, MID.z), sc = stateAt(tt).scan;
+    return { x: c[0], y: c[1], ppc: Math.hypot(u[0] - c[0], u[1] - c[1]), az: vv[0], scanY: sc > 50 ? null : px(0, sc, 0)[1], top: r.top, h: r.height };
+  }
 
   ui(); setChap(0);
   const done = runSliced(buildGen()).then((count) => {
@@ -462,8 +486,8 @@ export function initVorfall({ root, isPaused = () => false }) {
     if (tQ !== null) seek(+tQ); else { seek(KEY_T[0]); started = false; ui(); } // Vorschaubild, bis der Film startet
     dirty = true; last = performance.now(); requestAnimationFrame(frame);
     const r = stageEl.getBoundingClientRect();
-    if (tQ === null && !reduced && !isPaused() && r.top < innerHeight * 0.6 && r.bottom > innerHeight * 0.4) play();
+    if (auto && tQ === null && !reduced && !isPaused() && r.top < innerHeight * 0.6 && r.bottom > innerHeight * 0.4) play();
     return count;
   });
-  return { play, pause, seek, done, keys: KEY_T, state: () => ({ t, playing, ended, ready, chap, gl: true, seg, st, cam: [...cv] }) };
+  return { play, pause, seek, view, done, canvas, keys: KEY_T, state: () => ({ t, playing, ended, ready, chap, gl: true, seg, st, cam: [...cv] }) };
 }

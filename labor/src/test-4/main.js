@@ -10,7 +10,7 @@ import { runSliced } from '../shared/slice.js';
 import { initHouse } from '../haus-licht/house.js';
 import { ECHT } from '../wirbel-echt/echt.js';
 import { initStosswelle } from '../stosswelle/welle.js';
-import { initVorfall } from '../vorfall/film.js';
+import { initVorfall, SEG as VF_SEG } from '../vorfall/film.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -78,8 +78,10 @@ function runFrame(now) {
 // ---------- Scrollen ----------
 let lenis = null;
 let sheetOpen = false; // Termin-Blatt offen (Lenis steht, Handy rendert nicht)
-const VF = { film: null, opener: null, open: null }; // Film-Blatt (siehe unten)
-let vfOpen = false; // Film „Bandscheibenvorfall“ offen (Auftrag Z): deckt die Seite ab → Hauptbühne ruht (PC + Handy)
+const VF = { film: null, opener: null, open: null }; // Film „Bandscheibenvorfall“ (siehe unten)
+// Fokus (Kai 14.11. nachts): der Film läuft auf der Hauptbühne. on = offen, k/e = Übergang 0…1, hand = Übergabe von der Wirbelsäule
+// (auflösen + heranfahren + Scan-Linie), started = Film läuft, cover = Film deckt die Bühne, rest = Hauptbühne ruht (Akku)
+const FX = { on: false, k: 0, e: 0, hand: false, tilt: 0, gap: 0, started: false, cover: false, coverN: 0, rest: false, y0: 0, t0: 0, acc: 0, v: null };
 if (!reduced) {
   // ruhiges Scrollen: Mausrad langsamer, weiches Nachgleiten (Scrollbalken bleibt direkt).
   // Erst nach dem ersten Bild anlegen: Lenis misst die Seite, das erzwänge sonst ein zweites Layout im Start-Task (A1).
@@ -447,6 +449,8 @@ const sU = {
   uZone: { value: -10 }, uZoneAmt: { value: 0 }, uOn: { value: 0 }, uStip: { value: 1 }, uPix: uniforms.uPix,
   uPeri: { value: 0 }, uPeriStart: { value: 0 }, uScan: { value: 100 }, uScanAmt: { value: 0 }, // Scanner (Handy, 6.11.)
   uDiff: { value: 0 }, uFine: { value: 0 }, uSharp: { value: isDesktop() ? 0 : 1 }, uEcht: { value: 0 }, // Wirbelsäule echt (A): Handy schärfer; uEcht: Schattierung der echten Säule (Punkt 4) // Handy 7.11.: Wirbelsäule differenziert, Nerv fein (PC vorgemerkt)
+  uFocT: { value: new THREE.Vector4(0, 0, 0, 0) }, uFocS: { value: new THREE.Vector4(0, 1, 0, 0) }, uFocD: { value: 0.08 }, // Fokus: Segment wie im Film ausrichten (Mitte + Kippwinkel, Achse + halber Zusatzabstand, halbe Bandscheibe)
+  uFoc: { value: 0 }, uFocZone: { value: -10 }, uFocY: { value: new THREE.Vector3(-100, 100, 0) }, // Fokus: Auflösen außerhalb L4–L5 (Höhenband unten/oben, Mitte L4)
   uDiscMode: { value: DISC_MODE }, cDiscA: { value: C('#E0583C') }, // Bandscheiben (7.11. spät): 0 aktiv rot-orange · 1 alle · 2 alt blau
   cBone: { value: C('#F3EADA') }, cDisc: { value: C('#86AFC9') }, cDiscD: { value: C('#4FA8D6') }, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue,
   cSignal: { value: C('#DDF1FF') }, cCore: { value: C('#0E1C22') },
@@ -455,22 +459,40 @@ const GLSL_COMMON = /* glsl */`
   uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart, uScan, uScanAmt, uDiff, uFine, uDiscMode, uSharp, uEcht; uniform vec4 uXf;
   uniform vec3 cBone, cDisc, cDiscD, cDiscA, cAmber, cBlue, cSignal, cCore;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
-  const vec3 LDIR = vec3(.48, .72, .5);`;
+  const vec3 LDIR = vec3(.48, .72, .5);
+  // Fokus (Film „Bandscheibenvorfall“): alles außerhalb des Segments L4–L5 löst sich auf. focOut = 1 außerhalb des Höhenbands,
+  // focFar = Abstand vom Segment (0 nah … 1 fern): die Enden der Wirbelsäule gehen zuerst, die Welle läuft auf das Segment zu
+  uniform float uFoc, uFocZone, uFocD; uniform vec3 uFocY; uniform vec4 uFocT, uFocS;
+  // Segment L4–L5 in die Lage des Films bringen: der Abstand, den Puls zwischen die Wirbel legt, schließt sich (uFocS), die
+  // Bandscheibe stellt sich waagrecht (uFocT, Drehung um die Querachse durch die Mitte des Segments) – die ganze Säule geht mit
+  vec3 focFit(vec3 p){
+    if (uFocT.w == 0. && uFocS.w == 0.) return p;
+    vec3 q = p - uFocT.xyz;
+    float d = dot(q, uFocS.xyz);
+    q -= uFocS.xyz * sign(d) * uFocS.w * smoothstep(uFocD, uFocD + uFocS.w + .0001, abs(d));
+    float c = cos(uFocT.w), s = sin(uFocT.w);
+    q.yz = vec2(c * q.y - s * q.z, s * q.y + c * q.z);
+    return q + uFocT.xyz;
+  }
+  float focOut(float y){ return smoothstep(0., .08, max(uFocY.x - y, y - uFocY.y)); }
+  float focFar(float y){ return clamp(max(uFocY.x - y, y - uFocY.y) / 3.2, 0., 1.); }
+  float focK(float y, float h){ return smoothstep(0., 1., uFoc * 1.75 - (1. - focFar(y)) * .35 - h * .4); }`;
 
 // 1) Kern: dunkle Füllung, verdeckt die Rückseite der Punkte
 const coreMat = new THREE.ShaderMaterial({
   uniforms: sU,
   vertexShader: GLSL_COMMON + /* glsl */`
-    varying float vY; varying float vL;
+    varying float vY; varying float vL; varying float vLY;
     void main(){
-      vec3 p = rotY(position - normal * .012, uRot) * uXf.w + uXf.xyz;
-      vY = p.y; vL = max(dot(normalize(rotY(normal, uRot)), normalize(LDIR)), 0.);
+      vec3 p = rotY(focFit(position) - normal * .012, uRot) * uXf.w + uXf.xyz;
+      vY = p.y; vLY = position.y; vL = max(dot(normalize(rotY(normal, uRot)), normalize(LDIR)), 0.);
       gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.);
     }`,
   fragmentShader: GLSL_COMMON + /* glsl */`
-    varying float vY; varying float vL;
+    varying float vY; varying float vL; varying float vLY;
     void main(){
       if (vY < uCut) discard;
+      if (uFoc > 0. && fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) < focOut(vLY) * focK(vLY, .5) * 1.02) discard; // Fokus: Kern löst sich gerastert mit auf
       gl_FragColor = vec4(cCore + cBone * vL * .05, 1.);
       #include <colorspace_fragment>
     }`,
@@ -483,7 +505,16 @@ const boneMat = new THREE.ShaderMaterial({
     attribute float aZone, aKind, aEdge; uniform float uMaxSize;
     varying vec3 vCol; varying float vVis;
     void main(){
-      vec3 p = rotY(position, uRot) * uXf.w + uXf.xyz;
+      vec3 lp = focFit(position); float fo = 0.;
+      if (uFoc > 0.) {
+        // Fokus: Wirbel anderer Abschnitte und die Bandscheibe über L4 lösen sich auf – Punkte treiben entlang der Säule davon, werden kleiner und glimmen
+        float w = max(step(.5, abs(aZone - uFocZone)), aKind > .5 ? step(uFocY.z, position.y) : 0.);
+        float h = fract(sin(dot(position, vec3(127.1, 311.7, 74.7))) * 43758.5453);
+        fo = w * focK(position.y, h);
+        float up = position.y > (uFocY.x + uFocY.y) * .5 ? 1. : -1.;
+        lp += (vec3(normal.x, up * 1.4 + normal.y * .3, normal.z) * (.2 + h * .7) + vec3(sin(uTime * .9 + h * 40.), 0., cos(uTime * .8 + h * 31.)) * .08) * fo * fo;
+      }
+      vec3 p = rotY(lp, uRot) * uXf.w + uXf.xyz;
       vec3 n = normalize(rotY(normal, uRot));
       vec3 V = normalize(cameraPosition - p);
       float lam = max(dot(n, normalize(LDIR)), 0.);
@@ -525,10 +556,11 @@ const boneMat = new THREE.ShaderMaterial({
       col = mix(col, cAmber * 1.3, g);
       float sc = exp(-pow((p.y - uScan) * 16., 2.)) * uScanAmt; // Scanner: Band unter der Scan-Linie leuchtet
       col = mix(col, cAmber * 1.5 + vec3(.15), sc * .85);
-      vCol = col; vVis = step(uCut, p.y) * uOn;
+      col = mix(col, cAmber * 1.15, fo * .75);
+      vCol = col; vVis = step(uCut, p.y) * uOn * step(fo, .97);
       vec4 mv = viewMatrix * vec4(p, 1.);
       gl_Position = projectionMatrix * mv;
-      gl_PointSize = clamp(uStip / -mv.z * sz * (uSharp > .5 ? .86 : 1.), 1., uMaxSize) * (1. + g * .8 + sc * .7);
+      gl_PointSize = clamp(uStip / -mv.z * sz * (uSharp > .5 ? .86 : 1.) * (1. - fo * .7), 1., uMaxSize) * (1. + g * .8 + sc * .7);
     }`,
   fragmentShader: /* glsl */`
     varying vec3 vCol; varying float vVis;
@@ -605,13 +637,15 @@ function addNerves() {
       void main(){
         float t = fract(aPhase + uTime * aSpeed);
         float S1 = fract(uTime * .3), S2 = fract(uTime * .3 + .5);
-        vec3 p; float base, pk, boost = 0.;
+        vec3 p; float base, pk, boost = 0., fk = 1.; // fk: Fokus – 1 = außerhalb des Segments (blendet aus)
         if (aKind < 1.5) {                         // Rückenmark
-          p = rotY(curveAt(uCurves, aRow, uRows, t) + aOff, uRot) * uXf.w + uXf.xyz;
+          vec3 q = curveAt(uCurves, aRow, uRows, t) + aOff; fk = focOut(q.y);
+          p = rotY(focFit(q), uRot) * uXf.w + uXf.xyz;
           pk = max(packet(S1 - t, 700.), packet(S2 - t, 700.));
           base = .46;
         } else if (aKind < 2.5) {                  // Nervenwurzel
-          p = rotY(curveAt(uCurves, aRow, uRows, t) + aOff, uRot) * uXf.w + uXf.xyz;
+          fk = step(.5, abs(aZone - uFocZone));
+          p = rotY(focFit(curveAt(uCurves, aRow, uRows, t) + aOff), uRot) * uXf.w + uXf.xyz;
           float on = (1. - step(.5, abs(aZone - uZone))) * uZoneAmt;
           boost = on;
           float r1 = (S1 - aStart) * 4., r2 = (S2 - aStart) * 4.;
@@ -638,7 +672,7 @@ function addNerves() {
         gl_Position = projectionMatrix * mv;
         bool fine = aKind > 2.5 && uFine > .5;
         gl_PointSize = fine ? clamp(uPix * (.75 + pk * .9) * 15. / -mv.z, 1., 3.6) : clamp(uPix * (1.05 + pk * 1.4) * 15. / -mv.z, 1., 7.);
-        vCol = col; vA = vis * clamp(base + pk, 0., 1.4);
+        vCol = col; vA = vis * clamp(base + pk, 0., 1.4) * (1. - fk * clamp(uFoc * 1.6, 0., 1.));
         // N4 (Auftrag Z, nur PC): im Durchschein-Durchgang (uGhostV) die aktive Wurzel und die Versorgungsbahn kräftiger –
         // sonst beginnt die Bahn hinter dem echten, größeren Kreuzbein „in der Luft“ (L4–L5, S1)
         vA *= 1. + uGhostV * boost * 1.3;
@@ -1411,6 +1445,8 @@ function updateScan(dt, r, inSec) {
   const want = PROFILE + (pc ? -0.5 : 0.5) + (paused || reduced ? 0 : Math.sin(uniforms.uTime.value * 0.35) * 0.1); // PC: Wurzeln nach rechts
   spineRot += (want + Math.PI * 2 * Math.round((spineRot - want) / (Math.PI * 2)) - spineRot) * (reduced ? 1 : 1 - Math.exp(-dt * 2.2));
   uniforms.uSpineRot.value = spineRot;
+  const fx = FX.hand && FX.e > 0; // Fokus: Wirbelsäule übernimmt Blick und Lage des Films
+  if (fx) fxRot();
   axisWant = null;
   if (!pc) { sil.visible = false; silU.uOn.value = 0; }
   periLabel.style.opacity = 0;
@@ -1497,6 +1533,7 @@ function updateScan(dt, r, inSec) {
     }
     const e = ZM.k * ZM.k * (3 - 2 * ZM.k);
     X.set(OV.x + (zx - OV.x) * e, OV.y + (zy - OV.y) * e, 0, OV.w + (zw - OV.w) * e);
+    if (fx) fxPose(X);
   }
   const zoomE = ZM.k * ZM.k * (3 - 2 * ZM.k);
   // Aufbau beim Hereinkommen (Scan von oben), Auflösen nach oben beim Weiterscrollen
@@ -1507,13 +1544,14 @@ function updateScan(dt, r, inSec) {
   if (DENSE.obj && bones) DENSE.obj.material.uniforms.uStip.value = bones.pts.material.uniforms.uStip.value * 0.8; // Wirbelsäule echt (B)
   // Band unter der Linie: Lage in der Übersicht → in Wirbelsäulen-Einheiten → aktuelle (ggf. herangezoomte) Lage
   sU.uScan.value = y >= 0 && OV.w > 0 ? ((screenToWorldY(y) - OV.y) / OV.w) * X.w + X.y : 100;
-  sU.uScanAmt.value += ((ready ? 1 - 0.7 * zoomE : 0) - sU.uScanAmt.value) * Math.min(1, dt * 6);
+  sU.uScanAmt.value += ((ready && !(FX.on && FX.hand) ? 1 - 0.7 * zoomE : 0) - sU.uScanAmt.value) * Math.min(1, dt * 6);
 
   // Abschnitt: Hervorhebung, Bahn, Zeilen (erst, wenn die Nahansicht fast angekommen ist)
   const zone = seg >= 0 ? ZONES.indexOf(SSTOPS[seg].zone) : -10, zKey = seg >= 0 ? SSTOPS[seg].zone : null;
   if (zone !== sU.uZone.value) { sU.uZone.value = zone; sU.uZoneAmt.value = 0; sU.uPeri.value = 0; }
-  sU.uZoneAmt.value += ((zone >= 0 ? 1 : 0) - sU.uZoneAmt.value) * 0.07;
-  sU.uPeri.value += ((zKey && (pc || ML.key === zKey) && ZM.k > (pc ? 0.75 : 0.4) ? 1 : 0) - sU.uPeri.value) * 0.05;
+  const fxOn = FX.on && FX.hand; // Fokus: Hervorhebung und Versorgungsbahn treten zurück (das Segment wird zum Film)
+  sU.uZoneAmt.value += ((zone >= 0 && !fxOn ? 1 : 0) - sU.uZoneAmt.value) * 0.07;
+  sU.uPeri.value += ((zKey && !fxOn && (pc || ML.key === zKey) && ZM.k > (pc ? 0.75 : 0.4) ? 1 : 0) - sU.uPeri.value) * (fxOn ? 0.12 : 0.05);
   if (pc) {
     // PC: Silhouette rechts (vor dem Aufzug), Bahn bis ins Versorgungsgebiet, Schilder frei platziert
     placeSilhouette();
@@ -1979,7 +2017,7 @@ function tick() {
   lastTick = nowT;
   frameN++;
   if (sheetOpen && !isDesktop()) return; // Handy: Termin-Blatt deckt die Szene ab → nicht rendern (Akku)
-  if (vfOpen) return; // Film-Blatt offen: eigene Bühne, die Seite ruht (Akku)
+  if (FX.rest) return; // Film „Bandscheibenvorfall“ deckt die Bühne: eigene Bühne, die Seite ruht (Akku)
   if (lh.egoOpen()) return; // Rundgang aus Augenhöhe offen: der Dialog deckt alles ab, die Seite ruht (Akku)
   if (QW && !viaWatchdog) qualityWatch(gap); // nur messen, solange die Hauptbühne selbst zeichnet (nicht hinter Termin-Blatt/Augenhöhen-Rundgang)
   if (!viaWatchdog && !isDesktop() && morphNow >= 0.6 && performance.now() - lastInput > 1500 && frameN % 2) return; // Hero (Figur sichtbar): immer volle Rate (8.11., Option C)
@@ -1996,6 +2034,7 @@ function tick() {
   uniforms.uLogo.value = logoNow < 0.002 ? 0 : logoNow;
   manuK = manuVisible();
   swK = swVisible();
+  fxTick(dt);
   updateAxis(dt);
   roofPlace();
   uniforms.uRoofA.value = 1 - lh.roofK();
@@ -2014,6 +2053,7 @@ function tick() {
   if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
   dim = Math.max(dim, manuK, swK, listK); // Manuthera-Bühne, Stoßwelle und Leistungen: Partikel-Hintergrund blendet ganz aus
   if (licht && lichtK > 0) dim = Math.max(dim, lichtK); // K1: Partikel weichen dem Sonnenstaub
+  if (FX.on && !FX.hand) dim = 1; // Film ohne Übergabe (aus „Alle Leistungen“, ohne Scanner): Partikel weichen dem Film
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
   if (!isDesktop()) {
     // Handy: Partikel ohne Verzögerung ausblenden, sobald die Manuthera-Bühne kommt – sonst laufen beim schnellen Wischen Bilder ineinander
@@ -2072,6 +2112,7 @@ function tick() {
   points.visible = uniforms.uAlpha.value > 0.004;
   // 14.11. (N1): Kap. 04 – steht die Form „Dachlinie“ und ist sie nach dem Zeichnen des Linienhauses vergangen, gibt es nichts zu sehen
   if (Math.abs(morphNow - 3) < 0.02 && uniforms.uRoofA.value < 0.004) points.visible = false;
+  if (FX.cover) { points.visible = false; spineGroup.visible = false; sil.visible = false; } // der Film deckt alles: noch ein leeres Bild, dann ruht die Bühne
   const anyVis = points.visible || spineGroup.visible || sil.visible || !!(dust && dust.visible);
   if (renderer && !document.hidden && (anyVis || glDirty)) { renderer.render(scene, camera); glDirty = anyVis; }
   if (manu && manu.st.visible && !document.hidden) { manu.update(0, dt); manu.st.renderer.render(manu.st.scene, manu.st.camera); }
@@ -2253,39 +2294,148 @@ if (!reduced) requestAnimationFrame(() => {
   }
 }
 
-// Film „Bandscheibenvorfall“ (Auftrag Z 14.11.2026, Empfehlung der Film-Sitzung [A]): Knopf in der Karte L4–L5 (PC-Karte, am Handy
-// zusätzlich in der Scanner-Karte) öffnet ein Blatt wie das Termin-Blatt. Der Baustein film.js wird erst beim ersten Öffnen aufgebaut
-// (Rechnung in Zeitscheiben, eigene WebGL-Bühne); startet selbst, außer bei „Bewegung anhalten/reduzieren“; ohne WebGL fünf Standbilder.
-// Schließen: ×, Esc, Klick auf den Rand → Film hält an, Fokus zurück zum Knopf.
+// Film „Bandscheibenvorfall“ auf der Hauptbühne – „Fokus“ (Auftrag Kai 14.11.2026 nachts; vorher ein Blatt wie das Termin-Blatt):
+// Knopf in der Karte L4–L5 (PC-Karte, am Handy zusätzlich in der Scanner-Karte) →
+//   1. die Wirbelsäule löst sich außerhalb des Segments L4–L5 in Partikel auf (Shader uFoc), Texte und Aufzug blenden aus,
+//   2. das Segment fährt heran und dreht sich genau in die Lage, in der der Film beginnt (fxPose/fxRot aus film.view()),
+//   3. eine Scan-Linie läuft von unten nach oben: darunter steht schon der Film (eigene Bühne, per Maske freigegeben), darüber noch die Wirbelsäule,
+//   4. danach deckt der Film alles, die Hauptbühne ruht (FX.rest). Weiter: Knopf „Weiter“, ×, Esc oder Scrollen/Wischen – alles läuft rückwärts.
+// Ohne Übergabe (Link in „Alle Leistungen“, Handy quer, ohne WebGL, „Bewegung anhalten/reduzieren“): die Seite blendet aus, der Film ein.
+// Der Baustein film.js wird erst beim ersten Öffnen aufgebaut (Rechnung in Zeitscheiben); ohne WebGL fünf Standbilder.
+const fxInstant = () => reduced || paused;
+const vfDlg = document.getElementById('vorfallSheet');
+const _fc = new V3(), _fw = new V3();
+const fxLv = (id) => det && det.levels.find((l) => l.id === id);
+function fxBand() { // Segment L4–L5 in den Einheiten der Wirbelsäule: Höhenband (Rückenmark, Kern), Mitte L4 (Bandscheibe darüber geht)
+  const a = fxLv('L4'), b = fxLv('L5');
+  if (!a || !b) return false;
+  sU.uFocY.value.set((b.center.y - b.h * 0.62 - CY) * SC, (a.center.y + a.h * 0.62 - CY) * SC, (a.center.y - CY) * SC);
+  sU.uFocZone.value = ZONES.indexOf('l45');
+  // Lage wie im Film: Achse L5→L4, Kippwinkel bis zur Achse des Films, halber Zusatzabstand (Puls rückt die Wirbel auseinander)
+  const ax = _fw.set(a.center.x - b.center.x, a.center.y - b.center.y, a.center.z - b.center.z), len = ax.length();
+  ax.divideScalar(len || 1);
+  sU.uFocS.value.set(ax.x, ax.y, ax.z, 0); sU.uFocD.value = (VF_SEG.disc / 2) * SC;
+  sU.uFocT.value.set((a.center.x + b.center.x) / 2 * SC, ((a.center.y + b.center.y) / 2 - CY) * SC, (a.center.z + b.center.z) / 2 * SC, 0);
+  FX.tilt = clamp(VF_SEG.tilt - Math.atan2(ax.z, ax.y), -0.9, 0.9); FX.gap = clamp((len - VF_SEG.len) / 2, 0, 0.9) * SC;
+  return true;
+}
+function fxView() { // Lage des Films: vor dem Start und während der Scan-Linie; danach hält die Wirbelsäule die Startlage (Rückweg)
+  const f = VF.film, st = f && f.state ? f.state() : null;
+  return f && f.view ? f.view(FX.started && !FX.cover && st ? Math.min(st.t, 2.4) : 0) : null;
+}
+function fxRot() { // Blickwinkel des Films (Azimut) → Drehung der Wirbelsäule
+  const v = FX.v; if (!v) return;
+  const want = -THREE.MathUtils.degToRad(v.az), r0 = uniforms.uSpineRot.value;
+  uniforms.uSpineRot.value = r0 + (want + Math.PI * 2 * Math.round((r0 - want) / (Math.PI * 2)) - r0) * FX.e;
+}
+function fxPose(X) { // Mitte zwischen L4 und L5 wandert auf die Bildschirmlage des Films, Maßstab wie im Film (Bildpunkte je cm)
+  const v = FX.v, a = fxLv('L4'), b = fxLv('L5'); if (!v || !a || !b) return;
+  _fc.set((a.center.x + b.center.x) / 2 * SC, ((a.center.y + b.center.y) / 2 - CY) * SC, (a.center.z + b.center.z) / 2 * SC).applyAxisAngle(_Y, uniforms.uSpineRot.value);
+  const wT = (v.ppc * 8.197) / (GLH * SC), w = X.w * Math.pow(wT / X.w, FX.e);
+  const c = toPx(_fw.copy(_fc).multiplyScalar(X.w).add(_zw.set(X.x, X.y, 0)));
+  screenToWorld(c[0] + (v.x - c[0]) * FX.e, c[1] + (v.y - c[1]) * FX.e, _fc.z * w, _fw);
+  X.set(_fw.x - _fc.x * w, _fw.y - _fc.y * w, 0, w);
+}
+function fxMask(y) { // Film-Bühne nur unterhalb der Scan-Linie zeigen (y in Bildpunkten der Bühne; null = ganz, 'off' = gar nicht)
+  const cv = VF.film && VF.film.canvas; if (!cv) return;
+  const g = y === null ? '' : y === 'off' ? 'linear-gradient(transparent,transparent)' : `linear-gradient(to bottom,transparent ${(y - 10).toFixed(1)}px,#000 ${(y + 10).toFixed(1)}px)`;
+  if (cv.dataset.mask === g) return;
+  cv.dataset.mask = g; cv.style.webkitMaskImage = g; cv.style.maskImage = g;
+}
+function fxCover() { FX.cover = true; FX.coverN = 0; fxMask(null); }
+function fxTick(dt) {
+  if (!FX.on && FX.k <= 0) return;
+  const inst = fxInstant();
+  FX.k = inst ? (FX.on ? 1 : 0) : clamp(FX.k + (FX.on ? dt / 1.5 : -dt / 1.1));
+  FX.e = easeIO(FX.k);
+  sU.uFoc.value = FX.hand ? smooth(0, 0.82, FX.k) : 0;
+  sU.uFocT.value.w = FX.hand ? FX.tilt * FX.e : 0; sU.uFocS.value.w = FX.hand ? FX.gap * FX.e : 0;
+  if (!FX.on) { if (FX.k <= 0) { FX.hand = false; sU.uFoc.value = 0; } return; }
+  if (FX.cover) { if (++FX.coverN > 2) FX.rest = true; return; }
+  if (!FX.hand) { if (inst || performance.now() - FX.t0 > 520) fxCover(); return; }
+  FX.v = fxView();
+  const f = VF.film, st = f.state();
+  if (!FX.started) { if (FX.k >= 1 && st && st.ready) { f.seek(0); f.play(); FX.started = true; vfDlg.classList.add('is-run'); } return; }
+  if (!st || st.t > 2.35 || !FX.v || FX.v.scanY === null) fxCover(); // Scan ist durch: der Film steht allein
+  else fxMask(FX.v.scanY - FX.v.top);
+}
 {
-  const dlg = document.getElementById('vorfallSheet');
+  const dlg = vfDlg;
   if (dlg && typeof dlg.showModal === 'function') {
-    const xBtn = document.getElementById('vfClose');
+    const el = document.documentElement, xBtn = document.getElementById('vfClose'), more = document.getElementById('vfMore'), infoBtn = document.getElementById('vfInfo');
+    // „Kurz erklärt“: Textkarten, Warnsatz, Quellen – öffnet von selbst am Filmende; von Hand geöffnet hält der Film solange an
+    let moreWas = false;
+    const setMore = (v, byHand) => {
+      more.hidden = !v; infoBtn.setAttribute('aria-expanded', String(v)); dlg.classList.toggle('has-more', v);
+      const st = VF.film && VF.film.state ? VF.film.state() : null;
+      if (v && byHand) { moreWas = !!(st && st.playing); VF.film.pause(); more.scrollTop = 0; }
+      else if (!v && byHand && moreWas) { moreWas = false; VF.film.play(); }
+      else if (!v) moreWas = false;
+    };
     const open = (e) => {
       e.preventDefault();
       if (dlg.open) return;
       VF.opener = e.currentTarget;
-      document.documentElement.classList.add('sheet-open');
-      lenis?.stop();
-      vfOpen = true;
+      dlg.classList.remove('is-leaving');
       dlg.showModal();
-      xBtn.focus();
-      if (!VF.film) VF.film = initVorfall({ root: document.getElementById('vorfall'), isPaused: () => paused }) || { pause() {} };
+      if (!VF.film) VF.film = initVorfall({ root: document.getElementById('vorfall'), isPaused: () => paused, auto: false, onEnd: () => { if (FX.on) setMore(true, false); } }) || { pause() {}, play() {}, seek() {}, state: () => null };
+      const st = VF.film.state(), inst = fxInstant();
+      // Übergabe nur, wenn die Wirbelsäule im Scanner am Abschnitt L4–L5 steht (sonst gibt es nichts aufzulösen)
+      FX.hand = !inst && !!(st && st.gl) && !!renderer && !!det && (isDesktop() ? pcScan() : scanOn()) && SCAN.seg === SSTOPS.findIndex((q) => q.zone === 'l45') && spineGroup.visible && ZM.k > 0.5 && fxBand();
+      FX.on = true; FX.started = false; FX.cover = false; FX.coverN = 0; FX.rest = false; FX.t0 = performance.now(); FX.y0 = scrollY; FX.acc = 0; FX.v = null;
+      dlg.classList.toggle('is-hand', FX.hand); dlg.classList.remove('is-run');
+      fxMask(FX.hand ? 'off' : null);
+      el.classList.add('vf-focus', 'vf-fx');
+      setMore(false, false);
+      requestAnimationFrame(() => requestAnimationFrame(() => { if (FX.on) dlg.classList.add('is-in'); }));
+      xBtn.focus({ preventScroll: true });
+      // ohne Übergabe startet der Film, sobald er gebaut ist (läuft dort weiter, wo er zuletzt stand); mit Übergabe startet ihn fxTick
+      if (!FX.hand && !inst && VF.film.done) VF.film.done.then(() => { if (FX.on && !FX.hand && !fxInstant()) VF.film.play(); });
     };
+    const reset = () => { FX.on = false; FX.rest = false; FX.cover = false; FX.coverN = 0; glDirty = true; VF.film.pause(); el.classList.remove('vf-focus'); dlg.classList.remove('is-in'); };
+    const close = () => {
+      if (!FX.on) return;
+      reset();
+      const fin = () => { dlg.classList.remove('is-leaving'); if (dlg.open) dlg.close(); };
+      if (fxInstant()) fin(); else { dlg.classList.add('is-leaving'); setTimeout(fin, 440); }
+    };
+    dlg.addEventListener('cancel', (e) => { e.preventDefault(); close(); }); // Esc: mit Übergang zurück
     dlg.addEventListener('close', () => {
-      document.documentElement.classList.remove('sheet-open');
-      lenis?.start();
-      vfOpen = false; glDirty = true;
-      VF.film?.pause?.();
-      VF.opener?.focus({ preventScroll: true });
+      if (FX.on) reset();
+      fxMask(null);
+      setTimeout(() => { if (!FX.on) el.classList.remove('vf-fx'); }, 700);
+      if (VF.opener) VF.opener.focus({ preventScroll: true });
     });
-    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
-    xBtn.addEventListener('click', () => dlg.close());
-    VF.open = open;
+    xBtn.addEventListener('click', close);
+    $$('[data-vf-next]', dlg).forEach((b) => b.addEventListener('click', close));
+    infoBtn.addEventListener('click', () => setMore(more.hidden, true));
+    document.getElementById('vfAgain').addEventListener('click', () => { setMore(false, false); VF.film.seek(0); VF.film.play(); });
+    // Weiter durch Scrollen/Wischen (Kai): die Seite scrollt normal weiter, der Film gibt die Bühne frei. Kurz nach dem Öffnen
+    // zählt Nachgleiten (Lenis) noch nicht; im Textkasten „Kurz erklärt“ und auf der Abschnitts-Leiste wird nur dort gescrollt/gezogen.
+    const own = (t) => !!(t && t.closest && t.closest('.vfx-more,.vf-track'));
+    addEventListener('scroll', () => {
+      if (!FX.on) return;
+      if (performance.now() - FX.t0 < 700) { FX.y0 = scrollY; return; }
+      if (Math.abs(scrollY - FX.y0) > 36) close();
+    }, { passive: true });
+    dlg.addEventListener('wheel', (e) => {
+      if (!FX.on || e.ctrlKey || own(e.target) || performance.now() - FX.t0 < 700) return;
+      FX.acc += e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? VH : 1);
+      if (Math.abs(FX.acc) > 50) close();
+    }, { passive: true });
+    let touch = null;
+    dlg.addEventListener('touchstart', (e) => { touch = e.touches.length === 1 && !own(e.target) ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null; }, { passive: true });
+    dlg.addEventListener('touchmove', (e) => {
+      if (!touch || !FX.on) return;
+      const dx = e.touches[0].clientX - touch.x, dy = e.touches[0].clientY - touch.y;
+      if (Math.abs(dy) > 64 && Math.abs(dy) > Math.abs(dx) * 1.5) { touch = null; close(); }
+    }, { passive: true });
+    VF.open = open; VF.close = close;
     $$('[data-vorfall]').forEach((b) => b.addEventListener('click', open));
   }
 }
-window.__vf = VF; // Prüfhilfe (Konsole): __vf.film.state(), __vf.film.seek(t)
+VF.fx = FX;
+window.__vf = VF; // Prüfhilfe (Konsole): __vf.film.state(), __vf.film.seek(t), __vf.fx (Fokus), __vf.close()
 
 // Handy: Figur in die Bühne unter dem Titel einpassen (#heroStage) – nach dem ersten Bild messen (kein Layout beim Start, A1)
 function fitHero() {

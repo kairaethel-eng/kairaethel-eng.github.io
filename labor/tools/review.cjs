@@ -30,7 +30,7 @@ const STATES = [
   { id: 'hausordnung', ...scroll('#hausordnung') },
   { id: 'achse', ...scroll('#achse', 0.3), slow: 2 },
   ...['C1', 'C5', 'Th1', 'Th7', 'L4', 'S1'].map((n, i) => ({ id: 'achse-' + n, ...click('.scan-stop', i), slow: 1 })),
-  // Auftrag Z: Film „Bandscheibenvorfall“ als Blatt aus der Karte L4–L5 (öffnet wie der Knopf)
+  // Auftrag Z: Film „Bandscheibenvorfall“ aus der Karte L4–L5 (öffnet wie der Knopf; seit 14.11. nachts „Fokus“ auf der Hauptbühne, hier ohne Übergabe)
   { id: 'film', js: ["(() => { if (!window.__vf || !window.__vf.open) return false; window.__vf.open({ preventDefault() {}, currentTarget: document.querySelector('.vf-open') }); return true; })()"], slow: 2, after: 'Escape' },
   { id: 'dach', ...scroll('#dach'), slow: 1 },
   { id: 'rundgang', ...click('#next'), slow: 1 }, // Kap. 04 seit 14.11.: Linienhaus, › = nächster Raum (Licht an)
