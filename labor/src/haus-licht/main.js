@@ -3,6 +3,8 @@
 // Rundgang (5 s je Raum, Fortschritt), Tastatur (roving tabindex, aria-current), Handy: waagrecht wischen mit Einrasten
 // (natives scroll-snap – senkrecht wischen scrollt immer die Seite), „Bewegung anhalten“ (hop-motion) + „reduzieren“.
 // Debug im Browser: window.__hausLicht (state(), set(i), photo(i, url)).
+import { renderRoom } from './ego.js';
+
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
@@ -243,4 +245,110 @@ let rzT = 0;
 new ResizeObserver(() => { cancelAnimationFrame(rzT); rzT = requestAnimationFrame(() => { layoutRoof(); if (mqMob.matches && cur >= 0) centerRoom(cur, false); }); }).observe(house);
 if (document.fonts) document.fonts.ready.then(layoutRoof);
 
-window.__hausLicht = { state: () => ({ cur, drawState, tour: { ...tour }, paused, mob: mqMob.matches, W }), set: (i) => setRoom(i), photo };
+// ---------- Rundgang aus Augenhöhe (Variante 3A) ----------
+const dlg = $('#ego'), stage = $('#egoStage'), egoText = $('#egoText'), egoNo = $('#egoNo'), egoPanel = $('#egoPanel');
+const egoPrev = $('#egoPrev'), egoNext = $('#egoNext'), egoDots = $$('#egoDots button'), egoOpenBtn = $('#egoOpen');
+const ego = { i: 0, view: null, opener: null, litT: 0 };
+function egoFrame() { // Bühnengröße + freie Fläche neben dem Text (PC) → Fluchtpunkt
+  const sb = stage.getBoundingClientRect();
+  if (mqMob.matches) return { sw: sb.width, sh: sb.height, o: {} };
+  const pw = Math.min(egoPanel.getBoundingClientRect().right - sb.left, sb.width * 0.45) * 0.95;
+  return { sw: sb.width, sh: sb.height, o: { cx: pw + (sb.width - pw) / 2, fitW: sb.width - pw } };
+}
+function egoBuild(i) {
+  const v = document.createElement('div'); v.className = 'ego-view'; v.dataset.room = i;
+  const media = document.createElement('div'); media.className = 'ego-media'; v.appendChild(media);
+  // Schicht 2: Foto (gleiche Datei wie im Haus); Schicht 3 (Scan) kommt später ebenfalls in .ego-media
+  const ph = rooms[i].dataset.photo || $('.rm-photo', rooms[i])?.getAttribute('src');
+  if (ph) { const img = document.createElement('img'); img.alt = ''; img.decoding = 'async'; img.src = ph; media.appendChild(img); v.classList.add('has-photo'); }
+  const fr = egoFrame();
+  v.insertAdjacentHTML('beforeend', renderRoom(i, fr.sw, fr.sh, fr.o));
+  v.style.setProperty('--vx', ((fr.o.cx ?? fr.sw / 2) / fr.sw * 100).toFixed(1) + '%');
+  return v;
+}
+function egoUi(i) {
+  egoNo.textContent = String(i + 1).padStart(2, '0');
+  egoText.innerHTML = cards[i].innerHTML; // fester Inhalt dieser Seite (Kartentexte)
+  egoDots.forEach((b, k) => { if (k === i) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
+  egoPrev.disabled = i === 0;
+  egoNext.setAttribute('aria-label', i === N - 1 ? 'Rundgang beenden' : 'Nächster Raum');
+  endFinale(); setRoom(i, { scroll: false }); // das Haus darunter zieht mit
+}
+function egoLight(v, delay) {
+  clearTimeout(ego.litT);
+  if (reduced || paused || !delay) { v.classList.add('lit'); return; }
+  ego.litT = setTimeout(() => v.classList.add('lit'), delay); // „Licht an“ nach dem Ankommen
+}
+const anim = (el, kf, o) => (el.animate && !reduced ? el.animate(kf, { fill: 'both', easing: 'cubic-bezier(.2,.7,.1,1)', ...o }) : null);
+const drop = (el) => el.parentNode && el.parentNode.removeChild(el);
+function egoShow(i, dir) {
+  i = clamp(i, 0, N - 1);
+  if (ego.view && i === ego.i) return;
+  const old = ego.view, v = egoBuild(i);
+  stage.appendChild(v); ego.view = v; ego.i = i; egoUi(i);
+  if (old) {
+    const a = anim(old, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateX(${-dir * 7}%) scale(1.14)` }], { duration: 480 });
+    if (a) a.finished.then(() => drop(old), () => drop(old)); else drop(old);
+    anim(v, [{ opacity: 0, transform: `translateX(${dir * 7}%) scale(.93)` }, { opacity: 1, transform: 'none' }], { duration: 700, delay: 120 });
+  }
+  egoLight(v, old ? 650 : 0);
+}
+function egoOpen(i) {
+  stopTour();
+  ego.opener = document.activeElement;
+  document.documentElement.classList.add('ego-open');
+  const from = rooms[i].getBoundingClientRect();
+  dlg.showModal();
+  stage.textContent = ''; ego.view = null;
+  egoShow(i, 0);
+  const v = ego.view, sb = stage.getBoundingClientRect();
+  // Einflug: der Raum aus dem Haus öffnet sich zum Bildschirm, man tritt hinein
+  const ins = `inset(${Math.max(0, from.top - sb.top)}px ${Math.max(0, sb.right - from.right)}px ${Math.max(0, sb.bottom - from.bottom)}px ${Math.max(0, from.left - sb.left)}px)`;
+  anim(stage, [{ clipPath: ins }, { clipPath: 'inset(0px 0px 0px 0px)' }], { duration: 900 });
+  anim(v, [{ transform: 'scale(.62)' }, { transform: 'none' }], { duration: 1100 });
+  anim(dlg, [{ opacity: 0 }, { opacity: 1 }], { duration: 350, easing: 'linear' });
+  ['.ego-top', '.ego-panel'].forEach((s) => anim($(s, dlg), [{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 650 }));
+  ego.view.classList.remove('lit'); egoLight(v, 950);
+  egoNext.focus({ preventScroll: true });
+}
+function egoClose() {
+  if (!dlg.open) return;
+  const done = () => {
+    if (!dlg.open) return;
+    dlg.close(); document.documentElement.classList.remove('ego-open'); stage.textContent = ''; ego.view = null; clearTimeout(ego.litT);
+    if (mqMob.matches) centerRoom(ego.i, false);
+    (ego.opener && ego.opener.isConnected ? ego.opener : egoOpenBtn).focus({ preventScroll: true });
+  };
+  const a = anim(dlg, [{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: 'linear' });
+  if (a) a.finished.then(done, done); else done();
+}
+egoOpenBtn.addEventListener('click', () => egoOpen(cur < 0 ? 0 : cur));
+$('#egoClose').addEventListener('click', egoClose);
+dlg.addEventListener('cancel', (e) => { e.preventDefault(); egoClose(); });
+egoPrev.addEventListener('click', () => egoShow(ego.i - 1, -1));
+egoNext.addEventListener('click', () => (ego.i === N - 1 ? egoClose() : egoShow(ego.i + 1, 1)));
+egoDots.forEach((b, k) => b.addEventListener('click', () => egoShow(k, k > ego.i ? 1 : -1)));
+dlg.addEventListener('keydown', (e) => {
+  const k = e.key;
+  if (k === 'ArrowRight') { e.preventDefault(); if (ego.i < N - 1) egoShow(ego.i + 1, 1); }
+  else if (k === 'ArrowLeft') { e.preventDefault(); egoShow(ego.i - 1, -1); }
+  else if (k === 'Home') { e.preventDefault(); egoShow(0, -1); }
+  else if (k === 'End') { e.preventDefault(); egoShow(N - 1, 1); }
+});
+// Wischen über die Bühne: waagrecht = Raum wechseln (senkrecht bleibt frei)
+let sw0 = null;
+stage.addEventListener('pointerdown', (e) => { sw0 = { x: e.clientX, y: e.clientY }; });
+stage.addEventListener('pointerup', (e) => {
+  if (!sw0) return; const dx = e.clientX - sw0.x, dy = e.clientY - sw0.y; sw0 = null;
+  if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.3) { if (dx < 0 && ego.i < N - 1) egoShow(ego.i + 1, 1); else if (dx > 0) egoShow(ego.i - 1, -1); }
+});
+stage.addEventListener('pointercancel', () => { sw0 = null; });
+// Größe ändern: Zeichnung neu projizieren (ohne Übergang)
+new ResizeObserver(() => {
+  if (!dlg.open || !ego.view) return;
+  const v = ego.view, fr = egoFrame(), svg = $('.ego-svg', v);
+  if (svg) svg.outerHTML = renderRoom(ego.i, fr.sw, fr.sh, fr.o);
+  v.style.setProperty('--vx', ((fr.o.cx ?? fr.sw / 2) / fr.sw * 100).toFixed(1) + '%');
+}).observe(stage);
+
+window.__hausLicht = { state: () => ({ cur, drawState, tour: { ...tour }, paused, mob: mqMob.matches, W }), set: (i) => setRoom(i), photo, ego: { open: (i = 0) => egoOpen(i), show: (i) => egoShow(i, 1), close: egoClose, state: () => ({ i: ego.i, open: dlg.open, lit: !!ego.view?.classList.contains('lit') }) } };

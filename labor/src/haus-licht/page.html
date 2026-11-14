@@ -31,7 +31,7 @@
         <svg class="roofline" viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true"><path d="M2 38 L150 3 L298 38"/></svg>
         <h2 id="d-title">Alles unter<br><em>einem</em> Dach.</h2>
         <p class="lead">Treten Sie ein. Ein Rundgang durch die Praxis, bevor Sie zum ersten Mal da sind.</p>
-        <p class="hint"><span class="only-fine">Raum anklicken, mit ‹ › oder den Pfeiltasten weitergehen. Oder den Rundgang starten.</span><span class="only-touch">Wischen Sie unter dem Dach von Raum zu Raum oder tippen Sie auf einen Raum. Oder starten Sie den Rundgang.</span></p>
+        <p class="hint"><span class="only-fine">Raum anklicken, mit ‹ › oder den Pfeiltasten weitergehen. Oder den Rundgang starten – auch aus Augenhöhe.</span><span class="only-touch">Wischen Sie unter dem Dach von Raum zu Raum oder tippen Sie auf einen Raum. Oder starten Sie den Rundgang – auch aus Augenhöhe.</span></p>
       </div>
 
       <div class="house" id="house">
@@ -129,6 +129,7 @@
         <button type="button" class="t-btn" id="prev" aria-label="Vorheriger Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
         <button type="button" class="t-play" id="play" aria-pressed="false"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><span id="playTxt">Rundgang starten</span></button>
         <button type="button" class="t-btn" id="next" aria-label="Nächster Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+        <button type="button" class="t-ego" id="egoOpen" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg><span>Rundgang aus Augenhöhe</span></button>
         <div class="tour-prog" aria-hidden="true"><i id="prog"></i></div>
       </div>
 
@@ -173,4 +174,25 @@
     <p class="small">Labor · noindex · Stand 14.11.2026 · Entwurf „Licht im Fenster“: reines SVG + CSS, kein WebGL. Strichzeichnungen schematisch; je Raum ist Platz für ein echtes Foto (folgt).</p>
   </footer>
 </main>
+
+<!-- Rundgang aus Augenhöhe (Variante 3A, 14.11.2026): Raum für Raum in Zentralperspektive, Zeichnung → Foto → später Scan -->
+<dialog class="ego" id="ego" aria-labelledby="egoTitle">
+  <div class="ego-stage" id="egoStage"></div>
+  <div class="ego-top">
+    <p class="ego-kicker" id="egoTitle">Rundgang aus Augenhöhe</p>
+    <p class="ego-count" aria-hidden="true"><i id="egoNo">01</i> / 05</p>
+    <button type="button" class="ego-close" id="egoClose" aria-label="Rundgang schließen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="ego-panel" id="egoPanel">
+    <div class="ego-text" id="egoText" aria-live="polite"></div>
+    <div class="ego-nav">
+      <button type="button" class="t-btn" id="egoPrev" aria-label="Vorheriger Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="ego-dots" id="egoDots" role="group" aria-label="Raum wählen">
+        <button type="button" aria-label="Empfang"></button><button type="button" aria-label="Wartebereich"></button><button type="button" aria-label="Behandlung 1"></button><button type="button" class="hi" aria-label="Behandlung 2 mit Manuthera"></button><button type="button" aria-label="Training"></button>
+      </div>
+      <button type="button" class="t-btn" id="egoNext" aria-label="Nächster Raum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+    <p class="ego-hint"><span class="only-fine">‹ › oder Pfeiltasten · Esc schließt</span><span class="only-touch">Seitlich wischen für den nächsten Raum</span></p>
+  </div>
+</dialog>
 <!--JS-->
