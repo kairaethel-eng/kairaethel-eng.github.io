@@ -115,6 +115,9 @@ html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift
 .hero{display:flex;flex-direction:column;justify-content:flex-end;padding-top:7.5rem;padding-bottom:clamp(3.75rem,9vh,6.875rem)}
 .hero-inner{position:relative}
 .hero-stage,.hero-more{display:none}
+/* Willkommenszeile über der Überschrift (Go Kai 15.11.2026, Option C); wechselt bei Spannung 0 zur Antwort (main.js) */
+.hero-lead{font:italic 400 clamp(1.375rem,2.3vw,2.25rem)/1.15 var(--serif);color:var(--amber);margin:-.5rem 0 .875rem;transition:opacity .45s ease}
+.hero-lead.swap{opacity:0!important}
 .kinetic{font-size:clamp(3.625rem,9.8vw,10.75rem);line-height:.86;letter-spacing:-.045em;margin-bottom:2.125rem;max-width:7.2ch;color:var(--txt)}
 .kinetic .ch{display:inline-block;font-weight:var(--w,800);transition:color .4s}
 .kinetic .ch.hot{color:var(--amber)}
@@ -402,13 +405,13 @@ html:not(.js) button.ix-link{display:none}
   .hero{padding-top:5.75rem;justify-content:flex-start}
   .hero-inner{display:flex;flex-direction:column}
   .hero-inner>.kicker{order:0}.hero-inner>.kinetic{order:1;margin-bottom:.5rem}
-  .hero-stage{display:block;order:2;height:max(15rem,calc(100svh - 19rem));touch-action:pan-y;-webkit-tap-highlight-color:transparent}
+  .hero-stage{display:block;order:2;height:max(15rem,calc(100svh - 21.25rem));touch-action:pan-y;-webkit-tap-highlight-color:transparent}
   .hero-inner>.meter{order:3;margin-top:.25rem}
   .hero-more{display:inline-flex;order:4;align-self:center;align-items:center;gap:.375rem;min-height:2.75rem;padding:0 1rem;font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);text-decoration:none}
   .hero-more svg{width:1rem;height:1rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .hero-inner>.hero-sub{order:5;margin-top:1.25rem}
   .hero-inner>.nogl-note{order:6}
-  @media (min-width:601px){.hero-stage{height:max(15rem,calc(100svh - 26rem))}}
+  @media (min-width:601px){.hero-stage{height:max(15rem,calc(100svh - 28.25rem))}}
   .hero-inner>.actions{order:7}
 }
 @media (max-width:600px){
@@ -416,6 +419,7 @@ html:not(.js) button.ix-link{display:none}
   .kinetic{font-size:clamp(3.125rem,14.5vw,4rem);margin-bottom:1.375rem}
   .hero{padding-bottom:2.5rem}
   .hero .kicker{margin-bottom:1rem}
+  .hero-lead{margin:-.125rem 0 .5rem}
   .hero-sub{font-size:1rem;margin-bottom:1.5rem}
   .meter{margin-top:1.625rem}
   .brand svg{width:4.125rem}

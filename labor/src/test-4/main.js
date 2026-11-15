@@ -406,7 +406,12 @@ setInterval(() => {
   const t = measureTension();
   { const o = { v: tensionShown }; tween(o, 'v', t, 0.5, { onUpdate() { tensionShown = o.v; tensionVal.textContent = Math.round(tensionShown); } }); }
   tensionBar.style.transform = `scaleX(${t / 100})`;
-  if (t === 0 && !calm) { calm = true; meter?.classList.add('is-calm'); if (meterLbl) meterLbl.textContent = 'Entspannt.'; }
+  if (t === 0 && !calm) {
+    calm = true; meter?.classList.add('is-calm'); if (meterLbl) meterLbl.textContent = 'Entspannt.';
+    // Antwortzeile (Go Kai 15.11.2026): die Willkommenszeile „Kommen Sie erst einmal an.“ wechselt zur Antwort
+    const lead = $('#heroLead');
+    if (lead) { lead.classList.add('swap'); setTimeout(() => { lead.textContent = 'Gut. Jetzt können wir anfangen.'; lead.classList.remove('swap'); }, reduced ? 0 : 450); }
+  }
 }, 300);
 
 // ---------- Kinetischer Titel: Buchstaben entspannen sich unter der Hand ----------
@@ -2190,7 +2195,7 @@ if (paused) uniforms.uIntro.value = 1; // angehalten: kein Einflug (Durchsicht 7
 if (!reduced) requestAnimationFrame(() => {
   if (!paused) tween(uniforms.uIntro, 'value', 1, 3.2, { ease: easeExpo, delay: 0.1 });
   // Einblenden der Hero-Texte (gleiche Werte und gleicher Endzustand wie vorher mit gsap: opacity 1, transform translate(0,0))
-  ['.hero .kicker', '.kinetic', '.hero-sub', '.hero .actions', '.meter', '.top'].map((q) => $(q)).filter(Boolean).forEach((el, i) => {
+  ['.hero .kicker', '.hero-lead', '.kinetic', '.hero-sub', '.hero .actions', '.meter', '.top'].map((q) => $(q)).filter(Boolean).forEach((el, i) => {
     if (el.animate) el.animate([{ opacity: 0, transform: 'translate(0px, 20px)' }, { opacity: 1, transform: 'translate(0px, 0px)' }], { duration: 1100, delay: 200 + i * 60, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
     el.style.transform = 'translate(0px, 0px)'; el.style.opacity = '1';
   });

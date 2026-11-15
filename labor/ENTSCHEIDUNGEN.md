@@ -3,6 +3,10 @@
 Stand: 14.11.2026 nachts (Reihenfolge A) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Willkommenszeile im Start (Go Kai 15.11.2026: „C … gleich umsetzen, Antwortzeile auch“) – umgesetzt
+- **Gewählt: C** – über „Spannung lösen.“ steht klein in Bernstein-Kursiv „Kommen Sie erst einmal an.“ (Einladung statt Aufgabe, passt zu §2 „ankommen dürfen“). Verworfen: A „Bevor wir anfangen:“, B „Willkommen. Zuallererst:“, D Überschrift ersetzen.
+- **Antwortzeile:** Ist die Spannung auf 0, wechselt die Zeile zu „Gut. Jetzt können wir anfangen.“ (bleibt danach stehen). Überschrift, Unterzeile und Knöpfe unverändert.
+
 ## Reihenfolge der Kapitel (Go Kai 14.11.2026 nachts: „Überschrift 1, Empfehlung A“) – umgesetzt, wartet auf Sichtprüfung
 - **Gewählt: A** – 01 Spannung → 02 Bewegung → § Hausordnung → 03 Achse → 04 Dach (Rundgang → Alle Leistungen → Manuthera → Stoßwelle) → 05 Tür. Grund: erst der Mensch (willkommen), dann Kompetenz, das Konkrete direkt vor dem Termin; die Hausordnung stand vorher dort, wo die wenigsten ankommen. Verworfen: B (Kais erste Idee: Hausordnung vor Bewegung, Dach vor Achse, Leistungen vom Haus getrennt).
 - **Schluss-Überschrift:** „Die Tür steht *offen.*“ (Einladung statt Aufgabe). Verworfen: „Der nächste Schritt.“, „Kommen Sie herein.“; alt: „Der erste Schritt.“
