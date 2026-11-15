@@ -116,7 +116,7 @@ html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift
 .hero-inner{position:relative}
 .hero-stage,.hero-more{display:none}
 /* Willkommenszeile über der Überschrift (Go Kai 15.11.2026, Option C); wechselt bei Spannung 0 zur Antwort (main.js) */
-.hero-lead{font:italic 400 clamp(1.375rem,2.3vw,2.25rem)/1.15 var(--serif);color:var(--amber);margin:-.5rem 0 .875rem;transition:opacity .45s ease}
+.hero-lead{font:italic 400 clamp(2rem,3.6vw,3.5rem)/1.1 var(--serif);color:var(--amber);margin:-.25rem 0 1.25rem;transition:opacity .45s ease} /* 15.11. Go Kai 3B: ~1,6× größer, eigene Zeile, blendet zuerst allein ein (main.js Intro) */
 .hero-lead.swap{opacity:0!important}
 .kinetic{font-size:clamp(3.625rem,9.8vw,10.75rem);line-height:.86;letter-spacing:-.045em;margin-bottom:2.125rem;max-width:7.2ch;color:var(--txt)}
 .kinetic .ch{display:inline-block;font-weight:var(--w,800);transition:color .4s}
@@ -187,6 +187,8 @@ html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift
 
 /* Kapitel 04 seit 14.11.2026 (Go Kai „2a“): Linienhaus „Licht im Fenster“ statt Partikel-Haus – Baustein src/haus-licht */
 /*@include ../haus-licht/house.css*/
+/* Puls Kap. 04 PC breit (15.11. Go Kai 2A): Haus höher – Raumhöhe an die Hausbreite (50 % statt 36 %), weiter durch die Fensterhöhe begrenzt */
+@media (min-width:1100px){#lhRoot .rooms{height:clamp(13rem,min(50cqi,100svh - 17rem),40rem)}}
 .lh{position:relative;z-index:2}
 .roof-grid .roof-head{text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
 @media (max-width:920px){.roof{padding-top:5.5rem}}
@@ -419,7 +421,7 @@ html:not(.js) button.ix-link{display:none}
   .kinetic{font-size:clamp(3.125rem,14.5vw,4rem);margin-bottom:1.375rem}
   .hero{padding-bottom:2.5rem}
   .hero .kicker{margin-bottom:1rem}
-  .hero-lead{margin:-.125rem 0 .5rem}
+  .hero-lead{font-size:clamp(1.375rem,6.2vw,1.75rem);margin:-.125rem 0 .625rem}
   .hero-sub{font-size:1rem;margin-bottom:1.5rem}
   .meter{margin-top:1.625rem}
   .brand svg{width:4.125rem}
@@ -687,14 +689,23 @@ html.vf-focus body > :not(dialog):not(#gl):not(script):not(style){opacity:0!impo
 .vfx-acts{display:flex;flex-wrap:wrap;gap:.625rem;margin-top:1.25rem}
 .vf-src{margin-top:1.125rem;font-size:.75rem;color:var(--mute);max-width:86ch}
 .vf-src + .vf-src{margin-top:.5rem}
-.vf-open{appearance:none;display:inline-flex;align-items:center;gap:.625rem;min-height:2.75rem;margin-top:.875rem;padding:.375rem 1rem .375rem .5rem;border-radius:1.375rem;border:1px solid rgba(224,154,53,.6);background:rgba(224,154,53,.1);color:var(--txt);font:600 .8125rem/1.2 var(--sans);letter-spacing:.02em;cursor:pointer;transition:background .2s,border-color .2s}
-.vf-open:hover{background:rgba(224,154,53,.2);border-color:var(--amber)}
-.vf-open svg{flex:none;width:1.875rem;height:1.875rem;padding:.5rem .4375rem .5rem .5625rem;border-radius:50%;background:var(--amber);fill:var(--ink)}
-.vf-open small{font:italic 400 .875rem/1 var(--serif);letter-spacing:0;color:var(--amber)}
+/* Film-Knopf (15.11. Go Kai 1A+C): voller Bernstein-Knopf wie „Termin buchen“, Play-Kreis dunkel, leiser Puls-Ring um den Knopf
+   (nur sichtbar, solange die L4–L5-Karte steht; aus bei „Bewegung anhalten“/„reduzieren“) */
+.vf-open{appearance:none;position:relative;display:inline-flex;align-items:center;gap:.625rem;min-height:3rem;margin-top:.875rem;padding:.375rem 1.125rem .375rem .375rem;border-radius:1.5rem;border:0;background:var(--amber);color:#14110A;font:700 .8125rem/1.2 var(--sans);letter-spacing:.03em;cursor:pointer;box-shadow:0 .375rem 1.5rem rgba(224,154,53,.22);transition:background .2s,transform .3s var(--ease)}
+.vf-open::before{content:"";position:absolute;inset:0;border-radius:inherit;border:2px solid var(--amber);pointer-events:none;animation:vfPing 2.6s cubic-bezier(.2,.6,.3,1) infinite}
+@keyframes vfPing{0%{transform:scale(1);opacity:.75}70%,100%{transform:scale(1.08,1.4);opacity:0}}
+.vf-open:hover{background:#F0AE4E;transform:translateY(-1px)}
+.vf-open:focus-visible{outline:2px solid var(--txt);outline-offset:3px}
+.vf-open svg{flex:none;width:2.25rem;height:2.25rem;padding:.6875rem .5625rem .6875rem .75rem;border-radius:50%;background:#14110A;fill:var(--amber)}
+.vf-open small{font:italic 400 .9375rem/1 var(--serif);letter-spacing:0;color:rgba(20,17,10,.72)}
+html.paused .vf-open::before{animation:none;opacity:0}
+@media (prefers-reduced-motion:reduce){.vf-open::before{animation:none;opacity:0}}
 .seg-card .vf-open{flex-basis:auto}
 .scan-chips.is-on .vf-open{pointer-events:auto}
-.scan-chips .vf-open{margin-top:.625rem;min-height:2.75rem;font-size:.75rem;padding-right:.75rem}
-.scan-chips .vf-open small{display:none}
+.scan-chips .vf-open{display:inline-grid;grid-template-columns:auto auto;align-items:center;column-gap:.625rem;row-gap:.1875rem;margin-top:.625rem;min-height:2.75rem;font-size:.75rem;padding-right:1rem;text-align:left}
+.scan-chips .vf-open svg{grid-row:span 2;width:2rem;height:2rem;padding:.625rem .5rem .625rem .6875rem}
+.scan-chips .vf-open span{align-self:end}.scan-chips .vf-open small{align-self:start}
+.scan-chips .vf-open small{font-size:.8125rem}
 @media (max-width:1180px){
   .vfx-hint{display:none}
   .vfx .vf-bar{padding-right:calc(max(var(--gut-r),3vw) + 9.5rem)}

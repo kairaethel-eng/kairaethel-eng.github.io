@@ -191,6 +191,7 @@ const uniforms = {
   uXf: { value: [0, 1, 2, 3, 4].map(() => new THREE.Vector4(0, 0, 0, 1)) },
   uSpineRot: { value: -0.9 }, uCut: { value: 100 }, uRoofH: { value: 0.25 }, uRoofA: { value: 1 }, uLogo: { value: 0 },
   uBreath: { value: 0 }, uCalm: { value: 0 }, // Atem-Phase, „Entspannt“ (0..1)
+  uWave: { value: 2 }, // Lichtwelle beim Entspannen (15.11., Go Kai 4A): Lage in Körperhöhe 1.2 (über dem Kopf) → -0.2 (unter den Füßen), 2 = aus
   uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 },
   cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') },
   cBlue: { value: C('#5AA2D6') }, cGreen: { value: C('#8BC34A') }, cLogoP: { value: C('#2C6478') }, cGrey: { value: C('#8C979B') },
@@ -199,7 +200,7 @@ const uniforms = {
 const vert = /* glsl */`
   attribute float aHeat; attribute vec3 pos2; attribute vec3 pos3; attribute float kind3; attribute vec3 pos4; attribute float kind4; attribute vec4 aRand;
   uniform float uSpread, uFadeMid;
-  uniform float uBreath, uCalm;
+  uniform float uBreath, uCalm, uWave;
   uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uRoofH, uRoofA, uLogo;
   uniform sampler2D uRelax; uniform vec2 uBodyWH; uniform vec4 uXf[5];
   uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey;
@@ -225,6 +226,10 @@ const vert = /* glsl */`
       col = mix(base, cAmber, smoothstep(.08, .7, tension) * throb);
       col = mix(col, mix(cBlue, cGreen, aRand.x), relax * aHeat * .85);
       sz = 1. + tension*.9*throb;
+      // Ausatmen: eine helle Welle läuft einmal vom Kopf bis zu den Füßen (uv.y 1 = Kopf)
+      float wv = exp(-pow((uv.y - uWave)*6.5, 2.));
+      col = mix(col, mix(cBone*1.2, cGreen, .3 + aRand.x*.3), wv); sz *= 1. + wv*1.4;
+      p += normalize(vec3(p.x, 0., p.z) + 1e-4) * wv * .05;
     } else if(i==1){
       float lane = floor(aRand.x*11.);
       float x = mod(aRand.z*18. + uTime*(.35+aRand.y*.3), 18.) - 9.;
@@ -411,8 +416,27 @@ setInterval(() => {
     // Antwortzeile (Go Kai 15.11.2026): die Willkommenszeile „Kommen Sie erst einmal an.“ wechselt zur Antwort
     const lead = $('#heroLead');
     if (lead) { lead.classList.add('swap'); setTimeout(() => { lead.textContent = 'Gut. Jetzt können wir anfangen.'; lead.classList.remove('swap'); }, reduced ? 0 : 450); }
+    calmGo();
   }
 }, 300);
+
+// Entspannt (15.11., Go Kai 4A + automatisch weiter): Lichtwelle Kopf → Füße (uWave, 2,4 s), danach gleitet die Seite
+// von selbst zu Kapitel 02 – nur wenn der Besucher noch im Start steht und in der Zwischenzeit nicht selbst scrollt.
+// Bei „Bewegung anhalten“/„reduzieren“: keine Welle, kein Weiterscrollen (Farbwechsel + Antwortzeile bleiben).
+function calmGo() {
+  if (reduced || paused) return;
+  uniforms.uWave.value = 1.2; tween(uniforms.uWave, 'value', -0.2, 2.4, { ease: (x) => x * x * (3 - 2 * x), onUpdate: () => { glDirty = true; } });
+  const y0 = scrollY; let off = false;
+  const stop = () => { off = true; };
+  ['wheel', 'touchstart', 'keydown'].forEach((e) => addEventListener(e, stop, { once: true, passive: true }));
+  setTimeout(() => {
+    ['wheel', 'touchstart', 'keydown'].forEach((e) => removeEventListener(e, stop));
+    const t = $('#bewegung');
+    if (off || paused || !t || Math.abs(scrollY - y0) > 40 || morphNow > 0.6) return;
+    const y = t.getBoundingClientRect().top + scrollY;
+    lenis ? lenis.scrollTo(y, { duration: 2.8 }) : scrollTo({ top: y, behavior: 'smooth' });
+  }, 3200);
+}
 
 // ---------- Kinetischer Titel: Buchstaben entspannen sich unter der Hand ----------
 const title = $('#heroTitle');
@@ -980,7 +1004,7 @@ function mobMeasure(zoneKey) {
     let vfBtn = null;
     if (zoneKey === 'l45' && VF.open) {
       vfBtn = document.createElement('button'); vfBtn.type = 'button'; vfBtn.className = 'vf-open'; vfBtn.tabIndex = -1;
-      vfBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bandscheibenvorfall ansehen</span>';
+      vfBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bandscheibenvorfall ansehen</span><small>Film · 37 s</small>';
       vfBtn.addEventListener('click', VF.open);
     }
     chipsEl.replaceChildren(head, typ, list, ...(vfBtn ? [vfBtn] : []));
@@ -2196,7 +2220,9 @@ if (!reduced) requestAnimationFrame(() => {
   if (!paused) tween(uniforms.uIntro, 'value', 1, 3.2, { ease: easeExpo, delay: 0.1 });
   // Einblenden der Hero-Texte (gleiche Werte und gleicher Endzustand wie vorher mit gsap: opacity 1, transform translate(0,0))
   ['.hero .kicker', '.hero-lead', '.kinetic', '.hero-sub', '.hero .actions', '.meter', '.top'].map((q) => $(q)).filter(Boolean).forEach((el, i) => {
-    if (el.animate) el.animate([{ opacity: 0, transform: 'translate(0px, 20px)' }, { opacity: 1, transform: 'translate(0px, 0px)' }], { duration: 1100, delay: 200 + i * 60, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+    // 15.11. (Go Kai 3B): „Kommen Sie erst einmal an.“ kommt zuerst allein, der Rest ~1 s später
+    const lead1 = el.classList.contains('hero-lead');
+    if (el.animate) el.animate([{ opacity: 0, transform: 'translate(0px, 20px)' }, { opacity: 1, transform: 'translate(0px, 0px)' }], { duration: lead1 ? 1400 : 1100, delay: lead1 ? 250 : 1250 + i * 60, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
     el.style.transform = 'translate(0px, 0px)'; el.style.opacity = '1';
   });
 });

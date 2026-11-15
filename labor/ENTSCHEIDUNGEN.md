@@ -1,7 +1,13 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 14.11.2026 nachts (Reihenfolge A) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 15.11.2026 (Vier Punkte) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Vier Punkte (Go Kai 15.11.2026: „Go für alle Empfehlungen … wenn entspannt automatisch weiter runter, nicht mit Button“) – umgesetzt, wartet auf Sichtprüfung
+- **Film-Knopf L4–L5:** voller Bernstein-Knopf + leiser Puls-Ring (A+C), auch am Handy mit „Film · 37 s“. Verworfen: B (Vorschaubild-Kachel).
+- **Haus PC:** größer durch mehr Höhe, Layout gleich (A). Verworfen: B (Haus über ganze Breite), C (Spalten neu verteilt).
+- **„Kommen Sie erst einmal an.“:** deutlich größer, eigene Zeile, blendet zuerst allein ein (B). Verworfen: A (nur größer), C (atmende Linie).
+- **Spannung 0:** Lichtwelle Kopf → Füße (A), dann gleitet die Seite **automatisch** zu Kap. 02 (Kais Wunsch statt Knopf); nicht, wenn der Besucher selbst scrollt oder „Bewegung anhalten/reduzieren“ aktiv ist. Verworfen: B („Spannung gelöst.“), C als Knopf/Partikelstrom.
 
 ## Willkommenszeile im Start (Go Kai 15.11.2026: „C … gleich umsetzen, Antwortzeile auch“) – umgesetzt
 - **Gewählt: C** – über „Spannung lösen.“ steht klein in Bernstein-Kursiv „Kommen Sie erst einmal an.“ (Einladung statt Aufgabe, passt zu §2 „ankommen dürfen“). Verworfen: A „Bevor wir anfangen:“, B „Willkommen. Zuallererst:“, D Überschrift ersetzen.
