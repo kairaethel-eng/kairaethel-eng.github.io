@@ -1,0 +1,79 @@
+    <!-- Entwurf „Figur plus“ (16.11.2026): Kopie von ../kopf-fuss/kapitel.html; neu sind nur die SVG-Gruppen kf-brain und kf-nerves
+         (Gehirn und Nerven als gepunktete Linien, sichtbar nur ohne WebGL – sonst sind sie Partikel). Texte unverändert. -->
+    <div class="kf-sticky">
+      <canvas class="kf-gl" aria-hidden="true"></canvas>
+      <svg class="kf-svg" aria-hidden="true">
+        <defs>
+          <pattern id="kfDots" class="kf-dots" width="2.6" height="2.6" patternUnits="userSpaceOnUse"><circle cx="1.3" cy="1.3" r=".55" fill="#D9DCD3"/></pattern>
+          <mask id="kfMask" maskUnits="userSpaceOnUse" x="-50" y="-50" width="300" height="530"><g class="kf-shape" fill="#fff"></g></mask>
+          <radialGradient id="kfHot"><stop offset="0" stop-color="#E59A2F" stop-opacity=".85"/><stop offset="1" stop-color="#E59A2F" stop-opacity="0"/></radialGradient>
+          <radialGradient id="kfCool"><stop offset="0" stop-color="#8BC34A" stop-opacity=".55"/><stop offset="1" stop-color="#5AA2D6" stop-opacity="0"/></radialGradient>
+        </defs>
+        <g class="kf-bodyg">
+          <g class="kf-body"><rect x="-50" y="-50" width="300" height="530" fill="url(#kfDots)" mask="url(#kfMask)"/><g class="kf-glow"></g></g>
+          <g class="kf-brain" opacity="0"></g>
+          <g class="kf-nerves"></g>
+          <g class="kf-lines">
+            <path class="kf-line-glow kf-l0g"/><path class="kf-line-glow kf-l1g"/><path class="kf-line-glow kf-l2g"/>
+            <path class="kf-line kf-l0"/><path class="kf-line kf-l1"/><path class="kf-line kf-l2"/>
+          </g>
+        </g>
+        <line class="kf-wire"/>
+        <g class="kf-rings"></g>
+        <g class="kf-tips"></g>
+      </svg>
+      <div class="kf-shade" aria-hidden="true"></div>
+
+      <header class="kf-hero">
+        <p class="kicker"><span>HOP · Home of Physiotherapy</span></p>
+        <h1 id="kf-title">Zuhause ankommen. <em>Von Kopf bis Fuß.</em></h1>
+        <p class="kf-sub">Scrollen Sie einmal an sich selbst entlang.<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></p>
+        <p class="kf-nogl-note">Die bewegte Ansicht braucht einen aktuellen Browser – Lichtlinie und Texte funktionieren trotzdem.</p>
+      </header>
+
+      <article class="kf-st" aria-labelledby="kf-s1">
+        <p class="kicker"><i>01</i> Kopf</p>
+        <h2 id="kf-s1">Erst zuhören.</h2>
+        <p class="kf-txt">Bevor ich etwas untersuche, möchte ich verstehen, was Sie mitbringen.</p>
+        <p class="kf-do" aria-live="polite"></p>
+      </article>
+      <article class="kf-st" aria-labelledby="kf-s2">
+        <p class="kicker"><i>02</i> Nacken &amp; Schultern</p>
+        <h2 id="kf-s2">Die Ursache suchen, nicht nur die Stelle.</h2>
+        <p class="kf-txt">Wo es wehtut, ist oft nicht der Ort, an dem es beginnt.</p>
+        <p class="kf-do" aria-live="polite"></p>
+      </article>
+      <article class="kf-st" aria-labelledby="kf-s3">
+        <p class="kicker"><i>03</i> Hüfte</p>
+        <h2 id="kf-s3">Ein Therapeut für die ganze Therapie.</h2>
+        <p class="kf-txt">Sie erzählen Ihre Geschichte einmal. Ich bleibe vom ersten bis zum letzten Termin an Ihrer Seite.</p>
+        <p class="kf-do" aria-live="polite"></p>
+      </article>
+      <article class="kf-st" aria-labelledby="kf-s4">
+        <p class="kicker"><i>04</i> Füße</p>
+        <h2 id="kf-s4">Mensch statt Nummer.</h2>
+        <p class="kf-txt">Kein Wartezimmer, kein Durchlauf. Sie kommen in ein Zuhause.</p>
+        <p class="kf-do" aria-live="polite"></p>
+      </article>
+
+      <div class="kf-end">
+        <h2>Der Körper heilt sich selbst, <em>nicht ich.</em></h2>
+        <p class="kf-txt">Ich begleite ihn dabei – Schritt für Schritt.</p>
+        <div class="kf-acts"><!--KF-ACTS-SLOT--></div>
+      </div>
+
+      <div class="kf-spots">
+        <button type="button" class="kf-spot" tabindex="-1" aria-label="Kopf lösen"></button>
+        <button type="button" class="kf-spot" tabindex="-1" aria-label="Nacken und Schultern lösen"></button>
+        <button type="button" class="kf-spot" tabindex="-1" aria-label="Hüfte lösen"></button>
+        <button type="button" class="kf-spot" tabindex="-1" aria-label="Füße lösen"></button>
+      </div>
+      <button type="button" class="kf-next">Weiter scrollen<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <nav class="kf-prog" aria-label="Stationen von Kopf bis Fuß">
+        <button type="button" aria-label="01 Kopf"><i></i></button>
+        <button type="button" aria-label="02 Nacken und Schultern"><i></i></button>
+        <button type="button" aria-label="03 Hüfte"><i></i></button>
+        <button type="button" aria-label="04 Füße"><i></i></button>
+      </nav>
+      <div class="kf-hand" aria-hidden="true"><span>lösen</span></div>
+    </div>

@@ -1,7 +1,14 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 16.11.2026 (Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 16.11.2026 (Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Figur plus: Körperkonturen, Gehirn, Nervensystem (Auftrag Kai 16.11.2026) – Entwurfsseite `figur-plus.html`, **Einbau in Puls offen**
+- **Kai:** deutlich menschliche Konturen; an Station 01 (Kopf) ein Gehirn; die Linien nach unten als Nervensystem aus dem Gehirn; **alles im bekannten Partikel-Stil** (also keine gestochene SVG-Lichtlinie mehr für die Bahnen).
+- Umgesetzt als eigene Entwurfsseite (Kopie des Bausteins in `src/figur-plus`), Puls und `src/kopf-fuss` unverändert. Ablauf, Texte, Lösen und Weiter-Hinweis bleiben wie in Kapitel 01.
+- Gestaltung: Kontur als eigene Punktlinie, Körper innen durchsichtiger, sobald die Nerven wachsen; Gehirn warmweiß (hebt sich von Bernstein = Spannung ab), Nerven Bernstein; Impulse vom Gehirn nach außen ruhig (~6 s), nach Merkregel „ruhig vor schnell“.
+- Schematisch, keine Lehrtafel (Hinweis im Fuß der Seite). Figur neutral, ohne Gesicht.
+- Verworfen: Gehirn/Nerven als SVG-Linien über den Partikeln (Kai will Partikel) – bleibt nur als Rückfall ohne WebGL (gepunktet).
 
 ## Auftrag K übernommen (Go Kai 16.11.2026: „bitte so übernehmen auf Puls“) – umgesetzt, wartet auf Sichtprüfung
 - **Kapitel 01 in Puls = „Von Kopf bis Fuß“** (Baustein `src/kopf-fuss/kapitel.*`); „Spannung lösen“ mit Willkommenszeile, Spannungsanzeige und automatischem Weitergleiten ist ersetzt. Leiste „01 Ankommen“. Schluss: „Termin buchen“ + „Zur Wirbelsäule“.
