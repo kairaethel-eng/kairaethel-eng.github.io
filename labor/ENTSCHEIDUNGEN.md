@@ -1,6 +1,6 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 16.11.2026 (Auftrag K „Von Kopf bis Fuß“) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 16.11.2026 (Entwurf Tür, Wahl offen · Auftrag K „Von Kopf bis Fuß“) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
 ## Auftrag K „Von Kopf bis Fuß“ (Go Kai 16.11.2026) – Entwurfsseite `kopf-bis-fuss.html`, wartet auf Sichtprüfung
@@ -9,6 +9,12 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **Lösen:** Tippen auf die Stelle = Welle ab der Tippstelle (löst sicher); Wischen/Maus = Pinsel wie Puls (Rest ≤ 8 = gelöst, ~6 Striche); Weiterscrollen = die Lichtlinie löst die Stelle, sobald sie durch ist. Pinsel nur, wenn der Strich **auf** der markierten Stelle beginnt – senkrechtes Wischen scrollt immer.
 - **„Bewegung anhalten/reduzieren“:** keine Kamerafahrt (Figur bleibt ganz, nur die Linie wächst mit dem Scrollen), Texte ohne Blenden. **Ohne WebGL:** Körper als Punktraster-Umriss (SVG), Spannung als Leuchten, Linie/Texte/Lösen wie sonst.
 - **Technik [A]:** eigene schlanke WebGL-2-Bühne (`gl.js`, Shader aus Puls übernommen) statt three.js – Seite 171 KB, Skript 23 KB. Körper-Punktwolke als **Kopie** aus `shapes.js` (Import hätte three.js mitgezogen).
+
+## Tür: Knöpfe erst mit offener Partikel-Tür (Idee Kai 16.11.2026, Go für eine Entwurfsseite) – **Wahl offen**
+- Entwurfsseite `tuer.html` mit zwei Varianten, Puls unverändert: **A „Tür im Text“** (Tür an der Stelle der Knöpfe, Blatt aus Partikeln schwingt auf und zerfällt, Linien-Rahmen bleibt) und **C-kurz „Ein Schritt hindurch“** (Dachlinie wird Türrahmen, Kamera geht hindurch; hängt an der Zeit, keine Extra-Strecke).
+- Verworfen: B als eigene Variante (reine Linien-Tür; ihr Rahmen steckt in A), C mit eigener Scroll-Strecke (zu viel Weg vor dem Termin-Knopf).
+- Feste Regeln für beide: höchstens ~1,5 s bis zum Termin-Knopf, läuft einmal, Seite bleibt dunkel (kein „Licht ja“), Knöpfe immer per Tastatur erreichbar, „anhalten/reduzieren“/ohne JS = sofort offen.
+- Vorschlag in der Entwurfsseite: nur drei Knöpfe, „E-Mail-Adresse kopieren“ bei der Adresse.
 
 ## Vier Punkte (Go Kai 15.11.2026: „Go für alle Empfehlungen … wenn entspannt automatisch weiter runter, nicht mit Button“) – umgesetzt, wartet auf Sichtprüfung
 - **Film-Knopf L4–L5:** voller Bernstein-Knopf + leiser Puls-Ring (A+C), auch am Handy mit „Film · 37 s“. Verworfen: B (Vorschaubild-Kachel).
