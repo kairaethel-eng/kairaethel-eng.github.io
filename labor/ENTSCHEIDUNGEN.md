@@ -1,7 +1,14 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 15.11.2026 (Vier Punkte) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 16.11.2026 (Auftrag K „Von Kopf bis Fuß“) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Auftrag K „Von Kopf bis Fuß“ (Go Kai 16.11.2026) – Entwurfsseite `kopf-bis-fuss.html`, wartet auf Sichtprüfung
+- **Kapitel 01 neu als eigene Testseite**, Puls (`src/test-4`, `live/`) unverändert. Ablauf: ganze Figur + „Zuhause ankommen. *Von Kopf bis Fuß.*“ → Kamera an den Kopf → Bernstein-Lichtlinie Scheitel → Wirbelsäule → Becken → beide Beine → vier Stationen (01 Kopf, 02 Nacken & Schultern, 03 Hüfte, 04 Füße; Wirbelsäule ohne eigene Station, sie hat Kap. 03) → zurück auf die ganze Figur, tiefer Atem, „Der Körper heilt sich selbst, *nicht ich.*“ + „Weiter zu Puls“.
+- **Scharf über unscharf:** Lichtlinie, Leuchtpunkt, Ringe, Verbindungslinie, Eck-Klammer und Schrift liegen als SVG/HTML über den Partikeln (nichts davon aus Partikeln); Partikel feiner und mehr (PC 110 000, große Monitore bis 198 000, Handy 56 000; Puls 64 000/26 000), Bildpunkt-Dichte bis 2×.
+- **Lösen:** Tippen auf die Stelle = Welle ab der Tippstelle (löst sicher); Wischen/Maus = Pinsel wie Puls (Rest ≤ 8 = gelöst, ~6 Striche); Weiterscrollen = die Lichtlinie löst die Stelle, sobald sie durch ist. Pinsel nur, wenn der Strich **auf** der markierten Stelle beginnt – senkrechtes Wischen scrollt immer.
+- **„Bewegung anhalten/reduzieren“:** keine Kamerafahrt (Figur bleibt ganz, nur die Linie wächst mit dem Scrollen), Texte ohne Blenden. **Ohne WebGL:** Körper als Punktraster-Umriss (SVG), Spannung als Leuchten, Linie/Texte/Lösen wie sonst.
+- **Technik [A]:** eigene schlanke WebGL-2-Bühne (`gl.js`, Shader aus Puls übernommen) statt three.js – Seite 171 KB, Skript 23 KB. Körper-Punktwolke als **Kopie** aus `shapes.js` (Import hätte three.js mitgezogen).
 
 ## Vier Punkte (Go Kai 15.11.2026: „Go für alle Empfehlungen … wenn entspannt automatisch weiter runter, nicht mit Button“) – umgesetzt, wartet auf Sichtprüfung
 - **Film-Knopf L4–L5:** voller Bernstein-Knopf + leiser Puls-Ring (A+C), auch am Handy mit „Film · 37 s“. Verworfen: B (Vorschaubild-Kachel).

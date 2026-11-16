@@ -35,6 +35,8 @@ const PAGES = {
   // 'wirbel-echt': { out: 'wirbelsaeule-echt.html', dir: 'test-4', patch: 'wirbel-echt' },
   // Bandscheibenvorfall-Film (14.11.2026, Auftrag Kai): Entwurf zu Kap. 03 (L4–L5), Baustein src/vorfall/film.js, Daten eingebettet (tools/vorfall-daten.mjs)
   'vorfall': { out: 'bandscheibenvorfall.html' },
+  // Auftrag K (16.11.2026): Kapitel 01 neu „Von Kopf bis Fuß“ – Fahrt am Partikel-Körper entlang + Spannung lösen (Puls nur gelesen)
+  'kopf-fuss': { out: 'kopf-bis-fuss.html' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
   'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true, noTermin: true }, // Übergangsseite hat kein Termin-Blatt
