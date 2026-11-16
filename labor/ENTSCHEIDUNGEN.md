@@ -7,6 +7,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **Film-Knopf L4–L5:** voller Bernstein-Knopf + leiser Puls-Ring (A+C), auch am Handy mit „Film · 37 s“. Verworfen: B (Vorschaubild-Kachel).
 - **Haus PC:** größer durch mehr Höhe, Layout gleich (A). Verworfen: B (Haus über ganze Breite), C (Spalten neu verteilt).
 - **„Kommen Sie erst einmal an.“:** deutlich größer, eigene Zeile, blendet zuerst allein ein (B). Verworfen: A (nur größer), C (atmende Linie).
+- **16.11. (Kai):** Übergang 1 → 2 deutlich langsamer (4 s Pause, 7 s Gleiten); Finger-Wischen einfacher (breiterer Pinsel, jede Richtung, Rest ≤ 8 = gelöst).
 - **Spannung 0:** Lichtwelle Kopf → Füße (A), dann gleitet die Seite **automatisch** zu Kap. 02 (Kais Wunsch statt Knopf); nicht, wenn der Besucher selbst scrollt oder „Bewegung anhalten/reduzieren“ aktiv ist. Verworfen: B („Spannung gelöst.“), C als Knopf/Partikelstrom.
 
 ## Willkommenszeile im Start (Go Kai 15.11.2026: „C … gleich umsetzen, Antwortzeile auch“) – umgesetzt

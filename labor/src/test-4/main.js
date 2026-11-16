@@ -361,6 +361,8 @@ addEventListener('resize', resize); resize();
 const hand = $('#hand');
 const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), hit = new THREE.Vector3();
 let lastPaint = null, touched = false;
+// Pinsel (16.11., Kai: „mit dem Finger deutlich einfacher“): Finger breiter und kräftiger als die Maus
+const BR = finePointer ? 11 : 19, BA = finePointer ? 0.22 : 0.34;
 function paintAt(cx, cy) {
   ndc.set(cx / VW * 2 - 1, -(cy / GLH) * 2 + 1);
   raycaster.setFromCamera(ndc, camera);
@@ -374,9 +376,9 @@ function paintAt(cx, cy) {
   for (let s = 1; s <= steps; s++) {
     const x = lastPaint ? lastPaint[0] + (px - lastPaint[0]) * s / steps : px;
     const y = lastPaint ? lastPaint[1] + (py - lastPaint[1]) * s / steps : py;
-    const g = rctx.createRadialGradient(x, y, 0, x, y, 11);
-    g.addColorStop(0, 'rgba(255,255,255,.22)'); g.addColorStop(1, 'rgba(255,255,255,0)');
-    rctx.fillStyle = g; rctx.fillRect(x - 11, y - 11, 22, 22);
+    const g = rctx.createRadialGradient(x, y, 0, x, y, BR);
+    g.addColorStop(0, `rgba(255,255,255,${BA})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+    rctx.fillStyle = g; rctx.fillRect(x - BR, y - BR, BR * 2, BR * 2);
   }
   lastPaint = [px, py];
   relaxTex.needsUpdate = true;
@@ -386,9 +388,16 @@ addEventListener('pointermove', (e) => {
   if (!e.clientX && !e.clientY) return;
   if (morphNow > 0.6 || e.pointerType !== 'mouse') { hand.classList.remove('on'); if (morphNow > 0.6) return; }
   if (finePointer && e.pointerType === 'mouse') { hand.style.transform = `translate(${e.clientX}px,${e.clientY}px)`; hand.classList.add('on'); }
+  if (e.pointerType === 'touch') return; // Finger: über touchmove (läuft auch beim senkrechten Wischen/Scrollen weiter)
   paintAt(e.clientX, e.clientY);
 }, { passive: true });
 addEventListener('pointerleave', () => hand.classList.remove('on'));
+// Finger (16.11.): jede Wischrichtung löst – auch senkrecht, während die Seite scrollt (pointermove bricht dort ab)
+addEventListener('touchstart', () => { lastPaint = null; }, { passive: true });
+addEventListener('touchmove', (e) => {
+  if (morphNow > 0.6 || !e.touches.length) return;
+  paintAt(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: true });
 
 // Spannungsanzeige
 const tensionBar = $('#tension'), tensionVal = $('#tensionVal');
@@ -408,7 +417,11 @@ function measureTension() {
 }
 setInterval(() => {
   if (!touched) return;
-  const t = measureTension();
+  let t = measureTension();
+  if (t <= 8 || calm) { // 16.11. (Kai: „deutlich einfacher“): Rest ≤ 8 gilt als gelöst – die letzten Punkte lösen sich von selbst
+    if (!calm) { rctx.fillStyle = '#fff'; rctx.fillRect(0, 0, RW, RH); relaxTex.needsUpdate = true; }
+    t = 0;
+  }
   { const o = { v: tensionShown }; tween(o, 'v', t, 0.5, { onUpdate() { tensionShown = o.v; tensionVal.textContent = Math.round(tensionShown); } }); }
   tensionBar.style.transform = `scaleX(${t / 100})`;
   if (t === 0 && !calm) {
@@ -426,16 +439,19 @@ setInterval(() => {
 function calmGo() {
   if (reduced || paused) return;
   uniforms.uWave.value = 1.2; tween(uniforms.uWave, 'value', -0.2, 2.4, { ease: (x) => x * x * (3 - 2 * x), onUpdate: () => { glDirty = true; } });
-  const y0 = scrollY; let off = false;
-  const stop = () => { off = true; };
+  const y0 = scrollY; let off = false, gliding = false;
+  const stop = () => { off = true; if (gliding && lenis) lenis.scrollTo(scrollY, { immediate: true }); }; // eigene Eingabe bricht auch das Gleiten ab
   ['wheel', 'touchstart', 'keydown'].forEach((e) => addEventListener(e, stop, { once: true, passive: true }));
+  // 16.11. (Kai: „Übergang 1 → 2 deutlich langsamer“): länger stehen lassen, dann 7 s ruhig gleiten (weich an, weich aus)
   setTimeout(() => {
-    ['wheel', 'touchstart', 'keydown'].forEach((e) => removeEventListener(e, stop));
     const t = $('#bewegung');
     if (off || paused || !t || Math.abs(scrollY - y0) > 40 || morphNow > 0.6) return;
     const y = t.getBoundingClientRect().top + scrollY;
-    lenis ? lenis.scrollTo(y, { duration: 2.8 }) : scrollTo({ top: y, behavior: 'smooth' });
-  }, 3200);
+    gliding = true;
+    const done = () => { gliding = false; ['wheel', 'touchstart', 'keydown'].forEach((e) => removeEventListener(e, stop)); };
+    if (lenis) lenis.scrollTo(y, { duration: 7, easing: (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2), onComplete: done });
+    else { scrollTo({ top: y, behavior: 'smooth' }); done(); }
+  }, 4000);
 }
 
 // ---------- Kinetischer Titel: Buchstaben entspannen sich unter der Hand ----------
