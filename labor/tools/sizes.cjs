@@ -48,7 +48,7 @@ const seen = (sel) => { const a = [...document.querySelectorAll(sel)]; return a.
     const r = await p.evaluate(`(${seen})('.seg-card') + ' ' + (${seen})('#lhRoot .card') + ' ' + (${seen})('.ix-body') + ' ' + (${seen})('.laws li')`);
     say(r === '6/6 5/5 12/12 5/5', 'Ohne JavaScript: Karten, Räume, Leistungstexte, Paragraphen sichtbar', r); await p.close(); }
   { const p = await open({ viewport: { width: 1280, height: 720 } }, ''); // T2: Besucher ohne Grafikchip
-    const c = await p.evaluate(() => document.documentElement.className + ' | ' + getComputedStyle(document.querySelector('.still-hero')).backgroundImage.slice(0, 5));
+    const c = await p.evaluate(() => document.documentElement.className + ' | ' + getComputedStyle(document.querySelector('.still-achse')).backgroundImage.slice(0, 5));
     say(/no-gl/.test(c) && /url/.test(c), 'Software-Grafik (ohne ?gl=1): Standbilder statt WebGL', c); await p.close(); }
   { const p = await open({ viewport: { width: 794, height: 1123 } }); await p.emulateMedia({ media: 'print' }); await p.waitForTimeout(400); // T4 Druck
     const r = await p.evaluate(`(${seen})('.seg-card') + ' ' + (${seen})('#lhRoot .card') + ' ' + (${seen})('.ix-body') + ' ' + (${seen})('.laws li')`);

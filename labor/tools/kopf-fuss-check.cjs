@@ -2,7 +2,7 @@
 // Aufruf: node tools/kopf-fuss-check.cjs <d|m|xl> <präfix> [u,u,…]   (u = Bildschirmhöhen seit Beginn der Bühne; Standard: Start, 4 Stationen, Schluss)
 //   d = 1440×900, m = 390×844 (Handy, Touch), xl = 2560×1440. WAIT=ms je Bild (Standard 6000, SwiftShader ist langsam).
 //   REDUCED=1 „Bewegung reduzieren“, NOGL=1 ohne WebGL, TAP=i tippt vor dem Bild auf Station i (Lösen prüfen),
-//   WIPE=i streicht vor dem Bild sechsmal quer über Station i (PC Maus, Handy Finger über CDP), OUT=Ordner (Standard /tmp/shots).
+//   FILE=test-4-puls-scan.html prüft Kapitel 01 in Puls (Standard: Entwurfsseite). WIPE=i streicht vor dem Bild sechsmal quer über Station i (PC Maus, Handy Finger über CDP), OUT=Ordner (Standard /tmp/shots).
 // Hängt ?gl=1 an (Prüfmodus: WebGL trotz Software-Grafik), außer GL0=1.
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs');
@@ -18,7 +18,7 @@ const path = require('path'), fs = require('fs');
   const errs = [];
   p.on('pageerror', (e) => errs.push('pageerror ' + e.message));
   p.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errs.push(m.type() + ' ' + m.text()); });
-  await p.goto('file://' + path.resolve(__dirname, '../kopf-bis-fuss.html') + (process.env.GL0 ? '' : '?gl=1'));
+  await p.goto('file://' + path.resolve(__dirname, '..', process.env.FILE || 'kopf-bis-fuss.html') + (process.env.GL0 ? '' : '?gl=1'));
   await p.waitForTimeout(3500);
   let n = 0;
   for (const u of us) {

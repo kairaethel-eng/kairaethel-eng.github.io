@@ -1,0 +1,118 @@
+/* Baustein „Von Kopf bis Fuß“ (Auftrag K, 16.11.2026) – eingebunden per @include in src/kopf-fuss/style.css (Entwurf) und src/test-4/style.css (Puls).
+   Erwartet vom Gastgeber: Token (--ink, --txt, --dim, --mute, --amber, --green, --sans, --disp, --serif, --gut, --gut-r, --ease), .kicker, .btn.
+   Eine klebende Bühne (.kf-sticky) über 9,2 Bildschirmhöhen; Partikel (canvas) unten, darüber gestochen scharf als SVG:
+   Lichtlinie, Ringe mit Fortschritt, Leuchtpunkt, Verbindungslinie. Zustände: .kf-still (reduzieren/angehalten), .kf-nogl (ohne WebGL). */
+.kf{--len:9.2;position:relative;height:calc(var(--len) * 100svh)} /* Länge = U_LEN + 1 in kapitel.js */
+.kf-sticky{position:sticky;top:0;height:100svh;overflow:hidden}
+.kf-gl,.kf-svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.kf-gl{z-index:0}
+.kf-svg{z-index:1;pointer-events:none;overflow:hidden}
+.kf-body{display:none} /* Umriss nur ohne WebGL */
+.kf-line{fill:none;stroke:#F2B45A;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.kf-line-glow{fill:none;stroke:var(--amber);stroke-width:9;stroke-opacity:.16;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.kf-tip{fill:#FFE2B0}
+.kf-tip-halo{fill:none;stroke:var(--amber);stroke-width:1.25;transform-box:fill-box;transform-origin:center;animation:kfTip 1.6s ease-out infinite}
+@keyframes kfTip{0%{transform:scale(.6);opacity:.95}100%{transform:scale(2.4);opacity:0}}
+.kf-tip-glow{fill:var(--amber);opacity:.28}
+/* Ring: legt sich um die Stelle (Zeichnen), darauf der Fortschritt im Halt (füllt sich mit jedem Wischer); Start oben über den Versatz (kapitel.js) */
+.kf-ring{fill:none;stroke:var(--amber);stroke-width:1.25;opacity:0;transition:opacity .5s,stroke .8s} /* Strichlänge (Zeichnen) setzt kapitel.js */
+.kf-ring.on{opacity:.45}
+.kf-ring.ok{stroke:var(--green)}
+.kf-ring-prog{fill:none;stroke:#F2B45A;stroke-width:2.5;stroke-linecap:round;opacity:0;transition:opacity .5s,stroke .8s}
+.kf-ring-prog.on{opacity:1}
+.kf-ring-prog.ok{stroke:var(--green)}
+.kf-ring-halo{fill:none;stroke:var(--amber);stroke-width:1;opacity:0;transform-box:fill-box;transform-origin:center;transition:opacity .5s}
+.kf-ring-halo.on{opacity:1;animation:kfRing 2.4s ease-out infinite}
+.kf-ring-halo.ok{animation:none;opacity:0}
+@keyframes kfRing{0%{transform:scale(1);opacity:.45}100%{transform:scale(1.22);opacity:0}}
+.kf-wire{stroke:var(--amber);stroke-width:1;stroke-opacity:.7;transition:opacity .5s}
+.kf-wire.ok{stroke:var(--green)}
+
+/* Texte: PC rechts neben der Figur (Figur ~30 % links), Handy unten auf einem Verlauf */
+.kf-hero,.kf-st,.kf-end{position:absolute;z-index:3;left:46vw;top:50%;width:min(42rem,46vw);transform:translateY(-50%);text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
+.kf-hero h1{font-size:clamp(2.75rem,5.4vw,6.75rem);line-height:.94;letter-spacing:-.04em;margin-bottom:1.5rem;max-width:none}
+.kf-hero h1 em{display:block;font-size:.86em;letter-spacing:-.02em;margin-top:.12em}
+.kf-sub{display:flex;align-items:center;gap:.625rem;font-size:clamp(1.0625rem,1.45vw,1.375rem);color:var(--dim)}
+.kf-sub svg{width:1.25rem;height:1.25rem;flex:none;fill:none;stroke:var(--amber);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;animation:kfCue 2.2s ease-in-out infinite}
+@keyframes kfCue{0%,100%{transform:translateY(0)}50%{transform:translateY(.3rem)}}
+.kf-nogl-note{display:none}
+.kf-st,.kf-end{opacity:0;visibility:hidden;transition:opacity .7s var(--ease),transform .7s var(--ease),visibility 0s .7s;transform:translateY(calc(-50% + .75rem))}
+.kf-st.on,.kf-end.on{opacity:1;visibility:visible;transform:translateY(-50%);transition:opacity .9s var(--ease) .15s,transform .9s var(--ease) .15s,visibility 0s}
+/* grüne Eck-Klammer, gestochen scharf (Haarlinien in px) */
+.kf-st::before{content:"";position:absolute;left:-1.375rem;top:-1.125rem;width:1.375rem;height:1.375rem;border-left:1.5px solid var(--green);border-top:1.5px solid var(--green)}
+.kf-st h2,.kf-end h2{font-family:var(--disp);font-weight:800;letter-spacing:-.03em;line-height:.98;text-wrap:balance}
+.kf-st h2{font-size:clamp(2rem,3.5vw,4.25rem);margin-bottom:1.125rem}
+.kf-txt{font-size:clamp(1.0625rem,1.35vw,1.3125rem);color:var(--dim);max-width:36ch}
+.kf-do{margin-top:1.375rem;min-height:1.4em;font:500 .875rem/1.4 var(--sans);color:var(--mute);display:flex;align-items:center;gap:.5rem}
+.kf-do.ok{color:var(--green);font:italic 400 1.0625rem/1.4 var(--serif)}
+.kf-do.ok::before{content:"";width:.75rem;height:.4rem;border-left:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg) translateY(-.15rem)}
+.kf-end h2{font-size:clamp(2.25rem,4.2vw,5rem);margin-bottom:1.125rem}
+.kf-end .kf-txt{margin-bottom:2rem}
+.kf-acts{display:flex;flex-wrap:wrap;gap:.75rem}
+.kf-acts .btn svg{width:1rem;height:1rem;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;margin-left:.625rem}
+.kf-shade{display:none}
+
+/* Stelle zum Antippen (liegt genau im Ring) */
+.kf-spots{position:absolute;inset:0;z-index:2;pointer-events:none}
+.kf-spot{position:absolute;left:0;top:0;width:2.75rem;height:2.75rem;margin:0;padding:0;border:0;border-radius:50%;background:none;cursor:pointer;pointer-events:none;opacity:0}
+.kf-spot.on{pointer-events:auto}
+.kf-spot:focus-visible{opacity:1;outline:2px solid var(--amber);outline-offset:4px}
+
+/* Fortschritt: vier Striche rechts, jeder füllt sich auf dem Weg zu seiner Station und im Halt (--p) */
+.kf-prog{position:absolute;z-index:4;right:max(var(--gut-r),1.75vw);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:flex-end;gap:.125rem}
+.kf-prog button{appearance:none;display:flex;align-items:center;justify-content:flex-end;width:2.75rem;height:1.75rem;padding:0;border:0;background:none;cursor:pointer}
+.kf-prog i{position:relative;display:block;width:1.25rem;height:2px;border-radius:1px;background:rgba(237,232,220,.28);overflow:hidden;transition:width .5s var(--ease)}
+.kf-prog i::after{content:"";position:absolute;inset:0;background:var(--amber);transform-origin:left;transform:scaleX(var(--p,0))}
+.kf-prog button:hover i{background:rgba(237,232,220,.6)}
+.kf-prog button.on i{width:1.875rem}
+.kf-prog button.ok i::after{background:var(--green)}
+
+/* B: Pille „Weiter scrollen“ – nach ~3 s Stillstand in einer Station; Klick gleitet zur nächsten Station */
+.kf-next{position:absolute;z-index:4;left:46vw;bottom:clamp(1.5rem,6vh,3.5rem);display:inline-flex;align-items:center;gap:.625rem;min-height:2.75rem;padding:0 1.125rem 0 1rem;border-radius:1.375rem;border:1px solid rgba(224,154,53,.6);background:rgba(16,34,42,.92);color:var(--txt);font:600 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;cursor:pointer;box-shadow:0 .5rem 2rem rgba(0,0,0,.35);opacity:0;visibility:hidden;transform:translateY(.5rem);transition:opacity .6s var(--ease),transform .6s var(--ease),visibility 0s .6s}
+.kf-next.on{opacity:1;visibility:visible;transform:none;transition:opacity .6s var(--ease),transform .6s var(--ease),visibility 0s}
+.kf-next svg{width:1rem;height:1rem;fill:none;stroke:var(--amber);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.kf-next.on svg{animation:kfCue 1.6s ease-in-out infinite}
+.kf-next:hover{border-color:var(--amber)}
+
+.kf-hand{position:absolute;left:0;top:0;transform:translate(-200px,-200px);z-index:5;width:4.5rem;height:4.5rem;margin:-2.25rem 0 0 -2.25rem;border-radius:50%;border:1px solid rgba(224,154,53,.7);display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(circle,rgba(224,154,53,.12),rgba(224,154,53,0) 70%)}
+.kf-hand span{font:600 .6875rem/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
+.kf-hand.on{opacity:1}
+
+/* Handy und Tablet hochkant (≤ 920 px, wie Puls): Figur oben, Blickpunkt ~34 % der Höhe, Text unten auf einem Verlauf */
+@media (max-width:920px){
+  .kf-hero,.kf-st,.kf-end{left:var(--gut);right:var(--gut-r);width:auto;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 2rem);transform:none;padding-left:.375rem}
+  .kf-st,.kf-end{transform:translateY(.75rem)}
+  .kf-st.on,.kf-end.on{transform:none}
+  .kf-hero h1{font-size:clamp(2.125rem,9.6vw,3.5rem);margin-bottom:1rem}
+  .kf-st::before{left:-.25rem;top:-.875rem;width:1rem;height:1rem}
+  .kf-st h2{font-size:clamp(1.625rem,7.4vw,2.5rem);margin-bottom:.75rem}
+  .kf-end h2{font-size:clamp(1.75rem,8vw,2.75rem)}
+  .kf-end .kf-txt{margin-bottom:1.5rem}
+  .kf-do{margin-top:1rem}
+  .kf-shade{display:block;position:absolute;z-index:2;left:0;right:0;bottom:0;height:52%;pointer-events:none;background:linear-gradient(rgba(10,22,27,0),rgba(10,22,27,.78) 34%,rgba(10,22,27,.94) 70%);opacity:0;transition:opacity .8s}
+  .kf-shade.on{opacity:1}
+  .kf-prog{top:34%}
+  .kf-next{left:50%;bottom:auto;top:55%;translate:-50% 0}
+}
+
+/* Ohne WebGL: Umriss als Punktraster + Spannungs-Leuchten in SVG (kapitel.js), Lichtlinie und Texte wie sonst */
+.kf-nogl .kf-gl{display:none}
+.kf-nogl .kf-body{display:block}
+.kf-nogl .kf-nogl-note{display:block;margin-top:1rem;font-size:.875rem;color:var(--mute)}
+
+/* „Bewegung reduzieren“ / „Bewegung anhalten“: keine Fahrt (kapitel.js), Texte ohne Blenden */
+.kf-still .kf-st,.kf-still .kf-end,.kf-still .kf-ring,.kf-still .kf-ring-halo,.kf-still .kf-ring-prog,.kf-still .kf-next{transition:none}
+.kf-still .kf-tip-halo,.kf-still .kf-ring-halo.on,.kf-still .kf-sub svg,.kf-still .kf-next svg{animation:none}
+.kf-still .kf-tip-halo{opacity:0}
+
+/* Ohne JS / Skriptfehler: alle Texte untereinander lesbar */
+html:not(.js) .kf{height:auto}
+html:not(.js) .kf-sticky{position:static;height:auto;overflow:visible;padding:7rem 0 3rem}
+html:not(.js) .kf-gl,html:not(.js) .kf-svg,html:not(.js) .kf-shade,html:not(.js) .kf-prog,html:not(.js) .kf-spots,html:not(.js) .kf-hand,html:not(.js) .kf-do,html:not(.js) .kf-sub svg,html:not(.js) .kf-next{display:none}
+html:not(.js) .kf-hero,html:not(.js) .kf-st,html:not(.js) .kf-end{position:relative;left:auto;right:auto;top:auto;bottom:auto;transform:none;opacity:1;visibility:visible;width:auto;max-width:40rem;margin:0 max(var(--gut),5vw) 4rem max(calc(var(--gut) + 1.5rem),5vw)}
+
+@media print{
+  .kf-gl,.kf-svg,.kf-shade,.kf-prog,.kf-spots,.kf-hand,.kf-next{display:none!important}
+  .kf{height:auto}.kf-sticky{position:static;height:auto;overflow:visible}
+  .kf-hero,.kf-st,.kf-end{position:relative;left:auto;top:auto;transform:none;opacity:1;visibility:visible;width:auto;margin:0 0 2rem 1.5rem}
+}

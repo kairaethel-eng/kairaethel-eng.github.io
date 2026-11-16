@@ -1,9 +1,14 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 16.11.2026 (Entwurf Tür, Wahl offen · Auftrag K „Von Kopf bis Fuß“) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 16.11.2026 (Auftrag K in Puls übernommen · Entwurf Tür, Wahl offen) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
-## Auftrag K „Von Kopf bis Fuß“ (Go Kai 16.11.2026) – Entwurfsseite `kopf-bis-fuss.html`, wartet auf Sichtprüfung
+## Auftrag K übernommen (Go Kai 16.11.2026: „bitte so übernehmen auf Puls“) – umgesetzt, wartet auf Sichtprüfung
+- **Kapitel 01 in Puls = „Von Kopf bis Fuß“** (Baustein `src/kopf-fuss/kapitel.*`); „Spannung lösen“ mit Willkommenszeile, Spannungsanzeige und automatischem Weitergleiten ist ersetzt. Leiste „01 Ankommen“. Schluss: „Termin buchen“ + „Zur Wirbelsäule“.
+- **Weiter-Hinweis A + B** (Kais Wahl): Fortschrittsbogen am Ring + kriechende Linie + Strich rechts füllt sich (A), Pille „Weiter scrollen“ nach ~3 s Stillstand, gleitet zur nächsten Station (B). Verworfen: nur A, nur B + Knopf, C Einrasten (iPhone ruckelig).
+- **Übergang 1 → 2 „nahtlos“** (Kais Wahl): Lichtlinie zieht sich zurück, dieselbe Figur löst sich in die Bewegungslinien auf. Verworfen: „einfach“ (Bühne scrollt weg, sichtbare Naht).
+
+## Auftrag K „Von Kopf bis Fuß“ (Go Kai 16.11.2026) – Entwurfsseite `kopf-bis-fuss.html`
 - **Kapitel 01 neu als eigene Testseite**, Puls (`src/test-4`, `live/`) unverändert. Ablauf: ganze Figur + „Zuhause ankommen. *Von Kopf bis Fuß.*“ → Kamera an den Kopf → Bernstein-Lichtlinie Scheitel → Wirbelsäule → Becken → beide Beine → vier Stationen (01 Kopf, 02 Nacken & Schultern, 03 Hüfte, 04 Füße; Wirbelsäule ohne eigene Station, sie hat Kap. 03) → zurück auf die ganze Figur, tiefer Atem, „Der Körper heilt sich selbst, *nicht ich.*“ + „Weiter zu Puls“.
 - **Scharf über unscharf:** Lichtlinie, Leuchtpunkt, Ringe, Verbindungslinie, Eck-Klammer und Schrift liegen als SVG/HTML über den Partikeln (nichts davon aus Partikeln); Partikel feiner und mehr (PC 110 000, große Monitore bis 198 000, Handy 56 000; Puls 64 000/26 000), Bildpunkt-Dichte bis 2×.
 - **Lösen:** Tippen auf die Stelle = Welle ab der Tippstelle (löst sicher); Wischen/Maus = Pinsel wie Puls (Rest ≤ 8 = gelöst, ~6 Striche); Weiterscrollen = die Lichtlinie löst die Stelle, sobald sie durch ist. Pinsel nur, wenn der Strich **auf** der markierten Stelle beginnt – senkrechtes Wischen scrollt immer.

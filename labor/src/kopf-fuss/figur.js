@@ -153,6 +153,16 @@ export const BODY_SVG = [
   '<ellipse cx="126" cy="412" rx="15" ry="7"/>',
 ].join('');
 
+// Spannung an einer Stelle des Grundrisses (x, y nach unten): stärkste Zone, ihre Station und Mitte (auch Puls nutzt das für Form 0)
+export function stationHeat(bx, by) {
+  let h = 0, st = -1, sp = null;
+  STATIONS.forEach((S, si) => S.spots.forEach((z) => {
+    const ex = (bx - z[0]) / z[2], ey = (by - z[1]) / z[3], k = Math.exp(-(ex * ex + ey * ey) * 0.9);
+    if (k > h) { h = k; st = si; sp = z; }
+  }));
+  return h < 0.04 ? { h: 0, st: -1, sp: null } : { h, st, sp };
+}
+
 // ---------- Partikel: Körper-Wolke aus Puls, je Punkt Station + Spannung + Zonenmitte ----------
 // Ausgabe in Grundriss-Einheiten mit Ursprung in der Körpermitte, y nach oben (wie die Wolke in Puls, nur ohne BODY_SCALE)
 export function figurePoints(n) {
@@ -161,13 +171,7 @@ export function figurePoints(n) {
   for (let i = 0; i < n; i++) {
     const x = b.pos[i * 3] / BODY_SCALE, y = b.pos[i * 3 + 1] / BODY_SCALE, z = b.pos[i * 3 + 2] / BODY_SCALE;
     pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z;
-    const bx = x + BODY_W / 2, by = BODY_H / 2 - y;
-    let best = 0, bs = -1, bc = null;
-    STATIONS.forEach((S, si) => S.spots.forEach((sp) => {
-      const ex = (bx - sp[0]) / sp[2], ey = (by - sp[1]) / sp[3], h = Math.exp(-(ex * ex + ey * ey) * 0.9);
-      if (h > best) { best = h; bs = si; bc = sp; }
-    }));
-    if (best < 0.04) { bs = -1; best = 0; }
+    const { h: best, st: bs, sp: bc } = stationHeat(x + BODY_W / 2, BODY_H / 2 - y);
     st[i] = bs; heat[i] = best;
     ctr[i * 2] = bc ? bc[0] - BODY_W / 2 : 0; ctr[i * 2 + 1] = bc ? BODY_H / 2 - bc[1] : 0;
   }

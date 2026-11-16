@@ -26,6 +26,10 @@ const scroll = (sel, off = 0) => ({ go: `${sel}|${off}` });
 const click = (sel, i = 0) => ({ js: [`(() => { const e = document.querySelectorAll(${JSON.stringify(sel)})[${i}]; if (!e) return false; e.click(); return true; })()`] });
 const STATES = [
   { id: 'start', ...scroll('top') },
+  // Kap. 01 „Von Kopf bis Fuß“ (16.11.): Bühne klebt 9,2 Bildschirmhöhen – Kopf, Hüfte, Schluss
+  { id: 'kf-kopf', ...scroll('#start', 1.4), slow: 1 },
+  { id: 'kf-huefte', ...scroll('#start', 4.6), slow: 1 },
+  { id: 'kf-schluss', ...scroll('#start', 7.8), slow: 1 },
   { id: 'bewegung', ...scroll('#bewegung') },
   { id: 'hausordnung', ...scroll('#hausordnung') },
   { id: 'achse', ...scroll('#achse', 0.3), slow: 2 },

@@ -1,6 +1,8 @@
 // Testseite 4 · „Puls · Scan“ – wie „Puls + Achse“, die Wirbelsäule bleibt aber im Partikel-Stil:
 // eine Abtastlinie verdichtet die groben Partikel zu einer beleuchteten Punktwolke, dann Kamerafahrt.
 // 0 Körper → 1 Bewegung → 2 Wirbelsäule (Scan) → 3 Dachlinie (fließt ins Linienhaus, seit 14.11.2026) → 4 HOP-Kreise
+// Kapitel 01 seit 16.11.2026 (Auftrag K, Go Kai): „Von Kopf bis Fuß“ als eigene Bühne (Baustein ../kopf-fuss/kapitel.js); Form 0 erscheint
+// erst am Ende des Kapitels deckungsgleich mit dessen Figur (Übergabe, kf.fitE/handK) und löst sich in die Bewegungslinien auf.
 import * as THREE from 'three';
 import Lenis from 'lenis';
 import { bodyPoints, spinePointsGen, logoPoints, spineStippleGen, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
@@ -11,6 +13,8 @@ import { initHouse } from '../haus-licht/house.js';
 import { ECHT } from '../wirbel-echt/echt.js';
 import { initStosswelle } from '../stosswelle/welle.js';
 import { initVorfall, SEG as VF_SEG } from '../vorfall/film.js';
+import { initKopfFuss } from '../kopf-fuss/kapitel.js';
+import { stationHeat } from '../kopf-fuss/figur.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -152,6 +156,8 @@ function roofLinePoints(n) {
   return { pos, kind };
 }
 const body = bodyPoints(N), house = roofLinePoints(N), logo = logoPoints(N);
+// Spannung der Form 0 wie im Kapitel „Von Kopf bis Fuß“ (Stationen statt HOTSPOTS): gleiche Farben bei der Übergabe (gelöst = Blau/Grün)
+for (let i = 0; i < N; i++) body.heat[i] = stationHeat(body.pos[i * 3] / BODY_SCALE + BODY_W / 2, BODY_H / 2 - body.pos[i * 3 + 1] / BODY_SCALE).h;
 const geo = new THREE.BufferGeometry();
 geo.setAttribute('position', new THREE.BufferAttribute(body.pos, 3));
 geo.setAttribute('aHeat', new THREE.BufferAttribute(body.heat, 1));
@@ -180,7 +186,7 @@ geo.setAttribute('aRand', new THREE.BufferAttribute(rnd, 4));
 const RW = 100, RH = 215;
 const relaxCv = document.createElement('canvas'); relaxCv.width = RW; relaxCv.height = RH;
 const rctx = relaxCv.getContext('2d', { willReadFrequently: true });
-rctx.fillStyle = '#000'; rctx.fillRect(0, 0, RW, RH);
+rctx.fillStyle = '#fff'; rctx.fillRect(0, 0, RW, RH); // seit 16.11.: Form 0 zeigt nur noch den gelösten Körper (gelöst wird in Kapitel 01)
 const relaxTex = new THREE.CanvasTexture(relaxCv);
 relaxTex.minFilter = relaxTex.magFilter = THREE.LinearFilter;
 
@@ -191,6 +197,7 @@ const uniforms = {
   uXf: { value: [0, 1, 2, 3, 4].map(() => new THREE.Vector4(0, 0, 0, 1)) },
   uSpineRot: { value: -0.9 }, uCut: { value: 100 }, uRoofH: { value: 0.25 }, uRoofA: { value: 1 }, uLogo: { value: 0 },
   uBreath: { value: 0 }, uCalm: { value: 0 }, // Atem-Phase, „Entspannt“ (0..1)
+  uBodyRot: { value: 0 }, // Wiegen der Form 0 (seit 16.11. vom Kapitel „Von Kopf bis Fuß“ übernommen, damit die Übergabe deckungsgleich ist)
   uWave: { value: 2 }, // Lichtwelle beim Entspannen (15.11., Go Kai 4A): Lage in Körperhöhe 1.2 (über dem Kopf) → -0.2 (unter den Füßen), 2 = aus
   uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 },
   cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') },
@@ -200,7 +207,7 @@ const uniforms = {
 const vert = /* glsl */`
   attribute float aHeat; attribute vec3 pos2; attribute vec3 pos3; attribute float kind3; attribute vec3 pos4; attribute float kind4; attribute vec4 aRand;
   uniform float uSpread, uFadeMid;
-  uniform float uBreath, uCalm, uWave;
+  uniform float uBreath, uCalm, uWave, uBodyRot;
   uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uRoofH, uRoofA, uLogo;
   uniform sampler2D uRelax; uniform vec2 uBodyWH; uniform vec4 uXf[5];
   uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey;
@@ -220,7 +227,7 @@ const vert = /* glsl */`
       float tension = aHeat * (1. - relax);
       float breath = sin(uBreath) * (1. + uCalm*1.3); // entspannt: ruhiger, tiefer Atem
       p = position * vec3(1. + breath*.007, 1. + breath*.004, 1.) + jitter(.012*(1. - uCalm*.6) + tension*.06, 5.); // Spannung (8.11., Option C): Ausschlag ±4 statt ±7,5 px, Takt fest ≈ 1 Hz statt 3–4 Hz → wabert statt zu flimmern; fester Takt = kein Phasensprung beim Lösen
-      p = rotY(p, sin(uTime*.25)*.32);
+      p = rotY(p, uBodyRot);
       vec3 base = mix(cPetrol, cBone, .25 + aRand.y*.35);
       float throb = .7 + .3*sin(uTime*3.4 + aRand.x*.8);
       col = mix(base, cAmber, smoothstep(.08, .7, tension) * throb);
@@ -318,26 +325,33 @@ points.frustumCulled = false;
 scene.add(points);
 
 // ---------- Layout je Form (Position/Skalierung) ----------
-let heroFit = null;
 function layout() {
   const d = isDesktop(), a = VW / GLH;
   const hw = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)) * a; // halbe sichtbare Breite bei z=0
   const X = uniforms.uXf.value;
   if (d) {
-    X[0].set(hw * 0.56, -0.29, 0, 0.94);
+    X[0].set(hw * 0.56, -0.29, 0, 0.94); // Platzhalter, bodyFit() legt die Figur auf das Schlussbild von Kapitel 01
     X[1].set(0, -0.2, 0, Math.max(1, a * 0.75));
     X[2].set(hw * 0.47, -0.3, 0, 0.84);
     X[3].set(hw * 0.5, 0.1, 0, 0.74);
     X[4].set(hw * 0.46, 0, 0, 0.72);
   } else {
-    X[0].set(0, 2.35, 0, 0.40);        // Handy: etwas kleiner und höher, Füße über dem Kicker (Prüfung 1.11.)
-    if (heroFit) { const wpp = 8.19 / GLH, hw2 = (heroFit.bot - heroFit.top) * wpp; X[0].set(0, (GLH / 2 - (heroFit.top + heroFit.bot) / 2) * wpp, 0, Math.min(0.8, hw2 / 7.75)); } // Figur zwischen Leiste und Kicker (4.11.)
+    X[0].set(0, 2.35, 0, 0.40);        // Platzhalter, bodyFit() legt die Figur auf das Schlussbild von Kapitel 01
     X[1].set(0, 0, 0, 1.25);           // 1A: Bewegungslinien über den ganzen Bildschirm
     X[2].set(0, 1.65, 0, 0.28);        // 4A: Wirbelsäule in der oberen Bildhälfte
     X[3].set(0, 2.5, 0, 0.42);         // Dachlinie: Platzhalter, roofPlace legt sie aufs SVG-Dach
     X[4].set(0, 2.15, 0, 0.32);        // 3: tiefer und kleiner, frei von der Leiste
   }
   uniforms.uPix.value = renderer ? renderer.getPixelRatio() * (GLH / 900) * (d ? 1 : 1.25) : 1;
+  bodyFit();
+}
+// Form 0 deckungsgleich mit der Figur im Schlussbild von Kapitel 01 (kf.fitE: Bild = Anker + (Punkt − Blickpunkt)·Maßstab in px;
+// hier Kamera z = 13, 35°: Welt-Einheiten je px in der Ebene z = 0 = 2·13·tan(17,5°) / GLH)
+let kf = null;
+function bodyFit() {
+  const E = kf && kf.fitE(); if (!E) return;
+  const ppw = GLH / (2 * 13 * Math.tan(THREE.MathUtils.degToRad(17.5)));
+  uniforms.uXf.value[0].set((E.ax - E.fx * E.s - VW / 2) / ppw, (GLH / 2 - E.ay - E.fy * E.s) / ppw, 0, E.s / (ppw * BODY_SCALE));
 }
 function resize() {
   if (isDesktop()) [...$$('.seg-card'), ...$$('#achse .note')].forEach((c) => { c.style.opacity = ''; c.style.transform = ''; });
@@ -356,112 +370,6 @@ function resize() {
   layout();
 }
 addEventListener('resize', resize); resize();
-
-// ---------- Hand: Spannung lösen ----------
-const hand = $('#hand');
-const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), hit = new THREE.Vector3();
-let lastPaint = null, touched = false;
-// Pinsel (16.11., Kai: „mit dem Finger deutlich einfacher“): Finger breiter und kräftiger als die Maus
-const BR = finePointer ? 11 : 19, BA = finePointer ? 0.22 : 0.34;
-function paintAt(cx, cy) {
-  ndc.set(cx / VW * 2 - 1, -(cy / GLH) * 2 + 1);
-  raycaster.setFromCamera(ndc, camera);
-  if (!raycaster.ray.intersectPlane(plane, hit)) return;
-  const X = uniforms.uXf.value[0];
-  const bx = (hit.x - X.x) / X.w, by = (hit.y - X.y) / X.w;
-  const u = bx / (BODY_W * BODY_SCALE) + 0.5, v = 1 - (by / (BODY_H * BODY_SCALE) + 0.5);
-  if (u < -0.1 || u > 1.1 || v < -0.05 || v > 1.05) { lastPaint = null; return; }
-  const px = u * RW, py = v * RH;
-  const steps = lastPaint ? Math.ceil(Math.hypot(px - lastPaint[0], py - lastPaint[1]) / 2) : 1;
-  for (let s = 1; s <= steps; s++) {
-    const x = lastPaint ? lastPaint[0] + (px - lastPaint[0]) * s / steps : px;
-    const y = lastPaint ? lastPaint[1] + (py - lastPaint[1]) * s / steps : py;
-    const g = rctx.createRadialGradient(x, y, 0, x, y, BR);
-    g.addColorStop(0, `rgba(255,255,255,${BA})`); g.addColorStop(1, 'rgba(255,255,255,0)');
-    rctx.fillStyle = g; rctx.fillRect(x - BR, y - BR, BR * 2, BR * 2);
-  }
-  lastPaint = [px, py];
-  relaxTex.needsUpdate = true;
-  touched = true;
-}
-addEventListener('pointermove', (e) => {
-  if (!e.clientX && !e.clientY) return;
-  if (morphNow > 0.6 || e.pointerType !== 'mouse') { hand.classList.remove('on'); if (morphNow > 0.6) return; }
-  if (finePointer && e.pointerType === 'mouse') { hand.style.transform = `translate(${e.clientX}px,${e.clientY}px)`; hand.classList.add('on'); }
-  if (e.pointerType === 'touch') return; // Finger: über touchmove (läuft auch beim senkrechten Wischen/Scrollen weiter)
-  paintAt(e.clientX, e.clientY);
-}, { passive: true });
-addEventListener('pointerleave', () => hand.classList.remove('on'));
-// Finger (16.11.): jede Wischrichtung löst – auch senkrecht, während die Seite scrollt (pointermove bricht dort ab)
-addEventListener('touchstart', () => { lastPaint = null; }, { passive: true });
-addEventListener('touchmove', (e) => {
-  if (morphNow > 0.6 || !e.touches.length) return;
-  paintAt(e.touches[0].clientX, e.touches[0].clientY);
-}, { passive: true });
-
-// Spannungsanzeige
-const tensionBar = $('#tension'), tensionVal = $('#tensionVal');
-let tensionShown = 100, calm = false;
-const meter = $('.meter'), meterLbl = $('.meter span');
-function measureTension() {
-  const d = rctx.getImageData(0, 0, RW, RH).data;
-  let sum = 0, w = 0;
-  HOTSPOTS.forEach((h) => {
-    const x = Math.round(h.x / BODY_W * RW), y = Math.round(h.y / BODY_H * RH);
-    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
-      const xx = clamp(x + dx, 0, RW - 1), yy = clamp(y + dy, 0, RH - 1);
-      sum += h.k * Math.max(0, 1 - d[(yy * RW + xx) * 4] / 245); w += h.k; // Zeichenfläche (8 bit) bleibt bei ~251 stehen → ≥ 245 = gelöst
-    }
-  });
-  return Math.round(sum / w * 100);
-}
-setInterval(() => {
-  if (!touched) return;
-  let t = measureTension();
-  if (t <= 8 || calm) { // 16.11. (Kai: „deutlich einfacher“): Rest ≤ 8 gilt als gelöst – die letzten Punkte lösen sich von selbst
-    if (!calm) { rctx.fillStyle = '#fff'; rctx.fillRect(0, 0, RW, RH); relaxTex.needsUpdate = true; }
-    t = 0;
-  }
-  { const o = { v: tensionShown }; tween(o, 'v', t, 0.5, { onUpdate() { tensionShown = o.v; tensionVal.textContent = Math.round(tensionShown); } }); }
-  tensionBar.style.transform = `scaleX(${t / 100})`;
-  if (t === 0 && !calm) {
-    calm = true; meter?.classList.add('is-calm'); if (meterLbl) meterLbl.textContent = 'Entspannt.';
-    // Antwortzeile (Go Kai 15.11.2026): die Willkommenszeile „Kommen Sie erst einmal an.“ wechselt zur Antwort
-    const lead = $('#heroLead');
-    if (lead) { lead.classList.add('swap'); setTimeout(() => { lead.textContent = 'Gut. Jetzt können wir anfangen.'; lead.classList.remove('swap'); }, reduced ? 0 : 450); }
-    calmGo();
-  }
-}, 300);
-
-// Entspannt (15.11., Go Kai 4A + automatisch weiter): Lichtwelle Kopf → Füße (uWave, 2,4 s), danach gleitet die Seite
-// von selbst zu Kapitel 02 – nur wenn der Besucher noch im Start steht und in der Zwischenzeit nicht selbst scrollt.
-// Bei „Bewegung anhalten“/„reduzieren“: keine Welle, kein Weiterscrollen (Farbwechsel + Antwortzeile bleiben).
-function calmGo() {
-  if (reduced || paused) return;
-  uniforms.uWave.value = 1.2; tween(uniforms.uWave, 'value', -0.2, 2.4, { ease: (x) => x * x * (3 - 2 * x), onUpdate: () => { glDirty = true; } });
-  const y0 = scrollY; let off = false, gliding = false;
-  const stop = () => { off = true; if (gliding && lenis) lenis.scrollTo(scrollY, { immediate: true }); }; // eigene Eingabe bricht auch das Gleiten ab
-  ['wheel', 'touchstart', 'keydown'].forEach((e) => addEventListener(e, stop, { once: true, passive: true }));
-  // 16.11. (Kai: „Übergang 1 → 2 deutlich langsamer“): länger stehen lassen, dann 7 s ruhig gleiten (weich an, weich aus)
-  setTimeout(() => {
-    const t = $('#bewegung');
-    if (off || paused || !t || Math.abs(scrollY - y0) > 40 || morphNow > 0.6) return;
-    const y = t.getBoundingClientRect().top + scrollY;
-    gliding = true;
-    const done = () => { gliding = false; ['wheel', 'touchstart', 'keydown'].forEach((e) => removeEventListener(e, stop)); };
-    if (lenis) lenis.scrollTo(y, { duration: 7, easing: (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2), onComplete: done });
-    else { scrollTo({ top: y, behavior: 'smooth' }); done(); }
-  }, 4000);
-}
-
-// ---------- Kinetischer Titel: Buchstaben entspannen sich unter der Hand ----------
-const title = $('#heroTitle');
-const txt = title.textContent;
-title.innerHTML = txt.split(' ').map((w) => `<span style="white-space:nowrap">${[...w].map((c) => `<span class="ch" aria-hidden="true">${c}</span>`).join('')}</span>`).join(' ');
-const chars = $$('.ch', title);
-let ptr = { x: -9999, y: -9999 };
-const charMid = new Float32Array(chars.length * 2), charW = new Int16Array(chars.length);
-addEventListener('pointermove', (e) => { ptr = { x: e.clientX, y: e.clientY }; }, { passive: true });
 
 // ---------- Manifest: Wort für Wort ----------
 const statement = $('.statement');
@@ -1848,7 +1756,8 @@ function targetMorph() {
     let t = smooth(vh * 0.95, vh * 0.05, r.top); // Formwechsel über eine längere Strecke
     // Handy: die Figur löst sich schon beim ersten Scrollen an Ort und Stelle in Bewegungslinien auf
     // 16.11. (Kai, iPhone: „viel zu schnell“): über eine ganze Bildschirmhöhe statt 0,4 – fertig, bevor der Text von Kap. 02 die Mitte erreicht
-    if (!isDesktop() && prev === 0 && s === 1) t = smooth(vh * 0.05, vh * 1.0, scrollY);
+    // seit 16.11. (Kap. 01 „Von Kopf bis Fuß“ davor): gleiche Strecke, gemessen am Anfang von Kap. 02 statt am Seitenanfang
+    if (!isDesktop() && prev === 0 && s === 1) t = smooth(vh * 0.95, 0, r.top);
     // Handy: Wirbelsäule → Haus kürzer, damit das Haus fertig in der Bildmitte steht, bevor der Text von Kapitel 04 kommt
     if (!isDesktop() && prev === 2 && s === 3) t = smooth(vh * 1.15, vh * 0.25, r.top); // 16.11. (Kai: Tempo wie beim Start): 0,9 statt 0,65 Bildschirmhöhen
     // Handy: Bewegungslinien → Wirbelsäule früher fertig, damit der Scan schon mit der Überschrift entsteht;
@@ -2071,8 +1980,9 @@ function tick() {
   timer.update();
   const dt = Math.min(timer.getDelta(), 0.1); // 0,1 statt 0,05 (8.11.): Zeit läuft auch bei 15 B/s (Stromsparmodus) richtig
   uniforms.uTime.value += paused ? 0 : dt * CALM;
-  uniforms.uCalm.value += ((calm ? 1 : 0) - uniforms.uCalm.value) * Math.min(1, dt * 0.8);
-  uniforms.uBreath.value += paused ? 0 : dt * CALM * (1.15 - uniforms.uCalm.value * 0.45);
+  // Form 0: Lage, Atem, Ruhe und Wiegen vom Kapitel „Von Kopf bis Fuß“ (gleiche Werte → Übergabe ohne Sprung)
+  bodyFit();
+  uniforms.uCalm.value = kf.calm(); uniforms.uBreath.value = kf.breath(); uniforms.uBodyRot.value = kf.sway();
   const tm = targetMorph();
   if (!isDesktop()) logoPlace();
   morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
@@ -2102,6 +2012,8 @@ function tick() {
   if (licht && lichtK > 0) dim = Math.max(dim, lichtK); // K1: Partikel weichen dem Sonnenstaub
   if (FX.on && !FX.hand) dim = 1; // Film ohne Übergabe (aus „Alle Leistungen“, ohne Scanner): Partikel weichen dem Film
   uniforms.uAlpha.value += ((1 - dim * dimMax) - uniforms.uAlpha.value) * 0.1;
+  // Kapitel 01: die Hauptbühne bleibt aus, bis die eigene Bühne von „Von Kopf bis Fuß“ am Ende übergibt (kf.handK 0 → 1)
+  { const hk = kf.handK(); if (hk < 1) uniforms.uAlpha.value = Math.min(1 - dim * dimMax, hk); }
   if (!isDesktop()) {
     // Handy: Partikel ohne Verzögerung ausblenden, sobald die Manuthera-Bühne kommt – sonst laufen beim schnellen Wischen Bilder ineinander
     const out = Math.max(manuK, swK);
@@ -2111,17 +2023,6 @@ function tick() {
   uniforms.uSpread.value = reduced ? 0 : isDesktop() ? 0.32 : 0.28;
   livingHeadlines();
   uniforms.uFadeMid.value = isDesktop() ? 0.62 : 0.7;
-
-  // Titel
-  if (!reduced && morphNow < 0.8) {
-    // 13.11. (T5): Buchstaben-Mitten einmal je Bild in einem Zug lesen (vorher: lesen/schreiben im Wechsel = bis zu 9 Layouts je Bild),
-    // Gewicht nur schreiben, wenn es sich ändert
-    if (finePointer) chars.forEach((c, i) => { const r = c.getBoundingClientRect(); charMid[i * 2] = r.left + r.width / 2; charMid[i * 2 + 1] = r.top + r.height / 2; });
-    chars.forEach((c, i) => {
-      const w = Math.round(finePointer ? 200 + 600 * smooth(40, 380, Math.hypot(charMid[i * 2] - ptr.x, charMid[i * 2 + 1] - ptr.y)) : 520 + Math.sin(uniforms.uTime.value * 1.6 - i * 0.45) * 280);
-      if (w !== charW[i]) { charW[i] = w; c.style.setProperty('--w', w); }
-    });
-  }
 
   // Manifest
   const sr = statement.getBoundingClientRect();
@@ -2167,6 +2068,12 @@ function tick() {
   if (!document.hidden) updateServices(dt);
   updateHints(dt);
 }
+// ---------- Kapitel 01 „Von Kopf bis Fuß“ (Auftrag K, Go Kai 16.11.2026) ----------
+// eigene Bühne (Baustein), läuft vor tick im selben Bildtakt; Sprünge (Striche rechts, Pille „Weiter“) gleiten über Lenis
+kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced,
+  scrollTo: (y, sm) => (lenis ? lenis.scrollTo(y, sm ? { duration: 1.6 } : { immediate: true }) : window.scrollTo({ top: y, behavior: sm ? 'smooth' : 'auto' })) });
+window.__kf = kf; // Prüfhilfe: __kf.state(), __kf.go(u)
+frameFns.push((now) => kf.update(now));
 frameFns.push(tick);
 requestAnimationFrame(function loop(now) { requestAnimationFrame(loop); runFrame(now); });
 
@@ -2178,7 +2085,7 @@ requestAnimationFrame(function loop(now) { requestAnimationFrame(loop); runFrame
 // Alles ruht bei „Bewegung anhalten“ und „Bewegung reduzieren“.
 const inView = (el) => { if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.bottom > 0 && r.top < VH && r.right > 0 && r.left < VW; };
 {
-  const beatBtns = [$('.hero .btn:not(.btn-ghost)'), $('.door .btn:not(.btn-ghost)'), $('.top .btn-small')].filter(Boolean);
+  const beatBtns = [$('.kf-end .btn:not(.btn-ghost)'), $('.door .btn:not(.btn-ghost)'), $('.top .btn-small')].filter(Boolean);
   let lastBeat = performance.now(), beats = 0;
   setInterval(() => {
     const now = performance.now();
@@ -2210,9 +2117,8 @@ const mkHint = (txt, parent) => {
 // Wischhilfe (Kai 6.11.): ein Baustein überall – Finger mit Spur zeigt die echte Richtung an der echten Stelle,
 // bis zur ersten richtigen Benutzung; auf Touch-Geräten als dunkle Pille (lesbar über den Partikeln).
 // Senkrecht wischen scrollt überall (auch über der Figur); bedient wird seitlich, durch Antippen oder am Ziehstreifen (Kap. 03).
-const hintBody = mkHint(finePointer ? 'Maus über den Körper' : 'Seitlich streichen');
 const hintManu = manuSec ? mkHint(finePointer ? 'Ziehen zum Drehen' : 'Seitlich wischen', $('.manu-stage')) : null;
-[hintBody, hintManu].forEach((h) => h && h.classList.add('th-pill')); // 6A (7.11.): auch am PC dunkle Pille (vorher nur Touch)
+[hintManu].forEach((h) => h && h.classList.add('th-pill')); // 6A (7.11.): auch am PC dunkle Pille (vorher nur Touch)
 let manuUsed = false, manuT = 0;
 // Hinweis gilt erst als erledigt, wenn wirklich seitlich gewischt/gezogen wurde (nicht schon beim Antippen oder Scrollen)
 { let mx = null, my = 0; const gm = $('#glManu');
@@ -2223,10 +2129,6 @@ manuBtns.forEach((b) => b.addEventListener('click', () => (manuUsed = true)));
 const t0Hints = performance.now();
 function updateHints(dt) {
   const now = performance.now(), desk = isDesktop();
-  // Körper: bis zur ersten Berührung
-  const showBody = !touched && morphNow < 0.25 && now - t0Hints > 3500 && scrollY < VH * 0.3;
-  hintBody.classList.toggle('on', showBody);
-  if (showBody) hintBody.style.transform = desk ? `translate(${VW * 0.6}px, ${VH * 0.6}px) translate(-50%,-50%)` : `translate(${VW - 12}px, ${heroFit ? heroFit.top + (heroFit.bot - heroFit.top) * 0.3 - scrollY : VH * 0.24}px) translate(-100%,-50%)`; // rechts neben der Figur (Pille bleibt im Bild)
   // Manuthera-Liege
   if (hintManu) { manuT = manuK > 0.8 ? manuT + dt : 0; hintManu.classList.toggle('on', !manuUsed && manuT > 1.5); }
 }
@@ -2236,13 +2138,10 @@ function updateHints(dt) {
 if (paused) uniforms.uIntro.value = 1; // angehalten: kein Einflug (Durchsicht 7.11.)
 if (!reduced) requestAnimationFrame(() => {
   if (!paused) tween(uniforms.uIntro, 'value', 1, 3.2, { ease: easeExpo, delay: 0.1 });
-  // Einblenden der Hero-Texte (gleiche Werte und gleicher Endzustand wie vorher mit gsap: opacity 1, transform translate(0,0))
-  ['.hero .kicker', '.hero-lead', '.kinetic', '.hero-sub', '.hero .actions', '.meter', '.top'].map((q) => $(q)).filter(Boolean).forEach((el, i) => {
-    // 15.11. (Go Kai 3B): „Kommen Sie erst einmal an.“ kommt zuerst allein, der Rest ~1 s später
-    const lead1 = el.classList.contains('hero-lead');
-    if (el.animate) el.animate([{ opacity: 0, transform: 'translate(0px, 20px)' }, { opacity: 1, transform: 'translate(0px, 0px)' }], { duration: lead1 ? 1400 : 1100, delay: lead1 ? 250 : 1250 + i * 60, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
-    el.style.transform = 'translate(0px, 0px)'; el.style.opacity = '1';
-  });
+  // Einblenden: Kopfleiste wie bisher (Endzustand inline wie früher mit gsap), Starttext von Kapitel 01 nur über die Deckkraft
+  // (seine Lage setzt das CSS des Bausteins, kapitel.js führt die Deckkraft beim Scrollen)
+  const tb = $('.top'); if (tb && tb.animate) { tb.animate([{ opacity: 0, transform: 'translate(0px, 20px)' }, { opacity: 1, transform: 'translate(0px, 0px)' }], { duration: 1100, delay: 1250, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' }); tb.style.transform = 'translate(0px, 0px)'; tb.style.opacity = '1'; }
+  $$('.kf-hero > *').forEach((el, i) => el.animate && el.animate([{ opacity: 0, translate: '0 20px' }, { opacity: 1, translate: '0 0' }], { duration: 1200, delay: 300 + i * 120, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' }));
 });
 
 // A4 · Kontakt: E-Mail kopieren, Öffnungsstatus (rein clientseitig, ohne JS bleibt die Zeitenliste)
@@ -2486,17 +2385,6 @@ function fxTick(dt) {
 VF.fx = FX;
 window.__vf = VF; // Prüfhilfe (Konsole): __vf.film.state(), __vf.film.seek(t), __vf.fx (Fokus), __vf.close()
 
-// Handy: Figur in die Bühne unter dem Titel einpassen (#heroStage) – nach dem ersten Bild messen (kein Layout beim Start, A1)
-function fitHero() {
-  if (isDesktop()) { heroFit = null; layout(); return; }
-  const st = document.getElementById('heroStage');
-  if (!st) return;
-  const r = st.getBoundingClientRect(), top = r.top + scrollY + 4, bot = r.bottom + scrollY - 4;
-  if (bot - top > 60) { heroFit = { top, bot }; layout(); }
-}
-requestAnimationFrame(() => requestAnimationFrame(fitHero));
-addEventListener('resize', () => requestAnimationFrame(fitHero));
-document.fonts && document.fonts.ready.then(fitHero);
 // Hinweis „hochkant halten“ (Handy quer, 13.11. G4): schließen gilt bis zum Neuladen, gespeichert wird nichts
 $('#turnClose')?.addEventListener('click', () => $('#turnNote')?.classList.add('gone'));
 window.__hop = 1; // Start ist durchgelaufen (sonst zeigt die Seite alle Inhalte ohne Skript-Layout, siehe page.html/style.css „html:not(.js)“)

@@ -28,7 +28,6 @@ em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--amber)
 .wrap{width:100%;max-width:90rem;margin:0 auto;padding-left:max(var(--gut),5vw);padding-right:max(var(--gut-r),5vw)}
 .kicker{display:flex;align-items:baseline;gap:.75rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:1.625rem}
 .kicker .ks{white-space:nowrap}
-@media (max-width:30rem){.hero .kicker .kd{display:none}.hero .kicker .ks{display:block;margin-top:.5rem}}
 .kicker i{font:italic 400 1.25rem/1 var(--serif);letter-spacing:0;text-transform:none;color:var(--amber)}
 .lead{font-size:clamp(1.0625rem,1.35vw,1.25rem);color:var(--dim);max-width:44ch}
 .small{font-size:.875rem;color:var(--mute);max-width:52ch}
@@ -40,9 +39,6 @@ em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--amber)
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   animation:grain 1.2s steps(6) infinite}
 @keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
-.hand{position:fixed;left:0;top:0;transform:translate(-200px,-200px);z-index:30;width:5.25rem;height:5.25rem;margin:-42px 0 0 -42px;border-radius:50%;border:1px solid rgba(224,154,53,.7);display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .4s,width .4s var(--ease),height .4s var(--ease),margin .4s var(--ease);background:radial-gradient(circle,rgba(224,154,53,.12),rgba(224,154,53,0) 70%)}
-.hand span{font:600 .75rem/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
-.hand.on{opacity:1}
 /* Beschriftung der Versorgungsbahn (Nerv → Zielgebiet) */
 .peri-label{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .6s;display:flex;align-items:center;gap:.5rem;font:600 .75rem/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:#CFE8FA;white-space:nowrap;text-shadow:0 0 .875rem rgba(10,22,27,.95)}
 .peri-label::before{content:"";width:.4375rem;height:.4375rem;border-radius:50%;background:#DDF1FF;box-shadow:0 0 .75rem 3px rgba(90,162,214,.8)}
@@ -107,31 +103,14 @@ html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift
 .ix-name.wave .lt{animation:wave .7s ease-out calc(var(--i) * 22ms)}
 @keyframes wave{0%,100%{transform:none;color:inherit}35%{transform:translateY(-.16em);color:var(--amber)}}
 /* dunkler Lichthof hinter Text: bleibt über den Partikeln lesbar */
-.hero-inner,.manifest .wrap,.axis-head,.roof-head,.index,.laws,.door-inner{text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
+.manifest .wrap,.axis-head,.roof-head,.index,.laws,.door-inner{text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
 .btn{text-shadow:none}
 .chapter{position:relative;min-height:100svh}
 
-/* Hero */
-.hero{display:flex;flex-direction:column;justify-content:flex-end;padding-top:7.5rem;padding-bottom:clamp(3.75rem,9vh,6.875rem)}
-.hero-inner{position:relative}
-.hero-stage,.hero-more{display:none}
-/* Willkommenszeile über der Überschrift (Go Kai 15.11.2026, Option C); wechselt bei Spannung 0 zur Antwort (main.js) */
-.hero-lead{font:italic 400 clamp(2rem,3.6vw,3.5rem)/1.1 var(--serif);color:var(--amber);margin:-.25rem 0 1.25rem;transition:opacity .45s ease} /* 15.11. Go Kai 3B: ~1,6× größer, eigene Zeile, blendet zuerst allein ein (main.js Intro) */
-.hero-lead.swap{opacity:0!important}
-.kinetic{font-size:clamp(3.625rem,9.8vw,10.75rem);line-height:.86;letter-spacing:-.045em;margin-bottom:2.125rem;max-width:7.2ch;color:var(--txt)}
-.kinetic .ch{display:inline-block;font-weight:var(--w,800);transition:color .4s}
-.kinetic .ch.hot{color:var(--amber)}
-.hero-sub{font-size:clamp(1.0625rem,1.5vw,1.375rem);color:var(--dim);max-width:40ch;margin-bottom:2rem}
+/* Kapitel 01 „Von Kopf bis Fuß“ (Auftrag K, Go Kai 16.11.2026: übernommen statt „Spannung lösen“) – Baustein, gleiche Regeln wie die Entwurfsseite */
+/*@include ../kopf-fuss/kapitel.css*/
 .only-touch{display:none}
 @media (hover:none){.only-fine{display:none}.only-touch{display:inline}}
-.meter{margin-top:2.375rem;display:flex;align-items:center;gap:.875rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
-.meter-bar{width:9.375rem;height:2px;background:var(--line);position:relative;overflow:hidden}
-.meter-bar i{position:absolute;inset:0;background:linear-gradient(90deg,var(--blue),var(--amber));transform-origin:left;transition:transform .3s}
-.meter b{font:italic 400 1.875rem/1 var(--serif);letter-spacing:0;color:var(--txt);min-width:2.2ch;text-align:right;font-variant-numeric:tabular-nums}
-.meter span{transition:color .8s}
-.meter.is-calm span{font:italic 400 1.125rem/1 var(--serif);letter-spacing:0;text-transform:none;color:var(--green);animation:calmIn 1.2s var(--ease)}
-@keyframes calmIn{from{opacity:0;transform:translateY(.375rem)}}
-@media (prefers-reduced-motion:reduce){.meter.is-calm span{animation:none}}
 
 /* Manifest */
 .manifest{display:flex;align-items:center;padding-block:8.75rem}
@@ -400,30 +379,9 @@ html:not(.js) button.ix-link{display:none}
   .laws small{margin-top:.875rem;font-size:1rem}
   .manifest{padding-block:6.875rem}
   .door-inner{grid-template-columns:1fr}
-  .hero{justify-content:flex-end}
-}
-/* Handy/Tablet-Hero (Go Kai 4.11., Option 2): erster Bildschirm = Titel + große Figur + Anzeige; Text und Knöpfe nach kleinem Scroll */
-@media (max-width:920px){
-  .hero{padding-top:5.75rem;justify-content:flex-start}
-  .hero-inner{display:flex;flex-direction:column}
-  .hero-inner>.kicker{order:0}.hero-inner>.kinetic{order:1;margin-bottom:.5rem}
-  .hero-stage{display:block;order:2;height:max(15rem,calc(100svh - 21.25rem));touch-action:pan-y;-webkit-tap-highlight-color:transparent}
-  .hero-inner>.meter{order:3;margin-top:.25rem}
-  .hero-more{display:inline-flex;order:4;align-self:center;align-items:center;gap:.375rem;min-height:2.75rem;padding:0 1rem;font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);text-decoration:none}
-  .hero-more svg{width:1rem;height:1rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-  .hero-inner>.hero-sub{order:5;margin-top:1.25rem}
-  .hero-inner>.nogl-note{order:6}
-  @media (min-width:601px){.hero-stage{height:max(15rem,calc(100svh - 28.25rem))}}
-  .hero-inner>.actions{order:7}
 }
 @media (max-width:600px){
   body{font-size:1rem}
-  .kinetic{font-size:clamp(3.125rem,14.5vw,4rem);margin-bottom:1.375rem}
-  .hero{padding-bottom:2.5rem}
-  .hero .kicker{margin-bottom:1rem}
-  .hero-lead{font-size:clamp(1.375rem,6.2vw,1.75rem);margin:-.125rem 0 .625rem}
-  .hero-sub{font-size:1rem;margin-bottom:1.5rem}
-  .meter{margin-top:1.625rem}
   .brand svg{width:4.125rem}
   .top{gap:.5rem}
   .chap-now{margin-right:auto}
@@ -566,10 +524,9 @@ html.paused .btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}
 /* Ohne WebGL (A2, Go 4.11.2026; z. B. iOS-Lockdown-Modus): je Kapitel ein Standbild statt Partikel,
    Hinweise zum Anfassen und die Spannungsanzeige entfallen. Bilder laden nur in diesem Fall (CSS-Hintergrund). */
 .still,.nogl-note{display:none}
-html.no-gl #gl,html.no-gl .hand,html.no-gl .meter,html.no-gl .touch-hint,html.no-gl .hero-sub .only-fine,html.no-gl .hero-sub .only-touch,html.no-gl .axis-hint,html.no-gl .manu-hint,html.no-gl .manu-stage canvas,html.no-gl .serv-stage{display:none}
+html.no-gl #gl,html.no-gl .touch-hint,html.no-gl .axis-hint,html.no-gl .manu-hint,html.no-gl .manu-stage canvas,html.no-gl .serv-stage{display:none}
 html.no-gl .still{display:block;position:absolute;pointer-events:none;background:no-repeat center/contain}
 html.no-gl .nogl-note{display:block;margin:-1rem 0 2rem;font-size:.875rem;color:var(--dim)}
-html.no-gl .still-hero{background-image:url(assets/still-hero.webp);right:11vw;top:3rem;bottom:0;width:23vw}
 html.no-gl .still-achse{background-image:url(assets/still-achse.webp);right:18.5vw;top:4.4rem;bottom:0;width:15vw}
 html.no-gl .manu-stage{min-height:min(56vh,30rem)}
 html.no-gl .still-manu{background-image:url(assets/still-manu.webp);inset:0}
@@ -578,7 +535,7 @@ html.no-gl-manu .manu-stage{min-height:min(56vh,30rem)}
 html.no-gl-manu .still-manu{display:block;position:absolute;pointer-events:none;background:url(assets/still-manu.webp) no-repeat center/contain;inset:0}
 html.no-gl-manu #glManu,html.no-gl-manu .manu-hint,html.no-gl-serv .serv-stage{display:none}
 @media (max-width:920px){
-  html.no-gl .still-hero,html.no-gl .still-achse{left:0;right:0;width:auto;top:4.5rem;bottom:auto;height:38svh;background-position:center}
+  html.no-gl .still-achse{left:0;right:0;width:auto;top:4.5rem;bottom:auto;height:38svh;background-position:center}
   /* Handy: Kapitel 03 scrollt als Liste → Bild bleibt oben stehen, Karten laufen darüber */
   html.no-gl .still-achse{position:sticky;top:7rem;height:34svh;margin-bottom:-34svh}
 }
@@ -800,20 +757,20 @@ html:not(.js) .axis-sticky,html:not(.js) .rules-sticky{position:static;height:au
 html:not(.js) .axis-inner{display:block;height:auto}
 html:not(.js) .ix-body{grid-template-rows:1fr}
 html:not(.js) .ix-body p{padding-bottom:1.5rem}
-html:not(.js) #gl,html:not(.js) .hand,html:not(.js) .meter,html:not(.js) .hero-stage,html:not(.js) .hero-more,html:not(.js) .only-fine,html:not(.js) .only-touch,html:not(.js) .axis-hint,html:not(.js) .segnav,html:not(.js) .seg-dots,html:not(.js) .tour-kicker,html:not(.js) .tour-ctrl,html:not(.js) .roomnav,html:not(.js) .room-dots,html:not(.js) .manu-stage,html:not(.js) .manu-modes,html:not(.js) .serv-stage,html:not(.js) .law-prog,html:not(.js) .motion-btn,html:not(.js) .chap-now,html:not(.js) .index button::after,html:not(.js) .scan-rail{display:none}
+html:not(.js) #gl,html:not(.js) .only-fine,html:not(.js) .only-touch,html:not(.js) .axis-hint,html:not(.js) .segnav,html:not(.js) .seg-dots,html:not(.js) .tour-kicker,html:not(.js) .tour-ctrl,html:not(.js) .roomnav,html:not(.js) .room-dots,html:not(.js) .manu-stage,html:not(.js) .manu-modes,html:not(.js) .serv-stage,html:not(.js) .law-prog,html:not(.js) .motion-btn,html:not(.js) .chap-now,html:not(.js) .index button::after,html:not(.js) .scan-rail{display:none}
 html:not(.js) .index button{cursor:default}
 /* T4 · Druck: dunkle Bühne aus, alle Texte schwarz auf weiß und vollständig */
 @media print{
   :root{--txt:#111;--dim:#333;--mute:#555;--line:#ccc;--amber:#8a5a00}
   body{background:#fff;color:#111}
-  #gl,.grain,.hand,.top,.skip,.meter,.hero-stage,.hero-more,.still,.axis-hint,.segnav,.seg-dots,.scan-rail,.tour-ctrl,.roof-grid .hint,.ego,.manu-stage,.manu-modes,.serv-stage,.law-prog,.touch-hint,.turn-note,.only-fine,.only-touch,dialog,.btn,#copyMail{display:none!important}
+  #gl,.grain,.top,.skip,.still,.axis-hint,.segnav,.seg-dots,.scan-rail,.tour-ctrl,.roof-grid .hint,.ego,.manu-stage,.manu-modes,.serv-stage,.law-prog,.touch-hint,.turn-note,.only-fine,.only-touch,dialog,.btn,#copyMail{display:none!important}
   .chapter,.wrap,.axis,.axis-sticky,.rules-sticky,.axis-inner,.manu,.roof,.door{position:static!important;display:block!important;height:auto!important;min-height:0!important;overflow:visible!important;padding-top:.5rem!important;padding-bottom:.5rem!important;background:none!important}
   .seg-card,.card,.laws li{position:static!important;opacity:1!important;visibility:visible!important;transform:none!important;filter:none!important;margin-bottom:1rem;break-inside:avoid;border:0!important;background:none!important}
   .seg-cards,.cards,.laws{min-height:0!important;opacity:1!important;visibility:visible!important}
   .cards{display:block!important}
   .seg-card dl{position:static!important;width:auto!important;height:auto!important;clip:auto!important;white-space:normal!important;overflow:visible!important}
   .ix-body{grid-template-rows:1fr!important}
-  h1,h2,.kinetic,.laws span,.laws b{font-size:1.75rem!important;line-height:1.15!important;color:#111!important;max-width:none!important}
+  h1,h2,.laws span,.laws b{font-size:1.75rem!important;line-height:1.15!important;color:#111!important;max-width:none!important}
   .statement,.statement *{opacity:1!important;color:#111!important;font-size:1.25rem!important}
   .chips li{border:1px solid #999!important;background:none!important;color:#111!important}
   a{color:#111!important}

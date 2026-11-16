@@ -181,6 +181,10 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   if (cfg.live) css = css.replace(/url\(assets\//g, 'url('); // Standbilder (ohne WebGL) liegen neben der Live-Seite
   if (P) css += P.css;
   let tpl = readFileSync(join(dir, cfg.page || 'page.html'), 'utf8');
+  // Baustein-Markup einbinden (16.11.2026, „Von Kopf bis Fuß“): <!--@include pfad--> relativ zum Quellordner der Seite;
+  // ein Block <!--KF-ACTS-->…<!--/KF-ACTS--> der Seite landet an der Stelle <!--KF-ACTS-SLOT--> im Baustein
+  tpl = tpl.replace(/<!--@include ([^>]+?)-->/g, (m, f) => readFileSync(join(dir, f.trim()), 'utf8'));
+  { const acts = tpl.match(/<!--KF-ACTS-->([\s\S]*?)<!--\/KF-ACTS-->/); if (acts) tpl = tpl.replace(acts[0], '').replace('<!--KF-ACTS-SLOT-->', () => acts[1]); }
   if (P) tpl = applyPatches(tpl, P.page, 'page.html');
   if (cfg.root) ROOT_LINKS.forEach(([re, to]) => { tpl = tpl.replace(re, to); });
   // Datenschutz § 4 Online-Terminbuchung (<!--TERMIN-->…): ohne Termin-Blatt heraus, folgende §§ eins zurück

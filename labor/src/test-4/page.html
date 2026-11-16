@@ -8,7 +8,6 @@
 <a class="skip" href="#start">Zum Inhalt</a>
 <canvas id="gl" aria-hidden="true"></canvas>
 <div class="grain" aria-hidden="true"></div>
-<div class="hand" id="hand" aria-hidden="true"><span>lösen</span></div>
 <div class="turn-note" id="turnNote"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7.5" y="2.5" width="9" height="19" rx="2"/><path d="M3.5 10a8 8 0 0 1 1.6-3.6M20.5 14a8 8 0 0 1-1.6 3.6"/></svg><span>Bitte hochkant halten – so sehen Sie alles.</span><button type="button" id="turnClose" aria-label="Hinweis schließen">×</button></div>
 
 <nav class="top" id="top">
@@ -16,7 +15,7 @@
     <svg viewBox="0 0 560 240" aria-hidden="true"><circle cx="110" cy="120" r="66" fill="#7FAF45"/><circle cx="300" cy="120" r="66" fill="#3C7189"/><circle cx="490" cy="120" r="66" fill="#3F86B5"/><g font-family="Archivo Expanded,Archivo,Arial,sans-serif" font-weight="800" font-size="60" fill="#fff" text-anchor="middle"><text x="110" y="142">H</text><text x="300" y="142">O</text><text x="490" y="142">P</text></g></svg>
   </a>
   <ol class="chapters" id="chapters" aria-label="Kapitel">
-    <li><a href="#start"><i>01</i><span class="ct">Spannung<small>Start</small></span></a></li>
+    <li><a href="#start"><i>01</i><span class="ct">Ankommen<small>Von Kopf bis Fuß</small></span></a></li>
     <li><a href="#bewegung"><i>02</i><span class="ct">Bewegung<small>Über HOP</small></span></a></li>
     <li><a href="#hausordnung"><i>§</i><span class="ct">Hausordnung</span></a></li>
     <li><a href="#achse"><i>03</i><span class="ct">Achse<small>Wirbelsäule</small></span></a></li>
@@ -29,23 +28,11 @@
 </nav>
 
 <main>
-  <header class="chapter hero" id="start" data-stage="0">
-    <div class="still still-hero" aria-hidden="true"></div>
-    <div class="wrap hero-inner">
-      <p class="kicker"><span>HOP · Home of Physiotherapy<span class="kd"> · </span><span class="ks">Schorndorf</span></span></p>
-      <p class="hero-lead" id="heroLead" aria-live="polite">Kommen Sie erst einmal an.</p>
-      <h1 class="kinetic" id="heroTitle" aria-label="Spannung lösen.">Spannung lösen.</h1>
-      <div class="hero-stage" id="heroStage" aria-hidden="true"></div>
-      <a class="hero-more" href="#heroSub">Weiter<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
-      <p class="hero-sub" id="heroSub">Physiotherapie in Schorndorf mit Kompetenz und Herz. <span class="only-fine">Fahren Sie mit der Maus über den Körper und lösen Sie die Verspannungen.</span><span class="only-touch">Streichen Sie seitlich über den Körper und lösen Sie die Verspannungen.</span></p>
-      <p class="nogl-note">Die bewegte Ansicht braucht einen aktuellen Browser.</p>
-      <div class="actions">
-        <a class="btn" href="#tuer" data-termin aria-haspopup="dialog">Termin buchen</a>
-        <a class="btn btn-ghost" href="#achse">Zur Wirbelsäule</a>
-      </div>
-      <div class="meter" aria-hidden="true"><span>Spannung</span><div class="meter-bar"><i id="tension"></i></div><b id="tensionVal">100</b></div>
-    </div>
-  </header>
+  <!-- Kapitel 01 „Von Kopf bis Fuß“ (Auftrag K, Go Kai 16.11.2026): Baustein src/kopf-fuss (kapitel.html/.css/.js), ersetzt „Spannung lösen“ -->
+  <section class="chapter kf" id="start" data-stage="0" aria-labelledby="kf-title">
+<!--@include ../kopf-fuss/kapitel.html-->
+<!--KF-ACTS--><a class="btn" href="#tuer" data-termin aria-haspopup="dialog">Termin buchen</a><a class="btn btn-ghost" href="#achse">Zur Wirbelsäule</a><!--/KF-ACTS-->
+  </section>
 
   <section class="chapter manifest" id="bewegung" data-stage="1" aria-labelledby="m-title">
     <div class="wrap">
