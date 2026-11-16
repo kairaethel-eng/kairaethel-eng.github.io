@@ -1,6 +1,6 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 16.11.2026 (Entwurf Tür, Wahl offen · Auftrag K „Von Kopf bis Fuß“) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 16.11.2026 (Entwurf Tür, Tendenz C · Auftrag K „Von Kopf bis Fuß“) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
 ## Auftrag K „Von Kopf bis Fuß“ (Go Kai 16.11.2026) – Entwurfsseite `kopf-bis-fuss.html`, wartet auf Sichtprüfung
