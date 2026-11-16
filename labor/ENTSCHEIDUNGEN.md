@@ -7,6 +7,7 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **Kai:** deutlich menschliche Konturen; an Station 01 (Kopf) ein Gehirn; die Linien nach unten als Nervensystem aus dem Gehirn; **alles im bekannten Partikel-Stil** (also keine gestochene SVG-Lichtlinie mehr für die Bahnen).
 - Umgesetzt als eigene Entwurfsseite (Kopie des Bausteins in `src/figur-plus`), Puls und `src/kopf-fuss` unverändert. Ablauf, Texte, Lösen und Weiter-Hinweis bleiben wie in Kapitel 01.
 - Gestaltung: Kontur als eigene Punktlinie, Körper innen durchsichtiger, sobald die Nerven wachsen; Gehirn warmweiß (hebt sich von Bernstein = Spannung ab), Nerven Bernstein; Impulse vom Gehirn nach außen ruhig (~6 s), nach Merkregel „ruhig vor schnell“.
+- **Runde 2 (Kai 16.11.: „genau die Richtung … Konturen noch besser und anatomischer“):** Figur nach echten Körpermaßen in anatomischer Grundstellung (Handflächen nach vorn, Finger, Zehen) + Oberflächen-Anatomie als feine Linien, die zurücktreten, sobald die Nerven wachsen.
 - Schematisch, keine Lehrtafel (Hinweis im Fuß der Seite). Figur neutral, ohne Gesicht.
 - Verworfen: Gehirn/Nerven als SVG-Linien über den Partikeln (Kai will Partikel) – bleibt nur als Rückfall ohne WebGL (gepunktet).
 

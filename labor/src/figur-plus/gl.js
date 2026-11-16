@@ -53,8 +53,9 @@ void main(){
   a *= 1. - isBody * max(glass * (1. - aN.w), .82 * aN.y * brainK);
   // Kontur und Körperlinien: gestochen, hell
   col = mix(col, mix(cPetrol, cBone, .66), isLine);
-  a = mix(a, aN.w * (.5 + aRand.x*.42), isLine);
-  sz = mix(sz, .72, isLine);
+  float crease = step(aN.w, .8); // Kontur w = 1, Körperlinien w < 0,8: fein, hell, treten zurück, wenn die Nerven wachsen
+  a = mix(a, mix(aN.w * (.5 + aRand.x*.42), (.3 + aN.w*1.15) * (.6 + aRand.x*.4) * (1. - glass*1.5), crease), isLine);
+  sz = mix(sz, mix(.72, .6, crease), isLine);
   // Gehirn und Nerven: erscheinen mit der Lichtspitze, vorn an der Spitze heller
   float rev = smoothstep(aN.y - 1.2, aN.y + 1.2, uTip);
   float front = rev * (1. - smoothstep(2., 18., uTip - aN.y));

@@ -56,21 +56,30 @@ function xAt(pts, y) {
 const mirror = (pts) => pts.map((p) => [2 * CX - p[0], p[1]]);
 
 // ---------- Umriss: rechte Hälfte von oben (Scheitel) bis in den Schritt, Abschnitte treffen sich an den Ecken ----------
+// Maße nach dem Körper (1 cm ≈ 2,33 Einheiten bei 175 cm): Schulterbreite über die Deltamuskeln ~46 cm, Oberarm ~9 cm, Unterarm bis ~9 cm,
+// Handgelenk ~5,5 cm, Hand 19 × 8,5 cm, Taille ~28 cm, Becken ~34 cm, Oberschenkel ~16 cm, Knie ~10 cm, Wade ~12 cm, Knöchel ~6,5 cm.
+// Anatomische Grundstellung: Arme leicht abgespreizt, Handflächen nach vorn (Daumen außen), Füße nach vorn.
+const HAND_C = [168.2, 214], HAND_T = 0.15; // Handgelenk-Mitte, Neigung der Hand (Bogenmaß, nach außen)
+const hand = (hx, hy) => [HAND_C[0] + hx * Math.cos(HAND_T) + hy * Math.sin(HAND_T), HAND_C[1] - hx * Math.sin(HAND_T) + hy * Math.cos(HAND_T)]; // hx zum Daumen, hy zu den Fingerspitzen
+const HAND = [[6.2, 0], [7.8, 3.6], [10, 7.4], [12.6, 11.4], [15, 15.6], [16.8, 19.6], [17.2, 22.4], [15.8, 23.6], [14, 21.6], [12, 18.6], [10.5, 17.6], [10.1, 20.4], [10.4, 26], [10.2, 33],
+  [9.6, 38.4], [8.2, 40.6], [6.6, 40], [5.6, 37.4], [5.3, 40.6], [3.8, 43.4], [1.8, 43.2], [0.6, 40.4], [0.5, 38], [0.2, 39.6], [-1.2, 41.4], [-3, 41], [-4, 38.4], [-4.3, 34.8],
+  [-4.7, 34.6], [-5.8, 35.8], [-7.4, 35.4], [-8.4, 33], [-8.8, 29], [-9, 22], [-8.8, 14], [-8, 7], [-6.8, 2.6], [-6.2, 0]].map((p) => hand(p[0], p[1]));
 const HALF = [
-  // Kopf mit Ohr und Kiefer, Hals, Schulterlinie, Arm außen bis zu den Fingerspitzen
-  [[100, 11], [107.6, 12], [113.8, 15.6], [117.4, 21.6], [118.6, 28.6], [118.4, 34.4], [120.4, 36.4], [120.6, 41.6], [118.6, 45.4], [117.2, 46.6], [116, 51.6], [113, 56.6], [109.6, 59.8],
-    [109.2, 64], [109.6, 69.4], [112.4, 74], [119, 77.4], [128, 80], [136.6, 82.2], [143.6, 85], [149, 89.6], [152.2, 96.4], [153.6, 105.6], [154.2, 118], [154.8, 130], [156, 142], [157.8, 152], [159.6, 164], [160.6, 178], [160.6, 192], [161, 204], [162.8, 213], [164.2, 224], [163.8, 236], [162, 244.6], [159.6, 248]],
-  // Hand innen mit Daumen, Unterarm und Oberarm innen bis zur Achsel
-  [[159.6, 248], [156.8, 246.4], [155.4, 239], [153.4, 232.6], [151.4, 226.6], [151.4, 220], [153, 212], [153.6, 204], [152.6, 190], [150.8, 174], [149.2, 160], [147.8, 150], [146.6, 138], [145.2, 124], [143.6, 112], [141.6, 105.4]],
-  // Achsel, Brustkorb, Taille, Becken, Bein außen, Knöchel, Fuß außen
-  [[141.6, 105.4], [141.2, 116], [140, 130], [137.2, 146], [133.8, 160], [132.6, 170], [133.2, 180], [135.6, 192], [138, 204], [139.4, 218], [139.6, 236], [138.2, 256], [135.2, 278], [131.8, 296], [130.4, 306], [130.6, 316], [132, 328], [132.8, 342], [131.8, 358], [129, 376], [126.2, 390], [126.6, 397], [129.4, 402.6], [133.8, 408.6], [136.8, 413.8], [136.4, 417.6], [131.4, 419]],
-  // Sohle
-  [[131.4, 419], [114.4, 419]],
-  // Fuß innen, Bein innen bis in den Schritt
-  [[114.4, 419], [111, 417.6], [110.6, 412], [112.2, 404], [112.8, 396], [111.6, 382], [109.4, 364], [108, 348], [108.2, 334], [109.6, 318], [110.2, 306], [109.6, 294], [107.8, 276], [105.2, 256], [102.8, 240], [100, 229.4]],
+  // Schädel, Ohr, Kiefer, Hals, Kapuzenmuskel, Deltamuskel, Arm außen bis zum Handgelenk (Speichenseite)
+  [[100, 11], [106.4, 11.7], [112.2, 14.4], [116.2, 19], [118.2, 25], [118.4, 30.4], [117.6, 34], [118.8, 34.6], [120.8, 36.6], [121.2, 40.6], [120, 44.6], [117.8, 46.2], [117.2, 49.4], [115.6, 53.6], [112.8, 57.6], [110.6, 60.6],
+    [110, 64], [110.4, 68], [112, 71.4], [116.4, 74.6], [123, 77.6], [130.6, 80.2], [136.6, 82.6], [141.2, 84.6], [146.4, 87.6], [150.8, 92.6], [153.8, 99.2], [155.4, 106.8], [156.2, 113], [156.9, 119.6], [158.8, 127], [161.5, 137], [163.6, 147], [165.1, 155],
+    [167.6, 162], [169.8, 171], [170.9, 181], [171.7, 192], [172.7, 203], HAND[0]],
+  // Hand: Daumenballen, Daumen, vier Fingerkuppen, Kleinfingerballen
+  HAND,
+  // Arm innen: Elle, Beuger, Ellenbogen innen, Bizeps bis zur Achselfalte
+  [HAND[HAND.length - 1], [158.6, 204], [155.2, 192], [151.8, 180], [148.8, 170], [147.9, 163.4], [148.2, 157.4], [146.9, 150], [144.9, 140], [142.6, 131], [138.6, 122.6]],
+  // Rumpf: breiter Rückenmuskel, Brustkorb, Taille, Beckenkamm, Rollhügel; Bein außen: Oberschenkel, Knie, Wadenbeinkopf, Wade, Außenknöchel, Fuß
+  [[138.6, 122.6], [137.9, 132], [135.7, 144], [133.3, 156], [132, 166], [132.7, 174], [135.3, 183], [137.6, 194], [139.4, 206], [140, 216], [139.7, 236], [137.8, 258], [134.8, 280], [132.4, 296], [131.5, 306], [131.8, 314], [132.7, 320], [134.2, 338], [133, 356], [129.5, 376], [126.7, 390], [126.9, 398], [129.3, 404], [132.3, 410], [133.5, 414.8], [131.4, 418]],
+  // Zehen (von der kleinen zur großen)
+  [[131.4, 418], [129.6, 419], [127.8, 417.8], [125.8, 419.1], [123.8, 417.8], [121.6, 419.1], [119.4, 417.8], [116.8, 419.1], [114.6, 417.6], [111.6, 419.1], [108.8, 418]],
+  // Fuß innen, Innenknöchel (höher als außen), Wade innen (tiefer und kräftiger als außen), Knie, Oberschenkel innen bis in den Schritt
+  [[108.8, 418], [107.7, 414.4], [108.7, 409], [110.2, 402], [110.5, 395], [111.5, 388], [109.7, 374], [106.9, 356], [105.8, 338], [108.2, 321], [108.9, 312], [107.8, 304], [106.3, 294], [106.6, 284], [104.6, 268], [102.6, 250], [101.2, 236], [100, 229.4]],
 ];
-const ARM_Y = (y) => (y > 105.4 ? 105.4 + (y - 105.4) * 1.09 : y); // Arme etwas länger: Fingerspitzen auf Mitte Oberschenkel
-[0, 1].forEach((k) => HALF[k].forEach((p) => { p[1] = ARM_Y(p[1]); }));
 const SEG = HALF.map((s) => catmull(s, 6));
 const RIGHT = SEG.reduce((a, s, i) => a.concat(i ? s.slice(1) : s), []);
 export const OUTLINE = RIGHT.concat(mirror(RIGHT).reverse().slice(1, -1)); // geschlossene Kontur
@@ -79,23 +88,44 @@ const pathD = (pts, close) => pts.map((p, i) => `${i ? 'L' : 'M'}${f1(p[0])} ${f
 export const OUTLINE_D = pathD(OUTLINE, true);
 export const BODY_SVG = `<path d="${OUTLINE_D}"/>`;
 // Arm, Bein, Rumpf: Rand an der Höhe y (für Bahnen, die sicher im Körper liegen)
-const armOut = (y) => xAt(SEG[0], y), armIn = (y) => xAt(SEG[1], y);
-const sideOut = (y) => xAt(SEG[2], y), legIn = (y) => xAt(SEG[4], y);
+const armOut = (y) => xAt(SEG[0], y), armIn = (y) => xAt(SEG[2], y);
+const sideOut = (y) => xAt(SEG[3], y), legIn = (y) => xAt(SEG[5], y);
 
-// ---------- Körperlinien (fein, gehören zur Figur): rechte Seite, wird gespiegelt; „mid“ = nur einmal ----------
+// ---------- Körperlinien (Oberflächen-Anatomie, fein): rechte Seite, wird gespiegelt; „mid“ = nur einmal ----------
+// [Helligkeit, Punkte]: kräftig = Knochenpunkte und große Muskelränder, zart = Muskelteilungen. Die Linien treten zurück, sobald die Nerven wachsen.
+const ring = (cx, cy, rx, ry, n = 14) => Array.from({ length: n + 1 }, (_, k) => [cx + Math.cos(k / n * 6.2832) * rx, cy + Math.sin(k / n * 6.2832) * ry]);
+const H = (pts) => pts.map((p) => hand(p[0], p[1]));
 const CREASE_R = [
-  [[103.4, 80.6], [112, 81.4], [124, 83.2], [136, 85.6]],                       // Schlüsselbein
-  [[107.6, 62], [104.6, 71], [102, 79.6]],                                       // Halsmuskel
-  [[102.4, 111], [110, 116.4], [122, 117.2], [133, 112.4], [139.4, 105]],        // Brustmuskel unten
-  [[101.4, 121.6], [108, 129], [118, 138.6], [127.4, 144.4]],                    // Rippenbogen
-  [[133, 187.6], [123, 200.6], [111.6, 214.6], [102.6, 225.6]],                  // Leiste
-  [[114, 297.4], [120.2, 293.8], [126.4, 297.4]],                                // Kniescheibe oben
-  [[113.6, 301], [116.4, 307], [120.2, 309], [124, 307], [126.8, 301]],          // Kniescheibe unten
-  [[119.6, 316], [119.2, 340], [118.8, 368], [118.6, 388]],                      // Schienbeinkante
-  [[117, 46.8], [113.6, 54.6], [107.6, 60], [100.4, 62.4]],                      // Kiefer
-].map((c) => catmull(c, 6));
-const CREASE_M = [[[100, 84.6], [100, 118]], [[100, 123], [100, 166]], [[98.8, 169.4], [100, 170.8], [101.2, 169.4]]];
-const CREASES = [...CREASE_R, ...CREASE_R.map(mirror), ...CREASE_M].map(measured);
+  [0.6, [[115.6, 53.6], [112.4, 58.2], [107.6, 61.8], [103, 63.4], [100, 63.6]]],                        // Kiefer und Kinn
+  [0.42, [[111.6, 56.6], [108.4, 64], [104.6, 72.6], [101.6, 80.4]]],                                    // Kopfwender
+  [0.62, [[102.6, 81.6], [110, 81], [119, 82.2], [128, 84.4], [137, 86.4], [142, 86.2]]],                // Schlüsselbein
+  [0.44, [[131, 87.6], [134.4, 96], [138, 105], [142.6, 113], [148.4, 119.6], [154.4, 122]]],            // Deltamuskel: vordere Rinne bis zum Ansatz
+  [0.56, [[101.6, 113], [108, 118.6], [117, 120.4], [126, 117.8], [132.6, 111.6], [136.6, 104.6]]],      // großer Brustmuskel, Unterrand
+  [0.5, [[101.4, 120], [106.6, 127], [114, 136], [122, 143.4], [129, 147]]],                             // Rippenbogen
+  [0.36, [[114, 121.6], [116.6, 136], [117.4, 152], [116.4, 168], [112.6, 184], [107, 200]]],            // Rand des geraden Bauchmuskels
+  [0.3, [[101, 133], [108, 132], [116.2, 134]]], [0.3, [[101, 146.6], [108.6, 145.6], [117, 147]]], [0.3, [[101, 160.6], [108.6, 160], [116.8, 161]]], // Zwischensehnen
+  [0.28, [[135.4, 128], [130.6, 131.6]]], [0.28, [[134.6, 136.4], [129.6, 140]]], [0.28, [[133, 144.6], [128.2, 148]]], // Sägemuskel
+  [0.56, [[136, 186], [127, 197], [116, 209.6], [106.4, 221.6], [101.4, 227.4]]],                        // Beckenkamm und Leiste
+  [0.36, [[142.6, 126], [146.6, 134], [150.2, 144], [153.6, 153.6]]],                                    // Bizeps, innere Rinne
+  [0.4, [[149.6, 158.8], [156, 160.6], [163, 158.6]]],                                                   // Ellenbeuge
+  [0.3, [[162.6, 161], [165, 174], [167.6, 190], [169.8, 204]]],                                         // Oberarmspeichenmuskel
+  [0.36, H([[-5.4, 0.6], [0, 1.6], [5.4, 0.4]])],                                                        // Handgelenk
+  [0.4, H([[5.5, 37.4], [5.3, 30], [5.2, 23]])], [0.4, H([[0.5, 38], [0.4, 30], [0.4, 23]])], [0.4, H([[-4.3, 34.6], [-4.2, 28], [-4, 22.4]])], // Finger
+  [0.38, H([[9.8, 17], [7.6, 12], [4.6, 7.4], [2, 3.6]])],                                               // Daumenballen
+  [0.3, H([[9.4, 19.8], [4, 18.6], [-2, 19.6], [-8, 22]])],                                              // Handlinie
+  [0.36, [[134.4, 191], [127, 214], [118, 244], [111.4, 272], [108.6, 294]]],                            // Schneidermuskel
+  [0.3, [[131, 222], [129.4, 250], [126.4, 278], [124.6, 294]]],                                         // äußerer Schenkelmuskel
+  [0.34, [[108.4, 282], [111.6, 290], [113.8, 298]]],                                                    // innerer Schenkelmuskel („Tropfen“)
+  [0.56, ring(119.8, 303, 5.2, 6.2)],                                                                    // Kniescheibe
+  [0.36, [[117, 309.4], [118.6, 316], [120, 318]]], [0.36, [[122.6, 309.4], [121.2, 316], [120, 318]]],  // Kniescheibenband
+  [0.48, [[120, 318], [118.7, 340], [117.5, 364], [116.7, 386]]],                                        // Schienbeinkante
+  [0.3, [[110.6, 328], [112.8, 346], [113.6, 364]]],                                                     // Wadenmuskel, innerer Rand
+  [0.34, [[113, 396.6], [119, 399.6], [125, 399]]],                                                      // Sprunggelenk
+  [0.3, [[127.8, 417.8], [127, 412.6]]], [0.3, [[123.8, 417.8], [123.4, 412]]], [0.3, [[119.4, 417.8], [119.4, 411.6]]], [0.3, [[114.6, 417.6], [115.2, 411.6]]], // Zehen
+].map(([w, c]) => ({ w, pts: catmull(c, 6) }));
+const CREASE_M = [[0.44, [[97.4, 81.6], [100, 83.4], [102.6, 81.6]]], [0.44, [[100, 85], [100, 116]]], [0.44, [[100, 121], [100, 171.6]]], [0.5, ring(100, 173.4, 1.5, 1.2, 10)]]
+  .map(([w, c]) => ({ w, pts: c.length > 2 ? catmull(c, 4) : c }));
+const CREASES = [...CREASE_R, ...CREASE_R.map((c) => ({ w: c.w, pts: mirror(c.pts) })), ...CREASE_M].map((c) => ({ ...measured(c.pts), w: c.w }));
 
 // ---------- Gehirn (Ansicht von vorn): zwei Hälften mit Furchen, darunter Kleinhirn; Hirnstamm gehört zur Hauptbahn ----------
 const HEMI_R = (() => {
@@ -217,17 +247,16 @@ function add(pts, r, o = {}) {
     // Armgeflecht C5–Th1 → drei Armnerven bis in die Finger
     const hub = [130.6, 93.6];
     const roots = [66, 70, 74, 78, 82].map((y, i) => add(P([[101.4, y], [111, y + 4.6 - i * 0.5], [122, 89 + (i - 2) * 0.7], hub]), 0.46, { parent: cord }));
-    const arm = (f, yEnd, entry) => {
+    const arm = (f, entry, tail) => {
       const pts = [hub, entry];
-      for (let y = 113; y < yEnd - 5; y += 12) pts.push([lerp(armIn(y), armOut(y), f), y]);
-      pts.push([lerp(armIn(yEnd), armOut(yEnd), f), yEnd]);
-      return add(P(pts), 0.5, { parent: roots[2] });
+      for (let y = 113; y <= 209; y += 12) pts.push([lerp(y < 123 ? 138.6 : armIn(y), armOut(y), f), y]);
+      return add(P(pts.concat(tail.map((p) => hand(p[0], p[1])))), 0.5, { parent: roots[2] });
     };
-    arm(0.76, 238, [146.6, 103.4]);                    // Speichennerv
-    const med = arm(0.5, 234, [145.2, 105.4]);         // Mittelnerv
-    const uln = arm(0.25, 240, [143.9, 107.6]);        // Ellennerv
-    [[161.2, 255], [159.4, 258.4], [157.6, 257]].forEach((t) => add(P([[lerp(armIn(234), armOut(234), 0.5), 234], [(lerp(armIn(234), armOut(234), 0.5) + t[0]) / 2, 246], t]), 0.3, { parent: med }));
-    add(P([[lerp(armIn(240), armOut(240), 0.25), 240], [155.6, 247], [156.4, 253]]), 0.3, { parent: uln });
+    arm(0.78, [143.6, 101], [[5.2, 0], [8.6, 6], [12.4, 13.4], [15, 19.4]]);                       // Speichennerv → Daumenrücken
+    const med = arm(0.5, [142, 103.4], [[0.6, 0], [1.2, 6], [1.6, 12]]);                             // Mittelnerv → Handteller
+    const uln = arm(0.22, [140.4, 105.6], [[-4.2, 0], [-4.8, 7], [-5, 14]]);                         // Ellennerv
+    [[[6, 15], [11.4, 17], [14.2, 20.6]], [[4.6, 22], [7.4, 31], [8, 38]], [[2.6, 24], [3, 33], [2.9, 40.6]]].forEach((t) => add(P([hand(1.6, 12), ...t.map((p) => hand(p[0], p[1]))]), 0.3, { parent: med }));
+    [[[-2.6, 23], [-2, 31], [-1.9, 38.6]], [[-6, 22], [-6.6, 28], [-6.6, 33]]].forEach((t) => add(P([hand(-5, 14), ...t.map((p) => hand(p[0], p[1]))]), 0.3, { parent: uln }));
     // Zwischenrippennerven Th1–Th12: obere bis zur Flanke, untere im Bogen zum Bauch
     for (let i = 0; i < 12; i++) {
       const y = 86 + i * 7, k = i < 6 ? 1 : 1 - (i - 6) * 0.05;
@@ -250,15 +279,15 @@ function add(pts, r, o = {}) {
     const hip = [110.8, 224.4];
     const leg = [[100, SPLIT], [103, 213], [106.6, 219], hip, [114.6, 233]];
     for (const y of [246, 264, 282, 300, 318, 338, 358, 378]) leg.push([lerp(legIn(y), sideOut(y), 0.47), y]);
-    leg.push([118.6, 394], [119.6, 404], [122.4, 412], [124.4, SOLE]);
+    leg.push([119, 394], [119.4, 404], [120.6, 412], [121.6, SOLE]);
     const sci = add(P(leg), (y) => (y < 290 ? 0.95 : 0.66) * (1 - 0.4 * sstep(392, 419, y)), { main: true, d0: 174, w: 0.8 });
     [4, 5, 6, 7].forEach((i) => add(P([exits[i], [107, (exits[i][1] + hip[1]) / 2 + 1.6], hip]), 0.36, { parent: strands[i] }));
     // Wadenbeinnerv: zweigt über der Kniekehle ab, läuft außen bis zum Fußrücken
     const py = (y, f) => [lerp(legIn(y), sideOut(y), f), y];
-    add(P([py(288, 0.47), py(298, 0.66), py(310, 0.83), py(326, 0.84), py(350, 0.8), py(374, 0.78), py(392, 0.76), [127, 403], [131, 412.6]]), 0.46, { parent: sci });
+    add(P([py(288, 0.47), py(298, 0.66), py(310, 0.83), py(326, 0.84), py(350, 0.8), py(374, 0.78), py(392, 0.76), [126.6, 403], [129.6, 412.6]]), 0.46, { parent: sci });
     // Zehen
-    add(P([[119.6, 404], [117, 411], [116, 416.6]]), 0.28, { parent: sci });
-    add(P([[122.4, 412], [127, 415], [130.6, 417]]), 0.28, { parent: sci });
+    add(P([[119.4, 404], [115, 411], [111.8, 416]]), 0.28, { parent: sci });
+    add(P([[120.6, 412], [125.4, 415], [128.8, 417]]), 0.28, { parent: sci });
   }
 }
 export const NERVE_LIST = NERVES;
@@ -286,7 +315,7 @@ export const STATIONS = [
   { key: 'kopf', name: 'Kopf', c: [100, 37], r: 34, tip: 36, zoom: [3.5, 2.9], spots: [[100, 37, 21, 27]] },
   { key: 'nacken', name: 'Nacken & Schultern', c: [100, 88], r: 46, tip: 88, zoom: [2.25, 2.25], spots: [[100, 74, 13, 15], [124, 88, 21, 13], [76, 88, 21, 13]] },
   { key: 'huefte', name: 'Hüfte', c: [100, 222], r: 44, tip: 226, zoom: [2.05, 2.05], spots: [[100, 214, 24, 14], [122, 226, 17, 18], [78, 226, 17, 18]] },
-  { key: 'fuesse', name: 'Füße', c: [100, 395], r: 40, tip: 404, zoom: [2.25, 2.2], spots: [[123, 408, 16, 12], [77, 408, 16, 12]] },
+  { key: 'fuesse', name: 'Füße', c: [100, 395], r: 40, tip: 404, zoom: [2.25, 2.2], spots: [[120.6, 408, 17, 12], [79.4, 408, 17, 12]] },
 ];
 export function stationHeat(bx, by) {
   let h = 0, st = -1, sp = null;
@@ -301,7 +330,7 @@ export function stationHeat(bx, by) {
 // Art je Punkt (nfo.x): 0 Körper (nfo.y = liegt im Gehirn, nfo.w = Randnähe) · 1 Kontur/Körperlinie (nfo.w = Helligkeit) ·
 // 2 Gehirn (nfo.y = Spitzenhöhe, ab der es leuchtet, nfo.w = Höhe der Windung) · 3 Nerv (nfo.y = Spitzenhöhe, nfo.z = Weg vom Gehirn, nfo.w = Dicke)
 // Lage in Grundriss-Einheiten, Ursprung Körpermitte, y nach oben (wie figurePoints im Baustein).
-export function figurePoints(n, { nBrain = Math.round(n * 0.2), nNerve = Math.round(n * 0.36), nEdge = Math.round(n * 0.1), nCrease = Math.round(n * 0.028) } = {}) {
+export function figurePoints(n, { nBrain = Math.round(n * 0.2), nNerve = Math.round(n * 0.36), nEdge = Math.round(n * 0.11), nCrease = Math.round(n * 0.12) } = {}) {
   const rand = Math.random;
   const T = n + nEdge + nCrease + nBrain + nNerve;
   const pos = new Float32Array(T * 3), st = new Float32Array(T).fill(-1), heat = new Float32Array(T), ctr = new Float32Array(T * 2), rnd = new Float32Array(T * 4), nfo = new Float32Array(T * 4);
@@ -317,6 +346,12 @@ export function figurePoints(n, { nBrain = Math.round(n * 0.2), nNerve = Math.ro
   const ctx = cv.getContext('2d', { willReadFrequently: true });
   ctx.scale(S, S); ctx.fillStyle = '#fff'; ctx.beginPath();
   OUTLINE.forEach((p, k) => (k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath(); ctx.fill();
+  // Tonwert (Rot-Kanal): entlang der Körperlinien weiche Rinnen – dort fallen weniger Punkte, die Muskeln treten als Flächen hervor
+  ctx.globalCompositeOperation = 'source-atop'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const [lw, al] of [[6.4, 0.2], [3.6, 0.26], [1.8, 0.3]]) CREASES.forEach((c) => {
+    ctx.strokeStyle = `rgba(0,0,0,${(al * (0.5 + c.w)).toFixed(3)})`; ctx.lineWidth = lw; ctx.beginPath();
+    c.pts.forEach((p, k) => (k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.stroke();
+  });
   const data = ctx.getImageData(0, 0, W, H).data;
   const mask = new Uint8Array(W * H), runL = new Int16Array(W * H), runR = new Int16Array(W * H);
   for (let k = 0; k < W * H; k++) mask[k] = data[k * 4 + 3] > 128 ? 1 : 0;
@@ -341,6 +376,7 @@ export function figurePoints(n, { nBrain = Math.round(n * 0.2), nNerve = Math.ro
     const e1 = !inside(x - 2, y) || !inside(x + 2, y) || !inside(x, y - 2) || !inside(x, y + 2);
     const e2 = e1 || !inside(x - 5, y) || !inside(x + 5, y) || !inside(x, y - 5) || !inside(x, y + 5);
     if (!e2 && rand() < 0.5) continue; // Rand dichter: die Kontur trägt die Figur
+    if (rand() * 255 > data[(y * W + x) * 4]) continue; // Rinnen dunkler
     const bx = (x + rand()) / S, by = (y + rand()) / S, d = depthAt(x, y); // innerhalb des Bildpunkts gestreut (kein Raster in der Nahansicht)
     const z = (rand() < 0.5 ? -1 : 1) * d * (e1 ? rand() : 0.7 + rand() * 0.3);
     const h = stationHeat(bx, by), k = i;
@@ -362,7 +398,7 @@ export function figurePoints(n, { nBrain = Math.round(n * 0.2), nNerve = Math.ro
     for (let k = 0; k < cnt; k++) {
       const s = rand() * c.total, p = atLen(c, s), e = Math.min(s, c.total - s) / c.total; // zu den Enden hin auslaufend
       const mx = clamp(Math.round(p[0] * S), 0, W - 1), my = clamp(Math.round(p[1] * S), 0, H - 1);
-      put(p[0] + (rand() - 0.5) * 0.5, p[1] + (rand() - 0.5) * 0.5, inside(mx, my) ? depthAt(mx, my) * 0.92 : 0, 1, 0, 0, 0.34 + 0.3 * sstep(0, 0.22, e));
+      put(p[0] + (rand() - 0.5) * 0.36, p[1] + (rand() - 0.5) * 0.36, inside(mx, my) ? depthAt(mx, my) * 0.92 : 0, 1, 0, 0, c.w * (0.55 + 0.45 * sstep(0, 0.16, e)));
     }
   });
   // Gehirn: Windungen gefüllt, Furchen frei; leuchtet vom Scheitel aus auf
@@ -391,7 +427,7 @@ export function figurePoints(n, { nBrain = Math.round(n * 0.2), nNerve = Math.ro
     const X = left ? 2 * CX - x : x, dz = dome(X, y);
     put(X, y, (rand() * 2 - 1) * dz, 2, ryB(X, y), 0, 0.35 + 0.65 * sstep(0.3, 1.0, d)); k++;
   }
-  while (i < n + nEdge + nCrease + nBrain) put(CX, 28, 0, 2, 20, 0, 0);
+  while (i < n + nEdge + nCrease + nBrain) put(CX, 28, 0, 2, 20, 0, -0.6); // Rest unsichtbar
   // Nerven: Punkte entlang der Bahnen, Dichte nach Dicke
   const weight = (N) => { let s = 0; for (let k = 1; k < N.pts.length; k++) { const y = (N.pts[k][1] + N.pts[k - 1][1]) / 2, r = typeof N.r === 'number' ? N.r : N.r(y); s += (N.len[k] - N.len[k - 1]) * (0.28 + r * r * 0.9 + r * 0.5); } return s; };
   const ws = NERVES.map(weight), wt = ws.reduce((a, b) => a + b, 0);
