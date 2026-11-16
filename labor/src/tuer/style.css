@@ -118,8 +118,8 @@ html.paused #t-title em{animation:none}
    door-now: sofort da. „backwards“: nach dem Einblenden gelten wieder die normalen Regeln (Hover hebt den Knopf). */
 .dw-cv,.dw-glow,.dw-spill,.dw-gap,.c-stage,.c-glow{display:none}
 html.door-wait .doorway .btn,html.door-wait .doorway .small{opacity:0;pointer-events:none}
-html.door-open .doorway .btn,html.door-open .doorway .small{animation:btnIn .7s var(--ease) backwards;animation-delay:calc(var(--d,0s) + var(--i) * .11s)}
-@keyframes btnIn{0%{opacity:0;transform:translateY(.75rem)}100%{opacity:1;transform:none}}
+html.door-open .doorway .btn,html.door-open .doorway .small{animation:btnIn var(--dur,.7s) var(--ease) backwards;animation-delay:calc(var(--d,0s) + var(--i) * var(--stp,.11s))}
+@keyframes btnIn{0%{opacity:0;transform:translateY(var(--rise,.75rem))}100%{opacity:1;transform:none}}
 
 /* ---------- Variante A · Tür im Text ---------- */
 html[data-v="a"] .doorway{--d:.35s;position:relative;isolation:isolate;width:min(100%,17rem);margin:.75rem 0 3.25rem .5rem;padding:3rem 1.125rem 1.625rem;border:1px solid rgba(224,154,53,.66);border-bottom:0}
@@ -141,6 +141,8 @@ html[data-v="a"] .doorway .btn{width:100%;min-height:3.5rem;padding:.5rem .625re
 html[data-v="a"] .doorway .small{margin-top:1.375rem;font-size:.8125rem;line-height:1.5;color:var(--dim)}
 
 /* ---------- Variante C · ein Schritt hindurch ---------- */
+/* 16.11. (Kai: entspannt, Ruhe): Knöpfe kommen langsam und mit wenig Weg, einer nach dem anderen */
+html[data-v="c"] .doorway{--dur:1.8s;--stp:.42s;--rise:.375rem}
 html[data-v="c"] .c-stage{display:block;position:fixed;z-index:0;left:0;top:0;width:100%;height:100vh;height:100lvh;pointer-events:none}
 html[data-v="c"] .c-glow{display:block;position:fixed;z-index:0;left:0;top:0;width:100%;height:100vh;height:100lvh;opacity:0;pointer-events:none;background:radial-gradient(70% 46% at 50% 66%,rgba(224,154,53,.15),rgba(224,154,53,.05) 55%,rgba(224,154,53,0) 78%)}
 

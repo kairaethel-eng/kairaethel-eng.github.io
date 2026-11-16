@@ -1,12 +1,14 @@
 // Entwurf „Tür“ · Variante C-kurz „Ein Schritt hindurch“ (16.11.2026): bildschirmgroße Tür hinter dem Text, feste Bühne.
-// 1) Entstehen (hängt am Scrollen, keine Extra-Strecke): Staub sammelt sich zur Dachlinie, die Dachlinie klappt zum Türrahmen
-//    herunter, das Blatt verdichtet sich. 2) Schritt (hängt an der Zeit, läuft einmal): Blatt schwingt nach innen auf, die Kamera
+// 1) Entstehen (hängt am Scrollen, knapp eine Bildschirmhöhe, keine Extra-Strecke): Staub sammelt sich zur Dachlinie, die Dachlinie klappt zum Türrahmen
+//    herunter, das Blatt verdichtet sich. 2) Schritt (hängt an der Zeit, läuft einmal, ruhig: 6,4 s): Blatt schwingt nach innen auf, die Kamera
 //    geht hindurch, der Rahmen wandert über den Bildrand. 3) Drinnen: warmer Boden-Schein und Lichtpunkte, gedämpft.
 // Welt in Metern: Türöffnung 1 × 2,05, Boden y = 0, Türebene z = 0, z > 0 = drinnen. Eigene Zentralprojektion auf Canvas 2D.
-import { TAU, OPEN, clamp01, smooth, easeOut, easeInOut, rng, leafPoints, LEAF_N, makeBatch } from './door.js';
+import { TAU, OPEN, clamp01, smooth, easeInOut, easeSine, easeCalm, rng, leafPoints, LEAF_N, makeBatch } from './door.js';
 
 const DW = 1, DH = 2.05, D0 = 4.2, ZEND = 1.4, EYE = 1.08;
-const T_SWING = 0.95, T_WALK0 = 0.25, T_WALK = 1.4, T_GATE = 0.9, T_DONE = 1.75;
+// Zeiten in Sekunden seit dem Öffnen. 16.11. (Kai: „deutlich langsamere Animation, entspannt, Ruhe“): Schritt 1,75 s → 6,4 s,
+// Blatt schwingt 2,8 s auf, die Kamera geht 5 s (der Rahmen verlässt das Bild nach rund 3,4 s); kein Schnellvorlauf mehr. Knöpfe ab T_GATE (Tür gut halb offen).
+const T_SWING = 2.8, T_WALK0 = 1.4, T_WALK = 5.0, T_GATE = 1.8, T_DONE = 6.4, T_SETTLE = 3.6;
 const FR_N = 9; // Rahmenpunkt: Dach x, y · Tür x, y · Versatz q · Helligkeit · Größe · 2 Zufallswerte
 
 export function initC({ cv, glow, isStill }) {
@@ -14,7 +16,7 @@ export function initC({ cv, glow, isStill }) {
   let VW = 0, CH = 0, dpr = 1, F = 1, px = 1, cx = 0, cy = 0;
   let frame = null, leaf = null, floor = null, motes = null, sill = null;
   let state = 'form'; // form | step | done
-  let f = 0, T = 0, rate = 1, clock = 0, skip = false, dirty = true, lastG = -1, lastTop = 0, lastBot = 0, held = false;
+  let f = 0, T = 0, clock = 0, skip = false, dirty = true, lastG = -1, lastTop = 0, lastBot = 0, held = false;
 
   function build() {
     const w = cv.clientWidth, h = cv.clientHeight;
@@ -46,7 +48,7 @@ export function initC({ cv, glow, isStill }) {
     for (let i = 0; i < nOut; i++) { const z = -2.4 * Math.pow(R(), 1.3), xl = 0.48 - 0.3 * z; Q.push((R() * 2 - 1) * xl, z, Math.pow(1 + z / 2.4, 1.5) * 0.8 * (0.4 + 0.6 * R()), 0.9 + R() * 0.4); }
     floor = new Float32Array(Q);
     const M = [];
-    for (let i = 0; i < 230; i++) M.push((R() * 2 - 1) * 2.6, 0.15 + R() * 2.4, 0.4 + R() * 8.2, R() * TAU, 0.5 + R(), 0.8 + R() * 0.9);
+    for (let i = 0; i < 230; i++) M.push((R() * 2 - 1) * 2.6, 0.15 + R() * 2.4, 0.4 + R() * 8.2, R() * TAU, 0.3 + R() * 0.55, 0.8 + R() * 0.9);
     motes = new Float32Array(M);
     const S = [];
     for (let i = 0; i < 110; i++) S.push(-0.49 + 0.98 * R(), (R() - 0.5) * 0.03, 0.7 + 0.3 * R());
@@ -63,16 +65,16 @@ export function initC({ cv, glow, isStill }) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, VW, CH);
     ctx.globalCompositeOperation = 'lighter';
-    const k = state === 'form' ? 0 : state === 'done' ? 1 : easeOut(T / T_SWING); // Tür offen 0 … 1
-    const walk = state === 'form' ? 0 : state === 'done' ? 1 : easeInOut((T - T_WALK0) / T_WALK);
+    const k = state === 'form' ? 0 : state === 'done' ? 1 : easeCalm(T / T_SWING); // Tür offen 0 … 1
+    const walk = state === 'form' ? 0 : state === 'done' ? 1 : easeSine((T - T_WALK0) / T_WALK);
     const zc = -D0 + (D0 + ZEND) * walk;
     // nach dem Schritt gedämpft; verschwindet, wenn das Kapitel wieder nach unten aus dem Bild geht oder die Knöpfe oben hinaus sind
-    const amb = 1 - 0.42 * smooth(T_DONE - 0.1, T_DONE + 1.5, T);
+    const amb = 1 - 0.42 * smooth(T_DONE - 0.4, T_DONE + T_SETTLE, T);
     const G = state === 'form' ? 1 : amb * (0.3 + 0.7 * smooth(-0.1 * vh, 0.3 * vh, actBottom)) * smooth(vh * 1.3, vh * 0.95, titleTop) * smooth(-1.2 * vh, -0.5 * vh, actBottom);
     lastG = G; lastTop = titleTop; lastBot = actBottom;
     const ang = OPEN * k, ca = Math.cos(ang), sa = Math.sin(ang);
     let PX = 0, PY = 0, PS = 1; // Ergebnis der Projektion (Bildpunkt, Größenfaktor); Rückgabe = Ausblenden kurz vor der Kamera
-    const proj = (x, y, z) => { const dp = z - zc; if (dp < 0.12) return 0; const p = F / dp; PX = cx + x * p; PY = cy - (y - EYE) * p; PS = Math.min(2.8, Math.max(0.55, p / px)); return smooth(0.12, 0.85, dp); };
+    const proj = (x, y, z) => { const dp = z - zc; if (dp < 0.12) return 0; const p = F / dp; PX = cx + x * p; PY = cy - (y - EYE) * p; PS = Math.min(1.7, Math.max(0.55, p / px)); return smooth(0.2, 1.7, dp); }; // löst sich früh und weich auf, statt an der Kamera vorbeizuschießen
     if (zc < 0.2) {
       // Rahmen: sammeln (f 0 … .35), herunterklappen (f .35 … 1)
       const gth = smooth(0, 0.38, f), mor = clamp01((f - 0.35) / 0.65);
@@ -95,7 +97,7 @@ export function initC({ cv, glow, isStill }) {
         }
       }
       // Lichtspalt unter der geschlossenen Tür
-      const sl = smooth(0.75, 1, f) * (1 - k) * G * (0.75 + 0.25 * Math.sin(clock * 1.7));
+      const sl = smooth(0.75, 1, f) * (1 - k) * G * (0.75 + 0.25 * Math.sin(clock * 1.05));
       if (sl > 0.01) for (let i = 0; i < sill.length; i += 3) { const nf = proj(sill[i], 0.004, sill[i + 1]); if (nf) batch.put(PX, PY, 1.05 * PS, sill[i + 2] * sl * nf, 2); }
     }
     if (k > 0.01) {
@@ -108,7 +110,7 @@ export function initC({ cv, glow, isStill }) {
       const km = smooth(0.2, 1, k) * G;
       for (let i = 0; i < motes.length; i += 6) {
         const ph = motes[i + 3], z = motes[i + 2];
-        const nf = proj(motes[i] + 0.06 * Math.sin(clock * 0.31 + ph), motes[i + 1] + 0.05 * Math.cos(clock * 0.23 + ph * 2), z);
+        const nf = proj(motes[i] + 0.06 * Math.sin(clock * 0.21 + ph), motes[i + 1] + 0.05 * Math.cos(clock * 0.16 + ph * 2), z);
         if (nf) batch.put(PX, PY, motes[i + 5] * PS * 0.8, km * nf * (1 - z / 9.5) * (0.16 + 0.42 * (0.5 + 0.5 * Math.sin(clock * motes[i + 4] + ph))), 2);
       }
     }
@@ -122,24 +124,24 @@ export function initC({ cv, glow, isStill }) {
     get T() { return T; },
     // Knöpfe dürfen erscheinen (die Tür ist auf, die Kamera auf der Schwelle)
     gate() { return state === 'done' || (state === 'step' && T >= T_GATE); },
-    reset() { state = 'form'; f = 0; T = 0; rate = 1; dirty = true; },
-    finish() { state = 'done'; f = 1; T = T_DONE + 2; dirty = true; }, // Endzustand ohne Bewegung
+    reset() { state = 'form'; f = 0; T = 0; dirty = true; },
+    finish() { state = 'done'; f = 1; T = T_DONE + T_SETTLE + 1; dirty = true; }, // Endzustand ohne Bewegung
     // titleTop/actTop/actBottom: Lage von Überschrift und Knöpfen im Fenster (px)
     tick(dt, titleTop, actTop, actBottom) {
       if (!build()) return;
       const vh = window.innerHeight, still = isStill();
       if (!still) clock += dt;
       if (state === 'form') {
-        const want = smooth(vh * 1.15, vh * 0.66, titleTop), f0 = f;
-        f += (want - f) * (1 - Math.exp(-dt * 7));
+        // Entstehen über knapp eine Bildschirmhöhe Scrollweg (Richtwert der Seite seit 16.11.), weich nachgeführt
+        const want = smooth(vh * 1.5, vh * 0.62, titleTop), f0 = f;
+        f += (want - f) * (1 - Math.exp(-dt * 3.5));
         if (Math.abs(want - f) < 0.002) f = want;
-        if (f > 0.985 && want >= 1) { state = 'step'; f = 1; T = 0; rate = 1; }
+        if (f > 0.985 && want >= 1) { state = 'step'; f = 1; T = 0; }
         if (f !== f0 || dirty || (f > 0.75 && !still)) draw(titleTop, actBottom, vh); // ab f > .75 pulsiert der Lichtspalt
       } else if (held) {
         draw(titleTop, actBottom, vh);
       } else if (state === 'step') {
-        if (actTop < vh * 0.7 && T < T_GATE) rate = 3; // wer weiterscrollt, wartet nicht
-        T += dt * rate;
+        T += dt; // ein Tempo, kein Schnellvorlauf – wer weiterscrollt, bekommt die Knöpfe ab T_GATE trotzdem
         if (T >= T_DONE) state = 'done';
         draw(titleTop, actBottom, vh);
       } else {
@@ -147,7 +149,7 @@ export function initC({ cv, glow, isStill }) {
         const vis = titleTop < vh * 1.3 && actBottom > -vh * 1.2;
         if (!vis) { if (lastG > 0) draw(titleTop, actBottom, vh); return; } // einmal leeren, dann ruht die Bühne
         if (still) { if (dirty || titleTop !== lastTop || actBottom !== lastBot) draw(titleTop, actBottom, vh); return; }
-        skip = !skip; if (!skip || T < T_DONE + 1.6) draw(titleTop, actBottom, vh); // Ruhezustand: jedes zweite Bild
+        skip = !skip; if (!skip || T < T_DONE + T_SETTLE + 0.2) draw(titleTop, actBottom, vh); // Ruhezustand: jedes zweite Bild
       }
     },
     redraw() { dirty = true; },
