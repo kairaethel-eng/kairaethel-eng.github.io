@@ -10,10 +10,11 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **„Bewegung anhalten/reduzieren“:** keine Kamerafahrt (Figur bleibt ganz, nur die Linie wächst mit dem Scrollen), Texte ohne Blenden. **Ohne WebGL:** Körper als Punktraster-Umriss (SVG), Spannung als Leuchten, Linie/Texte/Lösen wie sonst.
 - **Technik [A]:** eigene schlanke WebGL-2-Bühne (`gl.js`, Shader aus Puls übernommen) statt three.js – Seite 171 KB, Skript 23 KB. Körper-Punktwolke als **Kopie** aus `shapes.js` (Import hätte three.js mitgezogen).
 
-## Tür: Knöpfe erst mit offener Partikel-Tür (Idee Kai 16.11.2026, Go für eine Entwurfsseite) – **Wahl offen**
+## Tür: Knöpfe erst mit offener Partikel-Tür (Idee Kai 16.11.2026, Go für eine Entwurfsseite) – **Tendenz C, Einbau in Puls offen**
+- **Kai 16.11.: „C finde ich toll, aber bitte deutlich langsamere Animation, es soll entspannt auf der Seite sein. Und Ruhe ausstrahlen.“** → C beruhigt: Schritt 6,4 s statt 1,75 s, weiche Kurven, kein Schnellvorlauf, Knöpfe langsam nacheinander. Merkregel für neue Bewegungen auf der Seite: ruhig vor schnell.
 - Entwurfsseite `tuer.html` mit zwei Varianten, Puls unverändert: **A „Tür im Text“** (Tür an der Stelle der Knöpfe, Blatt aus Partikeln schwingt auf und zerfällt, Linien-Rahmen bleibt) und **C-kurz „Ein Schritt hindurch“** (Dachlinie wird Türrahmen, Kamera geht hindurch; hängt an der Zeit, keine Extra-Strecke).
 - Verworfen: B als eigene Variante (reine Linien-Tür; ihr Rahmen steckt in A), C mit eigener Scroll-Strecke (zu viel Weg vor dem Termin-Knopf).
-- Feste Regeln für beide: höchstens ~1,5 s bis zum Termin-Knopf, läuft einmal, Seite bleibt dunkel (kein „Licht ja“), Knöpfe immer per Tastatur erreichbar, „anhalten/reduzieren“/ohne JS = sofort offen.
+- Feste Regeln für beide: läuft einmal, Knöpfe spätestens ~1,8 s nach dem Öffnen sichtbar, wenn sie im Bild sind (die erste Regel „höchstens ~1,5 s bis zum Termin-Knopf“ ist mit Kais Wunsch nach Ruhe gelockert; „Termin“ in der Kopfleiste bleibt immer erreichbar), Seite bleibt dunkel (kein „Licht ja“), Knöpfe immer per Tastatur erreichbar, „anhalten/reduzieren“/ohne JS = sofort offen.
 - Vorschlag in der Entwurfsseite: nur drei Knöpfe, „E-Mail-Adresse kopieren“ bei der Adresse.
 
 ## Vier Punkte (Go Kai 15.11.2026: „Go für alle Empfehlungen … wenn entspannt automatisch weiter runter, nicht mit Button“) – umgesetzt, wartet auf Sichtprüfung

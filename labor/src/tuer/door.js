@@ -7,6 +7,9 @@ export const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 export const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 export const easeOut = (x) => 1 - Math.pow(1 - clamp01(x), 3.4); // nahe an cubic-bezier(.2,.9,.25,1) der Überschrift „offen.“
 export const easeInOut = (x) => { x = clamp01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+// ruhige Kurven (16.11., Kai: „deutlich langsamer, entspannt“): weich anfahren, weich ankommen, kein Ruck in der Mitte
+export const easeSine = (x) => 0.5 - 0.5 * Math.cos(Math.PI * clamp01(x));
+export const easeCalm = (x) => 1 - Math.pow(1 - easeSine(x), 1.5); // wie easeSine, kommt etwas früher an und läuft lang aus
 export const OPEN = (84 * Math.PI) / 180; // Öffnungswinkel wie „offen.“ (rotateY −84°)
 
 // Zufall mit festem Startwert: jede Ladung zeigt dieselbe Tür
