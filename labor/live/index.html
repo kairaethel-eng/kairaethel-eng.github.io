@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="hop-build" content="69a58e2140">
+<meta name="hop-build" content="53fa72129c">
 <title>Physiotherapie in Schorndorf · HOP – Home of Physiotherapy, Kai Raethel</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="Physiotherapie mit Kompetenz und Herz in Schorndorf: Manuelle Therapie, Krankengymnastik, CMD, Stoßwelle und die Manuthera-Liege. Kai Raethel, Schlichtener Straße 87, nahe der Klinik.">
@@ -1273,12 +1273,16 @@ html.vf-focus body > :not(dialog):not(#gl):not(script):not(style){opacity:0!impo
 .vf-open{appearance:none;position:relative;display:inline-flex;align-items:center;gap:.625rem;min-height:3rem;margin-top:.875rem;padding:.375rem 1.125rem .375rem .375rem;border-radius:1.5rem;border:0;background:var(--amber);color:#14110A;font:700 .8125rem/1.2 var(--sans);letter-spacing:.03em;cursor:pointer;box-shadow:0 .375rem 1.5rem rgba(224,154,53,.22);transition:background .2s,transform .3s var(--ease)}
 .vf-open::before{content:"";position:absolute;inset:0;border-radius:inherit;border:2px solid var(--amber);pointer-events:none;animation:vfPing 2.6s cubic-bezier(.2,.6,.3,1) infinite}
 @keyframes vfPing{0%{transform:scale(1);opacity:.75}70%,100%{transform:scale(1.08,1.4);opacity:0}}
+
+.vf-open{animation:vfBeat 2.6s ease-in-out infinite}
+@keyframes vfBeat{0%,100%{transform:scale(1);filter:brightness(1);box-shadow:0 .375rem 1.5rem rgba(224,154,53,.22)}35%{transform:scale(1.06);filter:brightness(1.12);box-shadow:0 .5rem 2.5rem rgba(224,154,53,.55)}}
+.vf-open:hover,.vf-open:focus-visible{animation:none}
 .vf-open:hover{background:#F0AE4E;transform:translateY(-1px)}
 .vf-open:focus-visible{outline:2px solid var(--txt);outline-offset:3px}
 .vf-open svg{flex:none;width:2.25rem;height:2.25rem;padding:.6875rem .5625rem .6875rem .75rem;border-radius:50%;background:#14110A;fill:var(--amber)}
 .vf-open small{font:italic 400 .9375rem/1 var(--serif);letter-spacing:0;color:rgba(20,17,10,.72)}
-html.paused .vf-open::before{animation:none;opacity:0}
-@media (prefers-reduced-motion:reduce){.vf-open::before{animation:none;opacity:0}}
+html.paused .vf-open,html.paused .vf-open::before{animation:none}html.paused .vf-open::before{opacity:0}
+@media (prefers-reduced-motion:reduce){.vf-open,.vf-open::before{animation:none}.vf-open::before{opacity:0}}
 .seg-card .vf-open{flex-basis:auto}
 .scan-chips.is-on .vf-open{pointer-events:auto}
 .scan-chips .vf-open{display:inline-grid;grid-template-columns:auto auto;align-items:center;column-gap:.625rem;row-gap:.1875rem;margin-top:.625rem;min-height:2.75rem;font-size:.75rem;padding-right:1rem;text-align:left}
