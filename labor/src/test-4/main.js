@@ -1847,7 +1847,8 @@ function targetMorph() {
     // Übergang, während das Kapitel von unten hereinkommt
     let t = smooth(vh * 0.95, vh * 0.05, r.top); // Formwechsel über eine längere Strecke
     // Handy: die Figur löst sich schon beim ersten Scrollen an Ort und Stelle in Bewegungslinien auf
-    if (!isDesktop() && prev === 0 && s === 1) t = smooth(vh * 0.03, vh * 0.4, scrollY);
+    // 16.11. (Kai, iPhone: „viel zu schnell“): über eine ganze Bildschirmhöhe statt 0,4 – fertig, bevor der Text von Kap. 02 die Mitte erreicht
+    if (!isDesktop() && prev === 0 && s === 1) t = smooth(vh * 0.05, vh * 1.0, scrollY);
     // Handy: Wirbelsäule → Haus kürzer, damit das Haus fertig in der Bildmitte steht, bevor der Text von Kapitel 04 kommt
     if (!isDesktop() && prev === 2 && s === 3) t = smooth(vh * 0.95, vh * 0.3, r.top);
     // Handy: Bewegungslinien → Wirbelsäule früher fertig, damit der Scan schon mit der Überschrift entsteht;
