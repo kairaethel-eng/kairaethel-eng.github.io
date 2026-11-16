@@ -1662,7 +1662,7 @@ function updateAxis(dt) {
       bigK: smooth(vh * 1.75, vh * 1.35, c0), // Überschrift geht: ganze Wirbelsäule groß und mittig (bleibt groß)
       wIn: smooth(vh * 1.15, vh * 0.98, c0),  // Kamerafahrt zum ersten Abschnitt (Karte noch unsichtbar)
       endK: smooth(vh * 0.45, vh * 0.2, nt),  // nach letzter Karte + Hinweis: zurück zur ganzen Wirbelsäule
-      outK: smooth(vh * 1.05, vh * 0.6, dachSec.getBoundingClientRect().top), // auflösen (nach oben)
+      outK: smooth(vh * 1.45, vh * 0.6, dachSec.getBoundingClientRect().top), // auflösen (nach oben; 16.11. länger)
     };
     // ganze Wirbelsäule (Kopf bis Kreuzbein) groß und mittig im sichtbaren Bereich unter der Punkte-Leiste
     // (Bruchteile der Szenenhöhe GLH; Abschnitts-Posen rechnen relativ dazu, die Nahansichten bleiben gleich)
@@ -1850,10 +1850,10 @@ function targetMorph() {
     // 16.11. (Kai, iPhone: „viel zu schnell“): über eine ganze Bildschirmhöhe statt 0,4 – fertig, bevor der Text von Kap. 02 die Mitte erreicht
     if (!isDesktop() && prev === 0 && s === 1) t = smooth(vh * 0.05, vh * 1.0, scrollY);
     // Handy: Wirbelsäule → Haus kürzer, damit das Haus fertig in der Bildmitte steht, bevor der Text von Kapitel 04 kommt
-    if (!isDesktop() && prev === 2 && s === 3) t = smooth(vh * 0.95, vh * 0.3, r.top);
+    if (!isDesktop() && prev === 2 && s === 3) t = smooth(vh * 1.15, vh * 0.25, r.top); // 16.11. (Kai: Tempo wie beim Start): 0,9 statt 0,65 Bildschirmhöhen
     // Handy: Bewegungslinien → Wirbelsäule früher fertig, damit der Scan schon mit der Überschrift entsteht;
     // seit 14.11. nachts etwas später begonnen, damit die Wirbelsäule nicht über dem letzten Paragraphen der Hausordnung entsteht
-    if (!isDesktop() && prev === 1 && s === 2) t = smooth(vh * 0.78, vh * 0.3, r.top);
+    if (!isDesktop() && prev === 1 && s === 2) t = smooth(vh * 1.1, vh * 0.25, r.top); // 16.11.: 0,85 statt 0,48 (Beginn liegt unter den HOP-Kreisen)
     if (t > 0) m = prev + (s - prev) * t;
   }
   return m;
@@ -1864,8 +1864,9 @@ function targetMorph() {
 let logoNow = 0;
 function targetLogo() {
   const vh = VH, sy = scrollY, d = isDesktop();
-  const kIn = d ? smooth(vh * 0.9, vh * 0.2, logoGeo.rules - sy) : smooth(vh * 1.25, vh * 0.55, logoGeo.list - sy);
-  const kOut = d ? smooth(vh * 0.9, vh * 0.25, logoGeo.axis - sy) : smooth(vh * 0.85, vh * 0.4, logoGeo.axis - sy);
+  // 16.11. (Kai: „überall diese Geschwindigkeit“): Kreise kommen/gehen über ~0,9 Bildschirmhöhen (vorher 0,45–0,7)
+  const kIn = d ? smooth(vh * 1.0, vh * 0.1, logoGeo.rules - sy) : smooth(vh * 1.5, vh * 0.55, logoGeo.list - sy);
+  const kOut = d ? smooth(vh * 1.0, vh * 0.1, logoGeo.axis - sy) : smooth(vh * 1.2, vh * 0.35, logoGeo.axis - sy);
   return kIn * (1 - kOut);
 }
 // Handy: Logo steht mittig im freien Raum zwischen dem Text von Kapitel 02 (bzw. Leiste) und „§ Die Hausordnung“ und steigt mit dem Text auf
@@ -2091,7 +2092,7 @@ function tick() {
   // Partikel abdunkeln, sobald Text darüber liegt (Kontakt immer; mobil auch hinter den Bewegungslinien)
   const vh = VH;
   const doorTop = door.getBoundingClientRect().top;
-  let dim = isDesktop() ? smooth(vh * 0.75, vh * 0.25, doorTop) : smooth(vh * 1.3, vh * 0.8, doorTop);
+  let dim = isDesktop() ? smooth(vh * 0.95, vh * 0.1, doorTop) : smooth(vh * 1.6, vh * 0.7, doorTop); // 16.11.: Ausblenden zur Tür langsamer
   const dimMax = 1; // Kontakt: Partikel blenden ganz aus (Handy und PC)
   if (!isDesktop()) {
     if (morphNow > 0.3 && morphNow < 1.6) dim = Math.max(dim, 0.55 * (1 - logoNow)); // Bewegungslinien leise hinter Text, die HOP-Kreise zur Hausordnung in voller Helligkeit
