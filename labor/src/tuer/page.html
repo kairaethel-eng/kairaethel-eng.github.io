@@ -1,0 +1,79 @@
+<title>HOP Tür · zwei Entwürfe</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Labor, Entwurf zu Kapitel 05: Die Knöpfe für Termin und Kontakt erscheinen erst, wenn sich eine Tür aus Partikeln öffnet. Zwei Varianten zum Vergleich.">
+<script>document.documentElement.classList.add('js','door-wait');addEventListener('load',function(){if(!window.__tuer)document.documentElement.classList.remove('js','door-wait')})</script>
+<style>/*FONTS*//*CSS*/</style>
+<!--BODY-->
+<a class="skip" href="#tuer">Zu Kapitel 05</a>
+<div class="grain" aria-hidden="true"></div>
+<div class="c-glow" id="cGlow" aria-hidden="true"></div>
+<canvas class="c-stage" id="cStage" aria-hidden="true"></canvas>
+
+<nav class="top" aria-label="Entwurf">
+  <a class="brand" href="./" aria-label="HOP Labor, alle Testseiten">
+    <svg viewBox="0 0 560 240" aria-hidden="true"><circle cx="110" cy="120" r="66" fill="#7FAF45"/><circle cx="300" cy="120" r="66" fill="#3C7189"/><circle cx="490" cy="120" r="66" fill="#3F86B5"/><g font-family="Archivo Expanded,Archivo,Arial,sans-serif" font-weight="800" font-size="60" fill="#fff" text-anchor="middle"><text x="110" y="142">H</text><text x="300" y="142">O</text><text x="490" y="142">P</text></g></svg>
+  </a>
+  <div class="vsw" role="group" aria-label="Variante wählen">
+    <button type="button" data-v="a" aria-pressed="true"><b>A</b><span>Tür im Text</span></button>
+    <button type="button" data-v="c" aria-pressed="false"><b>C</b><span>Hindurch</span></button>
+  </div>
+  <button type="button" class="motion-btn" id="motionBtn" aria-pressed="false" aria-label="Bewegung anhalten" title="Bewegung anhalten"><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bewegung</span></button>
+</nav>
+
+<main>
+  <section class="vor" aria-labelledby="v-title">
+    <div class="wrap">
+      <p class="kicker"><i>05</i> Tür · Entwurf</p>
+      <h1 id="v-title">Zwei Türen <em>zur Wahl.</em></h1>
+      <p class="lead">Die Knöpfe für Termin und Kontakt erscheinen erst, wenn die Tür aufgeht. Oben zwischen A und C wechseln, dann nach unten scrollen.</p>
+      <ul class="v-list">
+        <li><b>A</b><span><strong>Tür im Text.</strong> Die Tür steht dort, wo die Knöpfe sind. Sie schwingt einmal auf, das Blatt wird zu Staub, der Rahmen bleibt.</span></li>
+        <li><b>C</b><span><strong>Ein Schritt hindurch.</strong> Aus der Dachlinie wird ein Türrahmen. Die Tür geht auf, Sie gehen hindurch, drinnen stehen die Knöpfe.</span></li>
+      </ul>
+      <p class="small">„Noch einmal“ unten rechts spielt den Einstieg erneut. Mit „Bewegung anhalten“ steht die Tür sofort offen.</p>
+    </div>
+    <p class="v-end wrap" aria-hidden="true"><span>Platzhalter · hier endet Kapitel 04</span><svg viewBox="0 0 24 24"><path d="M12 4v15M6 13l6 6 6-6"/></svg></p>
+  </section>
+
+  <section class="chapter door" id="tuer" aria-labelledby="t-title" tabindex="-1">
+    <div class="wrap door-inner">
+      <div>
+        <p class="kicker"><i>05</i> Tür</p>
+        <h2 id="t-title">Die Tür steht<br><em>offen.</em></h2>
+        <p class="lead">Buchen Sie Ihren Termin direkt online. Oder schreiben Sie mir eine E-Mail bzw. sprechen Sie auf den Anrufbeantworter, dann melde ich mich mit einem Terminvorschlag.</p>
+        <div class="doorway" id="doorway">
+          <canvas class="dw-cv" aria-hidden="true"></canvas>
+          <span class="dw-glow" aria-hidden="true"></span>
+          <span class="dw-spill" aria-hidden="true"></span>
+          <span class="dw-gap" aria-hidden="true"></span>
+          <div class="actions">
+            <a class="btn" style="--i:0" href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener">Online-Termin buchen</a>
+            <a class="btn btn-ghost" style="--i:1" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage&amp;body=Guten%20Tag%20Herr%20Raethel%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20einen%20Termin%20anfragen.%0D%0A%0D%0AName%3A%0D%0AR%C3%BCckrufnummer%3A%0D%0AWunschzeiten%3A%0D%0A%C3%84rztliche%20Verordnung%20vorhanden%20%28ja%2Fnein%29%3A%0D%0A%0D%0AMeine%20Beschwerde%20schildere%20ich%20Ihnen%20bitte%20erst%20im%20Gespr%C3%A4ch%2C%20nicht%20per%20E-Mail.%0D%0A%0D%0AVielen%20Dank">Per E-Mail anfragen</a>
+            <a class="btn btn-ghost" style="--i:2" href="tel:+4971819931470">07181 9931470</a>
+          </div>
+          <p class="small" style="--i:3">Bitte keine ausführlichen Gesundheitsangaben per E-Mail oder auf dem Anrufbeantworter. Die besprechen wir persönlich.</p>
+        </div>
+      </div>
+      <dl class="facts">
+        <div><dt>E-Mail</dt><dd><a id="mailAddr" href="mailto:kontakt@hopphysio.de">kontakt@hopphysio.de</a><button type="button" class="vc-btn" id="copyMail" hidden>Adresse kopieren</button><span class="copy-state" id="copyState" role="status"></span></dd></div>
+        <div><dt>Telefon</dt><dd><a href="tel:+4971819931470">07181 9931470</a><span class="dd-note">Nur Anrufbeantworter. Ich rufe Sie zurück, schneller geht es per E-Mail.</span><a class="vc" href="assets/hop-physiotherapie.vcf" download>Praxis im Telefon speichern</a></dd></div>
+        <div><dt>Adresse</dt><dd><a href="https://www.google.com/maps/search/?api=1&amp;query=Schlichtener%20Stra%C3%9Fe%2087%2C%2073614%20Schorndorf" target="_blank" rel="noopener">Schlichtener Straße 87, 73614 Schorndorf</a><span class="dd-note">In Google Maps öffnen</span></dd></div>
+        <div><dt>Zeiten</dt><dd>Mo–Fr 8:30–19:30 Uhr<br>Sa nach Absprache<br>So und feiertags geschlossen<span class="dd-note">Termine nach Vereinbarung</span></dd></div>
+        <div><dt>Abrechnung</dt><dd>Kassenpatienten, Privatpatienten und Selbstzahler<span class="dd-note">Ihre ärztliche Verordnung (falls vorhanden) bitte zum ersten Termin mitbringen.</span></dd></div>
+        <div><dt>Parken</dt><dd>Direkt vor dem Haus und in der Nähe</dd></div>
+        <div><dt>ÖPNV</dt><dd>VVS-Bus „Schlichtener Straße“ / „Grauhalde“</dd></div>
+        <div><dt>Inhaber</dt><dd>Kai Raethel · Manuelle Therapie · CMD</dd></div>
+      </dl>
+    </div>
+    <footer class="foot wrap">
+      <span>© 2026 HOP – Home of Physiotherapy · Kai Raethel</span>
+      <span><a href="recht-impressum.html">Impressum</a> · <a href="recht-datenschutz.html">Datenschutz</a></span>
+      <span class="lab">Entwurf · Tür</span>
+      <span class="credit">Entwurfsseite: „Online-Termin buchen“ öffnet hier die Buchungsseite in einem neuen Fenster (in Puls das Termin-Blatt). „E-Mail-Adresse kopieren“ steht in diesem Entwurf rechts bei der Adresse.</span>
+    </footer>
+  </section>
+</main>
+
+<button type="button" class="again" id="again" aria-label="Einstieg noch einmal abspielen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.6-5.9M4 4v5h5"/></svg><span>Noch einmal</span></button>
+<!--JS-->

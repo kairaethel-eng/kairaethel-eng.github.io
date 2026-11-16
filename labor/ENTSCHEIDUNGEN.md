@@ -1,7 +1,13 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 15.11.2026 (Vier Punkte) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 16.11.2026 (Entwurf Tür, Wahl offen) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Tür: Knöpfe erst mit offener Partikel-Tür (Idee Kai 16.11.2026, Go für eine Entwurfsseite) – **Wahl offen**
+- Entwurfsseite `tuer.html` mit zwei Varianten, Puls unverändert: **A „Tür im Text“** (Tür an der Stelle der Knöpfe, Blatt aus Partikeln schwingt auf und zerfällt, Linien-Rahmen bleibt) und **C-kurz „Ein Schritt hindurch“** (Dachlinie wird Türrahmen, Kamera geht hindurch; hängt an der Zeit, keine Extra-Strecke).
+- Verworfen: B als eigene Variante (reine Linien-Tür; ihr Rahmen steckt in A), C mit eigener Scroll-Strecke (zu viel Weg vor dem Termin-Knopf).
+- Feste Regeln für beide: höchstens ~1,5 s bis zum Termin-Knopf, läuft einmal, Seite bleibt dunkel (kein „Licht ja“), Knöpfe immer per Tastatur erreichbar, „anhalten/reduzieren“/ohne JS = sofort offen.
+- Vorschlag in der Entwurfsseite: nur drei Knöpfe, „E-Mail-Adresse kopieren“ bei der Adresse.
 
 ## Vier Punkte (Go Kai 15.11.2026: „Go für alle Empfehlungen … wenn entspannt automatisch weiter runter, nicht mit Button“) – umgesetzt, wartet auf Sichtprüfung
 - **Film-Knopf L4–L5:** voller Bernstein-Knopf + leiser Puls-Ring (A+C), auch am Handy mit „Film · 37 s“. Verworfen: B (Vorschaubild-Kachel).
