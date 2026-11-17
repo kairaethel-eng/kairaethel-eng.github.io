@@ -107,6 +107,11 @@ html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift
 .manifest .wrap,.axis-head,.roof-head,.index,.laws,.door-inner{text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
 .btn{text-shadow:none}
 .chapter{position:relative;min-height:100svh}
+/* Abstände zwischen Kapiteln (18.11.2026, Kai: „Abstände zu neuen Kapiteln sehr genau ansehen“): EIN Maß vor jedem nummerierten Kapitel
+   (--gap-chap, gemessen vom letzten Inhalt bis zur Kennzeile) und ein kleineres vor den Blöcken innerhalb von Kapitel 04 (--gap-sub).
+   Vorher lagen die Abstände am PC zwischen 135 und 365 px, am Handy zwischen 55 und 580 px. */
+:root{--gap-chap:clamp(11rem,27vh,16rem);--gap-sub:clamp(7rem,17vh,10.5rem)}
+@media (max-width:920px){:root{--gap-chap:9rem;--gap-sub:6.5rem}}
 
 /* Kapitel 01 „Von Kopf bis Fuß“ (Auftrag K, Go Kai 16.11.2026: übernommen statt „Spannung lösen“) – Baustein, gleiche Regeln wie die Entwurfsseite */
 /*@include ../kopf-fuss/kapitel.css*/
@@ -122,7 +127,7 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 @media (hover:none){.only-fine{display:none}.only-touch{display:inline}}
 
 /* Manifest */
-.manifest{display:flex;align-items:center;padding-block:8.75rem}
+.manifest{min-height:0;padding-block:6rem 0} /* nach der Figur: der freie Teil ihrer Bühne zählt zum Abstand mit */
 .statement{font-family:var(--sans);font-weight:500;font-size:clamp(1.75rem,3.9vw,3.875rem);line-height:1.12;letter-spacing:-.02em;max-width:22ch}
 .statement .word{opacity:.16;transition:opacity .4s}
 .statement .word.lit{opacity:1}
@@ -134,7 +139,7 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 .axis-sticky{position:sticky;top:0;height:100svh;overflow:hidden}
 .axis-inner{height:100%;display:grid;grid-template-columns:minmax(0,31.25rem) 1fr;grid-template-rows:auto auto 1fr auto;column-gap:2.5rem;padding-top:6.5rem;padding-bottom:1.75rem}
 .axis-head{grid-column:1}
-.axis-head h2{font-size:clamp(2.125rem,3.6vw,3.625rem);margin-bottom:.875rem}
+.axis-head h2{font-size:clamp(2.125rem,3.6vw,3.3rem);margin-bottom:.875rem}
 .axis-hint{font-size:.9375rem;color:var(--dim);max-width:42ch}
 .only-mob{display:none}
 .segnav{grid-column:1;grid-row:2;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.375rem;margin-top:1.625rem}
@@ -159,7 +164,7 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 .note{grid-column:1;grid-row:4;font-size:.75rem;color:var(--mute);margin-top:1rem;max-width:60ch}
 
 /* Dach / Index */
-.roof{padding-block:9.375rem 3rem}
+.roof{padding-block:calc(var(--gap-chap) - 1.75rem) 0} /* 1,75rem = Fuß der Wirbelsäulen-Bühne unter dem Hinweis */
 .roof-head{margin-bottom:3.125rem}
 .index{list-style:none;margin:0;padding:0;max-width:min(53.75rem,54vw);border-top:1px solid var(--line);counter-reset:ix}
 .index li{border-bottom:1px solid var(--line)}
@@ -179,7 +184,7 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 @media (min-width:1100px){#lhRoot .rooms{height:clamp(13rem,min(50cqi,100svh - 17rem),40rem)}}
 .lh{position:relative;z-index:2}
 .roof-grid .roof-head{text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
-@media (max-width:920px){.roof{padding-top:5.5rem}}
+@media (max-width:920px){.roof{padding-top:calc(var(--gap-chap) - 1rem)}}
 
 @media (min-width:921px){
 }
@@ -192,7 +197,7 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 .t-play .i-play{fill:currentColor}
 .t-play .i-pause{display:none;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
 .paused .room-tag.cta{animation:none}
-.roof-list{padding-top:clamp(3.75rem,8vw,6.875rem);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);column-gap:clamp(2rem,4vw,5rem);align-items:start}
+.roof-list{padding-top:calc(var(--gap-sub) - 1.5rem);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);column-gap:clamp(2rem,4vw,5rem);align-items:start}
 .roof-list .kicker{grid-column:1/-1}
 .roof-list .index{margin-top:.625rem;grid-column:1;max-width:none}
 /* Leistungen: Partikel-Bühne, die Punkte formen das Motiv der gewählten Leistung */
@@ -213,8 +218,8 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 @media (min-width:921px){.seg-card dl{position:absolute;width:1px;height:1px;margin:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.seg-card h3{margin-bottom:1.125rem}}
 
 /* Hausordnung */
-.rules{height:auto} /* Kai 7.11.: kein Scrollweg mehr, die Paragraphen wechseln von selbst (main.js LAW) */
-.rules-sticky{position:relative;height:100svh;display:flex;align-items:center}
+.rules{height:auto;min-height:0} /* Kai 7.11.: kein Scrollweg mehr, die Paragraphen wechseln von selbst (main.js LAW) */
+.rules-sticky{position:relative;padding-block:var(--gap-chap) calc(var(--gap-chap) - 6.5rem)} /* 6,5rem = Kopf der Wirbelsäulen-Bühne über „03 Achse“ */
 .laws{list-style:none;margin:0;padding:0;position:relative;min-height:46vh}
 .laws li{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;opacity:0;transform:translateY(2.5rem);filter:blur(.625rem);transition:opacity .7s var(--ease),transform .9s var(--ease),filter .7s}
 .laws li.is-on{opacity:1;transform:none;filter:none}
@@ -228,9 +233,9 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 .law-prog button:hover i{box-shadow:0 0 0 1px rgba(237,232,220,.25)}
 
 /* Tür */
-.door{padding-top:9.375rem}
+.door{padding-top:var(--gap-chap)}
 .door-inner{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.85fr);gap:3.75rem 5.625rem;align-items:end}
-.door h2{font-size:clamp(2.875rem,7.6vw,8rem);margin-bottom:1.625rem}
+.door h2{font-size:clamp(2.875rem,5.1vw,4.4rem);margin-bottom:1.625rem} /* 18.11.: „Die Tür steht“ passt in eine Zeile (vorher 7,6vw → drei Zeilen, doppelt so groß wie die anderen Kapitel) */
 .door .lead{margin-bottom:1.875rem}
 .door .small{margin-top:1.125rem}
 .facts{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:0 1.875rem;border-top:1px solid var(--line)}
@@ -265,14 +270,15 @@ html.paused .fein{opacity:1;transform:none;transition:none}
   .motion-btn span{display:none}
 }
 /* Manuthera-Highlight (Kapitel 04, nach dem Rundgang): eigene Bühne, Partikel-Hintergrund tritt zurück */
-.manu{position:relative;padding:clamp(4.375rem,11vh,8.125rem) 0 clamp(1.875rem,5vh,4.375rem)}
+.manu{position:relative;padding:calc(var(--gap-sub) - 5.5rem) 0 0} /* 5,5rem: der Text steht mittig neben der höheren Bühne – gemessen wird bis zur Kennzeile */
 .manu-inner{display:grid;grid-template-columns:minmax(20rem,.8fr) 1.2fr;gap:4vw;align-items:center}
 .kicker.hi{color:var(--amber);align-items:center}
 .dot{display:inline-block;width:.5rem;height:.5rem;border-radius:50%;background:var(--amber);flex:none;animation:dot 2.4s ease-out infinite}
 @keyframes dot{0%{box-shadow:0 0 0 0 rgba(224,154,53,.55)}70%{box-shadow:0 0 0 .625rem rgba(224,154,53,0)}100%{box-shadow:0 0 0 0 rgba(224,154,53,0)}}
 .paused .dot{animation:none}
 @media (prefers-reduced-motion: reduce){.dot{animation:none}}
-.manu-h{font-size:clamp(2.25rem,4.6vw,4.5rem)}
+.manu-h{font-size:clamp(2.25rem,3.9vw,3.4rem)} /* 18.11.: zwei Zeilen „Bewegung in / drei Dimensionen.“ statt drei */
+@media (min-width:921px){.manu-h em{white-space:nowrap}}
 .manu .lead{margin-top:1.5rem}
 .manu-modes{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-top:2rem;max-width:32.5rem}
 .manu-modes button{position:relative;overflow:hidden;min-height:2.875rem;padding:0 .5rem;background:transparent;border:1px solid rgba(237,232,220,.22);border-radius:3px;color:var(--dim);font:600 .75rem/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:color .3s,border-color .3s}
@@ -379,14 +385,14 @@ html:not(.js) button.ix-link{display:none}
   .roof-list .index{order:3}
   .serv-stage{order:2;position:sticky;top:calc(env(safe-area-inset-top,0px) + 4.25rem);z-index:3;height:30svh;margin:0 calc(-1 * max(var(--gut),5vw)) .5rem;background:linear-gradient(var(--ink) 90%,rgba(10,22,27,0))}
   .serv-name{bottom:12%;font-size:1.0625rem} /* im deckenden Teil des Verlaufs, sonst liegt der Name über den Leistungsnamen */
-  .door{background:linear-gradient(rgba(10,22,27,0),var(--ink) 8rem);padding-top:5.5rem}
-  .rules-sticky{align-items:flex-end;padding-bottom:9svh}
+  .door{background:linear-gradient(rgba(10,22,27,0),var(--ink) 8rem);padding-top:var(--gap-chap)}
+  .rules-sticky{padding-block:19rem calc(var(--gap-chap) - 6rem)} /* oben Platz für die HOP-Kreise zwischen Kap. 02 und „§ Die Hausordnung“ */
   .law-prog{margin-top:1.5rem;max-width:16rem}
   .laws{min-height:40svh}
   .laws b{font-size:3.5rem}
   .laws span{font-size:clamp(2.125rem,10vw,3rem)}
   .laws small{margin-top:.875rem;font-size:1rem}
-  .manifest{padding-block:6.875rem}
+  .manifest{padding-block:calc(var(--gap-chap) - 2rem) 0}
   .door-inner{grid-template-columns:1fr}
 }
 @media (max-width:600px){
@@ -738,7 +744,7 @@ html:not(.js) .vf-open,html:not(.js) #vorfallSheet{display:none}
 /* G5 · Handy/Tablet: Knöpfe der Manuthera-Liege und ihre Erklärzeile stehen direkt unter Überschrift und Bühne, der lange Text folgt danach.
    Seit 14.11.2026 nachts (Kai): erst Kennzeichnung + Überschrift, dann die Bühne; Bühne nur so hoch, wie die Liege braucht (kein leerer Platz). */
 @media (max-width:920px){
-  .manu{padding-top:3rem}
+  .manu{padding-top:var(--gap-sub)}
   .manu-stage canvas{height:min(56vh,30rem,84vw)}
   .manu-text{display:contents}
   .manu-text > .kicker{order:0}
@@ -793,4 +799,5 @@ html:not(.js) .index button{cursor:default}
   .seg-cards,.axis-head{position:static!important;width:auto!important;height:auto!important;max-height:none!important;clip:auto!important;white-space:normal!important;overflow:visible!important}
   #achse .note::before{display:none!important}
 }
-
+/* 18.11.: sehr schmale Handys (bis 380 px) – „Die Tür steht“ und „drei Dimensionen.“ bleiben je in einer Zeile */
+@media (max-width:380px){.door h2{font-size:2.125rem}.manu-h{font-size:1.9375rem}}

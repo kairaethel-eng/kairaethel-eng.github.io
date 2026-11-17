@@ -43,15 +43,17 @@ function arcD(r, k) {
 // ---------- Fahrplan: [u, Spitze der Lichtlinie (y), Blick] – Blick 'A' = ganze Figur (Start), 'E' = ganze Figur (Schluss), 0…3 = Station ----------
 // Im Halt kriecht die Linie um CREEP weiter (gleichmäßig, damit jeder kleine Wischer sichtbar etwas bewegt)
 const CREEP = [8, 8, 6, 4];
+// Seit 18.11.2026 (Kai: „weniger scrollen oder wischen“) rund ein Drittel kürzer: Halt je Station 0,42 statt 0,75 Bildschirmhöhen,
+// Fahrt dazwischen 0,5–0,58 statt 0,75–0,95, Schluss 0,74 statt 0,85 (vorher: U_LEN 8,2, --len 9,2).
 export const KEYS = [
-  [0.06, CROWN, 'A'],
-  [1.0, STATIONS[0].tip, 0], [1.75, STATIONS[0].tip + CREEP[0], 0],
-  [2.5, STATIONS[1].tip, 1], [3.25, STATIONS[1].tip + CREEP[1], 1],
-  [4.2, STATIONS[2].tip, 2], [4.95, STATIONS[2].tip + CREEP[2], 2],
-  [5.85, STATIONS[3].tip, 3], [6.6, STATIONS[3].tip + CREEP[3], 3],
-  [7.35, SOLE, 'E'],
+  [0.05, CROWN, 'A'],
+  [0.55, STATIONS[0].tip, 0], [0.97, STATIONS[0].tip + CREEP[0], 0],
+  [1.49, STATIONS[1].tip, 1], [1.91, STATIONS[1].tip + CREEP[1], 1],
+  [2.49, STATIONS[2].tip, 2], [2.91, STATIONS[2].tip + CREEP[2], 2],
+  [3.49, STATIONS[3].tip, 3], [3.91, STATIONS[3].tip + CREEP[3], 3],
+  [4.41, SOLE, 'E'],
 ];
-export const U_LEN = 8.2; // Ende der Bühne (Länge der Strecke = U_LEN + 1 Bildschirmhöhe, CSS .kf --len 9.2)
+export const U_LEN = 5.15; // Ende der Bühne (Länge der Strecke = U_LEN + 1 Bildschirmhöhe, CSS .kf --len 6.15 in fein.css)
 const ARR = STATIONS.map((_, i) => KEYS[1 + 2 * i][0]), LEAVE = STATIONS.map((_, i) => KEYS[2 + 2 * i][0]);
 const stOn = (i, u) => u > ARR[i] - 0.3 && u < LEAVE[i] + 0.12;
 const U_END = KEYS[KEYS.length - 1][0];
@@ -321,7 +323,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
   progBtns.forEach((b, i) => b.addEventListener('click', () => goU((ARR[i] + LEAVE[i]) / 2)));
   nextBtn?.addEventListener('click', () => {
     const i = STATIONS.findIndex((_, k) => S.us < LEAVE[k] - 0.02);
-    goU(i < 0 || S.us > ARR[3] ? U_END + 0.35 : S.us < ARR[i] - 0.3 ? (ARR[i] + LEAVE[i]) / 2 : i < 3 ? (ARR[i + 1] + LEAVE[i + 1]) / 2 : U_END + 0.35);
+    goU(i < 0 || S.us > ARR[3] ? U_END + 0.1 : S.us < ARR[i] - 0.3 ? (ARR[i] + LEAVE[i]) / 2 : i < 3 ? (ARR[i + 1] + LEAVE[i + 1]) / 2 : U_END + 0.1);
     S.idle = -4; // nach dem Klick nicht gleich wieder zeigen
   });
 
@@ -354,7 +356,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
     if (Math.abs(S.us - S.u) < 1e-4) S.us = S.u;
     const u = S.us;
     if (!paused) { S.time += dt * (reduced ? 0.45 : 1); S.breath += dt * (reduced ? 0.45 : 1) * (1.15 - S.calm * 0.45); }
-    S.calm += (smooth(6.75, 7.35, u) - S.calm) * Math.min(1, dt * 0.8);
+    S.calm += (smooth(U_END - 0.6, U_END, u) - S.calm) * Math.min(1, dt * 0.8);
     // still stehen (für die Pille „Weiter“): Zeit seit der letzten Scroll-Bewegung
     if (Math.abs(S.u - S.lastU) > 0.002) { S.idle = Math.min(S.idle, 0); S.lastU = S.u; }
     S.idle += dt;
@@ -450,7 +452,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
       // bewegte Kreise mit wechselnder Strichlänge ließen in Chrome alte Bögen stehen (Neuzeichnen zu klein berechnet)
       ring.setAttribute('d', arcD(rr, easeIO(S.draw[i])));
       prog.setAttribute('d', arcD(rr, hp));
-      progBtns[i].style.setProperty('--p', fmt(clamp((u - (ARR[i] - 0.75)) / (LEAVE[i] - ARR[i] + 0.75))));
+      progBtns[i].style.setProperty('--p', fmt(clamp((u - (ARR[i] - 0.5)) / (LEAVE[i] - ARR[i] + 0.5))));
       onKey.push(`${on ? 1 : 0}${S.ok[i] ? 1 : 0}`);
       const b = spots[i], d = Math.max(44, rr * 2);
       b.style.transform = `translate(${fmt(x - d / 2)}px,${fmt(y - d / 2)}px)`; b.style.width = b.style.height = `${fmt(d)}px`;
@@ -487,9 +489,9 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
       wire.setAttribute('opacity', fmt(sl ? (vis > 0.5 ? 1 : 0) : vis));
     } else wire.setAttribute('opacity', '0');
     // Verlauf hinter dem Text (Handy): nur während der Stationen – Start und Schluss zeigen die ganze Figur über dem Text
-    shade.classList.toggle('on', !sl && u > ARR[0] - 0.55 && u < LEAVE[3] + 0.35);
+    shade.classList.toggle('on', !sl && u > ARR[0] - 0.3 && u < LEAVE[3] + 0.3);
     // Start- und Schlusstext
-    const heroA = sl ? (u < 0.2 ? 1 : 0) : 1 - smooth(0.04, 0.32, u);
+    const heroA = sl ? (u < 0.15 ? 1 : 0) : 1 - smooth(0.03, 0.22, u); // fertig ausgeblendet, bevor der Text der ersten Station kommt (ab ARR − 0,3)
     heroEl.style.opacity = fmt(heroA); heroEl.style.visibility = heroA < 0.01 ? 'hidden' : '';
     endEl.classList.toggle('on', u > U_END - 0.3);
   }

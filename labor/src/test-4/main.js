@@ -1398,7 +1398,9 @@ function updateScan(dt, r, inSec) {
   } else if (near) {
     // Bühne aus der echten Lage von Kopfleiste, Bühne und Hinweis: löst sich die Bühne beim Weiterscrollen, gehen
     // Wirbelsäule, Karte, Zeilen und Griff mit ihr nach oben (Kai 6.11.: in Chrome lief der Hinweis in die Zeilen)
-    const nb = axisNote ? axisNote.getBoundingClientRect() : null, sr = axSticky ? axSticky.getBoundingClientRect() : null, lift = sr ? Math.min(0, sr.top) : 0;
+    // 18.11.: auch beim Hereinkommen (sr.top > 0) geht die Wirbelsäule mit ihrer Bühne – sie steigt mit „03 Achse“ von unten auf,
+    // statt schon groß über dem Text der Hausordnung zu stehen (vorher nur beim Lösen: Math.min(0, sr.top))
+    const nb = axisNote ? axisNote.getBoundingClientRect() : null, sr = axSticky ? axSticky.getBoundingClientRect() : null, lift = sr ? sr.top : 0;
     const hb = topBar ? topBar.getBoundingClientRect().bottom : 70;
     SCAN.cardTop = hb + 10 + lift; SCAN.top = hb + 16 + lift; SCAN.bot = (nb && nb.height ? nb.top - NOTE.shift : MINH - 60) - 12;
     if (nb && nb.height && sr) {
@@ -1411,7 +1413,10 @@ function updateScan(dt, r, inSec) {
     const tf = SCAN.top / GLH, bf = SCAN.bot / GLH;
     OV.w = ((bf - tf) * 8.197 * 0.95) / 8.7; OV.y = (0.5 - (tf + bf) / 2) * 8.197;
     // ganze Wirbelsäule zwischen Kopfleiste und Hinweis, rechter Rand am Ziehstreifen
-    const tx = det && SCAN.right ? OV.x + (VW - RAIL_W - 6 - SCAN.right) * (8.197 / GLH) : (0.22 * VW) * (8.197 / GLH);
+    // 18.11.: solange die Bühne noch nicht steht (kein Ziehstreifen im Bild), rückt die Wirbelsäule weiter nach rechts –
+    // sonst liegt sie beim Hereinkommen auf dem Ende der Überschrift und der Anleitung (Textspalte 64 %)
+    const edge = SCAN.wasEng ? RAIL_W + 6 : 30;
+    const tx = det && SCAN.right ? OV.x + (VW - edge - SCAN.right) * (8.197 / GLH) : (0.22 * VW) * (8.197 / GLH);
     OV.x = OV.init ? OV.x + (tx - OV.x) * (reduced ? 1 : 1 - Math.exp(-dt * 6)) : tx; OV.init = true;
   }
   // ruhige Schrägansicht (Wurzeln zeigen nach links), atmet leicht hin und her
@@ -1424,8 +1429,10 @@ function updateScan(dt, r, inSec) {
   if (!pc) { sil.visible = false; silU.uOn.value = 0; }
   periLabel.style.opacity = 0;
 
-  const solid = (inSec ? smooth(VH * 1.0, VH * 0.25, r.top) * (1 - smooth(VH * 0.95, VH * 0.45, r.bottom)) : 0) * spineK;
+  // Handy (18.11.): die Wirbelsäule löst sich etwas später auf – sie geht erst mit der Bühne nach oben, sonst bleibt vor „04 Dach“ ein leeres Bild
+  const solid = (inSec ? smooth(VH * 1.0, VH * 0.25, r.top) * (1 - (pc ? smooth(VH * 0.95, VH * 0.45, r.bottom) : smooth(VH * 0.5, VH * 0.08, r.bottom))) : 0) * spineK;
   const eng = inSec && solid > 0.97 && r.top < VH * 0.12 && r.bottom > VH * 0.9; // Bühne steht
+  SCAN.wasEng = eng;
   // Bildschirmlage der Wirbel und der fünf Abschnitte (Übersicht)
   if (det && near) {
     const rects = spineRects(OV); // (nutzt dieselbe Projektion wie die PC-Schilder)
@@ -1802,7 +1809,7 @@ function targetLogo() {
 function logoPlace() {
   const vh = VH, sy = scrollY, lb = logoGeo.list - sy, kt = logoGeo.kick - sy;
   let c = Math.min((Math.max(lb, 78) + kt) / 2, vh * 0.6);
-  c = Math.min(Math.max(c, lb + 75), kt - 90);
+  c = Math.min(Math.max(c, lb + 100), kt - 100); // 18.11.: etwas mehr Luft zum Zitat darüber (vorher 75/90)
   const hh = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)), wpp = 2 * hh / GLH;
   uniforms.uXf.value[4].set(0, (GLH / 2 - c) * wpp, 0, 0.32);
 }

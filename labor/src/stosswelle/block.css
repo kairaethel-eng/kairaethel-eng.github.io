@@ -2,9 +2,9 @@
    Linien-Bühne ohne WebGL (SVG in page.html, Bewegung in welle.js). Erwartet die Token der Seite (--ink, --txt, --dim, --mute,
    --line, --amber, --blue, --sans, --disp, --serif, --ease) und .wrap/.kicker/.lead/.chips/.btn/.manu-modes/.manu-read.
    Rem-Werte, Haarlinien in px. Zustand: .sw.in (gezeichnet), .sw[data-level="0|1|2"] (Stärke). */
-.sw{position:relative;padding:clamp(3.5rem,9vh,7rem) 0 clamp(1.5rem,4vh,3.5rem)}
+.sw{position:relative;padding:calc(var(--gap-sub,7rem) - 5rem) 0 0} /* 5rem: Text mittig neben der Zeichnung, die Zeichnung hat oben Luft – gemessen bis zur Kennzeile */
 .sw-inner{display:grid;grid-template-columns:1.1fr minmax(20rem,.9fr);gap:4vw;align-items:center}
-.sw-h{font-size:clamp(2.25rem,4.6vw,4.5rem)}
+.sw-h{font-size:clamp(2.25rem,3.9vw,3.4rem)}
 .sw .lead{margin-top:1.5rem}
 .sw .sw-modes{grid-template-columns:repeat(3,1fr);max-width:26rem}
 
@@ -78,11 +78,11 @@
 .sw-note{margin-top:clamp(2rem,5vh,3.5rem);font-size:.75rem;color:var(--mute);max-width:60ch}
 
 @media (min-width:921px) and (max-height:760px){
-  .sw{padding-top:3rem}
+  .sw{padding-top:calc(var(--gap-sub,7rem) - 5rem)}
   .sw-fig{width:min(100%,calc(64vh * 1.2))}
 }
 @media (max-width:920px){
-  .sw{padding-top:3rem}
+  .sw{padding-top:var(--gap-sub,6.5rem)}
   .sw-inner{grid-template-columns:1fr;gap:.625rem}
   .sw-text{display:contents}
   .sw-text > .kicker{order:0}

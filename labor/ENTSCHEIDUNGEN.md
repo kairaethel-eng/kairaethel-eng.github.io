@@ -1,7 +1,14 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 17.11.2026 abends (Feinschliff seitenweit in Puls umgesetzt, wartet auf Sichtprüfung · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 18.11.2026 (Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Abstände, Überschriften, Figur kürzer (Auftrag Kai 18.11.2026) – umgesetzt, Kai schickt Screenshots nach
+- **Kai:** „Gefällt mir gut“ (Feinschliff seitenweit). Auftrag: Abstände zu neuen Kapiteln und Überschriften genau ansehen und selbst verbessern; bei der Figur weniger scrollen/wischen.
+- **Merkregel Abstände:** zwei Maße – vor jedem nummerierten Kapitel `--gap-chap`, vor Blöcken innerhalb von Kapitel 04 `--gap-sub`; gemessen vom letzten Inhalt bis zur Kennzeile. Neue Blöcke bekommen eines der beiden Maße, keine eigenen Zahlen.
+- **Merkregel Überschriften:** Kapitel-Überschriften höchstens zwei Zeilen am PC, kursive Wortgruppe bleibt zusammen; die Tür ist nicht mehr größer als die anderen Kapitel.
+- **Figur:** Scrollweg −33 % (6,15 statt 9,2 Bildschirmhöhen). Noch kürzer nur nach Kais Urteil am iPhone.
+- **Handy Kap. 03:** die Wirbelsäule kommt und geht mit ihrem Kapitel (kein Bild mehr, in dem sie über fremdem Text steht oder fehlt).
 
 ## Feinschliff seitenweit (Go Kai 17.11.2026 abends: „Wende mal deine Ideen auf die ganze Website an … Feinschliff können wir danach machen“) – umgesetzt, wartet auf Sichtprüfung
 - **Kai zur Studie:** „Sieht bis jetzt super aus.“ → der Stil gilt jetzt in ganz Puls und `live/`: Figur plus mit Gehirn und Nerven ist Kapitel 01 (damit ist auch „Figur plus → Puls“ entschieden), Bewegungsbänder aus Perlen, HOP-Kreise aus Perlenringen, Dachlinie als Perlen, Motive gleichmäßig und gestochen, Antwort unter Maus/Finger auf Figur, Hauptwolke, Wirbelsäule und Motiven, Überschriften Stärke 560, eine Einblend-Art.

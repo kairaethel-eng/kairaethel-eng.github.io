@@ -1,4 +1,6 @@
 /* Studie „Feinschliff“: Zusätze zum Baustein-CSS (wird nach kapitel.css und plus.css eingebunden). */
+/* Länge der Strecke (18.11.2026, Kai: weniger scrollen): U_LEN + 1 in kapitel.js – zusammen ändern (Baustein kopf-fuss: 9.2) */
+.kf{--len:6.15}
 /* zweite Zeichenfläche: Figur „bisher“ liegt unter der neuen, sichtbar nur beim Umschalten (kapitel.js) */
 .kf-gl-alt{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0;visibility:hidden}
 .kf-nogl .kf-gl-alt{display:none}
@@ -14,10 +16,11 @@
 /* Text ruhig (Klasse kf-fein = Darstellung „neu“): Überschriften leichter und etwas größer, mehr Luft,
    und EINE Art des Einblendens für alles – Zeile für Zeile von unten, weich, nacheinander. */
 .kf-fein .kf-hero h1,.kf-fein .kf-st h2,.kf-fein .kf-end h2{font-weight:560;letter-spacing:-.035em;line-height:1.02}
-.kf-fein .kf-hero h1{font-size:clamp(2.875rem,5.6vw,7rem);line-height:.98;margin-bottom:1.875rem}
+.kf-fein .kf-hero h1{font-size:clamp(2.875rem,5.6vw,5.4rem);line-height:.98;margin-bottom:1.875rem}
 .kf-fein .kf-hero h1 em{margin-top:.16em}
-.kf-fein .kf-st h2{font-size:clamp(2.125rem,3.7vw,4.5rem);margin-bottom:1.5rem}
+.kf-fein .kf-st h2{font-size:clamp(2.125rem,3.7vw,3.2rem);margin-bottom:1.5rem}
 .kf-fein .kf-end h2{margin-bottom:1.5rem}
+@media (min-width:921px){.kf-fein .kf-end h2{font-size:clamp(2.25rem,4.2vw,3.6rem)}}
 .kf-fein .kicker{margin-bottom:1.75rem;letter-spacing:.2em}
 .kf-fein .kf-txt{max-width:34ch;line-height:1.55}
 .kf-fein .kf-do{margin-top:1.75rem}
