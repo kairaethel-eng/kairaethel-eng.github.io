@@ -1,7 +1,14 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 16.11.2026 (Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 17.11.2026 (Studie Feinschliff wartet auf Sichtprüfung · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Feinschliff: Partikel „professioneller“ (Go Kai 17.11.2026: „Go für alle deine besten Empfehlungen“) – Studie `feinschliff.html`, **Übernahme offen**
+- **Kai:** Puls sei „schon der Hammer“, ihm gefällt aber die professionelle Gestaltung/Animation eines Beispielvideos (Partikel-Gehirn „Nously“); gefragt, wie das in Partikel, Grafiken und Text-Einblendungen einfließen kann.
+- **Leitgedanken aus dem Video (gelten als Richtschnur, bis Kai anders entscheidet):** Ordnung statt Zufall (gleicher Abstand, gleiche Größe, scharfer Rand, kein Zittern) · Licht von der Kante · wenige Farben · eine Bewegung zur Zeit · Antwort nur dort, wo Maus/Finger ist · Text ruhig, eine Einblend-Art.
+- Umgesetzt nur als Entwurfsseite mit Umschalter bisher / neu (A geordnete Punkte, B Kantenlicht, D Antwort unter Maus/Finger, E Farbklang ohne Grün in den Punkten, F ruhigere Schrift, G Tiefe). C (Punkte als HOP-Ringe) nur als Adress-Schalter `?zeichen=ring`.
+- Puls, `src/kopf-fuss` und `figur-plus.html` unverändert. Übernahme in Puls, auf andere Formen und der Text-Stil seitenweit: je eigenes Go.
+- Passt zu Kais Urteil vom 11.11. („bei längerem Benutzen zu verpixelt und verspielt“) und zum Leitbild „ruhige Qualität“.
 
 ## Figur plus: Körperkonturen, Gehirn, Nervensystem (Auftrag Kai 16.11.2026) – Entwurfsseite `figur-plus.html`, **Einbau in Puls offen**
 - **Kai:** deutlich menschliche Konturen; an Station 01 (Kopf) ein Gehirn; die Linien nach unten als Nervensystem aus dem Gehirn; **alles im bekannten Partikel-Stil** (also keine gestochene SVG-Lichtlinie mehr für die Bahnen).
