@@ -25,9 +25,7 @@
 // Übergabe an Puls (Go Kai „nahtlos“): fitE() = Lage der Figur im Schlussbild, handK() 0→1 am Ende (eigene Bühne blendet aus,
 // Puls zeigt dieselbe Figur und löst sie in die Bewegungslinien auf), sway()/breath()/calm() für gleichen Atem und gleiches Wiegen.
 import { STATIONS, LINES, lineTo, BODY_SVG, finePoints, CROWN, SOLE, SPLIT, BODY_W, BODY_H, nerveSvg, brainSvg } from './figur.js';
-import { createStage } from './gl.js';
-import { figurePoints as oldPoints } from '../figur-plus/figur.js';
-import { glContext, createStage as oldStage } from '../figur-plus/gl.js';
+import { glContext, createStage } from './gl.js';
 
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
@@ -58,7 +56,10 @@ const ARR = STATIONS.map((_, i) => KEYS[1 + 2 * i][0]), LEAVE = STATIONS.map((_,
 const stOn = (i, u) => u > ARR[i] - 0.3 && u < LEAVE[i] + 0.12;
 const U_END = KEYS[KEYS.length - 1][0];
 
-export function initKopfFuss({ root, isPaused = () => false, reduced = false, scrollTo = (y, smoothly) => window.scrollTo({ top: y, behavior: smoothly ? 'smooth' : 'auto' }) }) {
+// old = { points, stage } (nur die Studienseite: Figur plus für den Umschalter „bisher“; Puls gibt nichts mit → kein Umschalter),
+// handover = true (Puls): am Schluss ziehen sich Gehirn und Nerven zurück, die Figur steht wieder als ruhiges Raster da und
+// wird an Form 0 der Hauptbühne übergeben (cloud() liefert dafür dieselben Punkte).
+export function initKopfFuss({ root, isPaused = () => false, reduced = false, old = null, handover = false, scrollTo = (y, smoothly) => window.scrollTo({ top: y, behavior: smoothly ? 'smooth' : 'auto' }) }) {
   const $ = (s, r = root) => r.querySelector(s);
   const $$ = (s, r = root) => [...r.querySelectorAll(s)];
   const finePointer = matchMedia('(pointer: fine)').matches;
@@ -180,11 +181,11 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, sc
   // „bisher“: Figur plus unverändert, eigene Zeichenfläche darunter; erst beim ersten Umschalten gebaut (Startzeit, Speicher)
   let stOld = null, oldTried = false;
   function ensureOld() {
-    if (stOld || oldTried || !gl) return !!stOld;
+    if (stOld || oldTried || !gl || !old || !canvasOld) return !!stOld;
     oldTried = true;
     try {
       const g = glContext(canvasOld);
-      if (g) { stOld = oldStage(g, oldPoints(big ? Math.round(104000 * clamp(innerWidth * innerHeight / (1440 * 900), 1, 1.7)) : 50000), relaxCv); H = 0; }
+      if (g) { stOld = old.stage(g, old.points(big ? Math.round(104000 * clamp(innerWidth * innerHeight / (1440 * 900), 1, 1.7)) : 50000), relaxCv); H = 0; }
     } catch (e) { console.error(e); stOld = null; }
     return !!stOld;
   }
@@ -376,7 +377,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, sc
     // Am Ende der Strecke blendet die eigene Bühne aus (handK); das Nervensystem bleibt bis dahin stehen
     // (im Baustein zieht sich die Lichtlinie vorher zurück – für die Übergabe an Puls; hier gibt es keine Übergabe)
     hk = smooth(U_LEN - 0.35, U_LEN - 0.05, u);
-    const lineK = 1;
+    const lineK = handover ? 1 - smooth(U_LEN - 0.55, U_LEN - 0.22, u) : 1;
     // Wiegen + Atem (wie Puls), gleiche Werte für Partikel und SVG
     const sway = sl ? 0 : Math.sin(S.time * 0.25) * 0.12; S.sway = sway;
     const br = Math.sin(S.breath) * (1 + S.calm * 1.3), kx = 1 + br * 0.007, ky = 1 + br * 0.004, cx = kx * Math.cos(sway);
@@ -497,6 +498,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, sc
   return {
     update,
     setStyle, style: () => (fine ? 'neu' : 'bisher'),
+    cloud: () => (st ? { pts, sp: SP, tilt: TILT } : null), // für Form 0 der Hauptbühne (Puls): dieselben Punkte, derselbe Abstand
+    pointer: () => PT, // Zeiger (Bildpunkte der Bühne, Stärke k) – Puls führt damit seine eigenen Bühnen
     state: () => ({ stil: fine ? 'neu' : 'bisher', mix: +mixK.toFixed(2), sp: +SP.toFixed(2), ptr: +PT.k.toFixed(2), u: +S.u.toFixed(3), us: +S.us.toFixed(3), tip: +S.tip.toFixed(1), cur: S.cur, idle: +S.idle.toFixed(1), act: S.act.map((x) => +x.toFixed(2)), auto: S.auto.map((x) => +x.toFixed(2)), sol: S.sol.map((x) => +x.toFixed(2)), rest: S.rest.map((x) => +x.toFixed(2)), done: S.done.slice(), gl: !!st, n: pts.count, still: still(), handK: +hk.toFixed(2), view: S.view && { s: +S.view.s.toFixed(2), ax: Math.round(S.view.ax), ay: Math.round(S.view.ay) } }),
     go: (u) => scrollTo(trackTop() + u * H, false),
     ring: (i) => ringPx[i].map((x) => Math.round(x)),

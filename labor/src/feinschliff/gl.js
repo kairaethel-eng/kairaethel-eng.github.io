@@ -85,6 +85,8 @@ void main(){
   col = mix(col, cBone, uCalm * .12 * (1. - on));
   // Körper: innen durchsichtiger, sobald das Nervensystem wächst (Rand bleibt); im Schädel Platz für das Gehirn
   float brainK = smoothstep(12., 30., uTip), glass = smoothstep(40., 230., uTip) * .5;
+  // uNerve 1 → 0 (Übergabe an Puls): Gehirn und Nerven ziehen sich zurück, der Körper wird wieder ganz sichtbar
+  glass *= uNerve; brainK *= uNerve;
   float hide = isBody * max(glass * (1. - aN.w), aN.y * brainK);
   a *= 1. - hide;
   // Kontur und Körperlinien
@@ -102,7 +104,7 @@ void main(){
   vec3 cb = mix(cLine, cWarm, smoothstep(.4, .9, aN.w));
   cb = mix(cb, vec3(1., .97, .9), clamp(front*.55 + wave*.7, 0., 1.));
   col = mix(col, cb, isBrain);
-  a = mix(a, rev * (.36 + .64*smoothstep(.3, .95, aN.w) + wave*.5) * (1. - .2*smoothstep(70., 210., uTip)), isBrain);
+  a = mix(a, rev * (.36 + .64*smoothstep(.3, .95, aN.w) + wave*.5) * (1. - .2*smoothstep(70., 210., uTip)) * uNerve, isBrain);
   d = mix(d, .31 + .1*aN.w, isBrain);
   float ph = fract(aN.z/170. - uTime*.16);            // Impuls: alle ~6 s eine Welle vom Gehirn nach außen
   float pulse = pow(ph, 9.) * uPulse;
@@ -135,6 +137,19 @@ void main(){
 }`;
 
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+
+// Software-Grafik (SwiftShader, llvmpipe …) gilt wie in Puls als „ohne WebGL“ → SVG-Umriss; ?gl=1 = Prüfmodus der Werkzeuge
+// (gleich wie in ../figur-plus/gl.js, hier noch einmal, damit Puls die alte Bühne nicht mitladen muss)
+export function glContext(canvas) {
+  const glQ = new URLSearchParams(location.search).get('gl');
+  let gl = null;
+  try { gl = canvas.getContext('webgl2', { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: true, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: !glQ }); } catch (e) { /* ohne WebGL 2 */ }
+  if (gl && !glQ) try {
+    const e = gl.getExtension('WEBGL_debug_renderer_info');
+    if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(String(gl.getParameter(e ? e.UNMASKED_RENDERER_WEBGL : gl.RENDERER)))) { gl.getExtension('WEBGL_lose_context')?.loseContext(); gl = null; }
+  } catch (e) { /* Name nicht lesbar: WebGL bleibt an */ }
+  return gl;
+}
 
 export function createStage(gl, pts, relaxCanvas) {
   const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };

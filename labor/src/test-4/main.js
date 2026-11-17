@@ -5,7 +5,9 @@
 // erst am Ende des Kapitels deckungsgleich mit dessen Figur (Übergabe, kf.fitE/handK) und löst sich in die Bewegungslinien auf.
 import * as THREE from 'three';
 import Lenis from 'lenis';
-import { bodyPoints, spinePointsGen, logoPoints, spineStippleGen, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
+import { spinePointsGen, spineStippleGen, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
+import { figureForm, roofForm, logoForm } from './ordnung.js';
+import { pointer, PTR_GLSL } from '../shared/zeiger.js';
 import { initAGen as initManuGen, MODES as MANU_MODES } from '../manu/ideaA.js';
 import { initServicesGen } from './services.js';
 import { runSliced } from '../shared/slice.js';
@@ -13,8 +15,7 @@ import { initHouse } from '../haus-licht/house.js';
 import { ECHT } from '../wirbel-echt/echt.js';
 import { initStosswelle } from '../stosswelle/welle.js';
 import { initVorfall, SEG as VF_SEG } from '../vorfall/film.js';
-import { initKopfFuss } from '../kopf-fuss/kapitel.js';
-import { stationHeat } from '../kopf-fuss/figur.js';
+import { initKopfFuss } from '../feinschliff/kapitel.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -143,28 +144,23 @@ if (renderer) {
 
 // ---------- Partikel ----------
 const N = isDesktop() ? 64000 : 26000;
-// Form 3 (seit 14.11.2026, Go Kai „2a“): Bernstein-Dachlinie statt Partikel-Haus. Giebel x −1…1, First bei y = 1 (Höhe per
-// uRoofH passend zum SVG-Dach), dichter Kern auf der Linie, ein Teil als feiner Hof; kind = Abstand zur Linie (0 … 1)
-function roofLinePoints(n) {
-  const pos = new Float32Array(n * 3), kind = new Float32Array(n);
-  for (let i = 0; i < n; i++) {
-    const s = Math.random() * 2 - 1, halo = Math.random() < 0.18, g = () => (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
-    const d = (halo ? 0.06 : 0.008) * g();
-    pos[i * 3] = s; pos[i * 3 + 1] = 1 - Math.abs(s) + d; pos[i * 3 + 2] = (halo ? 0.05 : 0.01) * g();
-    kind[i] = halo ? 1 : 0;
-  }
-  return { pos, kind };
-}
-const body = bodyPoints(N), house = roofLinePoints(N), logo = logoPoints(N);
-// Spannung der Form 0 wie im Kapitel „Von Kopf bis Fuß“ (Stationen statt HOTSPOTS): gleiche Farben bei der Übergabe (gelöst = Blau/Grün)
-for (let i = 0; i < N; i++) body.heat[i] = stationHeat(body.pos[i * 3] / BODY_SCALE + BODY_W / 2, BODY_H / 2 - body.pos[i * 3 + 1] / BODY_SCALE).h;
+// Geordnete Formen (17.11.2026, Go Kai „Ideen auf die ganze Website“, Baustein ordnung.js): jede Form hat je Punkt eine
+// Sichtbarkeit – sichtbar sind nur die Punkte des Rasters, die übrigen liegen verborgen auf der Form und verblassen beim Wechsel.
+// Form 0 (Figur) wird erst nach dem Start von Kapitel 01 gefüllt: dieselben Punkte wie dort (kf.cloud(), siehe Dateiende).
+// Form 3 = Bernstein-Dachlinie (Giebel x −1…1, First bei y = 1, Höhe per uRoofH passend zum SVG-Dach), Form 4 = HOP-Kreise.
+const DESK0 = isDesktop();
+const body = { pos: new Float32Array(N * 3), heat: new Float32Array(N), f0: new Float32Array(N * 3) }, house = roofForm(N, DESK0), logo = logoForm(N, DESK0);
 const geo = new THREE.BufferGeometry();
 geo.setAttribute('position', new THREE.BufferAttribute(body.pos, 3));
 geo.setAttribute('aHeat', new THREE.BufferAttribute(body.heat, 1));
+geo.setAttribute('aF0', new THREE.BufferAttribute(body.f0, 3));
+{ const w = new Float32Array(N * 2), idx = new Float32Array(N); for (let i = 0; i < N; i++) { w[i * 2] = house.w[i]; w[i * 2 + 1] = logo.w[i]; idx[i] = i; }
+  geo.setAttribute('aW', new THREE.BufferAttribute(w, 2)); geo.setAttribute('aIdx', new THREE.BufferAttribute(idx, 1)); }
 // Startzeit (A1, Go 4.11.2026): der Hero braucht nur die Körper-Wolke. Das Morph-Ziel Wirbelsäule wird nach dem
 // ersten Bild in Zeitscheiben gerechnet (bis dahin hält die Wolke die Körperform), die Detailbühnen je Kapitel.
 geo.setAttribute('pos2', new THREE.BufferAttribute(body.pos.slice(), 3));
-ECHT.initMorph(N, (p) => { geo.attributes.pos2.array.set(p); geo.attributes.pos2.needsUpdate = true; });
+let morphSet = false;
+ECHT.initMorph(N, (p) => { morphSet = true; geo.attributes.pos2.array.set(p); geo.attributes.pos2.needsUpdate = true; });
 if (renderer) runSliced(spinePointsGen(N)).then((sp) => ECHT.morphReady('bisher', sp.pos));
 // Kapitel erst bauen, wenn es in Reichweite kommt (anderthalb Bildschirme vorher)
 const whenNear = (el, fn) => {
@@ -202,72 +198,82 @@ const uniforms = {
   uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 },
   cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') },
   cBlue: { value: C('#5AA2D6') }, cGreen: { value: C('#8BC34A') }, cLogoP: { value: C('#2C6478') }, cGrey: { value: C('#8C979B') },
+  // Feinschliff (17.11.): Farben der Figur wie in Kapitel 01, Zeilen leicht von oben (uTilt), Punktgröße aus Welt-Durchmessern
+  // (uProj = Bildpunkte je Welt-Einheit × Abstand), Perlenbänder (uRib: Stränge je Bahn, Perlen je Strang), Zeiger (uPtr)
+  cDeep: { value: C('#44788E') }, cCalm: { value: C('#86BEE6') }, cBone0: { value: C('#E4E3D8') },
+  uTilt: { value: 0.16 }, uProj: { value: 1000 }, uPr: { value: 1 }, uRib: { value: new THREE.Vector2(DESK0 ? 9 : 6, DESK0 ? 300 : 257) },
+  uDr4: { value: logo.dr }, uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 },
+  uRibA: { value: DESK0 ? 1 : 1.75 }, // Handy: die Bänder sind nur im Vorübergehen zu sehen → kräftiger
 };
 
 const vert = /* glsl */`
   attribute float aHeat; attribute vec3 pos2; attribute vec3 pos3; attribute float kind3; attribute vec3 pos4; attribute float kind4; attribute vec4 aRand;
+  attribute vec3 aF0; attribute vec2 aW; attribute float aIdx;
   uniform float uSpread, uFadeMid;
   uniform float uBreath, uCalm, uWave, uBodyRot;
   uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uRoofH, uRoofA, uLogo;
+  uniform float uTilt, uProj, uPr, uDr4, uAsp, uRibA; uniform vec2 uRib; uniform vec4 uPtr;
   uniform sampler2D uRelax; uniform vec2 uBodyWH; uniform vec4 uXf[5];
-  uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey;
-  varying vec3 vCol; varying float vA;
-
+  uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey, cDeep, cCalm, cBone0;
+  varying vec3 vCol; varying float vA; varying float vSize;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
-  vec3 jitter(float amp, float sp){
-    return vec3(sin(uTime*sp*1.3+aRand.x*40.), sin(uTime*sp*1.7+aRand.y*40.), sin(uTime*sp*1.1+aRand.z*40.))*amp;
-  }
-
-  // jede Form liefert Position (xyz) und Farbe; w = Größenfaktor
-  void shape(int i, out vec3 p, out vec3 col, out float sz, out float al){
-    sz = 1.; al = 1.;
+  float hash1(float n){ return fract(sin(n*12.9898)*43758.5453); }
+` + PTR_GLSL + /* glsl */`
+  // jede Form liefert Position (xyz), Farbe, Sichtbarkeit (al) und den Durchmesser des Punkts in Welt-Einheiten (dw)
+  void shape(int i, out vec3 p, out vec3 col, out float dw, out float al){
+    dw = .024; al = 1.;
     if(i==0){
-      vec2 uv = position.xy / uBodyWH + .5;
-      float relax = texture2D(uRelax, vec2(uv.x, 1.-uv.y)).r;
-      float tension = aHeat * (1. - relax);
+      // Figur: dieselben Punkte wie Kapitel 01 (grobes Raster, Kontur, Körperlinien), Kantenlicht aus aF0.y, gelöst = ruhiges Blau
       float breath = sin(uBreath) * (1. + uCalm*1.3); // entspannt: ruhiger, tiefer Atem
-      p = position * vec3(1. + breath*.007, 1. + breath*.004, 1.) + jitter(.012*(1. - uCalm*.6) + tension*.06, 5.); // Spannung (8.11., Option C): Ausschlag ±4 statt ±7,5 px, Takt fest ≈ 1 Hz statt 3–4 Hz → wabert statt zu flimmern; fester Takt = kein Phasensprung beim Lösen
+      p = position * vec3(1. + breath*.007, 1. + breath*.004, 1.);
+      p.y -= p.z * uTilt;
       p = rotY(p, uBodyRot);
-      vec3 base = mix(cPetrol, cBone, .25 + aRand.y*.35);
-      float throb = .7 + .3*sin(uTime*3.4 + aRand.x*.8);
-      col = mix(base, cAmber, smoothstep(.08, .7, tension) * throb);
-      col = mix(col, mix(cBlue, cGreen, aRand.x), relax * aHeat * .85);
-      sz = 1. + tension*.9*throb;
+      col = mix(cDeep, cBone0, .2 + .8*aF0.y);
+      col = mix(col, cCalm, aHeat * .8);
+      al = mix(aF0.x, max(aF0.x, .62 * step(.01, aF0.x)), aHeat);
+      dw = aF0.z * uBodyWH.x / 200. * uXf[0].w;
       // Ausatmen: eine helle Welle läuft einmal vom Kopf bis zu den Füßen (uv.y 1 = Kopf)
-      float wv = exp(-pow((uv.y - uWave)*6.5, 2.));
-      col = mix(col, mix(cBone*1.2, cGreen, .3 + aRand.x*.3), wv); sz *= 1. + wv*1.4;
-      p += normalize(vec3(p.x, 0., p.z) + 1e-4) * wv * .05;
+      float wv = exp(-pow((position.y / uBodyWH.y + .5 - uWave)*6.5, 2.));
+      col = mix(col, cBone0*1.15, wv*.8); dw *= 1. + wv*.5;
     } else if(i==1){
-      float lane = floor(aRand.x*11.);
-      float x = mod(aRand.z*18. + uTime*(.35+aRand.y*.3), 18.) - 9.;
-      float y = (lane-5.)*.55 + sin(x*.5 + lane*1.7 + uTime*.7)*.45 + (aRand.w-.5)*.1;
-      float z = (aRand.y-.5)*2. + cos(x*.4 + lane)*.5;
+      // Bewegung: elf Bänder aus Perlensträngen. Jeder Strang hat Perlen in gleichem Abstand, alle fließen gleich schnell;
+      // die Stränge eines Bands liegen in der Tiefe nebeneinander und schwingen leicht versetzt → das Band dreht sich wie ein Tuch
+      float lane = mod(aIdx, 11.), rest = floor(aIdx / 11.);
+      float strand = mod(rest, uRib.x), bead = floor(rest / uRib.x);
+      float sj = strand / max(1., uRib.x - 1.) - .5;
+      float x = mod((bead + .5*mod(strand, 2.)) / uRib.y * 18. + uTime*(.3 + hash1(lane)*.22), 18.) - 9.;
+      float y = (lane-5.)*.55 + sin(x*.5 + lane*1.7 + uTime*.6 + sj*1.25)*.45 + sj*.17;
+      float z = sj*1.7 + cos(x*.4 + lane)*.5;
       p = vec3(x, y, z);
       float m = mod(lane, 4.);
-      col = m<1. ? cBlue : m<2. ? cPetrol*1.4 : m<3. ? cGreen*.85 : cAmber;
-      col = mix(col, cBone, .25);
-      sz = .9;
+      col = m<1. ? cBlue : m<2. ? cPetrol*1.4 : m<3. ? cBone : cAmber;
+      col = mix(col, cBone, .2 + .5*abs(sj)*2.*abs(sj)*2.); // Rand des Bands heller
+      al = step(bead, uRib.y - .5) * (.15 + .42*abs(sj)*2.) * uRibA;
+      dw = .022 * uXf[1].w;
     } else if(i==2){
       p = rotY(pos2, uSpineRot);
       float band = exp(-pow((pos2.y - (3.6 - mod(uTime*1.6, 9.)))*2.2, 2.));
       col = mix(cBone, cBlue, band*.8);
+      al = step(aRand.x, .55); dw = .021 * uXf[2].w / .84;
     } else if(i==3){
       // Dachlinie: liegt genau auf dem SVG-Dach (uXf[3] aus roofPlace), vergeht, während das Dach gezeichnet wird (uRoofA)
       p = vec3(pos3.x, pos3.y * uRoofH, pos3.z);
       col = mix(cAmber, cBone, kind3 * .45);
-      sz = kind3 > .5 ? .7 : .95; al = uRoofA;
+      dw = kind3 > .5 ? .019 : .03; al = uRoofA * aW.x;
     } else {
-      float br = 1. + sin(uTime*1.2 + pos4.x*.8)*.04;
-      p = pos4 * vec3(br, br, 1.) + jitter(.01, 2.);
+      // HOP-Kreise: Ringe aus Perlen, leicht gewölbt, atmen und wiegen ruhig
+      float br = 1. + sin(uTime*1.2 + pos4.x*.8)*.03;
+      p = pos4 * vec3(br, br, 1.);
       p = rotY(p, sin(uTime*.3)*.25);
-      col = kind4 < .5 ? cGreen : kind4 < 1.5 ? cLogoP*1.15 : kind4 < 2.5 ? cBlue : cGrey;
+      col = kind4 < .5 ? cGreen : kind4 < 1.5 ? cLogoP*1.5 : kind4 < 2.5 ? cBlue : cBone*.8;
+      al = aW.y; dw = uDr4 * (kind4 > 2.5 ? .42 : .58) * uXf[4].w;
     }
     p = p * uXf[i].w + uXf[i].xyz;
     if(i==2){
       // Abtastlinie: oberhalb ist die Wirbelsäule schon „fest“, darunter noch Partikel
       float g = exp(-pow((p.y - uCut)*7., 2.));
-      al = smoothstep(uCut + .1, uCut - .1, p.y);
-      col = mix(col, cAmber, g); sz *= 1. + g*1.6; al = max(al, g);
+      al *= smoothstep(uCut + .1, uCut - .1, p.y);
+      col = mix(col, cAmber, g); dw *= 1. + g*1.2; al = max(al, g);
     }
   }
 
@@ -280,9 +286,6 @@ const vert = /* glsl */`
     vec3 pA, pB, cA, cB; float sA, sB, aA, aB;
     shape(i0, pA, cA, sA, aA); shape(i1, pB, cB, sB, aB);
     vec3 p = mix(pA, pB, t);
-    // Haus „gestochen“: ruhiger, gleich große Punkte
-    float wH = (i0 == 3 ? 1. - t : 0.) + (i1 == 3 ? t : 0.);
-    p += vec3(sin(uTime*.5 + aRand.y*6.283), cos(uTime*.42 + aRand.z*6.283), 0.) * .012 * mix(uXf[i0].w, uXf[i1].w, t) * (1. - wH * .9);
     // Zerstäuben zwischen zwei Formen
     vec3 n = normalize(vec3(aRand.x-.5, aRand.y-.5, aRand.z-.5)+1e-4);
     // Streuung im Verhältnis zur Formgröße (auf dem Handy kleiner, damit Text frei bleibt)
@@ -290,32 +293,40 @@ const vert = /* glsl */`
     p += n * sin(t*3.14159) * (1.2 + aRand.w*1.6) * ws * uSpread;
     // Intro: aus der Tiefe einfliegen
     p += n * (1.-uIntro) * (6. + aRand.x*8.) * ws * uSpread;
-    float s = mix(sA, sB, t);
+    float dw = mix(sA, sB, t);
     vec3 col = mix(cA, cB, t);
-    float a = mix(.5 + aRand.x*.5, .9, wH) * (1. - uFadeMid*sin(t*3.14159)) * mix(aA, aB, t);
+    // unterwegs sind alle Punkte zu sehen (auch die im Ziel verborgenen): sie sammeln sich und verblassen beim Ankommen
+    float a = .85 * (1. - uFadeMid*sin(t*3.14159)) * mix(aA, aB, t);
     // Hausordnung (seit 14.11.2026 nachts direkt nach Kapitel 02): die HOP-Kreise (Form 4) legen sich über die laufende Form
     // und lösen sich danach in die Wirbelsäule auf – uLogo 0..1, unabhängig von der Kapitelfolge in uMorph
     if(uLogo > .001){
       vec3 pL, cL; float sL, aL;
       shape(4, pL, cL, sL, aL);
       float tl = smoothstep(st, st+.6, uLogo);
-      pL += vec3(sin(uTime*.5 + aRand.y*6.283), cos(uTime*.42 + aRand.z*6.283), 0.) * .012 * uXf[4].w;
       p = mix(p, pL, tl) + n * sin(tl*3.14159) * (1.2 + aRand.w*1.6) * mix(ws, uXf[4].w, tl) * uSpread;
-      s = mix(s, sL, tl); col = mix(col, cL, tl);
-      a = mix(a, (.5 + aRand.x*.5) * aL, tl) * (1. - uFadeMid*sin(tl*3.14159));
+      dw = mix(dw, sL, tl); col = mix(col, cL, tl);
+      a = mix(a, .85 * aL, tl) * (1. - uFadeMid*sin(tl*3.14159));
     }
     vec4 mv = modelViewMatrix * vec4(p, 1.);
     gl_Position = projectionMatrix * mv;
-    gl_PointSize = uSize * uPix * s * mix(.5 + aRand.y*.9, .82, wH) * 24. / -mv.z;
+    // Zeiger: Punkte unter Maus/Finger etwas größer und warmweiß (verborgene bleiben verborgen)
+    float pk = ptrK() * smoothstep(0., .12, a);
+    col = mix(col, vec3(1., .95, .86), pk * .82);
+    a += (1. - a) * pk * .72;
+    // Größe aus dem Welt-Durchmesser; unter der Mindestgröße bleibt der Punkt 1,6 px groß und wird dafür blasser
+    float want = dw * uProj / -mv.z * (1. + pk * .55), size = max(1.6 * uPr, want), thin = want / size;
+    gl_PointSize = size; vSize = size;
     vCol = col;
-    vA = a * uIntro;
+    vA = a * thin * thin * uIntro;
+    if (vA < .004) gl_Position = vec4(2., 2., 2., 1.); // verborgen: gar nicht erst zeichnen
   }`;
 const frag = /* glsl */`
   uniform float uAlpha;
-  varying vec3 vCol; varying float vA;
+  varying vec3 vCol; varying float vA; varying float vSize;
   void main(){
-    float d = length(gl_PointCoord - .5);
-    float a = smoothstep(.5, .05, d);
+    // gestochen: Scheibe mit einem Bildpunkt weichem Rand
+    float d = length(gl_PointCoord - .5), aa = min(.25, 1.3 / vSize);
+    float a = 1. - smoothstep(.5 - aa, .5, d);
     gl_FragColor = vec4(vCol, a * vA * uAlpha);
     #include <colorspace_fragment>
   }`;
@@ -343,6 +354,8 @@ function layout() {
     X[4].set(0, 2.15, 0, 0.32);        // 3: tiefer und kleiner, frei von der Leiste
   }
   uniforms.uPix.value = renderer ? renderer.getPixelRatio() * (GLH / 900) * (d ? 1 : 1.25) : 1;
+  // Bildpunkte (Gerät) je Welt-Einheit, mal Abstand: Punktgröße = Durchmesser · uProj / Abstand
+  { const pr = renderer ? renderer.getPixelRatio() : 1; uniforms.uPr.value = pr; uniforms.uAsp.value = a; uniforms.uProj.value = GLH * pr / (2 * Math.tan(THREE.MathUtils.degToRad(17.5))); }
   bodyFit();
 }
 // Form 0 deckungsgleich mit der Figur im Schlussbild von Kapitel 01 (kf.fitE: Bild = Anker + (Punkt − Blickpunkt)·Maßstab in px;
@@ -403,6 +416,7 @@ const sU = {
   uPeri: { value: 0 }, uPeriStart: { value: 0 }, uScan: { value: 100 }, uScanAmt: { value: 0 }, // Scanner (Handy, 6.11.)
   uDiff: { value: 0 }, uFine: { value: 0 }, uSharp: { value: isDesktop() ? 0 : 1 }, uEcht: { value: 0 }, // Wirbelsäule echt (A): Handy schärfer; uEcht: Schattierung der echten Säule (Punkt 4) // Handy 7.11.: Wirbelsäule differenziert, Nerv fein (PC vorgemerkt)
   uFocT: { value: new THREE.Vector4(0, 0, 0, 0) }, uFocS: { value: new THREE.Vector4(0, 1, 0, 0) }, uFocD: { value: 0.08 }, // Fokus: Segment wie im Film ausrichten (Mitte + Kippwinkel, Achse + halber Zusatzabstand, halbe Bandscheibe)
+  uPtr: uniforms.uPtr, uAsp: uniforms.uAsp, // Zeiger (17.11.): Punkte unter Maus/Finger etwas größer und warmweiß
   uFoc: { value: 0 }, uFocZone: { value: -10 }, uFocY: { value: new THREE.Vector3(-100, 100, 0) }, // Fokus: Auflösen außerhalb L4–L5 (Höhenband unten/oben, Mitte L4)
   uDiscMode: { value: DISC_MODE }, cDiscA: { value: C('#E0583C') }, // Bandscheiben (7.11. spät): 0 aktiv rot-orange · 1 alle · 2 alt blau
   cBone: { value: C('#F3EADA') }, cDisc: { value: C('#86AFC9') }, cDiscD: { value: C('#4FA8D6') }, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue,
@@ -455,8 +469,9 @@ const coreMat = new THREE.ShaderMaterial({
 const boneMat = new THREE.ShaderMaterial({
   uniforms: sU,
   vertexShader: GLSL_COMMON + /* glsl */`
-    attribute float aZone, aKind, aEdge; uniform float uMaxSize;
+    attribute float aZone, aKind, aEdge; uniform float uMaxSize; uniform vec4 uPtr; uniform float uAsp;
     varying vec3 vCol; varying float vVis;
+    ` + PTR_GLSL + /* glsl */`
     void main(){
       vec3 lp = focFit(position); float fo = 0.;
       if (uFoc > 0.) {
@@ -510,10 +525,12 @@ const boneMat = new THREE.ShaderMaterial({
       float sc = exp(-pow((p.y - uScan) * 16., 2.)) * uScanAmt; // Scanner: Band unter der Scan-Linie leuchtet
       col = mix(col, cAmber * 1.5 + vec3(.15), sc * .85);
       col = mix(col, cAmber * 1.15, fo * .75);
-      vCol = col; vVis = step(uCut, p.y) * uOn * step(fo, .97);
+      vVis = step(uCut, p.y) * uOn * step(fo, .97);
       vec4 mv = viewMatrix * vec4(p, 1.);
       gl_Position = projectionMatrix * mv;
-      gl_PointSize = clamp(uStip / -mv.z * sz * (uSharp > .5 ? .86 : 1.) * (1. - fo * .7), 1., uMaxSize) * (1. + g * .8 + sc * .7);
+      float pk = ptrK();
+      vCol = mix(col, max(col, cBone * 1.25), pk * .75);
+      gl_PointSize = clamp(uStip / -mv.z * sz * (uSharp > .5 ? .86 : 1.) * (1. - fo * .7), 1., uMaxSize) * (1. + g * .8 + sc * .7 + pk * .35);
     }`,
   fragmentShader: /* glsl */`
     varying vec3 vCol; varying float vVis;
@@ -875,10 +892,10 @@ function setActive(i) {
 // ---------- Nerven-Infos im Raum (PC): erscheinen Schritt für Schritt entlang der Bahn ----------
 const NINFO = {
   c12: { exit: 'Austritt C1–C2', nerv: 'Nn. suboccipitales · N. occipitalis major', gef: 'Tiefe Nackenmuskulatur', ziel: 'Hinterkopf', typ: 'Typisch: Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen', tgt: [84, 30] },
-  c56: { exit: 'Austritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [36, 240] },
+  c56: { exit: 'Austritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [18, 234] },
   th712: { exit: 'Austritt Th7–Th12', nerv: 'Untere Interkostalnerven · Bauchwand', gef: 'Gefühl: Rippenbogen, Bauchwand', ziel: 'bis zur Nabelhöhe (Th10)', typ: 'Typisch: gürtelförmiger Schmerz am Rippenbogen, Steifigkeit am Übergang zur LWS', tgt: [86, 195] }, // Flanke auf Nabelhöhe
   th16: { exit: 'Austritt Th1–Th6', nerv: 'Interkostalnerven, obere Rippen', gef: 'Brustkorbwand · Zwischenrippen', ziel: 'Brustkorb', typ: 'Typisch: atemabhängiges Stechen, Schmerz zwischen den Schulterblättern', tgt: [80, 118] },
-  l45: { exit: 'Austritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [76, 404] },
+  l45: { exit: 'Austritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [89, 410] },
   s1: { exit: 'Austritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [72, 412], pre: 'Iliosakralgelenk (ISG): verbindet Becken und Wirbelsäule.' },
 };
 const NC_KEYS = ['exit', 'nerv', 'gef', 'ziel', 'typ'];
@@ -1002,10 +1019,13 @@ function updateCalloutsMob(zoneKey, on, prog, opt = null) {
 }
 
 // Körper-Silhouette (zarte Partikel), an die Kamera gehängt, rechts im Bild; das Versorgungsgebiet glüht
-const silIdx = []; for (let i = 0; i < N; i += isDesktop() ? 6 : 9) silIdx.push(i);
-const silPos = new Float32Array(silIdx.length * 3);
-silIdx.forEach((j, k) => silPos.set([body.pos[j * 3], body.pos[j * 3 + 1], body.pos[j * 3 + 2] * 0.4], k * 3));
-const silGeo = new THREE.BufferGeometry(); silGeo.setAttribute('position', new THREE.BufferAttribute(silPos, 3));
+// (seit 17.11.: die sichtbaren Punkte der Figur aus Kapitel 01 – grobes Raster, Kontur, Körperlinien; gefüllt am Dateiende, silFill)
+const silGeo = new THREE.BufferGeometry(); silGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3));
+function silFill() {
+  const a = [];
+  for (let i = 0; i < N; i++) if (body.f0[i * 3] > 0) a.push(body.pos[i * 3], body.pos[i * 3 + 1], body.pos[i * 3 + 2] * 0.4);
+  silGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(a), 3));
+}
 const silU = { uOn: { value: 0 }, uTgt: { value: new V3() }, uTime: uniforms.uTime, uPix: uniforms.uPix, cBone: uniforms.cBone, cBlue: uniforms.cBlue, cPetrol: uniforms.cPetrol };
 const sil = new THREE.Points(silGeo, new THREE.ShaderMaterial({
   uniforms: silU, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
@@ -1015,8 +1035,8 @@ const sil = new THREE.Points(silGeo, new THREE.ShaderMaterial({
       float glow = exp(-d * d * 1.6) * (.75 + .25 * sin(uTime * 3. - d * 4.));
       vCol = mix(cPetrol * 1.3, cBlue * 1.6, glow) + vec3(.9) * glow * .35;
       vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
-      gl_PointSize = uPix * (1.2 + glow * 1.6) * 2.2; vA = uOn * (.16 + glow * .85); }`,
-  fragmentShader: /* glsl */`varying vec3 vCol; varying float vA; void main(){ float d = length(gl_PointCoord - .5); gl_FragColor = vec4(vCol, smoothstep(.5, .1, d) * vA);
+      gl_PointSize = uPix * (1. + glow * .9) * 2.1; vA = uOn * (.34 + glow * .66); }`,
+  fragmentShader: /* glsl */`varying vec3 vCol; varying float vA; void main(){ float d = length(gl_PointCoord - .5); gl_FragColor = vec4(vCol, (1. - smoothstep(.3, .5, d)) * vA);
     #include <colorspace_fragment>
   }`,
 }));
@@ -1968,6 +1988,7 @@ function qualityWatch(gap) {
   if (renderer.getPixelRatio() > pr) { renderer.setPixelRatio(pr); glDirty = true; layout(); }
   document.documentElement.dataset.q = QW.lvl;
 }
+const PTRV = [0, 0, 0.1, 0];
 function tick() {
   const nowT = performance.now(), gap = nowT - lastTick;
   lastTick = nowT;
@@ -2020,6 +2041,9 @@ function tick() {
     if (uniforms.uAlpha.value > 1 - out) uniforms.uAlpha.value = 1 - out;
   }
   uniforms.uSize.value = isDesktop() ? 1 : 1.1;
+  // Zeiger (Maus/Finger) für alle Bühnen: einmal je Bild nachführen, Hauptbühne in ihrer Zeichenfläche (fest am Fenster)
+  pointer.update(dt);
+  pointer.ndc({ left: 0, top: 0, width: VW, height: GLH }, PTRV, isDesktop() ? 58 : 50); uniforms.uPtr.value.fromArray(PTRV);
   uniforms.uSpread.value = reduced ? 0 : isDesktop() ? 0.32 : 0.28;
   livingHeadlines();
   uniforms.uFadeMid.value = isDesktop() ? 0.62 : 0.7;
@@ -2070,13 +2094,32 @@ function tick() {
 }
 // ---------- Kapitel 01 „Von Kopf bis Fuß“ (Auftrag K, Go Kai 16.11.2026) ----------
 // eigene Bühne (Baustein), läuft vor tick im selben Bildtakt; Sprünge (Striche rechts, Pille „Weiter“) gleiten über Lenis
-kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced,
+kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced, handover: true,
   scrollTo: (y, sm) => (lenis ? lenis.scrollTo(y, sm ? { duration: 1.6 } : { immediate: true }) : window.scrollTo({ top: y, behavior: sm ? 'smooth' : 'auto' })) });
 window.__kf = kf; // Prüfhilfe: __kf.state(), __kf.go(u)
+// Form 0 der Hauptwolke = dieselben Punkte wie die Figur in Kapitel 01 (Übergabe deckungsgleich, gleicher Punktabstand)
+{ const cl = kf.cloud();
+  if (cl && renderer) {
+    figureForm(N, cl, BODY_SCALE, body.pos, body.f0, body.heat);
+    uniforms.uTilt.value = cl.tilt;
+    ['position', 'aF0', 'aHeat'].forEach((k) => { geo.attributes[k].needsUpdate = true; });
+    silFill();
+    if (!morphSet) { geo.attributes.pos2.array.set(body.pos); geo.attributes.pos2.needsUpdate = true; } // bis die Wirbelsäule gerechnet ist
+  } }
 frameFns.push((now) => kf.update(now));
 frameFns.push(tick);
 requestAnimationFrame(function loop(now) { requestAnimationFrame(loop); runFrame(now); });
 
+
+// ---------- Text ruhig (Feinschliff 17.11.2026): eine Einblend-Art für alle Texte ohne eigenes Spiel ----------
+// Kennzeile, Einleitung, Zitat und die Überschriften von Manuthera/Stoßwelle kommen Zeile für Zeile von unten (CSS .fein);
+// die lebenden Überschriften (Achse, Dach, Tür), das Manifest und Kapitel 01 behalten ihr eigenes Spiel.
+if (reduced === false && 'IntersectionObserver' in window) {
+  const els = $$('main .kicker, main .lead, main .sign, main h2.manu-h, main h2.sw-h').filter((e) => e.closest('.kf') === null);
+  const seen = new Map();
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('fein-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: 0.15 });
+  els.forEach((e) => { const n = seen.get(e.parentNode) || 0; seen.set(e.parentNode, n + 1); e.style.setProperty('--fi', n); e.classList.add('fein'); io.observe(e); });
+}
 
 // ---------- Klickbares kenntlich machen (Go 1.11.2026, Variante A) ----------
 // Stufe 1: Termin-Knöpfe schlagen ab und zu wie ein Herz (nur in Ruhe, immer nur einer, Abstand wächst).

@@ -4,6 +4,35 @@
 import * as THREE from 'three';
 import { stage, FRAG, reduced, isDesktop, C } from '../manu/common.js';
 import { runSync } from '../shared/slice.js';
+import { pointer, PTR_GLSL } from '../shared/zeiger.js';
+
+// Feinschliff (17.11.2026, Go Kai „Ideen auf die ganze Website“): die Motive bleiben, wie sie sind – aber ihre Punkte liegen
+// gleichmäßig (von je sechs Kandidaten wird der genommen, der am weitesten von den schon gesetzten entfernt ist), sind gleich
+// groß und gestochen, ohne Flimmern, und antworten auf Maus/Finger (uPtr).
+function evenly(cell = 0.07) {
+  const g = new Map(), ci = (v) => Math.floor(v / cell) + 512, key = (x, y, z) => (x * 1024 + y) * 1024 + z;
+  const near = (p) => {
+    let m = cell * cell; const cx = ci(p[0]), cy = ci(p[1]), cz = ci(p[2]);
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
+      const l = g.get(key(cx + a, cy + b, cz + c)); if (!l) continue;
+      for (let k = 0; k < l.length; k += 3) { const dx = l[k] - p[0], dy = l[k + 1] - p[1], dz = l[k + 2] - p[2], d = dx * dx + dy * dy + dz * dz; if (d < m) m = d; }
+    }
+    return m;
+  };
+  return (fn) => {
+    let best = null, bd = -1;
+    for (let k = 0; k < 6; k++) { const p = fn(), d = near(p); if (d > bd) { bd = d; best = p; } if (d >= cell * cell) break; }
+    const k = key(ci(best[0]), ci(best[1]), ci(best[2])); (g.get(k) || g.set(k, []).get(k)).push(best[0], best[1], best[2]);
+    return best;
+  };
+}
+const FRAG_FEIN = /* glsl */`
+  varying vec3 vCol; varying float vA; varying float vSize;
+  void main(){
+    float d = length(gl_PointCoord - .5), aa = min(.25, 1.3 / vSize);
+    gl_FragColor = vec4(vCol, (1. - smoothstep(.5 - aa, .5, d)) * vA);
+    #include <colorspace_fragment>
+  }`;
 
 const R = Math.random;
 // Bewegungsarten (im Shader): 0 ruhig · 1 Hände drücken · 2 Welle läuft nach außen · 3 Drehen (Atlas) · 4 Kiefer öffnet
@@ -165,9 +194,10 @@ export function* initServicesGen(canvas, ui = {}) {
     const parts = m.parts(), tot = parts.reduce((s, q) => s + q.w, 0);
     const pos = new Float32Array(N * 3), kind = new Float32Array(N), anim = new Float32Array(N * 2);
     let i = 0;
+    const even = evenly();
     parts.forEach((q, qi) => {
       const cnt = qi === parts.length - 1 ? N - i : Math.round((q.w / tot) * N);
-      for (let j = 0; j < cnt && i < N; j++, i++) { const p = q.fn(); pos.set(p, i * 3); kind[i] = q.k; anim[i * 2] = q.a; anim[i * 2 + 1] = q.ph(p); }
+      for (let j = 0; j < cnt && i < N; j++, i++) { const p = even(q.fn); pos.set(p, i * 3); kind[i] = q.k; anim[i * 2] = q.a; anim[i * 2 + 1] = q.ph(p); }
     });
     // Reihenfolge mischen, damit Teile beim Wechsel gleichmäßig wandern
     for (let a = N - 1; a > 0; a--) { const b = Math.floor(R() * (a + 1)); for (let c = 0; c < 3; c++) { const t = pos[a * 3 + c]; pos[a * 3 + c] = pos[b * 3 + c]; pos[b * 3 + c] = t; } let t = kind[a]; kind[a] = kind[b]; kind[b] = t; for (let c = 0; c < 2; c++) { t = anim[a * 2 + c]; anim[a * 2 + c] = anim[b * 2 + c]; anim[b * 2 + c] = t; } }
@@ -182,13 +212,14 @@ export function* initServicesGen(canvas, ui = {}) {
   g.setAttribute('aKind', new THREE.BufferAttribute(new Float32Array(sets[0].kind), 1));
   g.setAttribute('aAnim', new THREE.BufferAttribute(new Float32Array(sets[0].anim), 2));
   g.setAttribute('aRnd', new THREE.BufferAttribute(rnd, 3));
-  const U = { uT: { value: 1 }, uTime: { value: 0 }, uPix: { value: 1 }, cols: { value: [C('#EDE5D3'), C('#E59A2F'), C('#5AA2D6'), C('#8BC34A'), C('#5F8EA0')] } };
+  const U = { uT: { value: 1 }, uTime: { value: 0 }, uPix: { value: 1 }, uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 }, cols: { value: [C('#EDE5D3'), C('#E59A2F'), C('#5AA2D6'), C('#8BC34A'), C('#5F8EA0')] } };
   const pts = new THREE.Points(g, new THREE.ShaderMaterial({
-    uniforms: U, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fragmentShader: FRAG,
+    uniforms: U, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fragmentShader: FRAG_FEIN,
     vertexShader: /* glsl */`
       attribute vec3 pos2, aRnd; attribute float aKind, aKindA; attribute vec2 aAnim;
-      uniform float uT, uTime, uPix; uniform vec3 cols[5];
-      varying vec3 vCol; varying float vA;
+      uniform float uT, uTime, uPix, uAsp; uniform vec4 uPtr; uniform vec3 cols[5];
+      varying vec3 vCol; varying float vA; varying float vSize;
+      ` + PTR_GLSL + /* glsl */`
       vec3 rotY(vec3 p, float a){ float c = cos(a), s = sin(a); return vec3(c*p.x + s*p.z, p.y, -s*p.x + c*p.z); }
       vec3 rotX(vec3 p, float a){ float c = cos(a), s = sin(a); return vec3(p.x, c*p.y - s*p.z, s*p.y + c*p.z); }
       vec3 rotZ(vec3 p, float a){ float c = cos(a), s = sin(a); return vec3(c*p.x - s*p.y, s*p.x + c*p.y, p.z); }
@@ -212,16 +243,17 @@ export function* initServicesGen(canvas, ui = {}) {
         float k = smoothstep(aRnd.y * .35, aRnd.y * .35 + .65, uT);
         vec3 dir = normalize(aRnd - .5 + 1e-4);
         vec3 p = mix(position, b, k) + dir * sin(k * 3.14159) * .25;
-        p += vec3(sin(t * .7 + aRnd.x * 6.28), cos(t * .6 + aRnd.z * 6.28), 0.) * .006;
         p = rotY(p, sin(t * .25) * .35);
         vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
-        gl_PointSize = uPix * (.8 + aRnd.z * .5) * 11. / -mv.z;
-        vCol = mix(cols[int(aKindA + .5)], cols[int(aKind + .5)], k);
-        vA = mix(.8, al, k) * (.55 + aRnd.x * .45);
+        float pk = ptrK();
+        vSize = max(1.6, uPix * 12.5 / -mv.z * (1. + pk * .55)); gl_PointSize = vSize;
+        vCol = mix(mix(cols[int(aKindA + .5)], cols[int(aKind + .5)], k), vec3(1., .95, .86), pk * .8);
+        vA = mix(.8, al, k) * .8; vA += (1. - min(vA, 1.)) * pk * .7;
       }`,
   }));
   pts.frustumCulled = false; st.scene.add(pts);
   let cur = 0, t = 0;
+  const PV = [0, 0, 0.1, 0];
   function show(i) {
     if (i === cur || i < 0 || i >= sets.length) return;
     // aktuellen Zwischenstand als neuen Start übernehmen (ohne Sprung)
@@ -242,6 +274,7 @@ export function* initServicesGen(canvas, ui = {}) {
     U.uTime.value = t;
     U.uT.value = Math.min(1, U.uT.value + dt / 1.3);
     U.uPix.value = st.renderer.getPixelRatio() * st.h / 500;
+    if (pointer.k() > 0 || U.uPtr.value.w > 0) { U.uPtr.value.fromArray(pointer.ndc(st.renderer.domElement.getBoundingClientRect(), PV, 50)); U.uAsp.value = st.aspect; }
     const d = 5.6 * (st.aspect < 1.1 ? 1.1 / st.aspect : 1);
     st.camera.position.set(0, 1.55, d); st.camera.lookAt(0, -0.12, 0);
   }

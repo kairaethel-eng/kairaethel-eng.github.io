@@ -3,6 +3,8 @@
 // mit eigener figur.js/gl.js); hier „Bewegung anhalten“ (hop-motion), der Umschalter bisher / neu und der Bildtakt.
 // Puls, src/kopf-fuss und die Seite figur-plus.html bleiben unberührt. Debug: window.__kf (state, go, ring, relax, setStyle).
 import { initKopfFuss } from './kapitel.js';
+import { figurePoints as oldPoints } from '../figur-plus/figur.js';
+import { createStage as oldStage } from '../figur-plus/gl.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const html = document.documentElement;
@@ -32,7 +34,7 @@ if (paused) {
 }
 
 // ---------- Bühne ----------
-const kf = initKopfFuss({ root: $('#kf'), isPaused: () => paused, reduced });
+const kf = initKopfFuss({ root: $('#kf'), isPaused: () => paused, reduced, old: { points: oldPoints, stage: oldStage } });
 requestAnimationFrame(function loop(now) { requestAnimationFrame(loop); kf.update(now); });
 window.__kf = kf; // Prüfhilfe: __kf.state(), __kf.go(u), __kf.ring(i), __kf.relax(), __kf.setStyle(true|false)
 

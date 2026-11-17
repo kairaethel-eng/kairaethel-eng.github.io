@@ -1,7 +1,14 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 17.11.2026 (Studie Feinschliff wartet auf Sichtprüfung · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 17.11.2026 abends (Feinschliff seitenweit in Puls umgesetzt, wartet auf Sichtprüfung · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Feinschliff seitenweit (Go Kai 17.11.2026 abends: „Wende mal deine Ideen auf die ganze Website an … Feinschliff können wir danach machen“) – umgesetzt, wartet auf Sichtprüfung
+- **Kai zur Studie:** „Sieht bis jetzt super aus.“ → der Stil gilt jetzt in ganz Puls und `live/`: Figur plus mit Gehirn und Nerven ist Kapitel 01 (damit ist auch „Figur plus → Puls“ entschieden), Bewegungsbänder aus Perlen, HOP-Kreise aus Perlenringen, Dachlinie als Perlen, Motive gleichmäßig und gestochen, Antwort unter Maus/Finger auf Figur, Hauptwolke, Wirbelsäule und Motiven, Überschriften Stärke 560, eine Einblend-Art.
+- **Merkregeln für alles Neue:** Punkte geordnet (gleicher Abstand, gleiche Größe, scharfer Rand), kein Zittern, kein Zufall im ruhenden Bild; Farben der Punkte: Petrol/Knochenweiß, Bernstein, ein Blau (Grün nur im Logo und in Häkchen/Ringen der Bedienung); Bewegung ruhig, eine zur Zeit.
+- Unverändert gelassen (bereits gestochen oder kein Partikel-Thema): Wirbelsäule, Manuthera-Liege, Film, Linienhaus, Stoßwelle. Lebende Überschriften und Manifest behalten ihr Spiel – Entscheidung offen.
+- Vergleichsseite `puls-vor-feinschliff.html` bleibt stehen, bis Kai entschieden hat; danach löschen (nur mit Go).
+- „Feinschliff danach“ (Kai): Liste der offenen Punkte in `UEBERGABE.md` ▶ Feinschliff seitenweit.
 
 ## Feinschliff: Partikel „professioneller“ (Go Kai 17.11.2026: „Go für alle deine besten Empfehlungen“) – Studie `feinschliff.html`, **Übernahme offen**
 - **Kai:** Puls sei „schon der Hammer“, ihm gefällt aber die professionelle Gestaltung/Animation eines Beispielvideos (Partikel-Gehirn „Nously“); gefragt, wie das in Partikel, Grafiken und Text-Einblendungen einfließen kann.
