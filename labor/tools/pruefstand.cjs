@@ -46,11 +46,13 @@ const STATES = [
   { id: 'kf-01-ankunft', go: kf(0.55), key: 1, ring: 0, wait: 700 }, // kurz nach dem Wisch: Fahrt läuft noch
   { id: 'kf-01', go: kf(0.76), key: 1, ring: 0 }, { id: 'kf-02', go: kf(1.7), key: 1, ring: 1 }, { id: 'kf-03', go: kf(2.7), key: 1, ring: 2 }, { id: 'kf-04', go: kf(3.7), key: 1, ring: 3 },
   { id: 'kf-schluss', go: kf(4.5) },
+  { id: 'auftakt-02', go: go('.auftakt-blk[data-for="bewegung"]', -0.3) }, // Kapitel-Auftakt (18.11.): große Ziffer, dahinter der Formwechsel
   { id: 'bewegung', go: go('#bewegung', 0) }, { id: 'hausordnung', go: go('#hausordnung', 0.1) },
+  { id: 'auftakt-03', go: go('.auftakt-blk[data-for="achse"]', -0.3) },
   { id: 'achse', go: go('#achse', 0.3), key: 1, wait: 6000 },
   ...STOPS.map((n, i) => ({ id: 'achse-' + n, go: stop(i), key: 1, wait: 5000 })),
-  { id: 'dach', go: go('#dach', 0) }, { id: 'leistungen', go: go('#allTitle', -0.1) }, { id: 'manuthera', go: go('#manuthera', 0), wait: 5000 },
-  { id: 'stosswelle', go: go('#stosswelle', 0) }, { id: 'tuer', go: go('#tuer', 0), wait: 12000 }, // Tür C: Schritt 6,4 s + Knöpfe nacheinander
+  { id: 'auftakt-04', go: go('.auftakt-blk[data-for="dach"]', -0.3) }, { id: 'dach', go: go('#dach', 0) }, { id: 'leistungen', go: go('#allTitle', -0.1) }, { id: 'manuthera', go: go('#manuthera', 0), wait: 5000 },
+  { id: 'stosswelle', go: go('#stosswelle', 0) }, { id: 'auftakt-05', go: go('.auftakt-blk[data-for="tuer"]', -0.3) }, { id: 'tuer', go: go('#tuer', 0), wait: 12000 }, // Tür C: Schritt 6,4 s + Knöpfe nacheinander
 ];
 const FILMS = [
   { id: 'kf-wisch', go: kf(0.1), k: 0.9 },

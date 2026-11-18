@@ -99,7 +99,7 @@ if (!reduced) {
 const scrollToY = (y) => (lenis ? lenis.scrollTo(y, { duration: 1.8 }) : scrollTo({ top: y }));
 $$('a[href^="#"]:not(.skip):not([data-termin]):not(.ego-contact)').forEach((a) => a.addEventListener('click', (e) => { // .skip: Browser-Sprung, damit der Fokus mitgeht (Durchsicht 7.11.)
   const id = a.getAttribute('href'), t = $(id); if (!t) return;
-  e.preventDefault(); scrollToY(t.getBoundingClientRect().top + scrollY);
+  e.preventDefault(); scrollToY((auftakt[t.id] || t).getBoundingClientRect().top + scrollY); // Kapitel-Link landet am Auftakt
   // 13.11. (T4): Fokus geht mit zum Ziel (Tastatur, Vorleseprogramme) und die Adresse merkt sich das Kapitel (Link teilen, neu laden)
   if (!t.hasAttribute('tabindex')) t.setAttribute('tabindex', '-1');
   t.focus({ preventScroll: true });
@@ -291,7 +291,7 @@ const vert = /* glsl */`
     vec3 n = normalize(vec3(aRand.x-.5, aRand.y-.5, aRand.z-.5)+1e-4);
     // Streuung im Verhältnis zur Formgröße (auf dem Handy kleiner, damit Text frei bleibt)
     float ws = mix(uXf[i0].w, uXf[i1].w, t);
-    // Studie „Auftakt“ (uDust, 18.11.): als feiner Staub streuen die Punkte nur halb so weit
+    // als feiner Staub (uDust, 18.11.) streuen die Punkte nur halb so weit
     p += n * sin(t*3.14159) * (1.2 + aRand.w*1.6) * ws * uSpread * (1. - .5 * uVeil * step(.01, uDust));
     // Intro: aus der Tiefe einfliegen
     p += n * (1.-uIntro) * (6. + aRand.x*8.) * ws * uSpread;
@@ -301,7 +301,7 @@ const vert = /* glsl */`
     float a = .85 * (1. - uFadeMid*sin(t*3.14159)) * mix(aA, aB, t);
     // Handy, Wirbelsäule <-> Dach (Go Kai 18.11. „1a“): die Punkte wandern unsichtbar und erscheinen erst an der Dachlinie
     a *= mix(1., smoothstep(.86, 1., t), uVeil);
-    // Studie „Auftakt“ (Go Kai 18.11. „2a“): statt unsichtbar zu wandern, löst sich knapp die Hälfte der Punkte als feiner
+    // Staub (Go Kai 18.11. „2a“, nach der Studie fest): statt unsichtbar zu wandern, löst sich knapp die Hälfte der Punkte als feiner
     // Staub und sammelt sich zur nächsten Form – klein (feste Größe, unabhängig von der Nahansicht), höchstens 60 % deckend
     float dustK = uVeil * step(.01, uDust); // uDust = Anteil der Punkte, die als Staub sichtbar werden (Handy 1 → 45 %, PC weniger: dort gibt es mehr Punkte)
     a = max(a, dustK * step(aRand.z, .45 * uDust) * .6 * smoothstep(0., .22, t) * (1. - smoothstep(.8, 1., t)));
@@ -1210,23 +1210,24 @@ segBtns.forEach((b) => b.addEventListener('click', () => {
 // der Kartenoberkante → Karte blendet oben aus. Nach der letzten Karte: ganze Wirbelsäule groß in der Mitte,
 // stehen lassen, dann löst sie sich nach oben auf und das Haus entsteht in der Bildmitte.
 const axisNote = $('#achse .note'), dachSec = $('#dach');
-// ---------- Studie „Kapitel-Auftakt“ (18.11.2026, Go Kai: „Go alle Empfehlungen“ → erst als Studie an einem Übergang) ----------
-// Nur mit ?auftakt=a oder ?auftakt=b in der Adresse; ohne den Schalter ist Puls unverändert. Gezeigt wird der Übergang 03 → 04:
-//   a  Kapitel-Auftakt: eigener ruhiger Abschnitt vor dem Kapitel (große Ziffer, Name, eine Linie zieht sich quer)
-//   b  Trennband: eine durchgehende Linie mit Ziffer und Name, ohne eigenen Abschnitt
-// Dazu in beiden Fällen: feiner Staub statt unsichtbarer Wanderung der Punkte (Shader uDust). Kleiner Umschalter unten im Bild.
-const AUFTAKT = (() => { const v = new URLSearchParams(location.search).get('auftakt'); return v === 'a' || v === 'b' ? v : null; })();
-let auftaktEl = null;
-if (AUFTAKT && dachSec) {
-  document.documentElement.classList.add('auftakt', 'auftakt-' + AUFTAKT);
-  auftaktEl = document.createElement('div'); auftaktEl.className = 'auftakt-blk';
-  auftaktEl.innerHTML = '<div class="wrap"><p class="au-row"><span class="au-no">04</span><span class="au-txt"><span class="au-name">Dach</span><span class="au-sub">Praxis &amp; Leistungen</span></span></p><i class="au-line" aria-hidden="true"></i></div>';
-  dachSec.parentNode.insertBefore(auftaktEl, dachSec);
-  new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) auftaktEl.classList.add('in'); }), { threshold: AUFTAKT === 'a' ? 0.3 : 0.6 }).observe(auftaktEl);
-  const sw = document.createElement('nav'); sw.className = 'au-sw'; sw.setAttribute('aria-label', 'Studie Kapitel-Auftakt');
-  sw.innerHTML = '<span>Studie Auftakt</span>' + [['a', 'A'], ['b', 'B'], ['', 'aus']].map(([v, t]) => `<a href="${location.pathname}${v ? '?auftakt=' + v : ''}#achse"${v === AUFTAKT ? ' aria-current="true"' : ''}>${t}</a>`).join('');
-  document.body.appendChild(sw);
+// ---------- Kapitel-Auftakt (18.11.2026, Studie A/B → Kai: „A“) ----------
+// Vor jedem der Kapitel 02–05 steht ein eigener ruhiger Abschnitt: große kursive Ziffer, Name, Untertitel wie in der Kopfleiste, eine
+// Linie zieht sich quer. Dahinter läuft der Formwechsel der Punkte (der Staub sammelt sich zur neuen Form) – der Übergang zeigt
+// den Kapitelwechsel. Der kleine Kicker im Kapitel entfällt dafür (CSS html.auftakt). Ohne JavaScript gibt es keinen Auftakt,
+// die Kicker bleiben. Kapitelanfang für Formwechsel, Kopfleiste und Kapitel-Links ist die Oberkante des Auftakts (auTop).
+const AU_INFO = { bewegung: ['02', 'Bewegung', 'Über HOP'], achse: ['03', 'Achse', 'Wirbelsäule'], dach: ['04', 'Dach', 'Praxis &amp; Leistungen'], tuer: ['05', 'Tür', 'Kontakt &amp; Termin'] };
+const auftakt = {};
+{
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.3 });
+  Object.entries(AU_INFO).forEach(([id, [no, name, sub]]) => {
+    const sec = document.getElementById(id); if (!sec) return;
+    const el = document.createElement('div'); el.className = 'auftakt-blk'; el.dataset.for = id;
+    el.innerHTML = `<div class="wrap"><p class="au-row"><span class="au-no">${no}</span><span class="au-txt"><span class="au-name">${name}</span><span class="au-sub">${sub}</span></span></p><i class="au-line" aria-hidden="true"></i></div>`;
+    sec.parentNode.insertBefore(el, sec); auftakt[id] = el; io.observe(el);
+  });
+  document.documentElement.classList.add('auftakt');
 }
+const auTop = (sec) => (auftakt[sec.id] || sec).getBoundingClientRect().top; // Kapitelanfang im Fenster (mit Auftakt)
 const MOB_X2 = { x: 0, y: 1.65, s: 0.28 }; // = layout() Handy (4A)
 let camArrive = 0, gateK = 1, dotsStuck = 0;
 const dotsBox = $('.seg-dots');
@@ -1838,10 +1839,13 @@ if (window.ResizeObserver) new ResizeObserver(chapDirty).observe(document.body);
 function targetMorph() {
   const vh = VH;
   let m = 0;
-  if (!chapTop) chapTop = chapters.map((c) => c.getBoundingClientRect().top + scrollY);
+  // mit Auftakt: der Formwechsel läuft hinter dem Auftakt. Ausnahme Kapitel 03: dort entsteht die Wirbelsäule mit ihrer Bühne
+  // (Abtastlinie von oben) – finge der Formwechsel schon am Auftakt an, stünde am PC lange eine helle Säule aus groben Punkten
+  // hinter „03“, bevor der Knochen sie ablöst. Hinter „03“ lösen sich stattdessen die HOP-Kreise auf (logoGeo.axis).
+  if (!chapTop) chapTop = chapters.map((c) => (c === axis ? c.getBoundingClientRect().top : auTop(c)) + scrollY);
   const sy = scrollY;
   // Hausordnung (seit 14.11. nachts nach Kapitel 02): Ende des Textes von Kapitel 02 + Kicker der Hausordnung (absolut, gemerkt)
-  logoGeo = logoGeo || { list: statement.parentNode.lastElementChild.getBoundingClientRect().bottom + sy, kick: rules.querySelector('.kicker').getBoundingClientRect().top + sy, rules: rules.getBoundingClientRect().top + sy, axis: axis.getBoundingClientRect().top + sy };
+  logoGeo = logoGeo || { list: statement.parentNode.lastElementChild.getBoundingClientRect().bottom + sy, kick: rules.querySelector('.kicker').getBoundingClientRect().top + sy, kickB: rules.querySelector('.kicker').getBoundingClientRect().bottom + sy, laws: $('#laws').getBoundingClientRect().top + sy, rules: rules.getBoundingClientRect().top + sy, axis: auTop(axis) + sy };
   for (let i = 0; i < chapters.length; i++) {
     const r = { top: chapTop[i] - sy };
     const s = +chapters[i].dataset.stage;
@@ -1857,10 +1861,6 @@ function targetMorph() {
     // Handy: Bewegungslinien → Wirbelsäule früher fertig, damit der Scan schon mit der Überschrift entsteht;
     // seit 14.11. nachts etwas später begonnen, damit die Wirbelsäule nicht über dem letzten Paragraphen der Hausordnung entsteht
     if (!isDesktop() && prev === 1 && s === 2) t = smooth(vh * 1.1, vh * 0.25, r.top); // 16.11.: 0,85 statt 0,48 (Beginn liegt unter den HOP-Kreisen)
-    // Studie „Auftakt“ a: der Staub sammelt sich schon hinter dem Auftakt – der Formwechsel beginnt, wenn der Auftakt hereinkommt
-    if (auftaktEl && AUFTAKT === 'a' && prev === 2 && s === 3) { const rt = r.top - auftaktEl.offsetHeight * 0.8; t = isDesktop() ? smooth(vh * 0.95, vh * 0.05, rt) : smooth(vh * 1.05, vh * 0.2, rt); }
-    // Variante b hat keinen eigenen Abschnitt: der Staub muss weg sein, bevor der Text von Kapitel 04 in der Bildmitte steht
-    if (auftaktEl && AUFTAKT === 'b' && prev === 2 && s === 3) t = isDesktop() ? smooth(vh * 1.1, vh * 0.5, r.top) : smooth(vh * 1.3, vh * 0.62, r.top);
     if (t > 0) m = prev + (s - prev) * t;
   }
   return m;
@@ -1882,9 +1882,9 @@ function targetLogo() {
 }
 // Handy: Logo steht mittig im freien Raum zwischen dem Text von Kapitel 02 (bzw. Leiste) und „§ Die Hausordnung“ und steigt mit dem Text auf
 function logoPlace() {
-  const vh = VH, sy = scrollY, lb = logoGeo.list - sy, kt = logoGeo.kick - sy;
-  let c = Math.min((Math.max(lb, 78) + kt) / 2, vh * 0.6);
-  c = Math.min(Math.max(c, lb + 100), kt - 100); // 18.11.: etwas mehr Luft zum Zitat darüber (vorher 75/90)
+  // 18.11. nachmittags (Kai: „Überschriften nach oben, Animationen darunter“): die Kreise stehen jetzt UNTER „§ Die Hausordnung“,
+  // mittig im freien Raum zwischen dem Kicker und den Paragraphen (vorher darüber, zwischen Kapitel 02 und dem Kicker)
+  const sy = scrollY, c = (logoGeo.kickB - sy + logoGeo.laws - sy) / 2;
   const hh = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)), wpp = 2 * hh / GLH;
   uniforms.uXf.value[4].set(0, (GLH / 2 - c) * wpp, 0, 0.32);
 }
@@ -1899,7 +1899,7 @@ const lh = initHouse({
   root: $('#lhRoot'), isPaused: () => paused, headLine: false,
   canDraw: () => !renderer || reduced || morphNow > 2.86, // erst zeichnen, wenn die Partikel an der Dachlinie angekommen sind
   onDialog: (open) => { if (open) lenis?.stop(); else lenis?.start(); },
-  goto: (h) => { const t = $(h); if (t) scrollToY(t.getBoundingClientRect().top + scrollY); },
+  goto: (h) => { const t = $(h); if (t) scrollToY((auftakt[t.id] || t).getBoundingClientRect().top + scrollY); },
 });
 const tourWant = null; // die Kamera der Partikel-Szene fährt in Kapitel 04 nicht mehr
 // Form 3 auf das SVG-Dach legen: Bildschirm-Pixel → Welt (Ebene z = 0, Übersichtskamera wie logoPlace)
@@ -1967,7 +1967,7 @@ const doorC = (() => {
     const dt = Math.min(0.1, (now - last) / 1000); last = now;
     if (phase === 'wait' && still()) showNow();
     // weit weg und noch nichts entstanden: nichts messen, nichts zeichnen
-    const dTop = door.getBoundingClientRect().top;
+    const dTop = auTop(door); // mit Auftakt: der Staub der Tür sammelt sich schon hinter „05 Tür“
     if (C.state === 'form' && C.f === 0 && dTop > innerHeight * 2.2) return;
     // die Bühne endet an der Oberkante von Kapitel 05 – sie liegt nie über dem Text davor (Stoßwelle, häufige Fragen)
     const clip = dTop > 1 ? `inset(${Math.round(dTop)}px 0 0 0)` : '';
@@ -2125,7 +2125,7 @@ function tick() {
   uniforms.uMorph.value = morphNow;
   uniforms.uVeil.value = morphNow > 2.02 && morphNow < 3 && (isDesktop() ? pcScan() : scanOn()) ? 1 : 0; // Scanner (Handy und PC): Weg Wirbelsäule <-> Dach unsichtbar („1a“)
   uniforms.uKeep.value = isDesktop() ? 0 : 1; // Handy/Tablet: Streifen laufen hinter den HOP-Kreisen weiter
-  uniforms.uDust.value = AUFTAKT ? (isDesktop() ? 0.45 : 1) : 0; // Studie: feiner Staub statt unsichtbar (PC: kleinerer Anteil, dort sind es mehr Punkte)
+  uniforms.uDust.value = isDesktop() ? 0.45 : 1; // feiner Staub statt unsichtbarer Wanderung (Kai 18.11.: „verstreute Übergänge wieder“; PC: kleinerer Anteil, dort sind es mehr Punkte)
   logoNow += (targetLogo() - logoNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uLogo.value = logoNow < 0.002 ? 0 : logoNow;
   manuK = manuVisible();

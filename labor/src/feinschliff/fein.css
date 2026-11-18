@@ -39,6 +39,13 @@
 @keyframes feinIn{from{opacity:0;transform:translateY(.875rem)}to{opacity:1;transform:none}}
 @media (max-width:920px){
   .kf-fein .kf-st,.kf-fein .kf-end{transform:none}
+  /* 18.11. (Kai: „Überschriften nach oben, Animationen sowie Texte erst darunter“): jeder Block füllt die Bühne, die Überschrift
+     steht oben unter der Kopfleiste, der Text unten; die Figur steht dazwischen (Lage: kapitel.js layout, topMode) */
+  .kf-fein .kf-hero,.kf-fein .kf-st,.kf-fein .kf-end{top:calc(env(safe-area-inset-top,0px) + 5.75rem);bottom:calc(env(safe-area-inset-bottom,0px) + 1.5rem);display:flex;flex-direction:column;pointer-events:none}
+  .kf-fein .kf-hero .kf-sub,.kf-fein .kf-st .kf-txt,.kf-fein .kf-end .kf-txt{margin-top:auto}
+  .kf-fein .kf-acts,.kf-fein .kf-acts *{pointer-events:auto}
+  .kf-fein .kf-end .kf-txt{margin-bottom:1.125rem}
+  .kf-fein .kf-shade{height:100%;background:linear-gradient(rgba(10,22,27,.9),rgba(10,22,27,.72) 22%,rgba(10,22,27,0) 36%,rgba(10,22,27,0) 60%,rgba(10,22,27,.8) 74%,rgba(10,22,27,.94))}
   .kf-fein .kf-hero h1{font-size:clamp(2.25rem,10vw,3.625rem);margin-bottom:1.125rem}
   .kf-fein .kf-st h2{font-size:clamp(1.75rem,7.8vw,2.625rem);margin-bottom:.875rem}
   .kf-fein .kicker{margin-bottom:1.125rem}

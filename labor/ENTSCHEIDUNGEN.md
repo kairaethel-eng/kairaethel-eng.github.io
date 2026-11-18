@@ -3,11 +3,18 @@
 Stand: 18.11.2026 (Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Kapitel-Auftakt, Staub, Überschrift oben (Kai 18.11.2026 abends: „A Pc nebeneinander“) – umgesetzt, wartet auf Sichtprüfung
+- **Entschieden:** Jedes der Kapitel 02–05 beginnt mit einem Auftakt (Variante A: eigener Abschnitt, große Ziffer, Name, Linie). B (Trennband) ist verworfen.
+- **Entschieden:** Übergänge zeigen feinen Staub (2a) statt unsichtbarer Wanderung; der Formwechsel läuft hinter dem Auftakt.
+- **Entschieden (Kai: „Überschriften alle nach oben, Animationen sowie Texte erst darunter“):** Reihenfolge je Kapitel am Handy und Tablet: Überschrift → Animation → Text. Am PC bleiben Überschrift und Grafik nebeneinander.
+- **Merkregel:** Neue Bausteine am Handy immer in dieser Reihenfolge bauen; Grafik nie über der Überschrift ihres Kapitels.
+- **Offen:** PC-Start (Überschrift auf mittlerer Höhe neben der Figur) – Frage an Kai blieb unbeantwortet, unverändert.
+
 ## Tür C in Puls, Streifen am Handy/Tablet, Studie Kapitel-Auftakt (Go Kai 18.11.2026 nachmittags: „Go alle Empfehlungen“)
 - **Entschieden:** Tür C („Ein Schritt hindurch“, beruhigt) ist in Puls eingebaut – Knöpfe erst mit offener Tür, langsam nacheinander; ohne Bewegung sofort.
 - **Entschieden:** Die Partikelstreifen von Kapitel 02 laufen auf allen Geräten hinter dem Text; die HOP-Kreise entstehen erst, wenn die Hausordnung herankommt.
 - **Entschieden (Richtung):** Die verstreuten Übergänge kommen zurück – als feiner Staub (2a), nicht als Wolke aus großen Punkten. Der Übergang soll zugleich den Kapitelwechsel zeigen (4a „Kapitel-Auftakt“).
-- **Offen, Kai entscheidet an der Studie:** Auftakt A (eigener Abschnitt) oder B (Trennband); danach Ausbau auf alle Kapitel.
+- **Erledigt (Kai abends: „A“):** Auftakt A, Ausbau auf alle Kapitel – siehe Abschnitt darüber.
 - **Merkregel:** „Verstreut“ ja, „explodiert“ nein – Staub hat feste kleine Punktgröße (nicht an die Nahansicht gekoppelt), ist höchstens zu 60 % deckend und wandert nie über Text, der gerade gelesen wird.
 
 ## Handy: Übergang 03 ↔ 04, freie Wirbelsäule, Text der Stationen (Go Kai 18.11.2026 per Arbeitsblatt: „1a · 2a · 3“) – umgesetzt, wartet auf Sichtprüfung

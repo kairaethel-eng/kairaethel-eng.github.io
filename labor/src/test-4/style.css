@@ -234,8 +234,10 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 
 /* Tür */
 .door{padding-top:var(--gap-chap)}
-/* Studie „Kapitel-Auftakt“ (18.11., nur mit ?auftakt=a|b): Variante a = eigener Abschnitt mit großer Ziffer, b = Trennband */
-.auftakt-blk{position:relative;z-index:1}
+/* Kapitel-Auftakt (18.11., Kai: „A“): eigener Abschnitt vor den Kapiteln 02–05 – große Ziffer, Name, Untertitel, eine Linie.
+   Wird von main.js eingefügt (html.auftakt); der kleine Kicker im Kapitel entfällt dann. */
+.auftakt-blk{position:relative;z-index:1;display:flex;align-items:flex-end;min-height:56svh;padding-top:var(--gap-chap)}
+.auftakt-blk .wrap{width:100%}
 .auftakt-blk .au-row{display:flex;align-items:flex-end;gap:clamp(1rem,2.6vw,2.5rem);margin:0}
 .auftakt-blk .au-no{font:italic 400 clamp(7.5rem,17vw,15rem)/.78 var(--serif);color:var(--amber);letter-spacing:-.02em}
 .auftakt-blk .au-txt{display:flex;flex-direction:column;gap:.625rem;padding-bottom:.4em}
@@ -247,23 +249,12 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 .auftakt-blk .au-line{transform:scaleX(0);transition:transform 1.8s var(--ease) .15s}
 .auftakt-blk.in .au-no,.auftakt-blk.in .au-txt{opacity:1;transform:none}
 .auftakt-blk.in .au-line{transform:none}
-html.auftakt-a .auftakt-blk{display:flex;align-items:flex-end;min-height:62svh;padding-top:var(--gap-chap)}
-html.auftakt-a .auftakt-blk .wrap{width:100%}
-html.auftakt-a .roof{padding-top:clamp(4rem,10vh,6.5rem)}
-html.auftakt-b .auftakt-blk{padding-top:calc(var(--gap-chap) * .7)}
-html.auftakt-b .auftakt-blk .au-row{align-items:baseline;gap:.875rem}
-html.auftakt-b .auftakt-blk .au-no{font-size:clamp(2.25rem,4vw,3.25rem);line-height:1}
-html.auftakt-b .auftakt-blk .au-txt{flex-direction:row;align-items:baseline;gap:.875rem;padding-bottom:0}
-html.auftakt-b .auftakt-blk .au-name{font:600 .875rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase}
-html.auftakt-b .auftakt-blk .au-line{margin-top:.875rem}
-html.auftakt-b .roof{padding-top:clamp(2rem,5vh,3.5rem)}
-html.auftakt .roof-head .kicker{display:none}
-.au-sw{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + .625rem);transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:.25rem;padding:.25rem .375rem .25rem .75rem;border-radius:1.5rem;border:1px solid rgba(224,154,53,.5);background:rgba(10,22,27,.94);font:600 .6875rem/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
-.au-sw span{margin-right:.375rem;white-space:nowrap}
-.au-sw a{display:flex;align-items:center;justify-content:center;min-width:2.5rem;height:2rem;padding:0 .625rem;border-radius:1rem;color:var(--txt);text-decoration:none}
-.au-sw a[aria-current]{background:var(--amber);color:#0A161B}
+html.auftakt .manifest{padding-block:clamp(3rem,8vh,5rem) 0}
+html.auftakt .roof{padding-top:clamp(4rem,10vh,6.5rem)}
+html.auftakt .door{padding-top:clamp(3rem,8vh,5rem)}
+html.auftakt .manifest .wrap>.kicker,html.auftakt .axis-head .kicker,html.auftakt .roof-head .kicker,html.auftakt .door-inner .kicker{display:none}
 @media (prefers-reduced-motion:reduce){.auftakt-blk .au-no,.auftakt-blk .au-txt,.auftakt-blk .au-line{transition:none;opacity:1;transform:none}}
-html:not(.js) .auftakt-blk,html:not(.js) .au-sw{display:none}
+@media print{.auftakt-blk{min-height:0;padding-top:2rem}.auftakt-blk .au-no,.auftakt-blk .au-txt,.auftakt-blk .au-line{opacity:1;transform:none}}
 /* Tür C „Ein Schritt hindurch“ (18.11., Baustein src/tuer/varC.js): feste Bühne hinter dem Text; Knöpfe erst mit offener Tür,
    langsam nacheinander (door-wait → door-open), ohne Bewegung sofort (door-now). Ohne JavaScript greift nichts davon. */
 .c-stage,.c-glow{display:none}
@@ -427,7 +418,8 @@ html:not(.js) button.ix-link{display:none}
   .serv-name{bottom:12%;font-size:1.0625rem} /* im deckenden Teil des Verlaufs, sonst liegt der Name über den Leistungsnamen */
   .door{background:linear-gradient(rgba(10,22,27,0),var(--ink) 8rem);padding-top:var(--gap-chap)}
   html.door-c:not(.no-gl) .door{background:none} /* Tür C: die Bühne steht hinter dem Text – die Punktwolke ist hier ohnehin ausgeblendet */
-  .rules-sticky{padding-block:19rem calc(var(--gap-chap) - 6rem)} /* oben Platz für die HOP-Kreise zwischen Kap. 02 und „§ Die Hausordnung“ */
+  .rules-sticky{padding-block:var(--gap-chap) calc(var(--gap-chap) - 6rem)}
+  .rules .kicker{margin-bottom:14rem} /* 18.11.: Platz für die HOP-Kreise UNTER „§ Die Hausordnung“ (vorher 19rem über dem Kicker) – Überschrift oben, Animation darunter */
   .law-prog{margin-top:1.5rem;max-width:16rem}
   .laws{min-height:40svh}
   .laws b{font-size:3.5rem}
@@ -838,7 +830,7 @@ html:not(.js) .index button{cursor:default}
 @media print{
   :root{--txt:#111;--dim:#333;--mute:#555;--line:#ccc;--amber:#8a5a00}
   body{background:#fff;color:#111}
-  #gl,.c-stage,.c-glow,.au-sw,.grain,.top,.skip,.still,.axis-hint,.segnav,.seg-dots,.scan-rail,.tour-ctrl,.roof-grid .hint,.ego,.manu-stage,.manu-modes,.serv-stage,.law-prog,.touch-hint,.turn-note,.only-fine,.only-touch,dialog,.btn,#copyMail{display:none!important}
+  #gl,.c-stage,.c-glow,.grain,.top,.skip,.still,.axis-hint,.segnav,.seg-dots,.scan-rail,.tour-ctrl,.roof-grid .hint,.ego,.manu-stage,.manu-modes,.serv-stage,.law-prog,.touch-hint,.turn-note,.only-fine,.only-touch,dialog,.btn,#copyMail{display:none!important}
   .chapter,.wrap,.axis,.axis-sticky,.rules-sticky,.axis-inner,.manu,.roof,.door{position:static!important;display:block!important;height:auto!important;min-height:0!important;overflow:visible!important;padding-top:.5rem!important;padding-bottom:.5rem!important;background:none!important}
   .seg-card,.card,.laws li{position:static!important;opacity:1!important;visibility:visible!important;transform:none!important;filter:none!important;margin-bottom:1rem;break-inside:avoid;border:0!important;background:none!important}
   .seg-cards,.cards,.laws{min-height:0!important;opacity:1!important;visibility:visible!important}

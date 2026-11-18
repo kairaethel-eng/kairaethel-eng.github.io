@@ -19,16 +19,19 @@ stehen wörtlich in `labor/TECHNIK.md` – dort gezielt nachschlagen, nicht alle
 - Richtung **„Puls · Scan“**: dunkel, Partikel, Bernstein-Akzente. Quellen `labor/src/test-4/` → `test-4-puls-scan.html` (Labor) und `live/` („Stand jetzt“, https://kairaethel-eng.github.io/labor/live/).
 - Seitenfolge: 01 Von Kopf bis Fuß (Figur mit Gehirn und Nerven) → 02 Bewegung (Perlenbänder) → § Hausordnung (HOP-Kreise) → 03 Achse (echte Wirbelsäule, Scanner, Film „Bandscheibenvorfall“) → 04 Dach (Linienhaus, Leistungen mit Motiven, Manuthera, Stoßwelle) → 05 Tür.
 - Seit 17./18.11.2026 gilt der **Feinschliff-Stil** auf der ganzen Seite (Studie `feinschliff.html`, Vergleich `puls-vor-feinschliff.html`).
+- Seit 18.11.2026 abends: **Kapitel-Auftakt** vor den Kapiteln 02–05 (große Ziffer, Name, Linie), **Staub** als Übergang 03 ↔ 04, **Tür C** in Kapitel 05, Streifen von Kapitel 02 auch am Handy/Tablet.
 - Startadresse (`/index.html`, `/impressum.html`, `/datenschutz.html`) ist eine Übergangsseite und wird **nie ohne ausdrückliches Go** geändert. Livegang ruht.
 - Entwurfsseiten und Archiv (Figur plus, Tür, Haus-Licht, Fusion, Zuhause, Manuthera, Vorfall …): Liste und Technik in `TECHNIK.md`.
 
 ## Gestaltungsregeln (prüfbar – gelten für alles Neue)
 - **Punkte:** geordnet (gleicher Abstand, gleiche Größe, scharfer Rand), kein Zittern, kein Zufall im ruhenden Bild.
 - **Farben der Punkte:** Petrol → Knochenweiß, Bernstein (Spannung, Nerven, Akzent), ein Blau; Grün nur im Logo und in Häkchen/Ringen der Bedienung.
-- **Bewegung:** ruhig, eine zur Zeit, nichts „explodiert“. Film-Regel: nie mehr als 28 % des Bilds hell, kein Sprung über 8 Punkte von Bild zu Bild; bei Wisch-Übergängen zwischen Kapiteln (Prüfstand) höchstens 4 Punkte.
+- **Bewegung:** ruhig, eine zur Zeit, nichts „explodiert“. Übergänge dürfen verstreut sein, aber als feiner Staub: kleine feste Punktgröße, höchstens 60 % deckend, nie über Text, der gerade gelesen wird. Film-Regel: nie mehr als 28 % des Bilds hell, kein Sprung über 8 Punkte von Bild zu Bild; bei Wisch-Übergängen zwischen Kapiteln (Prüfstand) höchstens 4 Punkte.
 - **Hauptgrafik** (Wirbelsäule in der Nahansicht, Stelle im Ring der Figur) ist höchstens zu 35 % verdeckt.
 - **Text** steht nie auf unruhigem Grund (höchstens 15 % der Textfläche unter Kontrast 3:1 groß bzw. 4,5:1).
-- **Abstände:** `--gap-chap` vor jedem nummerierten Kapitel, `--gap-sub` vor Blöcken in Kapitel 04 – keine eigenen Zahlen.
+- **Kapitelanfang:** jedes nummerierte Kapitel ab 02 beginnt mit dem Auftakt (`.auftakt-blk`); der Formwechsel der Punkte läuft dahinter. Kein eigener Kicker im Kapitel.
+- **Reihenfolge am Handy und Tablet:** Überschrift → Animation → Text (Kai 18.11.). Am PC stehen Überschrift und Grafik nebeneinander, die Überschrift oben in ihrer Spalte.
+- **Abstände:** `--gap-chap` vor jedem nummerierten Kapitel (steckt im Auftakt), `--gap-sub` vor Blöcken in Kapitel 04 – keine eigenen Zahlen.
 - **Überschriften:** Stärke 560; am PC höchstens zwei Zeilen (Start drei), die kursive Wortgruppe bleibt zusammen.
 - **Texte:** Sie-Form, ruhig, keine Heilversprechen (HWG); Gesundheitsinfos mit dem Standard-Hinweis aus `hop-praxis`.
 - **Technik:** eine HTML-Datei je Seite, keine externen Abrufe, `noindex` im Labor; CSS in rem, Haarlinien in px; nichts Kostenpflichtiges.

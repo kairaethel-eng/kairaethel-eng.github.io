@@ -80,7 +80,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
   const lineEls = [0, 1, 2].map((i) => [$(`.kf-l${i}`), $(`.kf-l${i}g`)]);
   const lineG = $('.kf-lines');
   const arts = $$('.kf-st'), dos = arts.map((a) => $('.kf-do', a)), spots = $$('.kf-spot'), progBtns = $$('.kf-prog button');
-  const nextBtn = $('.kf-next');
+  const nextBtn = $('.kf-next'), progEl = $('.kf-prog');
+  let topMode = false; const TXT = { head: 0, txt: 0 }; // Handy im Stil „neu“: Unterkante der Überschriften / Oberkante der Texte
   const NS = 'http://www.w3.org/2000/svg';
   const mk = (tag, cls, parent) => { const e = document.createElementNS(NS, tag); if (cls) e.setAttribute('class', cls); parent.appendChild(e); return e; };
   $('.kf-shape').innerHTML = BODY_SVG;
@@ -120,12 +121,29 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
     // Handy: die Figur endet über dem jeweiligen Textblock (Start bzw. Schluss); ohne Fahrt über dem höchsten Stationstext
     const artTop = arts.reduce((m, a) => Math.min(m, a.offsetTop), H);
     const heroTop = heroEl.offsetTop, endTop = endEl.offsetTop;
-    V.A = desk ? full(H * 0.93) : full(heroTop - 18);
-    V.E = desk ? V.A : full(endTop - 18);
-    V.S = desk ? V.A : full(Math.min(heroTop, endTop, artTop) - 22);
+    // Handy/Tablet im Stil „neu“ (18.11., Kai: „Überschriften nach oben, Animationen sowie Texte erst darunter“): jeder Textblock
+    // füllt die Bühne – Überschrift oben, Text unten (fein.css) –, die Figur steht dazwischen. Gemessen wird deshalb zwischen
+    // der Unterkante der Überschrift und der Oberkante des Textes.
+    topMode = !desk && root.classList.contains('kf-fein');
+    let stAy = H * 0.34;
+    if (topMode) {
+      const bot = (blk, sel) => { const e = $(sel, blk); return blk.offsetTop + e.offsetTop + e.offsetHeight; }, top = (blk, sel) => { const e = $(sel, blk); return blk.offsetTop + e.offsetTop; };
+      const hBot = Math.max(...arts.map((a) => bot(a, 'h2'))), tTop = Math.min(...arts.map((a) => top(a, '.kf-txt')));
+      TXT.head = hBot; TXT.txt = tTop;
+      V.A = full(top(heroEl, '.kf-sub') - 16, bot(heroEl, 'h1') + 12);
+      V.E = full(top(endEl, '.kf-txt') - 16, bot(endEl, 'h2') + 12);
+      V.S = full(Math.min(tTop, top(heroEl, '.kf-sub'), top(endEl, '.kf-txt')) - 18, Math.max(hBot, bot(heroEl, 'h1'), bot(endEl, 'h2')) + 12);
+      stAy = (hBot + tTop) / 2;
+      if (progEl) progEl.style.top = `${Math.round(stAy)}px`;
+    } else {
+      if (progEl) progEl.style.top = '';
+      V.A = desk ? full(H * 0.93) : full(heroTop - 18);
+      V.E = desk ? V.A : full(endTop - 18);
+      V.S = desk ? V.A : full(Math.min(heroTop, endTop, artTop) - 22);
+    }
     const sRef = desk ? V.A.s : (H * 0.5) / figH; // Handy: Zoom unabhängig von der Texthöhe
     STATIONS.forEach((St, i) => {
-      V[i] = { fx: St.c[0] - BODY_W / 2, fy: BODY_H / 2 - St.c[1], s: sRef * St.zoom[desk ? 1 : 0], ax: desk ? W * 0.23 : W / 2, ay: desk ? H * 0.5 : H * 0.34 };
+      V[i] = { fx: St.c[0] - BODY_W / 2, fy: BODY_H / 2 - St.c[1], s: sRef * St.zoom[desk ? 1 : 0], ax: desk ? W * 0.23 : W / 2, ay: desk ? H * 0.5 : stAy };
     });
     dpr = Math.min(devicePixelRatio || 1, 2);
     if (gl) {
@@ -138,7 +156,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
   }
   // Texthöhen ändern sich nach dem ersten Layout noch (Schrift fertig geladen, Umschalter bisher/neu) → neu messen,
   // sonst steht die Figur am Handy in der Überschrift
-  if (window.ResizeObserver) { const ro = new ResizeObserver(() => { H = 0; }); [heroEl, endEl, ...arts].forEach((e) => ro.observe(e)); }
+  if (window.ResizeObserver) { const ro = new ResizeObserver(() => { H = 0; }); [heroEl, endEl, ...arts, ...$$('h1,h2,.kf-txt,.kf-sub', root)].forEach((e) => ro.observe(e)); }
   document.fonts?.ready.then(() => { H = 0; });
   const mixView = (a, b, t, dip = 0) => {
     const s = Math.exp(lerp(Math.log(a.s), Math.log(b.s), t)) * (1 - dip * Math.sin(Math.PI * t));
@@ -347,7 +365,13 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
     const dt = Math.min(0.1, Math.max(0, (now - lastT) / 1000)); lastT = now;
     const r = root.getBoundingClientRect();
     stageTop = r.top > 0 ? r.top : Math.min(0, r.bottom - (H || innerHeight)); // Lage der klebenden Bühne (für die Übergabe an Puls)
-    if (r.bottom < -50 || r.top > innerHeight + 50) { hand.classList.remove('on'); return; } // Bühne nicht im Bild: ruht
+    if (r.bottom < -50 || r.top > innerHeight + 50) { // Bühne nicht im Bild: ruht
+      hand.classList.remove('on');
+      // liegt die Bühne über dem Fenster, ist sie fertig übergeben (18.11.: seit dem Kapitel-Auftakt grenzt Kapitel 02 nicht mehr
+      // direkt an – nach einem Sprung blieb hk sonst bei 0 stehen und die Punktwolke der Seite unsichtbar)
+      if (r.bottom < -50) { hk = 1; S.u = S.us = U_LEN; }
+      return;
+    }
     if (!H || stage.clientHeight !== H || stage.clientWidth !== W) layout();
     if (!H) return;
     const sl = still(), paused = isPaused();
@@ -478,7 +502,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
       const show = cur >= 0 && u > ARR[cur] - 0.05 && S.idle > 3;
       nextBtn.classList.toggle('on', show);
       // Handy: unter dem Ring, höchstens bis kurz über den Text; ohne Fahrt (ganze Figur) direkt über dem Text
-      if (!desk && cur >= 0) { const tTop = (arts[cur].offsetTop || H) - 58, top = sl ? tTop : Math.min(ringPx[cur][1] + ringPx[cur][2] + 14, tTop); nextBtn.style.top = `${fmt(Math.max(80, top))}px`; } else nextBtn.style.top = '';
+      if (!desk && cur >= 0) { const tTop = (topMode ? TXT.txt : arts[cur].offsetTop || H) - 58, top = sl ? tTop : Math.min(ringPx[cur][1] + ringPx[cur][2] + 14, tTop); nextBtn.style.top = `${fmt(Math.max(80, top))}px`; } else nextBtn.style.top = '';
     }
     // Verbindungslinie (PC): vom Ring zur Eck-Klammer des Textes
     if (desk && cur >= 0) {
