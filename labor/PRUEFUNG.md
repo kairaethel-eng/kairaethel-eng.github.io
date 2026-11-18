@@ -7,7 +7,7 @@ Auslöser: Kai schreibt „Detailprüfung“ (optional mit Seite/Bereich) – od
 Anlass: Kai sah am iPhone drei Dinge, die mir entgangen waren (Prüffenster 390×844 statt echt rund 390×692, nur Standbilder, nur eine Haltestelle).
 ```bash
 cd labor && node build.mjs test-4 && node build.mjs live
-node tools/pruefstand.cjs live/index.html <ordner> ia,d > <ordner>/log.txt 2>&1   # im Hintergrund starten (je Ansicht rund 20–30 min; ia und d dürfen als zwei Läufe nebeneinander laufen)
+node tools/pruefstand.cjs live/index.html <ordner> ia,d > <ordner>/log.txt 2>&1   # im Hintergrund starten; ia rund 35 min, d rund 55 min → als zwei Läufe nebeneinander, PC mit 60 min Zeitgrenze oder getrennt (`d zustand`, `d film`)
 ```
 - **Ansichten:** `ia` 390×692 (Kais iPhone im Browser der Claude-App – Standard), `is` 390×664, `il` 390×753, `ix` 430×740, `ie` 375×553, `d` 1440×900, `l` 1366×650, `xl` 2560×1440.
 - **Zustände** (je ein Bild + Messung): Start, Kap. 01 kurz nach dem Wisch und an allen vier Stationen, Schluss, Kap. 02, Hausordnung, Kap. 03 Übersicht und **alle sechs Haltestellen**, Dach, Leistungen, Manuthera, Stoßwelle, Tür.
