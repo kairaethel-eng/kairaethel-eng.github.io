@@ -117,6 +117,9 @@ const TEXTS = () => {
     if (n.data.trim().length < 1) continue;
     const el = n.parentElement; if (!el || el.closest('#top,.top,.sr-only,[aria-hidden="true"],dialog:not([open])')) continue;
     if (!el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue;
+    // nur für Vorleseprogramme (auf 1 px beschnitten, z. B. die Karten-Texte am PC): steht nicht im Bild
+    let clipped = false; for (let e = el; e && e !== document.body; e = e.parentElement) if ((e.offsetWidth <= 2 || e.offsetHeight <= 2) && getComputedStyle(e).overflow !== 'visible') { clipped = true; break; }
+    if (clipped) continue;
     const host = el.closest('h1,h2,h3,p,li,button,a,dt,dd,summary,label,figcaption') || el;
     const rg = document.createRange(); rg.selectNodeContents(n);
     const rects = [...rg.getClientRects()].filter((r) => r.width > 3 && r.height > 3 && r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw).map((r) => [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)]);
@@ -180,8 +183,8 @@ const TEXTS = () => {
       await S.go(p, settle); await settle(S.wait || 3000); await p.waitForTimeout(900); // CSS-Übergänge laufen in echter Zeit aus
       const groups = (await p.evaluate(TEXTS)).filter((g) => g.rects.length);
       const a = await shot();
-      await css('*,*::before,*::after{transition:none!important}body *:not(canvas):not(:has(canvas)){visibility:hidden!important}'); const bImg = await shot();
-      await css('*,*::before,*::after{transition:none!important;color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important}svg text{fill:transparent!important}'); const c = await shot();
+      await css('*,*::before,*::after{transition:none!important}body *:not(canvas):not(:has(canvas)){visibility:hidden!important}'); await p.waitForTimeout(250); const bImg = await shot();
+      await css('*,*::before,*::after{transition:none!important;color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important}svg text{fill:transparent!important}'); await p.waitForTimeout(250); const c = await shot();
       await css('');
       fs.writeFileSync(path.join(OUT, `${view}-${S.id}.png`), Buffer.from(a, 'base64'));
       if (process.env.ABC) { fs.writeFileSync(path.join(OUT, `${view}-${S.id}-B.png`), Buffer.from(bImg, 'base64')); fs.writeFileSync(path.join(OUT, `${view}-${S.id}-C.png`), Buffer.from(c, 'base64')); } // ABC=1: auch die Messbilder ablegen
@@ -204,7 +207,10 @@ const TEXTS = () => {
       const y0 = await p.evaluate(() => scrollY), dist = h * F.k, frames = [];
       for (let i = 0; i < 16; i++) {
         if (i < 8) { const e = 1 - Math.pow(1 - (i + 1) / 8, 3); await p.evaluate((y) => scrollTo(0, y), Math.round(y0 + dist * e)); }
-        await p.clock.runFor(40); await p.clock.runFor(40); await p.clock.runFor(40); frames.push(await shot());
+        await p.clock.runFor(40); await p.clock.runFor(40); await p.clock.runFor(40);
+        // Die Software-Grafik braucht echte Zeit, bis das neue Bild wirklich steht – ohne diese Pause zeigt die Aufnahme teils noch
+        // das vorige Bild (Text und Grafik passen dann nicht zusammen). Nebenwirkung: CSS-Übergänge laufen in dieser Zeit weiter.
+        await p.waitForTimeout(350); frames.push(await shot());
       }
       const R = await ana.evaluate((x) => window.film(x), { frames, w, h, top });
       fs.writeFileSync(path.join(OUT, `film-${view}-${F.id}.png`), Buffer.from(R.strip, 'base64'));

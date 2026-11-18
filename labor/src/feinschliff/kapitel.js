@@ -56,6 +56,8 @@ export const KEYS = [
 export const U_LEN = 5.15; // Ende der Bühne (Länge der Strecke = U_LEN + 1 Bildschirmhöhe, CSS .kf --len 6.15 in fein.css)
 const ARR = STATIONS.map((_, i) => KEYS[1 + 2 * i][0]), LEAVE = STATIONS.map((_, i) => KEYS[2 + 2 * i][0]);
 const stOn = (i, u) => u > ARR[i] - 0.3 && u < LEAVE[i] + 0.12;
+// Text der Station (18.11., Go Kai „3“): erst, wenn die Fahrt fast angekommen ist – vorher stand er über der Figur, während sie noch fuhr
+const txtOn = (i, u) => u > ARR[i] - 0.06 && u < LEAVE[i] + 0.12;
 const U_END = KEYS[KEYS.length - 1][0];
 
 // old = { points, stage } (nur die Studienseite: Figur plus für den Umschalter „bisher“; Puls gibt nichts mit → kein Umschalter),
@@ -453,7 +455,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
       ring.setAttribute('d', arcD(rr, easeIO(S.draw[i])));
       prog.setAttribute('d', arcD(rr, hp));
       progBtns[i].style.setProperty('--p', fmt(clamp((u - (ARR[i] - 0.5)) / (LEAVE[i] - ARR[i] + 0.5))));
-      onKey.push(`${on ? 1 : 0}${S.ok[i] ? 1 : 0}`);
+      onKey.push(`${on ? 1 : 0}${S.ok[i] ? 1 : 0}${txtOn(i, u) ? 1 : 0}`);
       const b = spots[i], d = Math.max(44, rr * 2);
       b.style.transform = `translate(${fmt(x - d / 2)}px,${fmt(y - d / 2)}px)`; b.style.width = b.style.height = `${fmt(d)}px`;
       if (!gl) glows[i].forEach((g) => { const rel = Math.max(relV[i], 1 - S.rest[i]); g.hot.setAttribute('opacity', fmt((1 - rel) * (0.45 + 0.55 * S.act[i]))); g.cool.setAttribute('opacity', fmt(rel * 0.9)); });
@@ -464,7 +466,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
       STATIONS.forEach((St, i) => {
         const on = stOn(i, u);
         [rings[i].ring, rings[i].halo, rings[i].prog].forEach((e) => { e.classList.toggle('on', on); e.classList.toggle('ok', S.ok[i]); });
-        arts[i].classList.toggle('on', on);
+        arts[i].classList.toggle('on', on && (sl || txtOn(i, u)));
         spots[i].classList.toggle('on', on && !S.done[i]); spots[i].tabIndex = on && !S.done[i] ? 0 : -1;
         progBtns[i].classList.toggle('on', i === cur); progBtns[i].classList.toggle('ok', S.ok[i]);
         if (on) progBtns[i].setAttribute('aria-current', 'step'); else progBtns[i].removeAttribute('aria-current');

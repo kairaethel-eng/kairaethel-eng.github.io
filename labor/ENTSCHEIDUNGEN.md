@@ -3,13 +3,21 @@
 Stand: 18.11.2026 (Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Handy: Übergang 03 ↔ 04, freie Wirbelsäule, Text der Stationen (Go Kai 18.11.2026 per Arbeitsblatt: „1a · 2a · 3“) – umgesetzt, wartet auf Sichtprüfung
+- **Entschieden (1a):** Am Handy zerfällt die Wirbelsäule beim Verlassen von Kapitel 03 nicht mehr. Sie gehört zu ihrem Kapitel (weiche Unterkante, scrollt mit hinaus, blendet als Ganzes aus); die Punktwolke wandert unsichtbar zum Dach. Der PC bleibt wie bisher (dort war der Übergang ruhig).
+- **Entschieden (2a):** Am Handy ist die Karte eine Leiste unten, die auf Antippen aufklappt; sichtbar bleiben zwei Schilder (Austritt, Ziel); der Aufzug ist eine schmale Schiene ohne Fläche. Nerv und Gefühl stehen in der aufgeklappten Leiste – kein Inhalt entfällt.
+- **Entschieden (3):** Stationstexte in Kapitel 01 erscheinen erst kurz vor der Ankunft.
+- **Merkregel:** Am Handy darf eine Grafik nie unter dem Text des nächsten Kapitels liegen – sie endet an der Kante ihres Kapitels.
+- **Bleibt (Kai 7.11.):** Bandscheiben im aktiven Abschnitt rot-orange – der Prüfer hielt das für eine vierte Farbe; es ist gewollt.
+- **Offen, Kai entscheidet:** Befunde 6, 7, 9, 11, 12 des zweiten Prüfers (siehe `UEBERGABE.md`).
+
 ## Prüfstand + schlanke Arbeitsanweisung + zweites Augenpaar (Go Kai 18.11.2026: „Go a c d“) – umgesetzt
 - **Entschieden:** Vor jeder Meldung „umgesetzt“ und vor jedem Veröffentlichen läuft `tools/pruefstand.cjs` (iPhone-Fenster 390×692 und PC). Regeln: Hauptgrafik ≤ 35 % verdeckt · Text ≤ 15 % auf unruhigem Grund · Wisch-Übergänge: ≤ 28 % hell, Sprung ≤ 4 Punkte. Filmstreifen werden immer angesehen.
 - **Entschieden:** `labor/CLAUDE.md` bleibt kurz (Regeln, Stand, Wegweiser); Technik nach `TECHNIK.md`, Verlauf in `UEBERGABE.md`.
 - **Entschieden:** Nach größeren Umbauten beurteilt ein Unteragent ohne Vorwissen die Bilder (zweites Augenpaar); Befunde gehen als Liste an Kai, nichts wird ungefragt umgesetzt.
 - **Merkregel:** Prüffenster ist Kais echtes Fenster (390×692), nicht 390×844. Bewegung wird als Film geprüft, nicht als Standbild. Jede Haltestelle, nicht nur die erste.
 - **Nicht gewählt (Baustein B):** echter Grafikchip über Kais PC – offen; dafür braucht die Cloud-Sitzung Zugriff auf den PC (derzeit „nicht verfügbar“).
-- **Offen, Kai entscheidet (Erörterung 18.11. spät):** (1) Übergang 03 ↔ 04 – Empfehlung: Wirbelsäule als Ganzes ausblenden, Punkte unsichtbar zum Haus führen, statt sichtbar zu zerstieben; (2) Wirbelsäule am iPhone frei stellen – Empfehlung: Karte als schmale Leiste unten (antippen = mehr), Aufzug schmaler, höchstens zwei Schilder; (3) Text an Station 01 erst einblenden, wenn die Fahrt angekommen ist.
+- **Erledigt (Go 18.11. vormittags, siehe Abschnitt darüber) – war offen:** (1) Übergang 03 ↔ 04 – Empfehlung: Wirbelsäule als Ganzes ausblenden, Punkte unsichtbar zum Haus führen, statt sichtbar zu zerstieben; (2) Wirbelsäule am iPhone frei stellen – Empfehlung: Karte als schmale Leiste unten (antippen = mehr), Aufzug schmaler, höchstens zwei Schilder; (3) Text an Station 01 erst einblenden, wenn die Fahrt angekommen ist.
 
 ## Abstände, Überschriften, Figur kürzer (Auftrag Kai 18.11.2026) – umgesetzt, Kai schickt Screenshots nach
 - **Kai:** „Gefällt mir gut“ (Feinschliff seitenweit). Auftrag: Abstände zu neuen Kapiteln und Überschriften genau ansehen und selbst verbessern; bei der Figur weniger scrollen/wischen.

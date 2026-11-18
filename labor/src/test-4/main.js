@@ -195,7 +195,7 @@ const uniforms = {
   uBreath: { value: 0 }, uCalm: { value: 0 }, // Atem-Phase, „Entspannt“ (0..1)
   uBodyRot: { value: 0 }, // Wiegen der Form 0 (seit 16.11. vom Kapitel „Von Kopf bis Fuß“ übernommen, damit die Übergabe deckungsgleich ist)
   uWave: { value: 2 }, // Lichtwelle beim Entspannen (15.11., Go Kai 4A): Lage in Körperhöhe 1.2 (über dem Kopf) → -0.2 (unter den Füßen), 2 = aus
-  uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 },
+  uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 }, uVeil: { value: 0 },
   cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') },
   cBlue: { value: C('#5AA2D6') }, cGreen: { value: C('#8BC34A') }, cLogoP: { value: C('#2C6478') }, cGrey: { value: C('#8C979B') },
   // Feinschliff (17.11.): Farben der Figur wie in Kapitel 01, Zeilen leicht von oben (uTilt), Punktgröße aus Welt-Durchmessern
@@ -209,7 +209,7 @@ const uniforms = {
 const vert = /* glsl */`
   attribute float aHeat; attribute vec3 pos2; attribute vec3 pos3; attribute float kind3; attribute vec3 pos4; attribute float kind4; attribute vec4 aRand;
   attribute vec3 aF0; attribute vec2 aW; attribute float aIdx;
-  uniform float uSpread, uFadeMid;
+  uniform float uSpread, uFadeMid, uVeil;
   uniform float uBreath, uCalm, uWave, uBodyRot;
   uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uRoofH, uRoofA, uLogo;
   uniform float uTilt, uProj, uPr, uDr4, uAsp, uRibA; uniform vec2 uRib; uniform vec4 uPtr;
@@ -297,6 +297,8 @@ const vert = /* glsl */`
     vec3 col = mix(cA, cB, t);
     // unterwegs sind alle Punkte zu sehen (auch die im Ziel verborgenen): sie sammeln sich und verblassen beim Ankommen
     float a = .85 * (1. - uFadeMid*sin(t*3.14159)) * mix(aA, aB, t);
+    // Handy, Wirbelsäule <-> Dach (Go Kai 18.11. „1a“): die Punkte wandern unsichtbar und erscheinen erst an der Dachlinie
+    a *= mix(1., smoothstep(.86, 1., t), uVeil);
     // Hausordnung (seit 14.11.2026 nachts direkt nach Kapitel 02): die HOP-Kreise (Form 4) legen sich über die laufende Form
     // und lösen sich danach in die Wirbelsäule auf – uLogo 0..1, unabhängig von der Kapitelfolge in uMorph
     if(uLogo > .001){
@@ -413,6 +415,7 @@ const N_GRAIN = isDesktop() ? 165000 : 46000, N_SLICE = isDesktop() ? 330000 : 8
 const sU = {
   uTime: uniforms.uTime, uRot: uniforms.uSpineRot, uCut: uniforms.uCut, uXf: { value: uniforms.uXf.value[2] },
   uZone: { value: -10 }, uZoneAmt: { value: 0 }, uOn: { value: 0 }, uStip: { value: 1 }, uPix: uniforms.uPix,
+  uFade: { value: 1 }, uClip: { value: -2 }, // Handy (18.11.): Ausblenden als Ganzes + weiche Unterkante am Kapitelende
   uPeri: { value: 0 }, uPeriStart: { value: 0 }, uScan: { value: 100 }, uScanAmt: { value: 0 }, // Scanner (Handy, 6.11.)
   uDiff: { value: 0 }, uFine: { value: 0 }, uSharp: { value: isDesktop() ? 0 : 1 }, uEcht: { value: 0 }, // Wirbelsäule echt (A): Handy schärfer; uEcht: Schattierung der echten Säule (Punkt 4) // Handy 7.11.: Wirbelsäule differenziert, Nerv fein (PC vorgemerkt)
   uFocT: { value: new THREE.Vector4(0, 0, 0, 0) }, uFocS: { value: new THREE.Vector4(0, 1, 0, 0) }, uFocD: { value: 0.08 }, // Fokus: Segment wie im Film ausrichten (Mitte + Kippwinkel, Achse + halber Zusatzabstand, halbe Bandscheibe)
@@ -423,7 +426,7 @@ const sU = {
   cSignal: { value: C('#DDF1FF') }, cCore: { value: C('#0E1C22') },
 };
 const GLSL_COMMON = /* glsl */`
-  uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart, uScan, uScanAmt, uDiff, uFine, uDiscMode, uSharp, uEcht; uniform vec4 uXf;
+  uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart, uScan, uScanAmt, uDiff, uFine, uDiscMode, uSharp, uEcht, uFade, uClip; uniform vec4 uXf;
   uniform vec3 cBone, cDisc, cDiscD, cDiscA, cAmber, cBlue, cSignal, cCore;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
   const vec3 LDIR = vec3(.48, .72, .5);
@@ -449,18 +452,19 @@ const GLSL_COMMON = /* glsl */`
 const coreMat = new THREE.ShaderMaterial({
   uniforms: sU,
   vertexShader: GLSL_COMMON + /* glsl */`
-    varying float vY; varying float vL; varying float vLY;
+    varying float vY; varying float vL; varying float vLY; varying float vK;
     void main(){
       vec3 p = rotY(focFit(position) - normal * .012, uRot) * uXf.w + uXf.xyz;
       vY = p.y; vLY = position.y; vL = max(dot(normalize(rotY(normal, uRot)), normalize(LDIR)), 0.);
       gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.);
+      vK = smoothstep(uClip, uClip + .16, gl_Position.y / gl_Position.w) * uFade; // Handy: Kern blendet mit der Wirbelsäule aus („1a“)
     }`,
   fragmentShader: GLSL_COMMON + /* glsl */`
-    varying float vY; varying float vL; varying float vLY;
+    varying float vY; varying float vL; varying float vLY; varying float vK;
     void main(){
-      if (vY < uCut) discard;
+      if (vY < uCut || vK < .03) discard;
       if (uFoc > 0. && fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) < focOut(vLY) * focK(vLY, .5) * 1.02) discard; // Fokus: Kern löst sich gerastert mit auf
-      gl_FragColor = vec4(cCore + cBone * vL * .05, 1.);
+      gl_FragColor = vec4(mix(vec3(.003, .008, .011), cCore + cBone * vL * .05, vK), 1.);
       #include <colorspace_fragment>
     }`,
 });
@@ -530,6 +534,10 @@ const boneMat = new THREE.ShaderMaterial({
       gl_Position = projectionMatrix * mv;
       float pk = ptrK();
       vCol = mix(col, max(col, cBone * 1.25), pk * .75);
+      // Handy (18.11., „1a“): am Kapitelende blendet die Wirbelsäule als Ganzes aus (uFade) und endet weich an der Unterkante
+      // des Kapitels (uClip, Bildschirmhöhe −1…1) – sie zerfällt nicht mehr in Punkte und liegt nie unter dem Text von „04 Dach“
+      float keep = smoothstep(uClip, uClip + .16, gl_Position.y / gl_Position.w) * uFade;
+      vCol = mix(vec3(.003, .008, .011), vCol, keep); vVis *= step(.03, keep);
       gl_PointSize = clamp(uStip / -mv.z * sz * (uSharp > .5 ? .86 : 1.) * (1. - fo * .7), 1., uMaxSize) * (1. + g * .8 + sc * .7 + pk * .35);
     }`,
   fragmentShader: /* glsl */`
@@ -593,7 +601,7 @@ function addNerves() {
   const nerveMat = new THREE.ShaderMaterial({
     uniforms: sU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: GLSL_COMMON + /* glsl */`
-      uniform sampler2D uCurves, uPeriTex; uniform float uRows, uGhostV;
+      uniform sampler2D uCurves, uPeriTex; uniform float uRows, uGhostV, uFade, uClip;
       attribute float aRow, aPhase, aSpeed, aKind, aZone, aStart; attribute vec3 aOff;
       varying vec3 vCol; varying float vA;
       vec3 curveAt(sampler2D tex, float row, float rows, float t){
@@ -646,6 +654,7 @@ function addNerves() {
         // N4 (Auftrag Z, nur PC): im Durchschein-Durchgang (uGhostV) die aktive Wurzel und die Versorgungsbahn kräftiger –
         // sonst beginnt die Bahn hinter dem echten, größeren Kreuzbein „in der Luft“ (L4–L5, S1)
         vA *= 1. + uGhostV * boost * 1.3;
+        vA *= smoothstep(uClip, uClip + .16, gl_Position.y / gl_Position.w) * uFade;
         gl_PointSize *= 1. + uGhostV * boost * .7;
       }`,
     fragmentShader: /* glsl */`
@@ -916,6 +925,8 @@ function mobTexts(zoneKey) {
 }
 // Scanner (Kai 6.11. spät): Karte oben als Überschrift – Abschnitt + Titel, „Typisch“, Therapien; die vier Zeilen links daneben
 const chipsEl = document.createElement('div'); chipsEl.className = 'scan-chips'; chipsEl.setAttribute('aria-hidden', 'true'); document.body.appendChild(chipsEl);
+// Leiste antippen = auf-/zuklappen (18.11., „2a“); der Film-Knopf darin hat seinen eigenen Klick
+chipsEl.addEventListener('click', (e) => { if (e.target.closest('.vf-open,.sc-film') || !chipsEl.classList.contains('is-on')) return; chipsEl.classList.toggle('is-open'); });
 // nur bei Abschnitts- oder Breitenwechsel: Texte setzen und einmal messen
 function mobMeasure(zoneKey) {
   const pad = VW < 360 ? 12 : 16, sc = scanOn();
@@ -936,43 +947,56 @@ function mobMeasure(zoneKey) {
   ncalls.forEach((el, i) => { ML.hs[i] = el.offsetHeight; ML.ws[i] = el.offsetWidth; });
   ML.chH = 0;
   if (sc) {
-    const head = document.createElement('p'), no = document.createElement('span'), h = document.createElement('span'), list = document.createElement('div');
+    // 18.11. (Go Kai „2a“): die Karte ist eine schmale Leiste unten – Abschnitt + Titel, Antippen zeigt „Typisch“, Nerv, Gefühl,
+    // Therapien. Sichtbar bleiben nur zwei Schilder (Austritt, Ziel); die Wirbelsäule steht darüber frei.
+    ML.ws[1] = ML.ws[2] = 0; ML.hs[1] = ML.hs[2] = 0;
+    const info = NINFO[zoneKey];
+    const bar = document.createElement('button'), head = document.createElement('span'), no = document.createElement('span'), h = document.createElement('span'), more = document.createElement('div'), list = document.createElement('div');
+    bar.type = 'button'; bar.className = 'sc-bar'; bar.tabIndex = -1;
     head.className = 'sc-t'; no.className = 'sc-no'; no.textContent = card ? ($('.seg-no', card) || card).textContent.trim() : '';
     h.className = 'sc-h'; h.textContent = card && $('h3', card) ? $('h3', card).textContent.trim() : ''; head.append(no, h);
-    list.className = 'sc-c'; list.replaceChildren(...(ML.compact ? [] : chipTxt).map((t) => { const s = document.createElement('span'); s.textContent = t; return s; }));
-    const typ = document.createElement('p'); typ.className = 'sc-typ'; typ.textContent = typCard;
-    // Film-Knopf (Auftrag Z): sichtbare Kopie nur für Finger/Maus – der echte Knopf steht in der (für Vorleseprogramme lesbaren) Karte
+    bar.append(head);
+    // Film-Knopf (Auftrag Z): sichtbare Kopien nur für Finger/Maus – der echte Knopf steht in der (für Vorleseprogramme lesbaren) Karte.
+    // In der Leiste klein („Film“), aufgeklappt mit vollem Text.
     let vfBtn = null;
     if (zoneKey === 'l45' && VF.open) {
+      const mini = document.createElement('span'); mini.className = 'sc-film'; mini.setAttribute('role', 'button');
+      mini.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>Film';
+      mini.addEventListener('click', (e) => { e.stopPropagation(); VF.open(e); });
+      bar.append(mini); bar.classList.add('has-film');
       vfBtn = document.createElement('button'); vfBtn.type = 'button'; vfBtn.className = 'vf-open'; vfBtn.tabIndex = -1;
       vfBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bandscheibenvorfall ansehen</span><small>Film · 37 s</small>';
       vfBtn.addEventListener('click', VF.open);
     }
-    chipsEl.replaceChildren(head, typ, list, ...(vfBtn ? [vfBtn] : []));
-    chipsEl.classList.toggle('sc-small', ML.compact > 1); // Stufe 2: kleinere Schrift
-    // ~60 % Breite (Kai 7.11.: Wirbelsäule rechts daneben besser sichtbar), nie in den Ziehstreifen
-    chipsEl.style.width = Math.min(Math.max(Math.round(VW * 0.6), 200), VW - pad - RAIL_W - 8, 480) + 'px'; ML.chH = chipsEl.offsetHeight;
+    const chev = document.createElement('span'); chev.className = 'sc-x'; bar.append(chev);
+    more.className = 'sc-more';
+    const typ = document.createElement('p'); typ.className = 'sc-typ'; typ.textContent = (info.pre ? info.pre + '\n' : '') + info.typ;
+    const rows = document.createElement('div'); rows.className = 'sc-rows';
+    [info.nerv, info.gef].forEach((t) => { const r = document.createElement('p'); r.textContent = t; rows.append(r); });
+    list.className = 'sc-c'; list.replaceChildren(...chipTxt.map((t) => { const sp = document.createElement('span'); sp.textContent = t; return sp; }));
+    more.append(typ, rows, list, ...(vfBtn ? [vfBtn] : []));
+    chipsEl.replaceChildren(bar, more);
+    chipsEl.classList.remove('is-open', 'sc-small');
+    chipsEl.style.width = Math.min(VW - pad - RAIL_W - 8, 480) + 'px'; ML.chH = chipsEl.offsetHeight;
   }
 }
 // Scanner (Kai 6.11. spät): Karte oben unter der Kopfleiste, darunter links die vier Zeilen; die Kamera legt die Wurzel
 // des Abschnitts auf „Austritt“, die Wirbelsäule darunter bleibt frei. Reicht der Platz nicht: Stufe 1 Therapien als
 // Textzeile, Stufe 2 kleinere Schrift in der Karte.
 function mobPlaceScan() {
-  const hs = ML.hs, sum = hs[0] + hs[1] + hs[2] + hs[3];
-  ML.chipsY = SCAN.cardTop; ML.typY = -999;
-  const top = ML.chipsY + ML.chH + 16, room = SCAN.bot - top;
-  if ((ML.compact || 0) < 2 && ML.key && !ML.remeasure && sum + 3 * 6 > room) { ML.compact = (ML.compact || 0) + 1; ML.remeasure = true; } // passt nicht → kompakter neu messen
-  const g = clamp((room - sum) / 3, 4, 10);
-  ML.y0 = top; // Lage ohne Verschiebung (danach richtet sich die Nahansicht)
-  // Kai 7.11. (1A): „Austritt“ auf Höhe des Austritts am Wirbel (bei voller Nahansicht); die Zeilen spreizen sich, bis
-  // „Ziel“ unter dem Wurzelende steht – der Nerv läuft dann neben den Zeilen nach unten; nie unter den Hinweis
-  let y = top, gg = g;
+  // 18.11. („2a“): freie Fläche = Kopfleiste bis Oberkante der Leiste. Der Abschnitt steht bei gut einem Drittel der Höhe,
+  // „Austritt“ auf Höhe des Austritts am Wirbel, „Ziel“ unter dem Wurzelende – beide nie unter die Leiste.
+  const hs = ML.hs, g = 10;
+  ML.typY = -999; ML.chipsY = SCAN.bot + 6; // Unterkante der Leiste (sie wächst beim Aufklappen nach oben)
+  const top = SCAN.cardTop + 6, bot = ML.chipsY - ML.chH - 10;
+  ML.y0 = top + (bot - top) * 0.36 - hs[0] / 2; // Lage ohne Verschiebung (danach richtet sich die Nahansicht)
+  let y0 = ML.y0, y3 = y0 + hs[0] + 56;
   if (ML.exitT != null && ML.tipKey === ML.key) {
-    y = clamp(ML.exitT - hs[0] / 2, top, Math.max(top, SCAN.bot - sum - 3 * g));
-    const want = ML.tipT + 24 - hs[3] / 2 - (y + hs[0] + hs[1] + hs[2]);
-    gg = clamp(want / 3, g, Math.max(g, (SCAN.bot - y - sum) / 3));
+    y0 = clamp(ML.exitT - hs[0] / 2, top, Math.max(top, bot - hs[0] - g - hs[3]));
+    y3 = ML.tipT + 24 - hs[3] / 2;
   }
-  for (let i = 0; i < 4; i++) { ML.ys[i] = y; y += hs[i] + gg; }
+  ML.ys[0] = y0; ML.ys[1] = ML.ys[2] = y0;
+  ML.ys[3] = clamp(y3, y0 + hs[0] + g, Math.max(y0 + hs[0] + g, bot - hs[3]));
 }
 addEventListener('resize', () => {
   ML.key = null;
@@ -1000,7 +1024,7 @@ function updateCalloutsMob(zoneKey, on, prog, opt = null) {
   const show = !!(on && zoneKey && periCurve && ML.key === zoneKey);
   const th = opt ? opt.th : MTH, dur = opt && opt.slow && !show ? '.9s' : '';
   ncalls.forEach((el, i) => {
-    const vis = show && prog > th[i] && !(sc && i === 4); // Scanner: „Typisch“ steht in der Karte
+    const vis = show && prog > th[i] && !(sc && (i === 4 || i === 1 || i === 2)); // Scanner: „Typisch“, Nerv und Gefühl stehen in der Leiste
     if (vis) mlVisT = now;
     el.style.opacity = vis ? 1 : 0; el.style.transitionDuration = dur;
     if (i < 4) nl[i].style.opacity = nring[i].style.opacity = vis && (!opt || opt.lines) ? 1 : 0;
@@ -1008,7 +1032,7 @@ function updateCalloutsMob(zoneKey, on, prog, opt = null) {
   { const on = !!(sc && show && prog > (opt ? opt.chip : MTH[4] + 0.06)); chipsEl.style.opacity = on ? 1 : 0; chipsEl.classList.toggle('is-on', on); } chipsEl.style.transitionDuration = dur; // is-on: Film-Knopf nur sichtbar tippbar
   if (!show) return;
   ncalls.forEach((el, i) => { el.style.transform = `translate(${ML.x}px, ${(i < 4 ? ML.ys[i] : ML.typY).toFixed(1)}px)`; });
-  if (sc) chipsEl.style.transform = `translate(${ML.x}px, ${ML.chipsY.toFixed(1)}px)`;
+  if (sc) { chipsEl.style.transform = `translate(${ML.x}px, ${ML.chipsY.toFixed(1)}px) translateY(-100%)`; chipsEl.style.maxHeight = Math.max(120, ML.chipsY - SCAN.cardTop - 4).toFixed(0) + 'px'; } // unten verankert
   (sc ? ML.anch : [0, 0.33, 0.66, 1]).forEach((t, i) => {
     const [ax, ay] = toPx(periCurve.getPointAt(t)), L = nl[i];
     // Linie endet am Rand des Andockrings, der Ring sitzt genau auf dem Nerv
@@ -1313,11 +1337,13 @@ scanRail.addEventListener('wheel', (e) => {
 }, { passive: false });
 const levName = (id) => (id === 'S' ? 'Kreuzbein' : id === 'Co' ? 'Steißbein' : id);
 let levY = [], stopY = [];
-let RAIL_W = 88, RK = 1, railVW = -1; // Breite des Ziehstreifens rechts (px): links Haltestellen, rechts Rinne mit Griff
+let RAIL_W = 88, RTX = 26, RK = 1, railVW = -1; // Breite des Ziehstreifens rechts (px): links Haltestellen, rechts Rinne mit Griff
 // wächst mit der Grundschrift (ab 1600 px, Griff/Haltestellen sind in rem) – Handy: 16 px → unverändert 88 px
 function railMeasure() {
   if (railVW === VW) return; railVW = VW;
-  RK = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16; RAIL_W = Math.round(88 * RK);
+  RK = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16;
+  // Handy (18.11., „2a“): schmale Schiene ohne Fläche – 64 statt 88 px, Griff näher am Rand (RTX = Abstand der Rinne vom Rand)
+  const pcR = isDesktop(); RAIL_W = Math.round((pcR ? 88 : 64) * RK); RTX = (pcR ? 26 : 22) * RK;
 }
 const nearestStop = (y) => { let b = 0; stopY.forEach((s, i) => { if (Math.abs(s - y) < Math.abs(stopY[b] - y)) b = i; }); return b; };
 // Antippen = zur nächsten Haltestelle; Ziehen erst ab 6 px Bewegung (sonst zoomt ein Tippen kurz heraus) und relativ:
@@ -1361,13 +1387,13 @@ const PC_ZOOM = 0.92; // PC: Nahansicht relativ zur früheren Kamerafahrt
 // Einblenden im Scanner (Kai 6.11., Variante b): Karte sofort beim Einrasten, die vier Zeilen nacheinander während des
 // Heranfahrens; beim Ziehen bleiben die Texte kurz stehen und blenden ruhig aus.
 const TX = { zone: null, t0: 0, last: 0 };
-const TX_OPT = { th: [0.3, 0.55, 0.8, 1.05, 0.05], chip: 0.05, lines: true, slow: true };
+const TX_OPT = { th: [0.3, 0.55, 0.8, 0.65, 0.05], chip: 0.05, lines: true, slow: true }; // 18.11.: nur Austritt (0) und Ziel (3) sichtbar
 function scanTexts(zKey, settle) {
   const now = performance.now();
   if (settle && zKey) { if (TX.zone !== zKey) { TX.zone = zKey; TX.t0 = now; } TX.last = now; }
-  const held = !settle && TX.zone && now - TX.last < 650;
+  const held = !settle && TX.zone && now - TX.last < 650 && SCAN.wasEng; // Bühne gelöst (Kapitel wird verlassen): nichts halten
   if (!settle && !held) TX.zone = null;
-  updateCalloutsMob(TX.zone, !!TX.zone && (settle || held), (now - TX.t0) / 1000, { ...TX_OPT, lines: settle });
+  updateCalloutsMob(TX.zone, !!TX.zone && (settle || held), (now - TX.t0) / 1000, { ...TX_OPT, lines: settle, slow: SCAN.wasEng });
 }
 const lvLocal = (lv, out) => out.set(lv.center.x * SC, (lv.center.y - CY) * SC, lv.center.z * SC).applyAxisAngle(_Y, spineRot);
 // PC-Scanner (Kai 7.11., 1A 2A 3A): gleiche Mechanik, aber Text links bleibt (Überschrift, segnav, Karte, Hinweis),
@@ -1430,7 +1456,12 @@ function updateScan(dt, r, inSec) {
   periLabel.style.opacity = 0;
 
   // Handy (18.11.): die Wirbelsäule löst sich etwas später auf – sie geht erst mit der Bühne nach oben, sonst bleibt vor „04 Dach“ ein leeres Bild
-  const solid = (inSec ? smooth(VH * 1.0, VH * 0.25, r.top) * (1 - (pc ? smooth(VH * 0.95, VH * 0.45, r.bottom) : smooth(VH * 0.5, VH * 0.08, r.bottom))) : 0) * spineK;
+  // Handy (18.11., Go Kai „1a“): beim Verlassen zerfällt sie nicht mehr in Punkte. Die Abtastlinie bleibt unten (solidIn), die
+  // Wirbelsäule endet weich an der Unterkante des Kapitels und blendet als Ganzes aus (outK → uFade), sobald „04 Dach“ ins Bild kommt.
+  const solidIn = inSec ? smooth(VH * 1.0, VH * 0.25, r.top) * spineK : 0;
+  const outK = pc ? smooth(VH * 0.95, VH * 0.45, r.bottom) : smooth(VH * 0.34, VH * 0.06, r.bottom);
+  const solid = solidIn * (1 - outK);
+  sU.uFade.value = pc ? 1 : 1 - outK; sU.uClip.value = pc ? -2 : 1 - 2 * (r.bottom - 4) / VH; // ganz weg 4 px über dem Kapitelende, voll da rund 55 px darüber
   const eng = inSec && solid > 0.97 && r.top < VH * 0.12 && r.bottom > VH * 0.9; // Bühne steht
   SCAN.wasEng = eng;
   // Bildschirmlage der Wirbel und der fünf Abschnitte (Übersicht)
@@ -1488,9 +1519,9 @@ function updateScan(dt, r, inSec) {
       _zc.set(0, 0, 0); st.ids.forEach((id) => _zc.add(lvLocal(det.levels.find((l) => l.id === id), _zw))); _zc.divideScalar(st.ids.length);
       zw = OV.w * ZOOM[ZM.idx];
       if (ML.key === st.zone && ML.hs[0]) mobPlaceScan();
-      const py = ML.key === st.zone && ML.hs[0] ? ML.y0 + ML.hs[0] / 2 : SCAN.top + (SCAN.bot - SCAN.top) * 0.4;
+      const py = ML.key === st.zone && ML.hs[0] ? ML.y0 + ML.hs[0] / 2 : SCAN.top + (SCAN.bot - SCAN.top) * 0.36;
       // Abschnitt mittig zwischen Zeilen-Spalte und Ziehstreifen
-      screenToWorld(Math.max(VW * 0.55, (ML.x + ML.colW + VW - RAIL_W) / 2 + 6), py, _zc.z * zw, _zw);
+      screenToWorld(Math.max(VW * 0.5, (ML.x + Math.max(ML.ws[0], ML.ws[3]) + 12 + VW - RAIL_W) / 2), py, _zc.z * zw, _zw);
       zx = _zw.x - _zc.x * zw; zy = _zw.y - _zc.y * zw;
       // Kai 7.11.: Wirbelkörper des Abschnitts rechts neben den Zeilen (sonst liegt der Nerv auf dem Knochen),
       // höchstens bis vor den Ziehstreifen
@@ -1518,7 +1549,7 @@ function updateScan(dt, r, inSec) {
   const zoomE = ZM.k * ZM.k * (3 - 2 * ZM.k);
   // Aufbau beim Hereinkommen (Scan von oben), Auflösen nach oben beim Weiterscrollen
   const topY = X.y + 4.35 * X.w, botY = X.y - 4.35 * X.w;
-  uniforms.uCut.value = solid <= 0 ? 100 : THREE.MathUtils.lerp(topY + 0.05, botY - 0.05, solid);
+  uniforms.uCut.value = solid <= 0 ? 100 : THREE.MathUtils.lerp(topY + 0.05, botY - 0.05, pc ? solid : solidIn);
   spineGroup.visible = solid > 0; sU.uOn.value = solid > 0 ? 1 : 0;
   if (bones) bones.pts.material.uniforms.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * GLH * 0.5 / tanH * X.w * (bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);
   if (DENSE.obj && bones) DENSE.obj.material.uniforms.uStip.value = bones.pts.material.uniforms.uStip.value * 0.8; // Wirbelsäule echt (B)
@@ -1548,7 +1579,10 @@ function updateScan(dt, r, inSec) {
 
   // Überschrift weicht, sobald gescannt wird; Hinweis geht beim Weiterscrollen mit (nicht über dem Haus stehen lassen)
   // PC: Textspalte bleibt stehen (2A)
-  if (axisHead && !pc) axisHead.style.opacity = ready && SCAN.demo === 2 ? 0 : '';
+  // 18.11. (Befund 3): hat der Scanner einmal gestanden, bleibt die Überschrift auch weg, während sich die Bühne am Kapitelende
+  // löst – sonst steht sie halb unter der Kopfleiste und nennt einen Knopf, der nicht mehr im Bild ist
+  const lifted = !pc && axSticky && axSticky.getBoundingClientRect().top < -2;
+  if (axisHead && !pc) axisHead.style.opacity = SCAN.demo === 2 && (ready || lifted) ? 0 : '';
   if (axisNote && !pc) axisNote.style.opacity = (1 - smooth(VH * 0.98, VH * 0.62, r.bottom)).toFixed(3);
   if (pc && axisHead && axisHead.style.opacity) axisHead.style.opacity = ''; // Fenster vom Handy- auf PC-Format gezogen
   if (pc && axisNote && (axisNote.style.opacity || NOTE.shift)) { axisNote.style.opacity = ''; axisNote.style.transform = ''; NOTE.shift = 0; }
@@ -1557,7 +1591,7 @@ function updateScan(dt, r, inSec) {
   if (!ready || y < 0) return;
   // Aufzug rechts: Rinne, Haltestellen und Griff bleiben fest (Übersicht), auch in der Nahansicht – der Griff zeigt,
   // wo man steht; die Scan-Linie über der Wirbelsäule gehört zur Übersicht und tritt in der Nahansicht zurück
-  const yMin = levY[0] - 6, yMax = levY[levY.length - 1] + 6, tx = VW - 26 * RK, rTop = yMin - 28 * RK;
+  const yMin = levY[0] - 6, yMax = levY[levY.length - 1] + 6, tx = VW - RTX, rTop = yMin - 28 * RK;
   sTrack.style.transform = `translate(${tx - 3}px, ${yMin.toFixed(1)}px)`; sTrack.style.height = (yMax - yMin).toFixed(1) + 'px';
   sTicks.forEach((el, i) => { el.style.transform = `translate(${tx - 10}px, ${stopY[i].toFixed(1)}px)`; el.classList.toggle('is-on', i === seg); });
   stopBtns.forEach((b, i) => { b.style.top = (stopY[i] - rTop).toFixed(1) + 'px'; b.classList.toggle('is-on', i === seg); });
@@ -1580,7 +1614,9 @@ function updateAxis(dt) {
   const ph = PH(), desk = isDesktop();
   const r = axis.getBoundingClientRect();
   const p = clamp(-r.top / Math.max(1, r.height - VH));
-  const inSec = r.top < VH && r.bottom > 0 && morphNow > 1.6 && morphNow < 2.4;
+  // Handy-Scanner (18.11., „1a“): die Wirbelsäule hängt am Kapitel, nicht mehr am Formwechsel der Punktwolke – sie bleibt, bis ihr
+  // Kapitel aus dem Bild ist (weiche Unterkante), und ist beim Zurückscrollen sofort wieder da (vorher: erst nach dem Formwechsel)
+  const inSec = r.top < VH && r.bottom > 0 && morphNow > 1.6 && (morphNow < 2.4 || (!desk && scanOn()));
   // noch nicht fertig gerechnet: grobe Partikel bleiben, danach fahren Scan und Kamera sanft nach
   spineK = bones ? ramp(spineK, dt) : 0;
   if (desk ? pcScan() : scanOn()) { updateScan(dt, r, inSec); return; } // Handy: Scanner (6.11.), PC: Hybrid-Scanner (7.11.)
@@ -2015,6 +2051,7 @@ function tick() {
   if (!isDesktop()) logoPlace();
   morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uMorph.value = morphNow;
+  uniforms.uVeil.value = !isDesktop() && morphNow > 2.02 && morphNow < 3 ? 1 : 0; // Handy: Weg Wirbelsäule <-> Dach unsichtbar („1a“)
   logoNow += (targetLogo() - logoNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uLogo.value = logoNow < 0.002 ? 0 : logoNow;
   manuK = manuVisible();

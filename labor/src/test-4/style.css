@@ -383,7 +383,7 @@ html:not(.js) button.ix-link{display:none}
   .roof-list{display:flex;flex-direction:column;padding-top:2.5rem}
   .roof-list .kicker{order:1}
   .roof-list .index{order:3}
-  .serv-stage{order:2;position:sticky;top:calc(env(safe-area-inset-top,0px) + 4.25rem);z-index:3;height:30svh;margin:0 calc(-1 * max(var(--gut),5vw)) .5rem;background:linear-gradient(var(--ink) 90%,rgba(10,22,27,0))}
+  .serv-stage{order:2;align-self:stretch;position:sticky;top:calc(env(safe-area-inset-top,0px) + 4.25rem);z-index:3;height:30svh;margin:0 calc(-1 * max(var(--gut),5vw)) .5rem;background:linear-gradient(var(--ink) 90%,rgba(10,22,27,0))}
   .serv-name{bottom:12%;font-size:1.0625rem} /* im deckenden Teil des Verlaufs, sonst liegt der Name über den Leistungsnamen */
   .door{background:linear-gradient(rgba(10,22,27,0),var(--ink) 8rem);padding-top:var(--gap-chap)}
   .rules-sticky{padding-block:19rem calc(var(--gap-chap) - 6rem)} /* oben Platz für die HOP-Kreise zwischen Kap. 02 und „§ Die Hausordnung“ */
@@ -444,24 +444,43 @@ html:not(.js) button.ix-link{display:none}
 /* Ziehstreifen = Aufzug: Haltestellen links (Knöpfe), Rinne + Griff rechts; nur hier wird gezogen, links scrollt die Seite */
 .scan-rail{position:fixed;right:0;z-index:2;display:none;touch-action:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;border-radius:.875rem 0 0 .875rem;border:1px solid rgba(224,154,53,.22);border-right:0;background:linear-gradient(90deg,rgba(10,22,27,.55),rgba(224,154,53,.08))}
 .scan-rail.on{display:block}
-@media (max-width:920px){.scan-rail{background:linear-gradient(90deg,rgba(10,22,27,.84),rgba(18,28,30,.9))}} /* N5 (Auftrag Z): Handy deckender – Beschriftung Th1/Th7 lag über hellen Knochenpunkten der breiteren echten Säule */
 .scan-rail{cursor:grab}.scan-rail:active{cursor:grabbing}.scan-stop{cursor:pointer}
 .scan-stop{position:absolute;left:.25rem;width:2.125rem;height:1.75rem;margin-top:-.875rem;padding:0;border:0;border-radius:.875rem;background:transparent;color:#A8BABF;font:600 .6875rem/1 var(--sans);letter-spacing:.04em;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .3s,background .3s}
 .scan-stop.is-on{color:var(--amber);background:rgba(224,154,53,.14)}
 .scan-stop:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
 /* Karte oben als Überschrift (Kai 6.11. spät): Abschnitt + Titel, „Typisch“, Therapien */
-.scan-chips{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s var(--ease);padding:.75rem .875rem .875rem;border:1px solid rgba(224,154,53,.55);border-radius:.375rem;background:rgba(14,30,37,.95)}
-.scan-chips .sc-t{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:.625rem;margin:0}
-.scan-chips .sc-no{font:italic 400 1.625rem/1 var(--serif);color:var(--amber)}
-.scan-chips .sc-h{font:600 1.125rem/1.1 var(--disp);letter-spacing:-.02em;color:var(--txt)}
-.scan-chips .sc-typ{margin:.5rem 0 0;font:500 .8125rem/1.45 var(--sans);color:#C2D0D4;white-space:pre-line}
+.scan-chips{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s var(--ease);border:1px solid rgba(224,154,53,.55);border-radius:.5rem;background:rgba(14,30,37,.96);overflow:hidden auto;overscroll-behavior:contain}
+/* 18.11. (Go Kai „2a“): schmale Leiste unten – Abschnitt + Titel; Antippen klappt „Typisch“, Nerv, Gefühl und Therapien auf */
+.scan-chips.is-on{pointer-events:auto}
+.scan-chips .sc-bar{display:flex;align-items:center;gap:.5rem;width:100%;min-height:3rem;margin:0;padding:.4375rem .5rem .4375rem .8125rem;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.scan-chips .sc-t{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:.5rem;row-gap:.125rem}
+.scan-chips .sc-no{font:italic 400 1.375rem/1 var(--serif);color:var(--amber)}
+.scan-chips .sc-h{font:600 1rem/1.15 var(--disp);letter-spacing:-.02em;color:var(--txt)}
+.scan-chips .sc-x{flex:none;position:relative;width:2rem;height:2rem;border-radius:50%;border:1px solid rgba(224,154,53,.6)}
+.scan-chips .sc-x::before{content:"";position:absolute;left:50%;top:50%;width:.5rem;height:.5rem;margin:-.125rem 0 0 -.25rem;border-left:2px solid var(--amber);border-top:2px solid var(--amber);transform:rotate(45deg);transition:transform .25s var(--ease)}
+.scan-chips.is-open .sc-x::before{margin-top:-.375rem;transform:rotate(225deg)}
+.scan-chips .sc-film{flex:none;display:inline-flex;align-items:center;gap:.25rem;height:2.25rem;padding:0 .75rem 0 .5rem;border-radius:1.125rem;background:var(--amber);color:#0A161B;font:700 .75rem/1 var(--sans);letter-spacing:.04em}
+.scan-chips .sc-film svg{width:1rem;height:1rem;fill:currentColor}
+.scan-chips.is-open .sc-film{display:none}
+.scan-chips .sc-bar.has-film .sc-h{font-size:.9375rem}
+@media (max-width:380px){.scan-chips .sc-film{width:2.25rem;padding:0;justify-content:center;font-size:0;gap:0}}
+.scan-chips .sc-more{display:none;padding:0 .8125rem .8125rem}
+.scan-chips.is-open .sc-more{display:block}
+.scan-chips .sc-typ{margin:.125rem 0 0;font:500 .8125rem/1.45 var(--sans);color:#C2D0D4;white-space:pre-line}
+.scan-chips .sc-rows{margin-top:.5rem;padding-top:.5rem;border-top:1px solid rgba(207,232,250,.14)}
+.scan-chips .sc-rows p{margin:0;font:600 .8125rem/1.4 var(--sans);letter-spacing:.02em;color:var(--txt)}
+.scan-chips .sc-rows p+p{margin-top:.1875rem}
 .scan-chips .sc-c{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.625rem}
 .scan-chips .sc-c:empty{display:none}
-.scan-chips .sc-c span{font:600 .75rem/1 var(--sans);padding:.375rem .5rem;border-radius:3px;border:1px solid rgba(224,154,53,.35);color:var(--txt);background:rgba(224,154,53,.07)}
-.scan-chips .sc-c span{font-size:.6875rem;padding:.3125rem .4375rem} /* schmale Karte (Kai 7.11.): zwei Kästchen je Zeile */
-.scan-chips.sc-small{padding:.5rem .75rem .625rem}
-.scan-chips.sc-small .sc-no{font-size:1.25rem}.scan-chips.sc-small .sc-h{font-size:.9375rem}.scan-chips.sc-small .sc-typ{font-size:.75rem;line-height:1.4;margin-top:.375rem}
-@media (max-width:360px){.scan-chips{padding:.5625rem .75rem .6875rem}.scan-chips .sc-no{font-size:1.375rem}.scan-chips .sc-h{font-size:1rem}.scan-chips .sc-c span{padding:.3125rem .4375rem}}
+.scan-chips .sc-c span{font:600 .6875rem/1 var(--sans);padding:.3125rem .4375rem;border-radius:3px;border:1px solid rgba(224,154,53,.35);color:var(--txt);background:rgba(224,154,53,.07)}
+@media (max-width:360px){.scan-chips .sc-no{font-size:1.25rem}.scan-chips .sc-h{font-size:.9375rem}}
+@media (prefers-reduced-motion:reduce){.scan-chips .sc-x::before{transition:none}}
+/* Handy: Aufzug als schmale Schiene ohne Fläche – die Wirbelsäule bleibt dahinter sichtbar; Haltestellen als kleine dunkle Marken */
+@media (max-width:920px){
+  .scan-rail{background:none;border-color:transparent}
+  .scan-stop{left:0;width:1.5rem;height:1.5rem;margin-top:-.75rem;border-radius:.375rem;background:rgba(10,22,27,.82);font-size:.625rem;letter-spacing:0}
+  .scan-stop.is-on{background:rgba(42,32,16,.92)}
+}
 html.no-gl .scan,html.no-gl .scan-rail,html.no-gl .scan-chips{display:none}
 @media (prefers-reduced-motion:reduce){.scan-coach{transition:none}.scan-coach>*{animation:none;opacity:1}}
 
