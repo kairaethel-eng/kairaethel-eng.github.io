@@ -4,7 +4,7 @@ Stand: 18.11.2026 (Abstände/Überschriften/kürzere Figur umgesetzt, Kai schick
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
 ## Handy: Übergang 03 ↔ 04, freie Wirbelsäule, Text der Stationen (Go Kai 18.11.2026 per Arbeitsblatt: „1a · 2a · 3“) – umgesetzt, wartet auf Sichtprüfung
-- **Entschieden (1a):** Am Handy zerfällt die Wirbelsäule beim Verlassen von Kapitel 03 nicht mehr. Sie gehört zu ihrem Kapitel (weiche Unterkante, scrollt mit hinaus, blendet als Ganzes aus); die Punktwolke wandert unsichtbar zum Dach. Der PC bleibt wie bisher (dort war der Übergang ruhig).
+- **Entschieden (1a):** Am Handy zerfällt die Wirbelsäule beim Verlassen von Kapitel 03 nicht mehr. Sie gehört zu ihrem Kapitel (weiche Unterkante, scrollt mit hinaus, blendet als Ganzes aus); die Punktwolke wandert unsichtbar zum Dach. Gilt seit 18.11. mittags auch am PC: dort zeigte der genauere Prüfstand dieselbe Wolke (meine erste Aussage „am PC ruhig“ war falsch).
 - **Entschieden (2a):** Am Handy ist die Karte eine Leiste unten, die auf Antippen aufklappt; sichtbar bleiben zwei Schilder (Austritt, Ziel); der Aufzug ist eine schmale Schiene ohne Fläche. Nerv und Gefühl stehen in der aufgeklappten Leiste – kein Inhalt entfällt.
 - **Entschieden (3):** Stationstexte in Kapitel 01 erscheinen erst kurz vor der Ankunft.
 - **Merkregel:** Am Handy darf eine Grafik nie unter dem Text des nächsten Kapitels liegen – sie endet an der Kante ihres Kapitels.

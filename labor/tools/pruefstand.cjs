@@ -135,8 +135,13 @@ const TEXTS = () => {
     }
     G.rects.push(...rects);
   }
+  window.__psHosts = [...map.keys()]; // für die zweite Sichtbarkeitsprüfung nach den Messbildern (STILL)
   return [...map.entries()].map(([host, G]) => ({ ...G, host: undefined, knownSel: G.sel, known: 0, inKnown: !!host.closest('.statement') }));
 };
+
+// Zweite Prüfung nach den Messbildern (Übergänge sind dann abgeschlossen): ist das Textstück immer noch sichtbar? Ein Element, das
+// gerade ausblendet (z. B. der Schluss-Block von Kapitel 01 nach dem Zurückscrollen), galt sonst je nach Rechenlast als sichtbar.
+const STILL = () => (window.__psHosts || []).map((h) => { if (!h.isConnected || !h.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return false; let al = 1; for (let e = h; e && e !== document.body; e = e.parentElement) al *= +getComputedStyle(e).opacity; return al >= 0.5; });
 
 (async () => {
   const root = path.resolve(__dirname, '..');
@@ -181,10 +186,16 @@ const TEXTS = () => {
     if (partsArg.includes('zustand')) for (const S of STATES) {
       if (ONLY && !ONLY.includes(S.id)) continue;
       await S.go(p, settle); await settle(S.wait || 3000); await p.waitForTimeout(900); // CSS-Übergänge laufen in echter Zeit aus
-      const groups = (await p.evaluate(TEXTS)).filter((g) => g.rects.length);
+      // Gemessen wird der Ruhezustand: CSS-Animationen (laufen in echter Zeit, z. B. der wippende Pfeil) stehen für alle drei
+      // Messbilder, laufende CSS-Übergänge werden beendet. Sonst hängt das Ergebnis von der Rechenlast ab: ein Text, der gerade
+      // einblendet, hat halbe Deckkraft und fällt beim Kontrast durch; ein Block, der gerade ausblendet, gilt noch als sichtbar.
+      const HOLD = '*,*::before,*::after{animation-play-state:paused!important;transition:none!important}';
+      await css(HOLD); await p.waitForTimeout(250);
+      let groups = await p.evaluate(TEXTS);
       const a = await shot();
-      await css('*,*::before,*::after{transition:none!important}body *:not(canvas):not(:has(canvas)){visibility:hidden!important}'); await p.waitForTimeout(250); const bImg = await shot();
-      await css('*,*::before,*::after{transition:none!important;color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important}svg text{fill:transparent!important}'); await p.waitForTimeout(250); const c = await shot();
+      await css(HOLD + '*,*::before,*::after{transition:none!important}body *:not(canvas):not(:has(canvas)){visibility:hidden!important}'); await p.waitForTimeout(250); const bImg = await shot();
+      await css(HOLD + '*,*::before,*::after{transition:none!important;color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important}svg text{fill:transparent!important}'); await p.waitForTimeout(250); const c = await shot();
+      { const still = await p.evaluate(STILL); groups = groups.filter((g, i) => still[i] && g.rects.length); }
       await css('');
       fs.writeFileSync(path.join(OUT, `${view}-${S.id}.png`), Buffer.from(a, 'base64'));
       if (process.env.ABC) { fs.writeFileSync(path.join(OUT, `${view}-${S.id}-B.png`), Buffer.from(bImg, 'base64')); fs.writeFileSync(path.join(OUT, `${view}-${S.id}-C.png`), Buffer.from(c, 'base64')); } // ABC=1: auch die Messbilder ablegen

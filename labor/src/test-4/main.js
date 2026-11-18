@@ -1459,9 +1459,10 @@ function updateScan(dt, r, inSec) {
   // Handy (18.11., Go Kai „1a“): beim Verlassen zerfällt sie nicht mehr in Punkte. Die Abtastlinie bleibt unten (solidIn), die
   // Wirbelsäule endet weich an der Unterkante des Kapitels und blendet als Ganzes aus (outK → uFade), sobald „04 Dach“ ins Bild kommt.
   const solidIn = inSec ? smooth(VH * 1.0, VH * 0.25, r.top) * spineK : 0;
-  const outK = pc ? smooth(VH * 0.95, VH * 0.45, r.bottom) : smooth(VH * 0.34, VH * 0.06, r.bottom);
+  // PC ebenso (18.11. mittags): der genauere Prüfstand zeigte dort dieselbe helle Wolke beim Verlassen und beim Zurückkommen
+  const outK = smooth(VH * 0.34, VH * 0.06, r.bottom);
   const solid = solidIn * (1 - outK);
-  sU.uFade.value = pc ? 1 : 1 - outK; sU.uClip.value = pc ? -2 : 1 - 2 * (r.bottom - 4) / VH; // ganz weg 4 px über dem Kapitelende, voll da rund 55 px darüber
+  sU.uFade.value = 1 - outK; sU.uClip.value = 1 - 2 * (r.bottom - 4) / VH; // ganz weg 4 px über dem Kapitelende, voll da rund 55 px darüber
   const eng = inSec && solid > 0.97 && r.top < VH * 0.12 && r.bottom > VH * 0.9; // Bühne steht
   SCAN.wasEng = eng;
   // Bildschirmlage der Wirbel und der fünf Abschnitte (Übersicht)
@@ -1549,7 +1550,7 @@ function updateScan(dt, r, inSec) {
   const zoomE = ZM.k * ZM.k * (3 - 2 * ZM.k);
   // Aufbau beim Hereinkommen (Scan von oben), Auflösen nach oben beim Weiterscrollen
   const topY = X.y + 4.35 * X.w, botY = X.y - 4.35 * X.w;
-  uniforms.uCut.value = solid <= 0 ? 100 : THREE.MathUtils.lerp(topY + 0.05, botY - 0.05, pc ? solid : solidIn);
+  uniforms.uCut.value = solid <= 0 ? 100 : THREE.MathUtils.lerp(topY + 0.05, botY - 0.05, solidIn);
   spineGroup.visible = solid > 0; sU.uOn.value = solid > 0 ? 1 : 0;
   if (bones) bones.pts.material.uniforms.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * GLH * 0.5 / tanH * X.w * (bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);
   if (DENSE.obj && bones) DENSE.obj.material.uniforms.uStip.value = bones.pts.material.uniforms.uStip.value * 0.8; // Wirbelsäule echt (B)
@@ -1616,11 +1617,12 @@ function updateAxis(dt) {
   const p = clamp(-r.top / Math.max(1, r.height - VH));
   // Handy-Scanner (18.11., „1a“): die Wirbelsäule hängt am Kapitel, nicht mehr am Formwechsel der Punktwolke – sie bleibt, bis ihr
   // Kapitel aus dem Bild ist (weiche Unterkante), und ist beim Zurückscrollen sofort wieder da (vorher: erst nach dem Formwechsel)
-  const inSec = r.top < VH && r.bottom > 0 && morphNow > 1.6 && (morphNow < 2.4 || (!desk && scanOn()));
+  const inSec = r.top < VH && r.bottom > 0 && morphNow > 1.6 && (morphNow < 2.4 || (desk ? pcScan() : scanOn()));
   // noch nicht fertig gerechnet: grobe Partikel bleiben, danach fahren Scan und Kamera sanft nach
   spineK = bones ? ramp(spineK, dt) : 0;
   if (desk ? pcScan() : scanOn()) { updateScan(dt, r, inSec); return; } // Handy: Scanner (6.11.), PC: Hybrid-Scanner (7.11.)
   scanUI.classList.remove('on'); scanRail.classList.remove('on'); chipsEl.style.opacity = 0; chipsEl.classList.remove('is-on'); sU.uScanAmt.value = 0;
+  sU.uFade.value = 1; sU.uClip.value = -2; // ohne Scanner (alter Ablauf): kein Ausblenden an der Kapitelkante
   if (SCAN.cleared) { SCAN.cleared = false; if (axisHead) axisHead.style.opacity = ''; if (axisNote) axisNote.style.transform = ''; NOTE.shift = 0; }
   if (desk) { axisWant = null; spineGroup.visible = false; sil.visible = false; return; } // PC ohne WebGL: Karte per segnav, keine Fahrt
   const X = uniforms.uXf.value[2];
@@ -2051,7 +2053,7 @@ function tick() {
   if (!isDesktop()) logoPlace();
   morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uMorph.value = morphNow;
-  uniforms.uVeil.value = !isDesktop() && morphNow > 2.02 && morphNow < 3 ? 1 : 0; // Handy: Weg Wirbelsäule <-> Dach unsichtbar („1a“)
+  uniforms.uVeil.value = morphNow > 2.02 && morphNow < 3 && (isDesktop() ? pcScan() : scanOn()) ? 1 : 0; // Scanner (Handy und PC): Weg Wirbelsäule <-> Dach unsichtbar („1a“)
   logoNow += (targetLogo() - logoNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uLogo.value = logoNow < 0.002 ? 0 : logoNow;
   manuK = manuVisible();
