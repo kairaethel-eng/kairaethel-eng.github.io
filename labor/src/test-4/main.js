@@ -16,6 +16,7 @@ import { ECHT } from '../wirbel-echt/echt.js';
 import { initStosswelle } from '../stosswelle/welle.js';
 import { initVorfall, SEG as VF_SEG } from '../vorfall/film.js';
 import { initKopfFuss } from '../feinschliff/kapitel.js';
+import { initC as initDoorC } from '../tuer/varC.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -195,7 +196,7 @@ const uniforms = {
   uBreath: { value: 0 }, uCalm: { value: 0 }, // Atem-Phase, „Entspannt“ (0..1)
   uBodyRot: { value: 0 }, // Wiegen der Form 0 (seit 16.11. vom Kapitel „Von Kopf bis Fuß“ übernommen, damit die Übergabe deckungsgleich ist)
   uWave: { value: 2 }, // Lichtwelle beim Entspannen (15.11., Go Kai 4A): Lage in Körperhöhe 1.2 (über dem Kopf) → -0.2 (unter den Füßen), 2 = aus
-  uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 }, uVeil: { value: 0 },
+  uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 }, uVeil: { value: 0 }, uDust: { value: 0 }, uKeep: { value: 0 },
   cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') },
   cBlue: { value: C('#5AA2D6') }, cGreen: { value: C('#8BC34A') }, cLogoP: { value: C('#2C6478') }, cGrey: { value: C('#8C979B') },
   // Feinschliff (17.11.): Farben der Figur wie in Kapitel 01, Zeilen leicht von oben (uTilt), Punktgröße aus Welt-Durchmessern
@@ -203,13 +204,13 @@ const uniforms = {
   cDeep: { value: C('#44788E') }, cCalm: { value: C('#86BEE6') }, cBone0: { value: C('#E4E3D8') },
   uTilt: { value: 0.16 }, uProj: { value: 1000 }, uPr: { value: 1 }, uRib: { value: new THREE.Vector2(DESK0 ? 9 : 6, DESK0 ? 300 : 257) },
   uDr4: { value: logo.dr }, uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 },
-  uRibA: { value: DESK0 ? 1 : 1.75 }, // Handy: die Bänder sind nur im Vorübergehen zu sehen → kräftiger
+  uRibA: { value: DESK0 ? 1 : 1.25 }, // Handy (18.11.): die Bänder laufen jetzt hinter dem Text von Kapitel 02 → gedämpft (vorher 1,75: nur im Vorübergehen zu sehen)
 };
 
 const vert = /* glsl */`
   attribute float aHeat; attribute vec3 pos2; attribute vec3 pos3; attribute float kind3; attribute vec3 pos4; attribute float kind4; attribute vec4 aRand;
   attribute vec3 aF0; attribute vec2 aW; attribute float aIdx;
-  uniform float uSpread, uFadeMid, uVeil;
+  uniform float uSpread, uFadeMid, uVeil, uDust, uKeep;
   uniform float uBreath, uCalm, uWave, uBodyRot;
   uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uRoofH, uRoofA, uLogo;
   uniform float uTilt, uProj, uPr, uDr4, uAsp, uRibA; uniform vec2 uRib; uniform vec4 uPtr;
@@ -290,7 +291,8 @@ const vert = /* glsl */`
     vec3 n = normalize(vec3(aRand.x-.5, aRand.y-.5, aRand.z-.5)+1e-4);
     // Streuung im Verhältnis zur Formgröße (auf dem Handy kleiner, damit Text frei bleibt)
     float ws = mix(uXf[i0].w, uXf[i1].w, t);
-    p += n * sin(t*3.14159) * (1.2 + aRand.w*1.6) * ws * uSpread;
+    // Studie „Auftakt“ (uDust, 18.11.): als feiner Staub streuen die Punkte nur halb so weit
+    p += n * sin(t*3.14159) * (1.2 + aRand.w*1.6) * ws * uSpread * (1. - .5 * uVeil * step(.01, uDust));
     // Intro: aus der Tiefe einfliegen
     p += n * (1.-uIntro) * (6. + aRand.x*8.) * ws * uSpread;
     float dw = mix(sA, sB, t);
@@ -299,15 +301,25 @@ const vert = /* glsl */`
     float a = .85 * (1. - uFadeMid*sin(t*3.14159)) * mix(aA, aB, t);
     // Handy, Wirbelsäule <-> Dach (Go Kai 18.11. „1a“): die Punkte wandern unsichtbar und erscheinen erst an der Dachlinie
     a *= mix(1., smoothstep(.86, 1., t), uVeil);
+    // Studie „Auftakt“ (Go Kai 18.11. „2a“): statt unsichtbar zu wandern, löst sich knapp die Hälfte der Punkte als feiner
+    // Staub und sammelt sich zur nächsten Form – klein (feste Größe, unabhängig von der Nahansicht), höchstens 60 % deckend
+    float dustK = uVeil * step(.01, uDust); // uDust = Anteil der Punkte, die als Staub sichtbar werden (Handy 1 → 45 %, PC weniger: dort gibt es mehr Punkte)
+    a = max(a, dustK * step(aRand.z, .45 * uDust) * .6 * smoothstep(0., .22, t) * (1. - smoothstep(.8, 1., t)));
+    dw = mix(dw, .03, dustK);
+    col = mix(col, mix(cPetrol * 1.5, cBone, aRand.x), dustK * (1. - smoothstep(.7, 1., t)));
     // Hausordnung (seit 14.11.2026 nachts direkt nach Kapitel 02): die HOP-Kreise (Form 4) legen sich über die laufende Form
     // und lösen sich danach in die Wirbelsäule auf – uLogo 0..1, unabhängig von der Kapitelfolge in uMorph
     if(uLogo > .001){
       vec3 pL, cL; float sL, aL;
       shape(4, pL, cL, sL, aL);
-      float tl = smoothstep(st, st+.6, uLogo);
+      float tl0 = smoothstep(st, st+.6, uLogo);
+      // Handy/Tablet (uKeep, 18.11., Go Kai „3a“): Punkte, die nicht zu den Kreisen gehören, bleiben als Streifen im Hintergrund
+      // (etwas blasser) – am hohen Tablet stehen Kapitel 02 und die Hausordnung zugleich im Bild, die Streifen hätten sonst keine Zeit
+      float stay = uKeep * (1. - step(.01, aL));
+      float tl = tl0 * (1. - stay);
       p = mix(p, pL, tl) + n * sin(tl*3.14159) * (1.2 + aRand.w*1.6) * mix(ws, uXf[4].w, tl) * uSpread;
       dw = mix(dw, sL, tl); col = mix(col, cL, tl);
-      a = mix(a, .85 * aL, tl) * (1. - uFadeMid*sin(tl*3.14159));
+      a = mix(a, .85 * aL, tl) * (1. - uFadeMid*sin(tl*3.14159)) * (1. - .4 * stay * tl0);
     }
     vec4 mv = modelViewMatrix * vec4(p, 1.);
     gl_Position = projectionMatrix * mv;
@@ -1198,6 +1210,23 @@ segBtns.forEach((b) => b.addEventListener('click', () => {
 // der Kartenoberkante → Karte blendet oben aus. Nach der letzten Karte: ganze Wirbelsäule groß in der Mitte,
 // stehen lassen, dann löst sie sich nach oben auf und das Haus entsteht in der Bildmitte.
 const axisNote = $('#achse .note'), dachSec = $('#dach');
+// ---------- Studie „Kapitel-Auftakt“ (18.11.2026, Go Kai: „Go alle Empfehlungen“ → erst als Studie an einem Übergang) ----------
+// Nur mit ?auftakt=a oder ?auftakt=b in der Adresse; ohne den Schalter ist Puls unverändert. Gezeigt wird der Übergang 03 → 04:
+//   a  Kapitel-Auftakt: eigener ruhiger Abschnitt vor dem Kapitel (große Ziffer, Name, eine Linie zieht sich quer)
+//   b  Trennband: eine durchgehende Linie mit Ziffer und Name, ohne eigenen Abschnitt
+// Dazu in beiden Fällen: feiner Staub statt unsichtbarer Wanderung der Punkte (Shader uDust). Kleiner Umschalter unten im Bild.
+const AUFTAKT = (() => { const v = new URLSearchParams(location.search).get('auftakt'); return v === 'a' || v === 'b' ? v : null; })();
+let auftaktEl = null;
+if (AUFTAKT && dachSec) {
+  document.documentElement.classList.add('auftakt', 'auftakt-' + AUFTAKT);
+  auftaktEl = document.createElement('div'); auftaktEl.className = 'auftakt-blk';
+  auftaktEl.innerHTML = '<div class="wrap"><p class="au-row"><span class="au-no">04</span><span class="au-txt"><span class="au-name">Dach</span><span class="au-sub">Praxis &amp; Leistungen</span></span></p><i class="au-line" aria-hidden="true"></i></div>';
+  dachSec.parentNode.insertBefore(auftaktEl, dachSec);
+  new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) auftaktEl.classList.add('in'); }), { threshold: AUFTAKT === 'a' ? 0.3 : 0.6 }).observe(auftaktEl);
+  const sw = document.createElement('nav'); sw.className = 'au-sw'; sw.setAttribute('aria-label', 'Studie Kapitel-Auftakt');
+  sw.innerHTML = '<span>Studie Auftakt</span>' + [['a', 'A'], ['b', 'B'], ['', 'aus']].map(([v, t]) => `<a href="${location.pathname}${v ? '?auftakt=' + v : ''}#achse"${v === AUFTAKT ? ' aria-current="true"' : ''}>${t}</a>`).join('');
+  document.body.appendChild(sw);
+}
 const MOB_X2 = { x: 0, y: 1.65, s: 0.28 }; // = layout() Handy (4A)
 let camArrive = 0, gateK = 1, dotsStuck = 0;
 const dotsBox = $('.seg-dots');
@@ -1828,6 +1857,10 @@ function targetMorph() {
     // Handy: Bewegungslinien → Wirbelsäule früher fertig, damit der Scan schon mit der Überschrift entsteht;
     // seit 14.11. nachts etwas später begonnen, damit die Wirbelsäule nicht über dem letzten Paragraphen der Hausordnung entsteht
     if (!isDesktop() && prev === 1 && s === 2) t = smooth(vh * 1.1, vh * 0.25, r.top); // 16.11.: 0,85 statt 0,48 (Beginn liegt unter den HOP-Kreisen)
+    // Studie „Auftakt“ a: der Staub sammelt sich schon hinter dem Auftakt – der Formwechsel beginnt, wenn der Auftakt hereinkommt
+    if (auftaktEl && AUFTAKT === 'a' && prev === 2 && s === 3) { const rt = r.top - auftaktEl.offsetHeight * 0.8; t = isDesktop() ? smooth(vh * 0.95, vh * 0.05, rt) : smooth(vh * 1.05, vh * 0.2, rt); }
+    // Variante b hat keinen eigenen Abschnitt: der Staub muss weg sein, bevor der Text von Kapitel 04 in der Bildmitte steht
+    if (auftaktEl && AUFTAKT === 'b' && prev === 2 && s === 3) t = isDesktop() ? smooth(vh * 1.1, vh * 0.5, r.top) : smooth(vh * 1.3, vh * 0.62, r.top);
     if (t > 0) m = prev + (s - prev) * t;
   }
   return m;
@@ -1839,7 +1872,11 @@ let logoNow = 0;
 function targetLogo() {
   const vh = VH, sy = scrollY, d = isDesktop();
   // 16.11. (Kai: „überall diese Geschwindigkeit“): Kreise kommen/gehen über ~0,9 Bildschirmhöhen (vorher 0,45–0,7)
-  const kIn = d ? smooth(vh * 1.0, vh * 0.1, logoGeo.rules - sy) : smooth(vh * 1.5, vh * 0.55, logoGeo.list - sy);
+  // 18.11. (Kai: „am Tablet und Handy kommen die Partikelstreifen nicht“, Go 3a): am Handy entstanden die Kreise schon, während
+  // der Text von Kapitel 02 noch im Bild stand (gemessen am Textende) – den Streifen blieb nur ein Augenblick. Jetzt wie am PC am
+  // Kicker „Die Hausordnung“ gemessen: die Kreise bilden sich, während er von unten bis zur Bildmitte steigt. Die übrigen Punkte
+  // laufen als Streifen weiter (Shader uKeep) – am Tablet stehen Kapitel 02 und die Hausordnung fast gleichzeitig im Bild.
+  const kIn = d ? smooth(vh * 1.0, vh * 0.1, logoGeo.rules - sy) : smooth(vh * 0.95, vh * 0.5, logoGeo.kick - sy);
   const kOut = d ? smooth(vh * 1.0, vh * 0.1, logoGeo.axis - sy) : smooth(vh * 1.2, vh * 0.35, logoGeo.axis - sy);
   return kIn * (1 - kOut);
 }
@@ -1909,6 +1946,39 @@ const ONE_ROOF = /[?&]dach=eins\b/.test(location.search);
 const tTitle = $('#t-title');
 splitLetters(tTitle);
 new IntersectionObserver((es, ob) => es.forEach((e) => { if (e.isIntersecting) { tTitle.classList.add('open'); ob.disconnect(); } }), { threshold: 0.4 }).observe(tTitle);
+
+// ---------- Tür C „Ein Schritt hindurch“ (18.11.2026, Kai: „Animation Tür C fehlt noch“, Go) ----------
+// Baustein src/tuer/varC.js (Entwurf vom 16.11., von Kai gewählt und beruhigt): der Türrahmen entsteht, während Kapitel 05
+// hereinkommt, dann läuft einmal der Schritt hindurch (6,4 s). Die Knöpfe erscheinen, sobald die Tür gut halb offen ist, langsam
+// nacheinander. Klassen an <html>: door-c (Bühne aktiv) · door-wait (Knöpfe versteckt) → door-open (blenden ein) bzw. door-now
+// (sofort da: „Bewegung anhalten“, „Bewegung reduzieren“, Software-Grafik, Tastatur-Fokus auf einem Knopf). Ohne JavaScript
+// gibt es keine dieser Klassen – die Knöpfe stehen dann einfach da. Prüfhilfe: window.__door.
+const doorC = (() => {
+  const cv = $('#cStage'), acts = $('#tuer .actions');
+  if (!cv || !acts) return null;
+  const H = document.documentElement, still = () => paused || reduced || H.classList.contains('no-gl');
+  const glowEl = $('#cGlow'), C = initDoorC({ cv, glow: glowEl, isStill: still });
+  let phase = 'wait', last = performance.now(), lastClip = '';
+  const reveal = (now) => { if (phase === 'open') return; phase = 'open'; H.classList.remove('door-wait'); H.classList.add(now ? 'door-now' : 'door-open'); };
+  const showNow = () => { reveal(true); C.finish(); };
+  H.classList.add('door-c', 'door-wait');
+  door.addEventListener('focusin', (e) => { if (phase === 'wait' && e.target.closest('.actions')) showNow(); });
+  frameFns.push((now) => {
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    if (phase === 'wait' && still()) showNow();
+    // weit weg und noch nichts entstanden: nichts messen, nichts zeichnen
+    const dTop = door.getBoundingClientRect().top;
+    if (C.state === 'form' && C.f === 0 && dTop > innerHeight * 2.2) return;
+    // die Bühne endet an der Oberkante von Kapitel 05 – sie liegt nie über dem Text davor (Stoßwelle, häufige Fragen)
+    const clip = dTop > 1 ? `inset(${Math.round(dTop)}px 0 0 0)` : '';
+    if (clip !== lastClip) { lastClip = clip; cv.style.clipPath = clip; if (glowEl) glowEl.style.clipPath = clip; }
+    const tt = tTitle.getBoundingClientRect().top, ar = acts.getBoundingClientRect();
+    C.tick(dt, tt, ar.top, ar.bottom);
+    if (phase === 'wait' && C.gate() && ar.top < innerHeight * 0.92) reveal(false);
+  });
+  return { C, showNow, get phase() { return phase; } };
+})();
+window.__door = doorC;
 // Leistungen: ein Impuls läuft durch den Namen (Maus darüber bzw. beim Durchscrollen auf dem Handy)
 const ixRows = $$('.index li').map((li) => {
   const name = $('.ix-name', li); splitLetters(name);
@@ -2054,6 +2124,8 @@ function tick() {
   morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uMorph.value = morphNow;
   uniforms.uVeil.value = morphNow > 2.02 && morphNow < 3 && (isDesktop() ? pcScan() : scanOn()) ? 1 : 0; // Scanner (Handy und PC): Weg Wirbelsäule <-> Dach unsichtbar („1a“)
+  uniforms.uKeep.value = isDesktop() ? 0 : 1; // Handy/Tablet: Streifen laufen hinter den HOP-Kreisen weiter
+  uniforms.uDust.value = AUFTAKT ? (isDesktop() ? 0.45 : 1) : 0; // Studie: feiner Staub statt unsichtbar (PC: kleinerer Anteil, dort sind es mehr Punkte)
   logoNow += (targetLogo() - logoNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
   uniforms.uLogo.value = logoNow < 0.002 ? 0 : logoNow;
   manuK = manuVisible();

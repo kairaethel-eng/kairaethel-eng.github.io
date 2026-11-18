@@ -6,7 +6,7 @@
 //   seite      Standard live/index.html (eigener kleiner Server, damit die echte Wirbelsäule lädt)
 //   ansichten  ia = iPhone im Browser der Claude-App 390×692 (Kais Gerät) · is = Safari mit Leisten 390×664 · il = Safari, Leisten
 //              eingeklappt 390×753 · ix = großes iPhone 430×740 · ie = iPhone SE 375×553 · d = PC 1440×900 · l = Laptop 1366×650
-//              · xl = 2560×1440.   Standard: ia,d
+//              · xl = 2560×1440 · t = Tablet hochkant 820×1180 (läuft im Handy-Ablauf).   Standard: ia,d
 //   teile      zustand (Verdeckung + Text je Zustand) · film (Wisch-Tests Bild für Bild) · beides ist Standard
 //   BASIS=<ordner>  vergleicht die Zustandsbilder mit einem früheren Lauf (welche Zustände haben sich geändert?)
 //
@@ -28,7 +28,7 @@ const [,, pageArg = 'live/index.html', outArg = '/tmp/pruefstand', viewsArg = 'i
 const OUT = path.resolve(outArg); fs.mkdirSync(OUT, { recursive: true });
 const VIEWS = {
   ia: [390, 692, 2, 'iPhone, Browser der Claude-App'], is: [390, 664, 2, 'iPhone Safari mit Leisten'], il: [390, 753, 2, 'iPhone Safari, Leisten eingeklappt'],
-  ix: [430, 740, 2, 'großes iPhone'], ie: [375, 553, 2, 'iPhone SE'], d: [1440, 900, 1, 'PC'], l: [1366, 650, 1, 'Laptop'], xl: [2560, 1440, 1, 'großer Monitor'],
+  ix: [430, 740, 2, 'großes iPhone'], ie: [375, 553, 2, 'iPhone SE'], t: [820, 1180, 2, 'Tablet hochkant'], d: [1440, 900, 1, 'PC'], l: [1366, 650, 1, 'Laptop'], xl: [2560, 1440, 1, 'großer Monitor'],
 };
 // jump = 4: am 18.11. geeicht – ruhige Übergänge liegen bei 0,2–3,3; die zerstiebende Wirbelsäule (03 → 04 von C1) bei 8,4, der Rückweg bei 4,9
 const RULE = { occl: 35, text: 15, bright: 28, jump: 4 };
@@ -50,7 +50,7 @@ const STATES = [
   { id: 'achse', go: go('#achse', 0.3), key: 1, wait: 6000 },
   ...STOPS.map((n, i) => ({ id: 'achse-' + n, go: stop(i), key: 1, wait: 5000 })),
   { id: 'dach', go: go('#dach', 0) }, { id: 'leistungen', go: go('#allTitle', -0.1) }, { id: 'manuthera', go: go('#manuthera', 0), wait: 5000 },
-  { id: 'stosswelle', go: go('#stosswelle', 0) }, { id: 'tuer', go: go('#tuer', 0) },
+  { id: 'stosswelle', go: go('#stosswelle', 0) }, { id: 'tuer', go: go('#tuer', 0), wait: 12000 }, // Tür C: Schritt 6,4 s + Knöpfe nacheinander
 ];
 const FILMS = [
   { id: 'kf-wisch', go: kf(0.1), k: 0.9 },
@@ -147,7 +147,7 @@ const STILL = () => (window.__psHosts || []).map((h) => { if (!h.isConnected || 
   const root = path.resolve(__dirname, '..');
   const srv = http.createServer((q, r) => { const f = path.join(root, decodeURIComponent(q.url.split('?')[0])); if (!f.startsWith(root) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.writeHead(404); r.end(); return; } r.writeHead(200); fs.createReadStream(f).pipe(r); });
   await new Promise((ok) => srv.listen(0, '127.0.0.1', ok));
-  const URL0 = `http://127.0.0.1:${srv.address().port}/${pageArg}?gl=1`;
+  const URL0 = `http://127.0.0.1:${srv.address().port}/${pageArg}${pageArg.includes('?') ? '&' : '?'}gl=1`; // Seite darf eigene Schalter tragen, z. B. test-4-puls-scan.html?auftakt=a
   const b = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const ana = await (await b.newContext()).newPage(); await ana.goto('about:blank'); await ana.evaluate(ANA);
   const md = [`# Prüfstand ${new Date().toISOString().slice(0, 16).replace('T', ' ')} · ${pageArg}`, '', `Regeln: Hauptgrafik höchstens ${RULE.occl} % verdeckt · Text höchstens ${RULE.text} % auf unruhigem Grund · Film: nie mehr als ${RULE.bright} % hell, kein Sprung über ${RULE.jump} Punkte.`, ''];
@@ -178,7 +178,9 @@ const STILL = () => (window.__psHosts || []).map((h) => { if (!h.isConnected || 
     // Bild direkt über das DevTools-Protokoll: page.screenshot() wartet intern auf Schriften und bleibt bei angehaltener Zeit
     // an manchen Zuständen hängen (Kap. 03, Nahansicht) – die direkte Aufnahme wartet auf nichts
     const cdp = await ctx.newCDPSession(p);
-    const shot = async () => (await cdp.send('Page.captureScreenshot', { format: 'png' })).data;
+    // zwei Aufnahmen: die erste (1 Bildpunkt) stößt nur ein frisches Bild an, die zweite zählt – sonst kam vereinzelt noch der
+    // Inhalt einer Zeichenfläche von viel früher ins Bild (18.11.: Tür-Bühne von Kapitel 05 im Bild von Kapitel 02)
+    const shot = async () => { await cdp.send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: 1, height: 1, scale: 1 } }); return (await cdp.send('Page.captureScreenshot', { format: 'png' })).data; };
     const css = async (txt) => p.evaluate((t) => { let s = document.getElementById('ps-css'); if (!s) { s = document.createElement('style'); s.id = 'ps-css'; document.head.appendChild(s); } s.textContent = t; }, txt);
     console.log(`\n== ${view} · ${label} · ${w}×${h}`); md.push('', `## ${view} · ${label} · ${w}×${h}`, '');
 
@@ -193,6 +195,7 @@ const STILL = () => (window.__psHosts || []).map((h) => { if (!h.isConnected || 
       await css(HOLD); await p.waitForTimeout(250);
       let groups = await p.evaluate(TEXTS);
       const a = await shot();
+      if (process.env.DBGJS) console.log('   DBGJS', JSON.stringify(await p.evaluate(process.env.DBGJS))); // DBGJS='<Ausdruck>': Seitenzustand je Zustand ausgeben
       await css(HOLD + '*,*::before,*::after{transition:none!important}body *:not(canvas):not(:has(canvas)){visibility:hidden!important}'); await p.waitForTimeout(250); const bImg = await shot();
       await css(HOLD + '*,*::before,*::after{transition:none!important;color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important}svg text{fill:transparent!important}'); await p.waitForTimeout(250); const c = await shot();
       { const still = await p.evaluate(STILL); groups = groups.filter((g, i) => still[i] && g.rects.length); }

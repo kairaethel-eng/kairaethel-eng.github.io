@@ -3,6 +3,13 @@
 Stand: 18.11.2026 (Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Tür C in Puls, Streifen am Handy/Tablet, Studie Kapitel-Auftakt (Go Kai 18.11.2026 nachmittags: „Go alle Empfehlungen“)
+- **Entschieden:** Tür C („Ein Schritt hindurch“, beruhigt) ist in Puls eingebaut – Knöpfe erst mit offener Tür, langsam nacheinander; ohne Bewegung sofort.
+- **Entschieden:** Die Partikelstreifen von Kapitel 02 laufen auf allen Geräten hinter dem Text; die HOP-Kreise entstehen erst, wenn die Hausordnung herankommt.
+- **Entschieden (Richtung):** Die verstreuten Übergänge kommen zurück – als feiner Staub (2a), nicht als Wolke aus großen Punkten. Der Übergang soll zugleich den Kapitelwechsel zeigen (4a „Kapitel-Auftakt“).
+- **Offen, Kai entscheidet an der Studie:** Auftakt A (eigener Abschnitt) oder B (Trennband); danach Ausbau auf alle Kapitel.
+- **Merkregel:** „Verstreut“ ja, „explodiert“ nein – Staub hat feste kleine Punktgröße (nicht an die Nahansicht gekoppelt), ist höchstens zu 60 % deckend und wandert nie über Text, der gerade gelesen wird.
+
 ## Handy: Übergang 03 ↔ 04, freie Wirbelsäule, Text der Stationen (Go Kai 18.11.2026 per Arbeitsblatt: „1a · 2a · 3“) – umgesetzt, wartet auf Sichtprüfung
 - **Entschieden (1a):** Am Handy zerfällt die Wirbelsäule beim Verlassen von Kapitel 03 nicht mehr. Sie gehört zu ihrem Kapitel (weiche Unterkante, scrollt mit hinaus, blendet als Ganzes aus); die Punktwolke wandert unsichtbar zum Dach. Gilt seit 18.11. mittags auch am PC: dort zeigte der genauere Prüfstand dieselbe Wolke (meine erste Aussage „am PC ruhig“ war falsch).
 - **Entschieden (2a):** Am Handy ist die Karte eine Leiste unten, die auf Antippen aufklappt; sichtbar bleiben zwei Schilder (Austritt, Ziel); der Aufzug ist eine schmale Schiene ohne Fläche. Nerv und Gefühl stehen in der aufgeklappten Leiste – kein Inhalt entfällt.
