@@ -236,7 +236,7 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 .door{padding-top:var(--gap-chap)}
 /* Kapitel-Auftakt (18.11., Kai: „A“): eigener Abschnitt vor den Kapiteln 02–05 – große Ziffer, Name, Untertitel, eine Linie.
    Wird von main.js eingefügt (html.auftakt); der kleine Kicker im Kapitel entfällt dann. */
-.auftakt-blk{position:relative;z-index:1;display:flex;align-items:flex-end;min-height:56svh;padding-top:var(--gap-chap)}
+.auftakt-blk{position:relative;z-index:1;box-sizing:border-box;display:flex;align-items:flex-end;min-height:56svh;padding-top:var(--gap-chap)} /* 56 % der Bildhöhe insgesamt (Abstand zum Kapitel davor inbegriffen) */
 .auftakt-blk .wrap{width:100%}
 .auftakt-blk .au-row{display:flex;align-items:flex-end;gap:clamp(1rem,2.6vw,2.5rem);margin:0}
 .auftakt-blk .au-no{font:italic 400 clamp(7.5rem,17vw,15rem)/.78 var(--serif);color:var(--amber);letter-spacing:-.02em}
