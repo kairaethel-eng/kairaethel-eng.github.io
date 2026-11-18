@@ -18,7 +18,7 @@
 //       Verdeckung  = Anteil der Grafik (B), der in A von etwas überdeckt ist – Regel: Hauptgrafik höchstens 35 %.
 //       Text        = Anteil der Textfläche, hinter der der Grund zu hell/unruhig ist (Kontrast < 3:1 groß bzw. 4,5:1) – Regel: ≤ 15 %.
 //   • Film: ein kräftiger Wisch (rund 0,9 Fensterhöhen, mit Schwung über 8 Bilder auslaufend), dazu 8 Bilder Nachlauf; Abstand 120 ms. Gemessen wird, wie voll
-//     das Bild mit hellen Punkten ist und wie sprunghaft es sich ändert – Regel: nie mehr als 28 % hell, kein Sprung über 8 Punkte.
+//     das Bild mit hellen Punkten ist und wie sprunghaft es sich ändert – Regel: nie mehr als 28 % hell, kein Sprung über 4 Punkte.
 //   Ergebnis: bericht.md, <ansicht>-<zustand>.png, film-<ansicht>-<name>.png (Streifen), Rückgabewert 1 bei Regelverstoß.
 // Grenze: ohne Grafikchip (Container) bleiben Tempo und Flüssigkeit unbewertbar; was nur auf echter Grafik auftritt, zeigt auch
 // dieser Prüfstand nicht sicher. Dafür: tools/edgeshot.mjs auf Kais PC bzw. Bildschirmfilm vom iPhone.
@@ -30,7 +30,8 @@ const VIEWS = {
   ia: [390, 692, 2, 'iPhone, Browser der Claude-App'], is: [390, 664, 2, 'iPhone Safari mit Leisten'], il: [390, 753, 2, 'iPhone Safari, Leisten eingeklappt'],
   ix: [430, 740, 2, 'großes iPhone'], ie: [375, 553, 2, 'iPhone SE'], d: [1440, 900, 1, 'PC'], l: [1366, 650, 1, 'Laptop'], xl: [2560, 1440, 1, 'großer Monitor'],
 };
-const RULE = { occl: 35, text: 15, bright: 28, jump: 8 };
+// jump = 4: am 18.11. geeicht – ruhige Übergänge liegen bei 0,2–3,3; die zerstiebende Wirbelsäule (03 → 04 von C1) bei 8,4, der Rückweg bei 4,9
+const RULE = { occl: 35, text: 15, bright: 28, jump: 4 };
 const KNOWN = ['.statement']; // bewusst so gestaltet: Manifest leuchtet Wort für Wort auf (noch nicht aufgeleuchtete Wörter sind blass)
 
 // ---------- Zustände und Wisch-Tests ----------
@@ -92,10 +93,12 @@ const ANA = () => {
   };
   window.film = async ({ frames, w, h, top }) => {
     const stats = []; let prev = null;
-    const sw = 180, sh = Math.round(h * sw / w), strip = new OffscreenCanvas(sw * frames.length, sh), sx = strip.getContext('2d');
+    // Streifen: Handy 16 Bilder in einer Reihe (je 180 breit), PC zwei Reihen zu 8 (je 360 breit) – sonst ist am PC nichts zu erkennen
+    const wide = w > 600, sw = wide ? 360 : 180, sh = Math.round(h * sw / w), per = wide ? 8 : frames.length;
+    const strip = new OffscreenCanvas(sw * per, sh * Math.ceil(frames.length / per)), sx = strip.getContext('2d');
     for (let i = 0; i < frames.length; i++) {
       const bmp = await createImageBitmap(await (await fetch('data:image/png;base64,' + frames[i])).blob());
-      sx.drawImage(bmp, i * sw, 0, sw, sh);
+      sx.drawImage(bmp, (i % per) * sw, Math.floor(i / per) * sh, sw, sh);
       const c = new OffscreenCanvas(w, h), x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(bmp, 0, 0, w, h);
       const D = x.getImageData(0, 0, w, h).data; let br = 0, ch = 0, n = 0;
       for (let y = top; y < h; y++) for (let xx = 0; xx < w; xx++) { const o = (y * w + xx) * 4, l = lum(D[o], D[o + 1], D[o + 2]); n++; if (l > 96) br++; if (prev && Math.abs(l - lum(prev[o], prev[o + 1], prev[o + 2])) > 30) ch++; }

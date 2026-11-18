@@ -25,7 +25,7 @@ stehen wörtlich in `labor/TECHNIK.md` – dort gezielt nachschlagen, nicht alle
 ## Gestaltungsregeln (prüfbar – gelten für alles Neue)
 - **Punkte:** geordnet (gleicher Abstand, gleiche Größe, scharfer Rand), kein Zittern, kein Zufall im ruhenden Bild.
 - **Farben der Punkte:** Petrol → Knochenweiß, Bernstein (Spannung, Nerven, Akzent), ein Blau; Grün nur im Logo und in Häkchen/Ringen der Bedienung.
-- **Bewegung:** ruhig, eine zur Zeit, nichts „explodiert“. Film-Regel: nie mehr als 28 % des Bilds hell, kein Sprung über 8 Punkte von Bild zu Bild.
+- **Bewegung:** ruhig, eine zur Zeit, nichts „explodiert“. Film-Regel: nie mehr als 28 % des Bilds hell, kein Sprung über 8 Punkte von Bild zu Bild; bei Wisch-Übergängen zwischen Kapiteln (Prüfstand) höchstens 4 Punkte.
 - **Hauptgrafik** (Wirbelsäule in der Nahansicht, Stelle im Ring der Figur) ist höchstens zu 35 % verdeckt.
 - **Text** steht nie auf unruhigem Grund (höchstens 15 % der Textfläche unter Kontrast 3:1 groß bzw. 4,5:1).
 - **Abstände:** `--gap-chap` vor jedem nummerierten Kapitel, `--gap-sub` vor Blöcken in Kapitel 04 – keine eigenen Zahlen.
