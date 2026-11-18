@@ -3,6 +3,21 @@
 Zweck: die ganze Seite in gleichbleibender Weise auf Details prüfen und **Empfehlungen mit der größten Wirkung** liefern.
 Auslöser: Kai schreibt „Detailprüfung“ (optional mit Seite/Bereich) – oder nach größeren Umbauten. Später ggf. als Zeitplan (Option c, erst nach Kais Go).
 
+## Prüfstand – vor jeder Meldung „umgesetzt“ und vor jedem Veröffentlichen (seit 18.11.2026, Go Kai „a“)
+Anlass: Kai sah am iPhone drei Dinge, die mir entgangen waren (Prüffenster 390×844 statt echt rund 390×692, nur Standbilder, nur eine Haltestelle).
+```bash
+cd labor && node build.mjs test-4 && node build.mjs live
+node tools/pruefstand.cjs live/index.html <ordner> ia,d > <ordner>/log.txt 2>&1   # im Hintergrund starten (je Ansicht rund 20–30 min; ia und d dürfen als zwei Läufe nebeneinander laufen)
+```
+- **Ansichten:** `ia` 390×692 (Kais iPhone im Browser der Claude-App – Standard), `is` 390×664, `il` 390×753, `ix` 430×740, `ie` 375×553, `d` 1440×900, `l` 1366×650, `xl` 2560×1440.
+- **Zustände** (je ein Bild + Messung): Start, Kap. 01 kurz nach dem Wisch und an allen vier Stationen, Schluss, Kap. 02, Hausordnung, Kap. 03 Übersicht und **alle sechs Haltestellen**, Dach, Leistungen, Manuthera, Stoßwelle, Tür.
+- **Messungen:** Verdeckung der Hauptgrafik (Regel ≤ 35 %) · Text auf unruhigem Grund (Regel ≤ 15 % der Textfläche unter Kontrast) · Film: Anteil heller Bildpunkte (≤ 28 %) und Sprung von Bild zu Bild (≤ 8 Punkte).
+- **Filme** (`film-<ansicht>-<name>.png`, 16 Bilder nebeneinander, Abstand 120 ms): ein Wisch mit Schwung an jedem Kapitelübergang, dazu Kap. 03 von S1 und von C1 nach 04 und zurück. **Jeden Streifen selbst ansehen** – die Zahlen finden nur Grobes.
+- **Hilfen:** `NUR=kf-01,achse-Th1` (nur diese Zustände/Filme) · `ABC=1` (Messbilder B „nur Grafik“ und C „Text durchsichtig“ ablegen) · `DBG=1` (Farbe und Flächen zu jedem Text-Befund) · `BASIS=<ordner eines früheren Laufs>` (meldet, welche Zustände sich geändert haben – vor einem Umbau einen Lauf als Basis aufheben).
+- **Umgang mit „FEHLER“:** Bild ansehen → beheben oder im Bericht als bekannt/gewollt begründen. Ein „alles ok“ ersetzt die Sichtung nicht.
+- **Zweites Augenpaar (Go Kai „c“):** nach größeren Umbauten einen Unteragenten ohne Vorwissen die Bilder und Streifen nach der Checkliste unten beurteilen lassen (nur Bilder + Gestaltungsregeln mitgeben, keine eigene Vermutung). Befunde als Liste an Kai, nichts ungefragt umsetzen.
+- **Grenze [B]:** Die Software-Grafik im Container zeigt nicht alles, was ein echter Grafikchip zeigt (Beispiel 18.11.: Kais „Explosion“ beim Übergang 03 → 04 ist hier auch im Film nicht zu sehen). Bei Bewegungsthemen deshalb immer [O] an Kai und um einen kurzen Bildschirmfilm bitten.
+
 ## Ablauf (Cloud-Container, ~35–60 min; review.cjs je Ansicht: PC ~10 min, Handy ~4 min, 2560 länger)
 1. `git pull`, `cd labor && npm ci && node build.mjs test-4 && node build.mjs live`
 2. **Bildersatz + Messungen:** `node tools/review.cjs live/index.html <ordner> d,m,xl` (optional `s` 320×568, `dr` „Bewegung reduzieren“).
