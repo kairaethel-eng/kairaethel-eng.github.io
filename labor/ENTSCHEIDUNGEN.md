@@ -3,6 +3,14 @@
 Stand: 18.11.2026 (Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Messanzeige, Tür-Bühne „Hineingehen“, Logo mit H · O · P (Go Kai 19.11.2026: „Go 1ab 2ab 3a“) – umgesetzt, wartet auf Sichtprüfung
+- **Entschieden (3a):** Kapitel 05 hat eine eigene klebende Tür-Bühne mit Scrollweg; die Knöpfe „Termin buchen“ und „Kontakt & Anfahrt“ stehen erst drinnen. Damit ist die Entscheidung vom 16.11. („keine eigene Scroll-Strecke vor dem Termin-Knopf“) aufgehoben – Kai wünscht das Hineingehen ausdrücklich; „Termin“ in der Kopfleiste bleibt immer erreichbar. Tür C (zeitgesteuert, hinter dem Text) ist abgelöst.
+- **Entschieden (2a/2b):** Logo in der Kopfleiste groß und mit lesbaren Buchstaben; die HOP-Kreise aus Punkten tragen H · O · P.
+- **Entschieden (1a/1b):** Erst messen (Messanzeige `?takt=1` auf Kais Gerät), dann gezielt beheben; die Tür-Bühne zeichnet auf dem Grafikchip und ist nur in ihrer Nähe eingeschaltet.
+- **Merkregel:** Jede zusätzliche Zeichenfläche wird nur in der Nähe ihrer Stelle eingeschaltet und zeichnet auf dem Grafikchip; nichts liegt dauernd bildschirmgroß über der Seite.
+- **Merkregel:** Leistung lässt sich im Container nur auf der Skript-Seite messen (`takt.cjs`-Vorgehen in `TECHNIK.md`); für die Grafik braucht es Kais Gerät.
+- **Offen:** Ursache des Stotterns (Messwerte von Kai) · Logo groß am Start (2c) · „Details“ = Kontaktangaben?
+
 ## Kapitel-Auftakt, Staub, Überschrift oben (Kai 18.11.2026 abends: „A Pc nebeneinander“) – umgesetzt, wartet auf Sichtprüfung
 - **Entschieden:** Jedes der Kapitel 02–05 beginnt mit einem Auftakt (Variante A: eigener Abschnitt, große Ziffer, Name, Linie). B (Trennband) ist verworfen.
 - **Entschieden:** Übergänge zeigen feinen Staub (2a) statt unsichtbarer Wanderung; der Formwechsel läuft hinter dem Auftakt.

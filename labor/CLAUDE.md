@@ -19,7 +19,8 @@ stehen wörtlich in `labor/TECHNIK.md` – dort gezielt nachschlagen, nicht alle
 - Richtung **„Puls · Scan“**: dunkel, Partikel, Bernstein-Akzente. Quellen `labor/src/test-4/` → `test-4-puls-scan.html` (Labor) und `live/` („Stand jetzt“, https://kairaethel-eng.github.io/labor/live/).
 - Seitenfolge: 01 Von Kopf bis Fuß (Figur mit Gehirn und Nerven) → 02 Bewegung (Perlenbänder) → § Hausordnung (HOP-Kreise) → 03 Achse (echte Wirbelsäule, Scanner, Film „Bandscheibenvorfall“) → 04 Dach (Linienhaus, Leistungen mit Motiven, Manuthera, Stoßwelle) → 05 Tür.
 - Seit 17./18.11.2026 gilt der **Feinschliff-Stil** auf der ganzen Seite (Studie `feinschliff.html`, Vergleich `puls-vor-feinschliff.html`).
-- Seit 18.11.2026 abends: **Kapitel-Auftakt** vor den Kapiteln 02–05 (große Ziffer, Name, Linie), **Staub** als Übergang 03 ↔ 04, **Tür C** in Kapitel 05, Streifen von Kapitel 02 auch am Handy/Tablet.
+- Seit 18.11.2026 abends: **Kapitel-Auftakt** vor den Kapiteln 02–05 (große Ziffer, Name, Linie), **Staub** als Übergang 03 ↔ 04, Streifen von Kapitel 02 auch am Handy/Tablet.
+- Seit 19.11.2026: **Tür-Bühne „Hineingehen“** in Kapitel 05 (Knöpfe erst drinnen), Logo mit lesbarem H · O · P, **Messanzeige** `?takt=1` (Bilder je Sekunde auf Kais Gerät). Offen: Kai meldet Stottern der Partikel – Ursache noch nicht bestätigt, erst seine Messwerte abwarten (`UEBERGABE.md` oben).
 - Startadresse (`/index.html`, `/impressum.html`, `/datenschutz.html`) ist eine Übergangsseite und wird **nie ohne ausdrückliches Go** geändert. Livegang ruht.
 - Entwurfsseiten und Archiv (Figur plus, Tür, Haus-Licht, Fusion, Zuhause, Manuthera, Vorfall …): Liste und Technik in `TECHNIK.md`.
 
@@ -34,6 +35,7 @@ stehen wörtlich in `labor/TECHNIK.md` – dort gezielt nachschlagen, nicht alle
 - **Abstände:** `--gap-chap` vor jedem nummerierten Kapitel (steckt im Auftakt), `--gap-sub` vor Blöcken in Kapitel 04 – keine eigenen Zahlen.
 - **Überschriften:** Stärke 560; am PC höchstens zwei Zeilen (Start drei), die kursive Wortgruppe bleibt zusammen.
 - **Texte:** Sie-Form, ruhig, keine Heilversprechen (HWG); Gesundheitsinfos mit dem Standard-Hinweis aus `hop-praxis`.
+- **Leistung:** jede zusätzliche Zeichenfläche nur in der Nähe ihrer Stelle einschalten und auf dem Grafikchip zeichnen; nichts liegt dauernd bildschirmgroß über der Seite. Im Container ist nur die Skript-Seite messbar – für die Grafik Kais Messanzeige (`?takt=1`) oder Film.
 - **Technik:** eine HTML-Datei je Seite, keine externen Abrufe, `noindex` im Labor; CSS in rem, Haarlinien in px; nichts Kostenpflichtiges.
 
 ## „Fertig“ heißt (vor jeder Meldung „umgesetzt“ und vor jedem Veröffentlichen)

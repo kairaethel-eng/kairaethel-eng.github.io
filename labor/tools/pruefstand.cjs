@@ -52,8 +52,11 @@ const STATES = [
   { id: 'achse', go: go('#achse', 0.3), key: 1, wait: 6000 },
   ...STOPS.map((n, i) => ({ id: 'achse-' + n, go: stop(i), key: 1, wait: 5000 })),
   { id: 'auftakt-04', go: go('.auftakt-blk[data-for="dach"]', -0.3) }, { id: 'dach', go: go('#dach', 0) }, { id: 'leistungen', go: go('#allTitle', -0.1) }, { id: 'manuthera', go: go('#manuthera', 0), wait: 5000 },
-  { id: 'stosswelle', go: go('#stosswelle', 0) }, { id: 'auftakt-05', go: go('.auftakt-blk[data-for="tuer"]', -0.3) }, { id: 'tuer', go: go('#tuer', 0), wait: 12000 }, // Tür C: Schritt 6,4 s + Knöpfe nacheinander
+  { id: 'stosswelle', go: go('#stosswelle', 0) }, { id: 'auftakt-05', go: go('.auftakt-blk[data-for="tuer"]', -0.3) }, { id: 'tuer', go: go('#doorTrack', 0), wait: 4000 }, // Tür-Bühne (19.11.): Tür geschlossen, Überschrift oben
+  { id: 'tuer-halb', go: go('#doorTrack', 0.6), wait: 4000 }, { id: 'tuer-drin', go: go('#doorTrack', 1.3), wait: 4000 }, // halb hindurch · drinnen, Knöpfe da
+  { id: 'kontakt', go: go('#kontakt', -0.1) },
 ];
+// jump: eigene Schwelle für den Sprung (Regel 4 gilt für Kapitelübergänge; allgemein 8)
 const FILMS = [
   { id: 'kf-wisch', go: kf(0.1), k: 0.9 },
   { id: '01-nach-02', go: go('#bewegung', -0.7), k: 0.9 },
@@ -64,6 +67,7 @@ const FILMS = [
   { id: '04-zurueck-nach-03', go: go('#dach', 0.1), k: -0.9 },
   { id: 'leistungen-nach-manuthera', go: go('#manuthera', -0.7), k: 0.9 },
   { id: 'stosswelle-nach-05', go: go('#tuer', -0.7), k: 0.9 },
+  { id: 'tuer-hindurch', go: go('#doorTrack', 0), k: 1.3, jump: 8 }, // ganzer Weg durch die Tür in einem Wisch: der Rahmen zieht am Bild vorbei (gewollt)
 ];
 
 // ---------- Auswertung im Browser (eigene leere Seite, keine Zusatzpakete) ----------
@@ -232,7 +236,7 @@ const STILL = () => (window.__psHosts || []).map((h) => { if (!h.isConnected || 
       fs.writeFileSync(path.join(OUT, `film-${view}-${F.id}.png`), Buffer.from(R.strip, 'base64'));
       const br = R.stats.map((s) => s.bright), maxB = Math.max(...br); let jump = 0; for (let i = 2; i < br.length; i++) jump = Math.max(jump, Math.abs(br[i] - br[i - 1]));
       const maxC = Math.max(...R.stats.slice(2).map((s) => s.change));
-      say(maxB <= RULE.bright && jump <= RULE.jump, `Film ${F.id.padEnd(26)} hell höchstens ${maxB} % · größter Sprung ${jump.toFixed(1)} · größte Änderung je Bild ${maxC} %`);
+      say(maxB <= RULE.bright && jump <= (F.jump || RULE.jump), `Film ${F.id.padEnd(26)} hell höchstens ${maxB} % · größter Sprung ${jump.toFixed(1)} · größte Änderung je Bild ${maxC} %`);
     }
     say(!errs.length, `Skriptfehler: ${errs.length ? [...new Set(errs)].join(' | ') : 'keine'}`);
     await ctx.close();

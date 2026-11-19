@@ -16,7 +16,7 @@ import { ECHT } from '../wirbel-echt/echt.js';
 import { initStosswelle } from '../stosswelle/welle.js';
 import { initVorfall, SEG as VF_SEG } from '../vorfall/film.js';
 import { initKopfFuss } from '../feinschliff/kapitel.js';
-import { initC as initDoorC } from '../tuer/varC.js';
+import { initDoorStage, DOOR_PLAN } from '../tuer/buehne.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -266,8 +266,8 @@ const vert = /* glsl */`
       float br = 1. + sin(uTime*1.2 + pos4.x*.8)*.03;
       p = pos4 * vec3(br, br, 1.);
       p = rotY(p, sin(uTime*.3)*.25);
-      col = kind4 < .5 ? cGreen : kind4 < 1.5 ? cLogoP*1.5 : kind4 < 2.5 ? cBlue : cBone*.8;
-      al = aW.y; dw = uDr4 * (kind4 > 2.5 ? .42 : .58) * uXf[4].w;
+      col = kind4 < .5 ? cGreen : kind4 < 1.5 ? cLogoP*1.5 : kind4 < 2.5 ? cBlue : kind4 < 3.5 ? cBone*.8 : cBone0*1.3; // 4 = Buchstaben H · O · P
+      al = aW.y; dw = uDr4 * (kind4 > 3.5 ? .64 : kind4 > 2.5 ? .42 : .58) * uXf[4].w;
     }
     p = p * uXf[i].w + uXf[i].xyz;
     if(i==2){
@@ -1947,38 +1947,53 @@ const tTitle = $('#t-title');
 splitLetters(tTitle);
 new IntersectionObserver((es, ob) => es.forEach((e) => { if (e.isIntersecting) { tTitle.classList.add('open'); ob.disconnect(); } }), { threshold: 0.4 }).observe(tTitle);
 
-// ---------- Tür C „Ein Schritt hindurch“ (18.11.2026, Kai: „Animation Tür C fehlt noch“, Go) ----------
-// Baustein src/tuer/varC.js (Entwurf vom 16.11., von Kai gewählt und beruhigt): der Türrahmen entsteht, während Kapitel 05
-// hereinkommt, dann läuft einmal der Schritt hindurch (6,4 s). Die Knöpfe erscheinen, sobald die Tür gut halb offen ist, langsam
-// nacheinander. Klassen an <html>: door-c (Bühne aktiv) · door-wait (Knöpfe versteckt) → door-open (blenden ein) bzw. door-now
-// (sofort da: „Bewegung anhalten“, „Bewegung reduzieren“, Software-Grafik, Tastatur-Fokus auf einem Knopf). Ohne JavaScript
-// gibt es keine dieser Klassen – die Knöpfe stehen dann einfach da. Prüfhilfe: window.__door.
-const doorC = (() => {
-  const cv = $('#cStage'), acts = $('#tuer .actions');
-  if (!cv || !acts) return null;
-  const H = document.documentElement, still = () => paused || reduced || H.classList.contains('no-gl');
-  const glowEl = $('#cGlow'), C = initDoorC({ cv, glow: glowEl, isStill: still });
-  let phase = 'wait', last = performance.now(), lastClip = '';
-  const reveal = (now) => { if (phase === 'open') return; phase = 'open'; H.classList.remove('door-wait'); H.classList.add(now ? 'door-now' : 'door-open'); };
-  const showNow = () => { reveal(true); C.finish(); };
-  H.classList.add('door-c', 'door-wait');
-  door.addEventListener('focusin', (e) => { if (phase === 'wait' && e.target.closest('.actions')) showNow(); });
+// ---------- Tür-Bühne „Hineingehen“ (19.11.2026, Go Kai „3a“; löst Tür C vom 18.11. ab) ----------
+// Kai: „dass man wie in die Tür rein geht und dort dann erst die Buttons für Termin oder Details stehen“. Kapitel 05 beginnt mit
+// einer klebenden Bühne (#doorTrack, 230 % Bildhöhe): Überschrift oben, darunter groß die Tür. Der Scrollweg p (0 … 1) öffnet sie
+// und führt hindurch (Baustein src/tuer/buehne.js, gezeichnet auf dem Grafikchip); drinnen blenden die zwei Knöpfe ein.
+// Klasse an <html>: door-walk = Bühne mit Weg. Ohne sie (ohne JavaScript, Software-Grafik, „Bewegung anhalten/reduzieren“,
+// kein Grafikchip) stehen Überschrift und Knöpfe einfach da. Die Zeichenfläche ist nur in der Nähe der Bühne eingeschaltet
+// (Go „1b“: sie lag am 18.11. dauernd bildschirmgroß über der Seite). Prüfhilfe: window.__door.
+const doorStage = (() => {
+  const cv = $('#cStage'), glowEl = $('#cGlow'), track = $('#doorTrack'), inEl = $('#doorIn');
+  if (!cv || !track || !inEl) return null;
+  const sticky = $('.door-sticky', track), cue = $('.door-cue', track), H = document.documentElement;
+  const still = () => paused || reduced || H.classList.contains('no-gl');
+  let st = null, failed = false, last = performance.now(), on = false, walk = null, lastClip = '', lastG = -1, lastCue = -1;
+  const setWalk = (v) => { if (v === walk) return; walk = v; H.classList.toggle('door-walk', v); if (!v) { inEl.style.opacity = ''; inEl.style.transform = ''; inEl.classList.add('is-on'); lastG = -1; } chapDirty(); };
+  const off = () => { if (!on) return; on = false; cv.classList.remove('on'); glowEl.classList.remove('on'); if (st) st.clear(); };
+  // Tastatur: Fokus auf einem noch verborgenen Knopf → ans Ende der Bühne (Tür offen, Knöpfe da)
+  inEl.addEventListener('focusin', () => { if (walk && st && st.p < DOOR_PLAN.gate) scrollToY(track.getBoundingClientRect().bottom + scrollY - innerHeight + 2); });
+  setWalk(!still());
   frameFns.push((now) => {
     const dt = Math.min(0.1, (now - last) / 1000); last = now;
-    if (phase === 'wait' && still()) showNow();
-    // weit weg und noch nichts entstanden: nichts messen, nichts zeichnen
-    const dTop = auTop(door); // mit Auftakt: der Staub der Tür sammelt sich schon hinter „05 Tür“
-    if (C.state === 'form' && C.f === 0 && dTop > innerHeight * 2.2) return;
-    // die Bühne endet an der Oberkante von Kapitel 05 – sie liegt nie über dem Text davor (Stoßwelle, häufige Fragen)
-    const clip = dTop > 1 ? `inset(${Math.round(dTop)}px 0 0 0)` : '';
-    if (clip !== lastClip) { lastClip = clip; cv.style.clipPath = clip; if (glowEl) glowEl.style.clipPath = clip; }
-    const tt = tTitle.getBoundingClientRect().top, ar = acts.getBoundingClientRect();
-    C.tick(dt, tt, ar.top, ar.bottom);
-    if (phase === 'wait' && C.gate() && ar.top < innerHeight * 0.92) reveal(false);
+    setWalk(!still() && !failed);
+    if (!walk) { off(); return; }
+    const r = track.getBoundingClientRect(), vh = innerHeight;
+    if (r.top > vh * 1.5 || r.bottom < -vh * 0.3) { off(); return; } // weit weg: Zeichenfläche aus, nichts messen
+    if (!st) { st = initDoorStage({ cv, glow: glowEl, isStill: still }); if (!st) { failed = true; return; } }
+    if (st.dead) { failed = true; return; }
+    if (!on) { on = true; cv.classList.add('on'); glowEl.classList.add('on'); }
+    // die Bühne endet an den Kanten ihres Abschnitts – nie über dem Text davor oder danach
+    const clip = `inset(${Math.max(0, Math.round(r.top))}px 0 ${Math.max(0, Math.round(vh - r.bottom))}px 0)`;
+    if (clip !== lastClip) { lastClip = clip; cv.style.clipPath = clip; glowEl.style.clipPath = clip; }
+    const sr = sticky.getBoundingClientRect(), hb = tTitle.getBoundingClientRect().bottom, desk = isDesktop();
+    st.frame(dt, {
+      w: cv.clientWidth, h: vh, desk, cx: cv.clientWidth / 2,
+      areaTop: hb + (desk ? 8 : 18), areaBot: sr.bottom - (desk ? 44 : 30), fadeY: hb - 8,
+      fWant: smooth(vh * 0.95, vh * 0.12, r.top), // Tür entsteht, während die Bühne hereinkommt
+      pWant: clamp(-r.top / Math.max(1, r.height - sr.height)),
+    });
+    const g = smooth(DOOR_PLAN.gate, DOOR_PLAN.gate + 0.12, st.p);
+    if (Math.abs(g - lastG) > 0.004 || (g === 0) !== (lastG === 0) || (g === 1) !== (lastG === 1)) {
+      lastG = g; inEl.style.opacity = g.toFixed(3); inEl.style.transform = `translateY(${((1 - g) * 14).toFixed(1)}px)`; inEl.classList.toggle('is-on', g > 0.5);
+    }
+    const c = st.f > 0.9 ? 1 - smooth(0.02, 0.1, st.p) : 0;
+    if (cue && Math.abs(c - lastCue) > 0.01) { lastCue = c; cue.style.opacity = c.toFixed(2); }
   });
-  return { C, showNow, get phase() { return phase; } };
+  return { get st() { return st; }, get walk() { return walk; }, get on() { return on; } };
 })();
-window.__door = doorC;
+window.__door = doorStage;
 // Leistungen: ein Impuls läuft durch den Namen (Maus darüber bzw. beim Durchscrollen auf dem Handy)
 const ixRows = $$('.index li').map((li) => {
   const name = $('.ix-name', li); splitLetters(name);
@@ -2226,6 +2241,33 @@ window.__kf = kf; // Prüfhilfe: __kf.state(), __kf.go(u)
   } }
 frameFns.push((now) => kf.update(now));
 frameFns.push(tick);
+
+// ---------- Messanzeige (19.11.2026, Go Kai „1a“): nur mit ?takt=1 in der Adresse ----------
+// Anlass: Kai meldet, dass die Partikel „stottern/haken“; im Container (ohne Grafikchip) ist das nicht messbar. Die Anzeige
+// unten links zeigt auf SEINEM Gerät: Bilder je Sekunde, längste Pause, wer den Takt gibt (normal = requestAnimationFrame,
+// Reserve = Zeitgeber, weil das Gerät den normalen Takt anhält), Auflösung, Qualitätsstufe. Zwei Schalter zum Gegenprüfen:
+// „Leiste klar“ nimmt den Weichzeichner der Kopfleiste weg, „Auflösung 1×“ senkt die Auflösung der Hauptbühne.
+if (new URLSearchParams(location.search).get('takt') === '1') {
+  const box = document.createElement('div'); box.className = 'takt';
+  box.innerHTML = '<pre></pre><div><button type="button" data-t="blur">Leiste klar</button><button type="button" data-t="res">Auflösung 1×</button></div>';
+  document.body.appendChild(box);
+  const out = box.firstChild, gaps = [], H = document.documentElement;
+  let lastF = 0, wd = 0, n = 0, lastShow = 0;
+  box.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.t === 'blur') b.classList.toggle('on', H.classList.toggle('takt-klar'));
+    if (b.dataset.t === 'res' && renderer) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); renderer.setPixelRatio(on ? 1 : Math.min(devicePixelRatio || 1, isDesktop() ? 1.6 : 1.4)); glDirty = true; layout(); }
+  });
+  frameFns.push((now) => {
+    if (lastF) { gaps.push(now - lastF); if (gaps.length > 180) gaps.shift(); }
+    lastF = now; n++; if (viaWatchdog) wd++;
+    if (now - lastShow < 500 || gaps.length < 5) return;
+    lastShow = now;
+    const last60 = gaps.slice(-60), avg = last60.reduce((a, b) => a + b, 0) / last60.length, worst = Math.max(...gaps);
+    out.textContent = `Bilder/s  ${(1000 / avg).toFixed(0)}\nlängste Pause  ${worst.toFixed(0)} ms\nTakt  ${wd / n > 0.5 ? 'Reserve' : wd ? 'normal + Reserve' : 'normal'} (${Math.round(wd / n * 100)} % Reserve)\nAuflösung  ${renderer ? renderer.getPixelRatio().toFixed(2) : '–'} von ${(devicePixelRatio || 1).toFixed(2)}\nQualität  ${H.dataset.q || 0} · Punkte ${N}\nFenster  ${VW}×${VH} · Kap. ${navIdx + 1}`;
+    wd = 0; n = 0;
+  });
+}
 requestAnimationFrame(function loop(now) { requestAnimationFrame(loop); runFrame(now); });
 
 

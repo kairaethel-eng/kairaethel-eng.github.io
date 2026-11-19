@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="Testseite 4 (Puls · Scan): HOP – Home of Physiotherapy als dunkle Partikel-Inszenierung, Wirbelsäule als gescannte Punktwolke mit Kamerafahrt.">
-<script>document.documentElement.classList.add('js');addEventListener('load',function(){if(!window.__hop)document.documentElement.classList.remove('js','door-wait')})</script>
+<script>document.documentElement.classList.add('js');addEventListener('load',function(){if(!window.__hop)document.documentElement.classList.remove('js','door-walk')})</script>
 <style>/*FONTS*//*CSS*/</style>
 <!--BODY-->
 <a class="skip" href="#start">Zum Inhalt</a>
@@ -14,7 +14,9 @@
 
 <nav class="top" id="top">
   <a class="brand" href="#start" aria-label="HOP – Home of Physiotherapy, zum Anfang">
-    <svg viewBox="0 0 560 240" aria-hidden="true"><circle cx="110" cy="120" r="66" fill="#7FAF45"/><circle cx="300" cy="120" r="66" fill="#3C7189"/><circle cx="490" cy="120" r="66" fill="#3F86B5"/><g font-family="Archivo Expanded,Archivo,Arial,sans-serif" font-weight="800" font-size="60" fill="#fff" text-anchor="middle"><text x="110" y="142">H</text><text x="300" y="142">O</text><text x="490" y="142">P</text></g></svg>
+    <!-- 19.11.2026 (Kai: „Logo deutlich kenntlich, Buchstaben H O P“): Kreise enger gesetzt und größer, Buchstaben kräftig – vorher 78 px breit, Buchstaben rund 7 px -->
+    <svg viewBox="0 0 424 140" aria-hidden="true"><circle cx="70" cy="70" r="66" fill="#7FAF45"/><circle cx="212" cy="70" r="66" fill="#3C7189"/><circle cx="354" cy="70" r="66" fill="#3F86B5"/><g font-family="Archivo Expanded,Archivo,Arial,sans-serif" font-weight="800" font-size="74" fill="#fff" text-anchor="middle"><text x="70" y="96">H</text><text x="212" y="96">O</text><text x="354" y="96">P</text></g></svg>
+    <span class="brand-name" aria-hidden="true">Home of<br>Physiotherapy</span>
   </a>
   <ol class="chapters" id="chapters" aria-label="Kapitel">
     <li><a href="#start"><i>01</i><span class="ct">Ankommen<small>Von Kopf bis Fuß</small></span></a></li>
@@ -427,10 +429,25 @@
 
 
   <section class="chapter door" id="tuer" data-stage="3" aria-labelledby="t-title">
-    <div class="wrap door-inner">
+    <!-- Tür-Bühne „Hineingehen“ (19.11.2026, Go Kai „3a“): Überschrift oben, darunter groß die Tür (Zeichenfläche #cStage, fest hinter
+         dem Text). Beim Weiterscrollen öffnet sie sich, man geht hindurch, drinnen stehen die zwei Knöpfe. Ohne JavaScript, ohne
+         Grafikchip oder bei „Bewegung anhalten“: Überschrift und Knöpfe stehen einfach da (main.js: doorStage). -->
+    <div class="door-track" id="doorTrack">
+      <div class="door-sticky">
+        <div class="wrap door-top">
+          <p class="kicker"><i>05</i> Tür</p>
+          <h2 id="t-title">Die Tür steht<br><em>offen.</em></h2>
+        </div>
+        <p class="door-cue" aria-hidden="true">Treten Sie ein<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></p>
+        <div class="wrap door-in" id="doorIn">
+          <a class="btn" href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener" data-termin aria-haspopup="dialog">Termin buchen</a>
+          <a class="btn btn-ghost" href="#kontakt">Kontakt &amp; Anfahrt</a>
+        </div>
+      </div>
+    </div>
+    <div class="wrap door-inner" id="kontakt" aria-labelledby="k-title">
       <div>
-        <p class="kicker"><i>05</i> Tür</p>
-        <h2 id="t-title">Die Tür steht<br><em>offen.</em></h2>
+        <h3 class="door-h3" id="k-title">Kontakt &amp; Anfahrt</h3>
         <p class="lead">Buchen Sie Ihren Termin direkt online. Oder schreiben Sie mir eine E-Mail bzw. sprechen Sie auf den Anrufbeantworter, dann melde ich mich mit einem Terminvorschlag.</p>
         <div class="actions">
           <a class="btn" href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener" data-termin aria-haspopup="dialog">Online-Termin buchen</a>
