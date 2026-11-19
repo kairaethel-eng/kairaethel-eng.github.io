@@ -257,6 +257,10 @@ html.auftakt .manifest{padding-block:clamp(3rem,8vh,5rem) 0}
 html.auftakt .roof{padding-top:clamp(4rem,10vh,6.5rem)}
 html.auftakt .door{padding-top:0}
 html.auftakt .manifest .wrap>.kicker,html.auftakt .axis-head .kicker,html.auftakt .roof-head .kicker,html.auftakt .door-top .kicker{display:none}
+/* 19.11.: bis 380 px Breite kleiner – „04 Dach / Praxis & Leistungen“ war bei 320 px 45 px breiter als das Fenster (die ganze Seite wurde dadurch verkleinert dargestellt) */
+.auftakt-blk{overflow-x:clip}
+.auftakt-blk .au-txt{min-width:0}
+@media (max-width:380px){.auftakt-blk .au-row{gap:.75rem}.auftakt-blk .au-no{font-size:5.75rem}.auftakt-blk .au-name{font-size:1.625rem}.auftakt-blk .au-sub{font-size:.625rem;letter-spacing:.1em}}
 @media (prefers-reduced-motion:reduce){.auftakt-blk .au-no,.auftakt-blk .au-txt,.auftakt-blk .au-line{transition:none;opacity:1;transform:none}}
 @media print{.auftakt-blk{min-height:0;padding-top:2rem}.auftakt-blk .au-no,.auftakt-blk .au-txt,.auftakt-blk .au-line{opacity:1;transform:none}}
 /* Tür-Bühne „Hineingehen“ (19.11., Go Kai „3a“, Baustein src/tuer/buehne.js): klebende Bühne, Überschrift oben, darunter die Tür
@@ -474,8 +478,9 @@ html:not(.js) button.ix-link{display:none}
 }
 @media (max-width:350px){
   .top{gap:.375rem}
-  .brand svg{width:4rem}
+  .brand svg{width:3.625rem}
   .chap-now{font-size:.75rem}
+  .chap-now small{display:none} /* 19.11.: Untertitel des Kapitels entfällt bis 350 px – „Termin“ lag dort schon vorher 13 px außerhalb des Bilds */
   .top .btn-small{padding:0 .625rem}
 }
 /* Scanner (Handy, 6.11.): Linie, Griff, Leiste – Lage aus main.js updateScan; nur mit .on sichtbar */

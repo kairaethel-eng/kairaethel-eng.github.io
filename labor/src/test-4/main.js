@@ -2264,7 +2264,7 @@ if (new URLSearchParams(location.search).get('takt') === '1') {
     if (now - lastShow < 500 || gaps.length < 5) return;
     lastShow = now;
     const last60 = gaps.slice(-60), avg = last60.reduce((a, b) => a + b, 0) / last60.length, worst = Math.max(...gaps);
-    out.textContent = `Bilder/s  ${(1000 / avg).toFixed(0)}\nlängste Pause  ${worst.toFixed(0)} ms\nTakt  ${wd / n > 0.5 ? 'Reserve' : wd ? 'normal + Reserve' : 'normal'} (${Math.round(wd / n * 100)} % Reserve)\nAuflösung  ${renderer ? renderer.getPixelRatio().toFixed(2) : '–'} von ${(devicePixelRatio || 1).toFixed(2)}\nQualität  ${H.dataset.q || 0} · Punkte ${N}\nFenster  ${VW}×${VH} · Kap. ${navIdx + 1}`;
+    out.textContent = `Bilder/s  ${(1000 / avg).toFixed(0)}\nlängste Pause  ${worst.toFixed(0)} ms\nTakt  ${wd / n > 0.5 ? 'Reserve' : wd ? 'normal + Reserve' : 'normal'} (${Math.round(wd / n * 100)} % Reserve)\nAuflösung  ${renderer ? renderer.getPixelRatio().toFixed(2) : '–'} von ${(devicePixelRatio || 1).toFixed(2)}\nQualität  ${H.dataset.q || 0} · Punkte ${N}\nFenster  ${VW}×${VH}`;
     wd = 0; n = 0;
   });
 }
