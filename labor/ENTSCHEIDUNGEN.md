@@ -1,7 +1,16 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 18.11.2026 (Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 20.11.2026 (Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Stil von Figur/Wirbelsäule auf alle Punkt-Grafiken, Übergänge über die Zeit (Auftrag Kai 20.11.2026) – umgesetzt, wartet auf Sichtprüfung
+- **Entschieden (Auftrag):** Leistungs-Motive und Manuthera folgen demselben Stil wie Figur und Wirbelsäule: geordnete Zeilen, Kantenlicht, gestochene gleich große Punkte, verdeckte Rückseite, Antwort unter Maus/Finger.
+- **Entschieden (Auftrag):** Übergänge sind überall feiner Staub und laufen über die Zeit, ausgelöst beim Hereinscrollen – nicht mehr am Scrollweg. Damit ist „der Übergang hängt allein am Scrollen“ (Stand bis 19.11.) für Formwechsel, HOP-Kreise, Abtastlinie und Tür-Sammeln aufgehoben.
+- **Bleibt am Scrollweg (bewusst):** Fahrt an der Figur in Kapitel 01, Hineingehen durch die Tür (Kai 19.11.), Haltestellen der Wirbelsäule.
+- **Merkregel:** Ein Ablauf über die Zeit darf nicht über Text liegen, den man schon liest – die MENGE des Staubs darf deshalb am Scrollen hängen (dünner, sobald die Überschrift im Lesebereich steht), der ABLAUF nicht.
+- **Merkregel:** Neue Punkt-Grafiken werden mit `src/shared/raster.js` gebaut (kein Zufall bei der Lage der Punkte); Zufall nur als fester Startwert für Streu-Richtungen.
+- **Merkregel:** Nebenbühnen starten ihren Auftritt erst, wenn sie zu gut einem Drittel im Bild stehen.
+- **Offen (Kai, Arbeitsblatt 3):** Tempo der Abläufe · Auftritt jedes Mal oder nur beim ersten Mal · Stoßwelle/Linienhaus als Punkt-Grafik?
 
 ## Messanzeige, Tür-Bühne „Hineingehen“, Logo mit H · O · P (Go Kai 19.11.2026: „Go 1ab 2ab 3a“) – umgesetzt, wartet auf Sichtprüfung
 - **Entschieden (3a):** Kapitel 05 hat eine eigene klebende Tür-Bühne mit Scrollweg; die Knöpfe „Termin buchen“ und „Kontakt & Anfahrt“ stehen erst drinnen. Damit ist die Entscheidung vom 16.11. („keine eigene Scroll-Strecke vor dem Termin-Knopf“) aufgehoben – Kai wünscht das Hineingehen ausdrücklich; „Termin“ in der Kopfleiste bleibt immer erreichbar. Tür C (zeitgesteuert, hinter dem Text) ist abgelöst.

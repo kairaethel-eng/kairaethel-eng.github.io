@@ -17,7 +17,7 @@
 //   • Je Zustand drei Bilder: A normal · B nur die Zeichenflächen (Grafik ohne Text/Karten) · C Text durchsichtig (Grund hinter dem Text).
 //       Verdeckung  = Anteil der Grafik (B), der in A von etwas überdeckt ist – Regel: Hauptgrafik höchstens 35 %.
 //       Text        = Anteil der Textfläche, hinter der der Grund zu hell/unruhig ist (Kontrast < 3:1 groß bzw. 4,5:1) – Regel: ≤ 15 %.
-//   • Film: ein kräftiger Wisch (rund 0,9 Fensterhöhen, mit Schwung über 8 Bilder auslaufend), dazu 8 Bilder Nachlauf; Abstand 120 ms. Gemessen wird, wie voll
+//   • Film: ein kräftiger Wisch (rund 0,9 Fensterhöhen, mit Schwung über 8 Bilder auslaufend), dazu 16 Bilder Nachlauf (seit 20.11.2026; vorher 8); Abstand 120 ms. Gemessen wird, wie voll
 //     das Bild mit hellen Punkten ist und wie sprunghaft es sich ändert – Regel: nie mehr als 28 % hell, kein Sprung über 4 Punkte.
 //   Ergebnis: bericht.md, <ansicht>-<zustand>.png, film-<ansicht>-<name>.png (Streifen), Rückgabewert 1 bei Regelverstoß.
 // Grenze: ohne Grafikchip (Container) bleiben Tempo und Flüssigkeit unbewertbar; was nur auf echter Grafik auftritt, zeigt auch
@@ -100,7 +100,7 @@ const ANA = () => {
   window.film = async ({ frames, w, h, top }) => {
     const stats = []; let prev = null;
     // Streifen: Handy 16 Bilder in einer Reihe (je 180 breit), PC zwei Reihen zu 8 (je 360 breit) – sonst ist am PC nichts zu erkennen
-    const wide = w > 600, sw = wide ? 360 : 180, sh = Math.round(h * sw / w), per = wide ? 8 : frames.length;
+    const wide = w > 600, sw = wide ? 360 : 180, sh = Math.round(h * sw / w), per = wide ? 8 : 12;
     const strip = new OffscreenCanvas(sw * per, sh * Math.ceil(frames.length / per)), sx = strip.getContext('2d');
     for (let i = 0; i < frames.length; i++) {
       const bmp = await createImageBitmap(await (await fetch('data:image/png;base64,' + frames[i])).blob());
@@ -212,8 +212,11 @@ const STILL = () => (window.__psHosts || []).map((h) => { if (!h.isConnected || 
       const R = await ana.evaluate((x) => window.state(x), { a, b: bImg, c, w, h, top, groups, ring });
       const bad = R.texts.filter((t, i) => t.n > 60 && t.bad > RULE.text && !groups[i].inKnown).sort((x, y) => y.bad - x.bad);
       const occBad = S.key && R.occl !== null && R.occl > RULE.occl;
+      // 20.11.2026: eine Hauptgrafik, die gar nicht im Bild ist, ist ein Fehler (an dem Tag fehlte die Wirbelsäule in allen Haltestellen –
+      // der Lauf meldete trotzdem „alles ok“, weil ohne Grafik auch nichts verdeckt sein kann)
+      const gone = !!S.key && R.graphic < 0.3;
       if (process.env.DBG) for (const t of bad) { const G = groups[R.texts.indexOf(t)]; console.log('   DBG', t.sel, t.px + 'px', 'Farbe', G.col.map((v) => +v.toFixed(2)).join(','), 'Kontrast nötig', G.need, 'Flächen', JSON.stringify(G.rects.slice(0, 4))); }
-      say(!occBad && !bad.length, `${S.id.padEnd(16)} Grafik ${String(R.graphic).padStart(5)} % des Bilds · verdeckt ${R.occl === null ? ' –' : String(R.occl).padStart(2) + ' %'}${S.key ? '' : ' (nicht Hauptgrafik)'}${bad.length ? ' · Text auf unruhigem Grund: ' + bad.slice(0, 3).map((t) => `„${t.txt.slice(0, 28)}“ ${t.bad} %`).join(', ') : ''}`);
+      say(!occBad && !bad.length && !gone, `${S.id.padEnd(16)}${gone ? ' HAUPTGRAFIK FEHLT ·' : ''} Grafik ${String(R.graphic).padStart(5)} % des Bilds · verdeckt ${R.occl === null ? ' –' : String(R.occl).padStart(2) + ' %'}${S.key ? '' : ' (nicht Hauptgrafik)'}${bad.length ? ' · Text auf unruhigem Grund: ' + bad.slice(0, 3).map((t) => `„${t.txt.slice(0, 28)}“ ${t.bad} %`).join(', ') : ''}`);
       if (process.env.BASIS && fs.existsSync(path.join(process.env.BASIS, `${view}-${S.id}.png`))) {
         const d = await ana.evaluate((x) => window.diff(x), { a, b: fs.readFileSync(path.join(process.env.BASIS, `${view}-${S.id}.png`)).toString('base64'), w, h });
         if (d > 1.5) { console.log(`         geändert gegenüber BASIS: ${d} % der Bildpunkte`); md.push(`  - geändert gegenüber BASIS: ${d} %`); }
@@ -223,9 +226,11 @@ const STILL = () => (window.__psHosts || []).map((h) => { if (!h.isConnected || 
     if (partsArg.includes('film')) for (const F of FILMS) {
       if (ONLY && !ONLY.includes(F.id)) continue;
       await F.go(p, settle); await settle(F.wait || 3000);
-      // Wisch wie am Handy: der Weg wird über die ersten 8 Bilder auslaufend verteilt (Schwung), danach 8 Bilder Nachlauf
+      // Wisch wie am Handy: der Weg wird über die ersten 8 Bilder auslaufend verteilt (Schwung), danach 16 Bilder Nachlauf
+      // (seit 20.11.2026 24 statt 16 Bilder: die Formwechsel laufen über die Zeit – rund 2 s – und sollen im Streifen zu Ende zu sehen sein)
+      const NF = 24;
       const y0 = await p.evaluate(() => scrollY), dist = h * F.k, frames = [];
-      for (let i = 0; i < 16; i++) {
+      for (let i = 0; i < NF; i++) {
         if (i < 8) { const e = 1 - Math.pow(1 - (i + 1) / 8, 3); await p.evaluate((y) => scrollTo(0, y), Math.round(y0 + dist * e)); }
         await p.clock.runFor(40); await p.clock.runFor(40); await p.clock.runFor(40);
         // Die Software-Grafik braucht echte Zeit, bis das neue Bild wirklich steht – ohne diese Pause zeigt die Aufnahme teils noch

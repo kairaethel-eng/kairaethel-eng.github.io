@@ -21,12 +21,15 @@ stehen wörtlich in `labor/TECHNIK.md` – dort gezielt nachschlagen, nicht alle
 - Seit 17./18.11.2026 gilt der **Feinschliff-Stil** auf der ganzen Seite (Studie `feinschliff.html`, Vergleich `puls-vor-feinschliff.html`).
 - Seit 18.11.2026 abends: **Kapitel-Auftakt** vor den Kapiteln 02–05 (große Ziffer, Name, Linie), **Staub** als Übergang 03 ↔ 04, Streifen von Kapitel 02 auch am Handy/Tablet.
 - Seit 19.11.2026: **Tür-Bühne „Hineingehen“** in Kapitel 05 (Knöpfe erst drinnen), Logo mit lesbarem H · O · P, **Messanzeige** `?takt=1` (Bilder je Sekunde auf Kais Gerät). Offen: Kai meldet Stottern der Partikel – Ursache noch nicht bestätigt, erst seine Messwerte abwarten (`UEBERGABE.md` oben).
+- Seit 20.11.2026: **Leistungs-Motive und Manuthera im Stil von Figur und Wirbelsäule** (geordnete Punkte aus `src/shared/raster.js`, Kantenlicht, verdeckte Rückseite); **Übergänge laufen über die Zeit** (Auslöser beim Hereinscrollen, Staub bei jedem Formwechsel, Auftritt der Nebenbühnen aus Staub). Offene Punkte für Kai: Arbeitsblatt 3 (Adresse in `UEBERGABE.md` oben) – zuerst auslesen.
 - Startadresse (`/index.html`, `/impressum.html`, `/datenschutz.html`) ist eine Übergangsseite und wird **nie ohne ausdrückliches Go** geändert. Livegang ruht.
 - Entwurfsseiten und Archiv (Figur plus, Tür, Haus-Licht, Fusion, Zuhause, Manuthera, Vorfall …): Liste und Technik in `TECHNIK.md`.
 
 ## Gestaltungsregeln (prüfbar – gelten für alles Neue)
 - **Punkte:** geordnet (gleicher Abstand, gleiche Größe, scharfer Rand), kein Zittern, kein Zufall im ruhenden Bild.
 - **Farben der Punkte:** Petrol → Knochenweiß, Bernstein (Spannung, Nerven, Akzent), ein Blau; Grün nur im Logo und in Häkchen/Ringen der Bedienung.
+- **Punkt-Grafiken:** immer mit `src/shared/raster.js` bauen (Zeilen über die Oberfläche, Normale je Punkt → Kantenlicht, Kern verdeckt die Rückseite); kein Zufall bei der Lage.
+- **Abläufe:** Übergänge und Auftritte laufen über die Zeit (Auslöser beim Hereinscrollen, `riegel()` in `main.js`), nicht am Scrollweg. Am Scrollweg bleiben nur: Fahrt an der Figur, Hineingehen durch die Tür, Haltestellen der Wirbelsäule. Nur die Menge des Staubs darf am Scrollen hängen (dünner, sobald Text im Lesebereich steht).
 - **Bewegung:** ruhig, eine zur Zeit, nichts „explodiert“. Übergänge dürfen verstreut sein, aber als feiner Staub: kleine feste Punktgröße, höchstens 60 % deckend, nie über Text, der gerade gelesen wird. Film-Regel: nie mehr als 28 % des Bilds hell, kein Sprung über 8 Punkte von Bild zu Bild; bei Wisch-Übergängen zwischen Kapiteln (Prüfstand) höchstens 4 Punkte.
 - **Hauptgrafik** (Wirbelsäule in der Nahansicht, Stelle im Ring der Figur) ist höchstens zu 35 % verdeckt.
 - **Text** steht nie auf unruhigem Grund (höchstens 15 % der Textfläche unter Kontrast 3:1 groß bzw. 4,5:1).
@@ -40,7 +43,7 @@ stehen wörtlich in `labor/TECHNIK.md` – dort gezielt nachschlagen, nicht alle
 
 ## „Fertig“ heißt (vor jeder Meldung „umgesetzt“ und vor jedem Veröffentlichen)
 1. `cd labor && node build.mjs test-4 && node build.mjs live` (Entwurfsseiten: ihr eigenes Ziel).
-2. **Prüfstand:** `node tools/pruefstand.cjs live/index.html <ordner> ia,d` – iPhone-Fenster 390×692 und PC; je Zustand Verdeckung und Text, dazu Wisch-Tests als Filmstreifen. Jeden „FEHLER“ ansehen: beheben oder als bekannt/gewollt begründen. Die Filmstreifen (`film-*.png`) immer selbst ansehen.
+2. **Prüfstand:** `node tools/pruefstand.cjs live/index.html <ordner> ia,d` – iPhone-Fenster 390×692 und PC; je Zustand Verdeckung und Text, dazu Wisch-Tests als Filmstreifen (24 Bilder). Nach Änderungen an Motiven/Manuthera zusätzlich `node tools/motive.cjs live/index.html <ordner> d` (Kontaktbogen) ansehen. Jeden „FEHLER“ ansehen: beheben oder als bekannt/gewollt begründen. Die Filmstreifen (`film-*.png`) immer selbst ansehen.
 3. `node tools/sizes.cjs live/index.html` → „alles ok“ (niedrige Fenster, Handy quer, ohne JS, ohne Grafikchip, Druck).
 4. Je nach Änderung: `tools/gaps.cjs` (Abstände), `tools/heads.cjs` (Überschriften), `tools/audit.cjs` (axe), `tools/kopf-fuss-check.cjs` (Kapitel 01).
 5. Die geänderte Stelle in **jedem** Zustand ansehen (alle sechs Haltestellen, alle vier Stationen, alle Räume), in beiden Scrollrichtungen, langsam und mit kräftigem Wisch.

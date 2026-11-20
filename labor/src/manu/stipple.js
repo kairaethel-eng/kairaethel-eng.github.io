@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler.js';
 import { runSync, every, poissonGrid, bounds } from '../shared/slice.js';
+import { assemble } from '../shared/raster.js';
 
 const prep = (geo) => {
   const g = geo.index ? geo.toNonIndexed() : geo;
@@ -180,4 +181,49 @@ export function box(c, s, seg = [1, 1, 1]) {
   const g = new THREE.BoxGeometry(s[0], s[1], s[2], seg[0], seg[1], seg[2]);
   g.translate(c[0], c[1], c[2]);
   return g;
+}
+
+// ---------- Geordnete Punkte (20.11.2026, Auftrag Kai: Stil der Figur und der Wirbelsäule auf die Manuthera) ----------
+// Wie stippleGen, aber ohne Zufall: die Teile kommen als Formen aus ../shared/raster.js (Zeilen über die Oberfläche, gleicher Abstand,
+// jede zweite Zeile versetzt). Punkte, die in einem Nachbarteil derselben Gruppe stecken, entfallen. Dazu je Punkt eine feste
+// Streu-Richtung (aRnd) für den Auftritt aus feinem Staub.
+// parts: { r (Form), kind, map(v) → { la, lb, a, b, w }, keep?(n, v), grp? }
+export function* orderedGen(parts, sp) {
+  const out = { P: [], P2: [], N: [], SA: [], SB: [], W: [], K: [], R: [] };
+  let a = 20261120 >>> 0;
+  const rnd = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  yield;
+  const done = assemble(parts.map((p) => ({ ...p, g: p.r })), sp);
+  yield;
+  const v = new THREE.Vector3(), n = new THREE.Vector3(), tick = every(2048);
+  let count = 0;
+  for (const { part, pts } of done) for (const q of pts) {
+    if (tick()) yield;
+    v.set(q[0], q[1], q[2]); n.set(q[3], q[4], q[5]);
+    if (part.keep && !part.keep(n, v)) continue;
+    const m = part.map(v);
+    out.P.push(m.la.x, m.la.y, m.la.z); out.P2.push(m.lb.x, m.lb.y, m.lb.z); out.N.push(n.x, n.y, n.z);
+    out.SA.push(m.a); out.SB.push(m.b); out.W.push(m.w); out.K.push(part.kind); out.R.push(rnd(), rnd(), rnd());
+    count++;
+  }
+  const geo = toGeo(out);
+  geo.setAttribute('aRnd', new THREE.Float32BufferAttribute(out.R, 3));
+  return { geo, count, spacing: sp };
+}
+// Kern aus den Dreiecken derselben Formen
+export function* coreOfRasterGen(parts) {
+  const out = { P: [], P2: [], N: [], SA: [], SB: [], W: [], K: [] };
+  const v = new THREE.Vector3();
+  for (const p of parts) {
+    if (p.core === false) continue;
+    const T = p.r.tris;
+    for (let i = 0; i < T.length; i += 6) {
+      v.set(T[i], T[i + 1], T[i + 2]);
+      const m = p.map(v);
+      out.P.push(m.la.x, m.la.y, m.la.z); out.P2.push(m.lb.x, m.lb.y, m.lb.z); out.N.push(T[i + 3], T[i + 4], T[i + 5]);
+      out.SA.push(m.a); out.SB.push(m.b); out.W.push(m.w); out.K.push(p.kind);
+    }
+    yield;
+  }
+  return toGeo(out);
 }

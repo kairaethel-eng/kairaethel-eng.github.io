@@ -49,6 +49,26 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+// ---------- Auslöser statt Scrollweg (20.11.2026, Auftrag Kai: „nicht scroll abhängig machen sondern ruhig und schön beim runter
+// scrollen wischen automatisch animieren“) ----------
+// Die bisherigen Scrollwerte (0…1) bleiben als Messung, sind aber nur noch der Auslöser: über `an` startet der Ablauf, unter `aus`
+// läuft er zurück. Der Ablauf selbst läuft über die Zeit – gleich ruhig, egal wie schnell gescrollt oder gewischt wird.
+// Beim ersten Aufruf (Laden mitten in der Seite) steht der Wert sofort am Ziel; bei „Bewegung anhalten/reduzieren“ ohne Ablauf.
+const FORM_SEK = 2.0;  // ein Formwechsel der Punktwolke (Figur → Bänder → Wirbelsäule → Dachlinie)
+const LOGO_SEK = 1.9;  // HOP-Kreise entstehen / lösen sich
+const SCAN_SEK = 1.7;  // Abtastlinie baut die Wirbelsäule auf
+function riegel(sek, an = 0.3, aus = 0.12) {
+  let want = -1, v = 0;
+  const f = (scrub, dt) => {
+    if (want < 0) { want = scrub > an ? 1 : 0; v = want; }
+    else if (scrub > an) want = 1; else if (scrub < aus) want = 0;
+    v = reduced || paused ? want : want > v ? Math.min(1, v + dt / sek) : Math.max(0, v - dt / sek);
+    return v;
+  };
+  f.want = () => Math.max(0, want); f.set = (x) => { want = x; v = x; }; f.v = () => v;
+  return f;
+}
+const weich = (t) => t * t * (3 - 2 * t);
 // Fenstergröße beim Start ohne erzwungenes Layout (A1): innerWidth/innerHeight ließen den Browser die ganze Seite
 // mitten im Start-Skript setzen. Media-Queries kennen die Größe ohne Layout; danach hält „resize“ die Werte aktuell.
 const mqSize = (dim) => { let lo = 0, hi = 16384; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (matchMedia(`(min-${dim}: ${m}px)`).matches) lo = m; else hi = m; } return lo; };
@@ -307,6 +327,12 @@ const vert = /* glsl */`
     a = max(a, dustK * step(aRand.z, .45 * uDust) * .6 * smoothstep(0., .22, t) * (1. - smoothstep(.8, 1., t)));
     dw = mix(dw, .03, dustK);
     col = mix(col, mix(cPetrol * 1.5, cBone, aRand.x), dustK * (1. - smoothstep(.7, 1., t)));
+    // 20.11. (Auftrag Kai: „die Zerstreuung der Pixel-Übergänge auf der ganzen Seite“): bei JEDEM Formwechsel sind die Punkte unterwegs
+    // feiner Staub – kleine feste Größe, höchstens 60 % deckend – und werden erst beim Ankommen wieder zur Form
+    float fine = sin(t * 3.14159) * (1. - dustK);
+    fine = smoothstep(0., .55, fine);
+    dw = mix(dw, .034, fine);
+    a = mix(a, min(a, .6), fine);
     // Hausordnung (seit 14.11.2026 nachts direkt nach Kapitel 02): die HOP-Kreise (Form 4) legen sich über die laufende Form
     // und lösen sich danach in die Wirbelsäule auf – uLogo 0..1, unabhängig von der Kapitelfolge in uMorph
     if(uLogo > .001){
@@ -1209,7 +1235,7 @@ segBtns.forEach((b) => b.addEventListener('click', () => {
 // sobald die Kamera steht, und lebt nur im unteren Bildteil → beim Weiterscrollen bleibt der Abschnitt über
 // der Kartenoberkante → Karte blendet oben aus. Nach der letzten Karte: ganze Wirbelsäule groß in der Mitte,
 // stehen lassen, dann löst sie sich nach oben auf und das Haus entsteht in der Bildmitte.
-const axisNote = $('#achse .note'), dachSec = $('#dach');
+const axisNote = $('#achse .note'), dachSec = $('#dach'), dTitleEl = $('#d-title');
 // ---------- Kapitel-Auftakt (18.11.2026, Studie A/B → Kai: „A“) ----------
 // Vor jedem der Kapitel 02–05 steht ein eigener ruhiger Abschnitt: große kursive Ziffer, Name, Untertitel wie in der Kopfleiste, eine
 // Linie zieht sich quer. Dahinter läuft der Formwechsel der Punkte (der Staub sammelt sich zur neuen Form) – der Übergang zeigt
@@ -1488,7 +1514,11 @@ function updateScan(dt, r, inSec) {
   // Handy (18.11.): die Wirbelsäule löst sich etwas später auf – sie geht erst mit der Bühne nach oben, sonst bleibt vor „04 Dach“ ein leeres Bild
   // Handy (18.11., Go Kai „1a“): beim Verlassen zerfällt sie nicht mehr in Punkte. Die Abtastlinie bleibt unten (solidIn), die
   // Wirbelsäule endet weich an der Unterkante des Kapitels und blendet als Ganzes aus (outK → uFade), sobald „04 Dach“ ins Bild kommt.
-  const solidIn = inSec ? smooth(VH * 1.0, VH * 0.25, r.top) * spineK : 0;
+  // 20.11. (Auftrag Kai: Abläufe über die Zeit): die Abtastlinie startet, sobald das Kapitel hereinkommt, und läuft dann von selbst.
+  // Kommt man von unten zurück (Kapitel steht schon über dem Bild), ist die Wirbelsäule wie bisher sofort wieder da.
+  if (!inSec) scanGate.set(0); else if (!scanGate.inSec && r.top < VH * 0.25) scanGate.set(1);
+  scanGate.inSec = inSec;
+  const solidIn = inSec ? weich(scanGate(smooth(VH * 1.0, VH * 0.25, r.top), dt)) * spineK : 0;
   // PC ebenso (18.11. mittags): der genauere Prüfstand zeigte dort dieselbe helle Wolke beim Verlassen und beim Zurückkommen
   const outK = smooth(VH * 0.34, VH * 0.06, r.bottom);
   const solid = solidIn * (1 - outK);
@@ -1641,6 +1671,7 @@ function updateScan(dt, r, inSec) {
   scanRail.style.left = (VW - RAIL_W).toFixed(0) + 'px'; scanRail.style.top = rTop.toFixed(0) + 'px'; scanRail.style.height = (yMax - yMin + 56 * RK).toFixed(0) + 'px';
 }
 
+const scanGate = riegel(SCAN_SEK, 0.25, 0.08); // früh auslösen: startet die Abtastlinie später, steht so lange die grobe helle Übergangswolke neben der Überschrift (20.11. im Film gesehen)
 function updateAxis(dt) {
   const ph = PH(), desk = isDesktop();
   const r = axis.getBoundingClientRect();
@@ -1831,13 +1862,15 @@ document.addEventListener('click', (e) => { if (!e.target.closest('#chapters')) 
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && topNav.classList.contains('menu-open')) { setMenu(false); chapNow.focus(); } });
 addEventListener('resize', () => { if (VW > 1000) setMenu(false); });
 let chapShown = -1;
-let morphNow = 0;
+let morphNow = 0, morphInit = false, tickDt = 0;
 let chapTop = null, logoGeo = null;
 const chapDirty = () => { chapTop = null; logoGeo = null; };
 addEventListener('resize', chapDirty); addEventListener('load', chapDirty);
 if (window.ResizeObserver) new ResizeObserver(chapDirty).observe(document.body);
+const morphGate = [];
 function targetMorph() {
   const vh = VH;
+  if (!morphGate.length) chapters.forEach(() => morphGate.push(riegel(1)));
   let m = 0;
   // mit Auftakt: der Formwechsel läuft hinter dem Auftakt. Ausnahme Kapitel 03: dort entsteht die Wirbelsäule mit ihrer Bühne
   // (Abtastlinie von oben) – finge der Formwechsel schon am Auftakt an, stünde am PC lange eine helle Säule aus groben Punkten
@@ -1861,7 +1894,8 @@ function targetMorph() {
     // Handy: Bewegungslinien → Wirbelsäule früher fertig, damit der Scan schon mit der Überschrift entsteht;
     // seit 14.11. nachts etwas später begonnen, damit die Wirbelsäule nicht über dem letzten Paragraphen der Hausordnung entsteht
     if (!isDesktop() && prev === 1 && s === 2) t = smooth(vh * 1.1, vh * 0.25, r.top); // 16.11.: 0,85 statt 0,48 (Beginn liegt unter den HOP-Kreisen)
-    if (t > 0) m = prev + (s - prev) * t;
+    morphGate[i](t, 0);
+    if (morphGate[i].want()) m = s; // Auslöser: das Kapitel ist da → Ziel ist seine Form; der Weg dorthin läuft über die Zeit (tick)
   }
   return m;
 }
@@ -1869,7 +1903,8 @@ function targetMorph() {
 // während die Hausordnung hereinkommt, und lösen sich in die Wirbelsäule auf, sobald Kapitel 03 folgt (Shader: uLogo).
 // Handy wie seit 8.11.: schon am Ende des vorigen Textes fertig, mittig im freien Raum über „§ Die Hausordnung“.
 let logoNow = 0;
-function targetLogo() {
+const logoIn = riegel(LOGO_SEK), logoOut = riegel(LOGO_SEK);
+function targetLogo(dt = 0) {
   const vh = VH, sy = scrollY, d = isDesktop();
   // 16.11. (Kai: „überall diese Geschwindigkeit“): Kreise kommen/gehen über ~0,9 Bildschirmhöhen (vorher 0,45–0,7)
   // 18.11. (Kai: „am Tablet und Handy kommen die Partikelstreifen nicht“, Go 3a): am Handy entstanden die Kreise schon, während
@@ -1878,7 +1913,8 @@ function targetLogo() {
   // laufen als Streifen weiter (Shader uKeep) – am Tablet stehen Kapitel 02 und die Hausordnung fast gleichzeitig im Bild.
   const kIn = d ? smooth(vh * 1.0, vh * 0.1, logoGeo.rules - sy) : smooth(vh * 0.95, vh * 0.5, logoGeo.kick - sy);
   const kOut = d ? smooth(vh * 1.0, vh * 0.1, logoGeo.axis - sy) : smooth(vh * 1.2, vh * 0.35, logoGeo.axis - sy);
-  return kIn * (1 - kOut);
+  // 20.11.: Auslöser statt Scrollweg – die Kreise sammeln sich und lösen sich über die Zeit
+  return weich(logoIn(kIn, dt)) * (1 - weich(logoOut(kOut, dt)));
 }
 // Handy: Logo steht mittig im freien Raum zwischen dem Text von Kapitel 02 (bzw. Leiste) und „§ Die Hausordnung“ und steigt mit dem Text auf
 function logoPlace() {
@@ -1955,6 +1991,7 @@ new IntersectionObserver((es, ob) => es.forEach((e) => { if (e.isIntersecting) {
 // kein Grafikchip) stehen Überschrift und Knöpfe einfach da. Die Zeichenfläche ist nur in der Nähe der Bühne eingeschaltet
 // (Go „1b“: sie lag am 18.11. dauernd bildschirmgroß über der Seite). Prüfhilfe: window.__door.
 const doorStage = (() => {
+  const doorGate = riegel(2.2); // Staub sammelt sich zur Tür: Auslöser beim Hereinkommen, Ablauf über die Zeit
   const cv = $('#cStage'), glowEl = $('#cGlow'), track = $('#doorTrack'), inEl = $('#doorIn');
   if (!cv || !track || !inEl) return null;
   const sticky = $('.door-sticky', track), cue = $('.door-cue', track), H = document.documentElement;
@@ -1981,7 +2018,7 @@ const doorStage = (() => {
     st.frame(dt, {
       w: cv.clientWidth, h: vh, desk, cx: cv.clientWidth / 2,
       areaTop: hb + (desk ? 8 : 18), areaBot: sr.bottom - (desk ? 44 : 30), fadeY: hb - 8,
-      fWant: smooth(vh * 0.95, vh * 0.12, r.top), // Tür entsteht, während die Bühne hereinkommt
+      fWant: weich(doorGate(smooth(vh * 0.95, vh * 0.12, r.top), dt)), // Tür entsteht, sobald die Bühne hereinkommt – über die Zeit (20.11.), nicht am Scrollweg
       pWant: clamp(-r.top / Math.max(1, r.height - sr.height)),
     });
     const g = smooth(DOOR_PLAN.gate, DOOR_PLAN.gate + 0.12, st.p);
@@ -2136,12 +2173,18 @@ function tick() {
   uniforms.uCalm.value = kf.calm(); uniforms.uBreath.value = kf.breath(); uniforms.uBodyRot.value = kf.sway();
   const tm = targetMorph();
   if (!isDesktop()) logoPlace();
-  morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
+  // Formwechsel über die Zeit (FORM_SEK je Form; liegen mehrere Formen dazwischen – Sprung über Kapitel – entsprechend schneller)
+  tickDt = dt;
+  if (!morphInit || reduced || paused) { morphNow = tm; morphInit = true; }
+  else { const d = tm - morphNow, st = dt / FORM_SEK * Math.max(1, Math.abs(d)); morphNow = Math.abs(d) <= st ? tm : morphNow + Math.sign(d) * st; }
   uniforms.uMorph.value = morphNow;
   uniforms.uVeil.value = morphNow > 2.02 && morphNow < 3 && (isDesktop() ? pcScan() : scanOn()) ? 1 : 0; // Scanner (Handy und PC): Weg Wirbelsäule <-> Dach unsichtbar („1a“)
   uniforms.uKeep.value = isDesktop() ? 0 : 1; // Handy/Tablet: Streifen laufen hinter den HOP-Kreisen weiter
-  uniforms.uDust.value = isDesktop() ? 0.45 : 1; // feiner Staub statt unsichtbarer Wanderung (Kai 18.11.: „verstreute Übergänge wieder“; PC: kleinerer Anteil, dort sind es mehr Punkte)
-  logoNow += (targetLogo() - logoNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
+  // 20.11.: der Staub läuft jetzt über die Zeit – wer schnell weiterwischt, hat die Überschrift von Kapitel 04 schon im Lesebereich,
+  // während er noch unterwegs ist. Dann wird er dünner und verschwindet (nur die Menge hängt am Scrollen, nicht der Ablauf).
+  const dustFree = 1 - smooth(VH * 0.82, VH * 0.5, dTitleEl.getBoundingClientRect().top);
+  uniforms.uDust.value = (isDesktop() ? 0.45 : 1) * (morphNow > 2.02 && morphNow < 2.98 ? Math.max(0.011, dustFree) : 1); // feiner Staub statt unsichtbarer Wanderung (Kai 18.11.: „verstreute Übergänge wieder“; PC: kleinerer Anteil, dort sind es mehr Punkte)
+  logoNow = targetLogo(dt);
   uniforms.uLogo.value = logoNow < 0.002 ? 0 : logoNow;
   manuK = manuVisible();
   swK = swVisible();
