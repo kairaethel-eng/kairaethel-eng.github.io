@@ -10,6 +10,7 @@ import { figureForm, roofForm, logoForm } from './ordnung.js';
 import { pointer, PTR_GLSL } from '../shared/zeiger.js';
 import { initAGen as initManuGen, MODES as MANU_MODES } from '../manu/ideaA.js';
 import { initServicesGen } from './services.js';
+import { decode as decodeAnat } from '../wirbel-echt/anatomie.js';
 import { runSliced } from '../shared/slice.js';
 import { initHouse } from '../haus-licht/house.js';
 import { ECHT } from '../wirbel-echt/echt.js';
@@ -54,9 +55,9 @@ const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t *
 // Die bisherigen Scrollwerte (0…1) bleiben als Messung, sind aber nur noch der Auslöser: über `an` startet der Ablauf, unter `aus`
 // läuft er zurück. Der Ablauf selbst läuft über die Zeit – gleich ruhig, egal wie schnell gescrollt oder gewischt wird.
 // Beim ersten Aufruf (Laden mitten in der Seite) steht der Wert sofort am Ziel; bei „Bewegung anhalten/reduzieren“ ohne Ablauf.
-const FORM_SEK = 2.0;  // ein Formwechsel der Punktwolke (Figur → Bänder → Wirbelsäule → Dachlinie)
-const LOGO_SEK = 1.9;  // HOP-Kreise entstehen / lösen sich
-const SCAN_SEK = 1.7;  // Abtastlinie baut die Wirbelsäule auf
+const FORM_SEK = 2.8;  // ein Formwechsel der Punktwolke (Figur → Bänder → Wirbelsäule → Dachlinie)
+const LOGO_SEK = 2.6;  // HOP-Kreise entstehen / lösen sich
+const SCAN_SEK = 2.3;  // Abtastlinie baut die Wirbelsäule auf
 function riegel(sek, an = 0.3, aus = 0.12) {
   let want = -1, v = 0;
   const f = (scrub, dt) => {
@@ -224,7 +225,7 @@ const uniforms = {
   cDeep: { value: C('#44788E') }, cCalm: { value: C('#86BEE6') }, cBone0: { value: C('#E4E3D8') },
   uTilt: { value: 0.16 }, uProj: { value: 1000 }, uPr: { value: 1 }, uRib: { value: new THREE.Vector2(DESK0 ? 9 : 6, DESK0 ? 300 : 257) },
   uDr4: { value: logo.dr }, uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 },
-  uRibA: { value: DESK0 ? 1 : 1.25 }, // Handy (18.11.): die Bänder laufen jetzt hinter dem Text von Kapitel 02 → gedämpft (vorher 1,75: nur im Vorübergehen zu sehen)
+  uRibA: { value: DESK0 ? 0.62 : 1.25 }, // PC seit 20.11. leiser (Kai: „am PC sehr unübersichtlich und die Punkte zu deutlich“) // Handy (18.11.): die Bänder laufen jetzt hinter dem Text von Kapitel 02 → gedämpft (vorher 1,75: nur im Vorübergehen zu sehen)
 };
 
 const vert = /* glsl */`
@@ -938,12 +939,12 @@ function setActive(i) {
 }
 // ---------- Nerven-Infos im Raum (PC): erscheinen Schritt für Schritt entlang der Bahn ----------
 const NINFO = {
-  c12: { exit: 'Austritt C1–C2', nerv: 'Nn. suboccipitales · N. occipitalis major', gef: 'Tiefe Nackenmuskulatur', ziel: 'Hinterkopf', typ: 'Typisch: Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen', tgt: [84, 30] },
-  c56: { exit: 'Austritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [18, 234] },
-  th712: { exit: 'Austritt Th7–Th12', nerv: 'Untere Interkostalnerven · Bauchwand', gef: 'Gefühl: Rippenbogen, Bauchwand', ziel: 'bis zur Nabelhöhe (Th10)', typ: 'Typisch: gürtelförmiger Schmerz am Rippenbogen, Steifigkeit am Übergang zur LWS', tgt: [86, 195] }, // Flanke auf Nabelhöhe
-  th16: { exit: 'Austritt Th1–Th6', nerv: 'Interkostalnerven, obere Rippen', gef: 'Brustkorbwand · Zwischenrippen', ziel: 'Brustkorb', typ: 'Typisch: atemabhängiges Stechen, Schmerz zwischen den Schulterblättern', tgt: [80, 118] },
-  l45: { exit: 'Austritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [89, 410] },
-  s1: { exit: 'Austritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [72, 412], pre: 'Iliosakralgelenk (ISG): verbindet Becken und Wirbelsäule.' },
+  c12: { exit: 'Nervenaustritt C1–C2', nerv: 'Nn. suboccipitales · N. occipitalis major', gef: 'Tiefe Nackenmuskulatur', ziel: 'Hinterkopf', typ: 'Typisch: Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen', tgt: [84, 30] },
+  c56: { exit: 'Nervenaustritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [18, 234] },
+  th712: { exit: 'Nervenaustritt Th7–Th12', nerv: 'Untere Interkostalnerven · Bauchwand', gef: 'Gefühl: Rippenbogen, Bauchwand', ziel: 'bis zur Nabelhöhe (Th10)', typ: 'Typisch: gürtelförmiger Schmerz am Rippenbogen, Steifigkeit am Übergang zur LWS', tgt: [86, 195] }, // Flanke auf Nabelhöhe
+  th16: { exit: 'Nervenaustritt Th1–Th6', nerv: 'Interkostalnerven, obere Rippen', gef: 'Brustkorbwand · Zwischenrippen', ziel: 'Brustkorb', typ: 'Typisch: atemabhängiges Stechen, Schmerz zwischen den Schulterblättern', tgt: [80, 118] },
+  l45: { exit: 'Nervenaustritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [89, 410] },
+  s1: { exit: 'Nervenaustritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [72, 412], pre: 'Iliosakralgelenk (ISG): verbindet Becken und Wirbelsäule.' },
 };
 const NC_KEYS = ['exit', 'nerv', 'gef', 'ziel', 'typ'];
 const ncalls = NC_KEYS.map((k) => { const el = document.createElement('div'); el.className = 'ncall ncall-' + k; el.setAttribute('aria-hidden', 'true'); document.body.appendChild(el); return el; });
@@ -1903,7 +1904,7 @@ function targetMorph() {
 // während die Hausordnung hereinkommt, und lösen sich in die Wirbelsäule auf, sobald Kapitel 03 folgt (Shader: uLogo).
 // Handy wie seit 8.11.: schon am Ende des vorigen Textes fertig, mittig im freien Raum über „§ Die Hausordnung“.
 let logoNow = 0;
-const logoIn = riegel(LOGO_SEK), logoOut = riegel(LOGO_SEK);
+const logoIn = riegel(LOGO_SEK), logoOut = riegel(LOGO_SEK, 0.62, 0.4); // Auflösen erst, wenn Kapitel 03 wirklich hereinkommt (bei hohen Fenstern liegt es sonst schon im Messbereich, während man die Hausordnung liest)
 function targetLogo(dt = 0) {
   const vh = VH, sy = scrollY, d = isDesktop();
   // 16.11. (Kai: „überall diese Geschwindigkeit“): Kreise kommen/gehen über ~0,9 Bildschirmhöhen (vorher 0,45–0,7)
@@ -1977,7 +1978,7 @@ const dTitle = $('#d-title'), roofLetters = splitLetters(dTitle);
 dTitle.insertAdjacentHTML('beforebegin', '<svg class="roofline" viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true"><path d="M2 38 L150 3 L298 38" pathLength="1"/></svg>');
 const roofline = $('.roofline path');
 // Auftrag Z (vorbereitet, NICHT Standard – Kai entscheidet): ?dach=eins blendet die kleine Linie aus, sobald das Hausdach gezeichnet wird (eine Dachlinie statt zwei)
-const ONE_ROOF = /[?&]dach=eins\b/.test(location.search);
+const ONE_ROOF = !/[?&]dach=zwei\b/.test(location.search); // seit 20.11. fest (Kai im Arbeitsblatt: „nur eine“); ?dach=zwei zeigt zum Vergleich beide
 // 05 Tür („Die Tür steht offen.“, 14.11. nachts): Buchstaben blenden ruhig ein, „offen.“ schwingt wie ein Türblatt auf und bewegt sich später ab und zu leicht
 const tTitle = $('#t-title');
 splitLetters(tTitle);
@@ -1991,7 +1992,7 @@ new IntersectionObserver((es, ob) => es.forEach((e) => { if (e.isIntersecting) {
 // kein Grafikchip) stehen Überschrift und Knöpfe einfach da. Die Zeichenfläche ist nur in der Nähe der Bühne eingeschaltet
 // (Go „1b“: sie lag am 18.11. dauernd bildschirmgroß über der Seite). Prüfhilfe: window.__door.
 const doorStage = (() => {
-  const doorGate = riegel(2.2); // Staub sammelt sich zur Tür: Auslöser beim Hereinkommen, Ablauf über die Zeit
+  const doorGate = riegel(3.0); // Staub sammelt sich zur Tür: Auslöser beim Hereinkommen, Ablauf über die Zeit
   const cv = $('#cStage'), glowEl = $('#cGlow'), track = $('#doorTrack'), inEl = $('#doorIn');
   if (!cv || !track || !inEl) return null;
   const sticky = $('.door-sticky', track), cue = $('.door-cue', track), H = document.documentElement;
@@ -2000,13 +2001,19 @@ const doorStage = (() => {
   const setWalk = (v) => { if (v === walk) return; walk = v; H.classList.toggle('door-walk', v); if (!v) { inEl.style.opacity = ''; inEl.style.transform = ''; inEl.classList.add('is-on'); lastG = -1; } chapDirty(); };
   const off = () => { if (!on) return; on = false; cv.classList.remove('on'); glowEl.classList.remove('on'); if (st) st.clear(); };
   // Tastatur: Fokus auf einem noch verborgenen Knopf → ans Ende der Bühne (Tür offen, Knöpfe da)
-  inEl.addEventListener('focusin', () => { if (walk && st && st.p < DOOR_PLAN.gate) scrollToY(track.getBoundingClientRect().bottom + scrollY - innerHeight + 2); });
+  const hit = $('#doorHit'), DOOR_SEK = 3.8;
+  let opened = false, doorP = 0;
+  const open = () => { if (opened) return; opened = true; if (hit) hit.hidden = true; };
+  if (hit) hit.addEventListener('click', open);
+  inEl.addEventListener('focusin', () => { if (walk && !opened) { open(); doorP = 1; } });
   setWalk(!still());
   frameFns.push((now) => {
     const dt = Math.min(0.1, (now - last) / 1000); last = now;
     setWalk(!still() && !failed);
     if (!walk) { off(); return; }
     const r = track.getBoundingClientRect(), vh = innerHeight;
+    // (Höhe prüfen: ist der Inhalt ausgeblendet – Messbilder des Prüfstands –, hat die Bühne keine Höhe)
+    if (!opened && r.height > vh * 0.5 && r.bottom < vh * 0.3) { opened = true; doorP = 1; hit && (hit.hidden = true); }
     if (r.top > vh * 1.5 || r.bottom < -vh * 0.3) { off(); return; } // weit weg: Zeichenfläche aus, nichts messen
     if (!st) { st = initDoorStage({ cv, glow: glowEl, isStill: still }); if (!st) { failed = true; return; } }
     if (st.dead) { failed = true; return; }
@@ -2019,7 +2026,9 @@ const doorStage = (() => {
       w: cv.clientWidth, h: vh, desk, cx: cv.clientWidth / 2,
       areaTop: hb + (desk ? 8 : 18), areaBot: sr.bottom - (desk ? 44 : 30), fadeY: hb - 8,
       fWant: weich(doorGate(smooth(vh * 0.95, vh * 0.12, r.top), dt)), // Tür entsteht, sobald die Bühne hereinkommt – über die Zeit (20.11.), nicht am Scrollweg
-      pWant: clamp(-r.top / Math.max(1, r.height - sr.height)),
+      // 20.11. (Kai im Arbeitsblatt: „Gerne auf die Tür drücken, bzw. klicken“): die Tür geht auf Antippen/Klick auf und man geht über die
+      // Zeit hindurch (vorher am Scrollweg). Wer ohne Antippen weiterscrollt, findet sie beim Zurückkommen offen (Knöpfe erreichbar).
+      pWant: weich(doorP = opened ? Math.min(1, doorP + dt / DOOR_SEK) : 0),
     });
     const g = smooth(DOOR_PLAN.gate, DOOR_PLAN.gate + 0.12, st.p);
     if (Math.abs(g - lastG) > 0.004 || (g === 0) !== (lastG === 0) || (g === 1) !== (lastG === 1)) {
@@ -2028,7 +2037,7 @@ const doorStage = (() => {
     const c = st.f > 0.9 ? 1 - smooth(0.02, 0.1, st.p) : 0;
     if (cue && Math.abs(c - lastCue) > 0.01) { lastCue = c; cue.style.opacity = c.toFixed(2); }
   });
-  return { get st() { return st; }, get walk() { return walk; }, get on() { return on; } };
+  return { get st() { return st; }, get walk() { return walk; }, get on() { return on; }, open, get opened() { return opened; }, reset() { opened = false; doorP = 0; if (hit) hit.hidden = false; } }; // reset: Prüfhilfe (Tür wieder zu)
 })();
 window.__door = doorStage;
 // Leistungen: ein Impuls läuft durch den Namen (Maus darüber bzw. beim Durchscrollen auf dem Handy)
@@ -2084,7 +2093,10 @@ const servList = $('.roof-list'), servName = $('#servName');
 // Aufbau erst, wenn „Alle Leistungen“ in Reichweite kommt (A1)
 let serv = null;
 glWait($('#glServ'));
-whenNear(roofHead, () => runSliced(initServicesGen($('#glServ'), { isPaused: () => paused, onShow: (i, name) => { if (servName) servName.textContent = name; } })).then((m) => { serv = m; if (!m) document.documentElement.classList.add('no-gl-serv'); glReady($('#glServ')); }));
+// echte Knochen für die anatomischen Motive (20.11.): eigene Datei neben der Seite; lädt sie nicht (file://, Funkloch), bleiben die gerechneten Motive
+const loadAnat = () => fetch(HOP_ASSETS + 'motive-anatomie.bin').then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+  .then((buf) => { const A = {}; for (const q of decodeAnat(new Uint8Array(buf)).parts) A[q.id] = q; return A; }).catch((e) => { console.warn('Anatomie der Motive nicht geladen – gerechnete Motive:', e && e.message); return null; });
+whenNear(roofHead, () => loadAnat().then((anat) => runSliced(initServicesGen($('#glServ'), { anat, isPaused: () => paused, onShow: (i, name) => { if (servName) servName.textContent = name; } }))).then((m) => { serv = m; if (!m) document.documentElement.classList.add('no-gl-serv'); glReady($('#glServ')); }));
 let servLock = -1e9, servAutoT = 0;
 const servItems = $$('#index li');
 servItems.forEach((li, i) => {

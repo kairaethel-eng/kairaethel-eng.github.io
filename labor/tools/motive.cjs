@@ -14,7 +14,11 @@ const path = require('path'), fs = require('fs');
   const p = await ctx.newPage();
   p.on('pageerror', (e) => console.log('ERR', e.message));
   p.on('console', (m) => { if (m.type() === 'error' && !/wirbelsaeule-echt/.test(m.text())) console.log('ERR', m.text()); });
-  await p.goto('file://' + path.resolve(file) + '?gl=1');
+  // eigener kleiner Server (wie der Prüfstand): nur so laden die Dateien neben der Seite (echte Knochen der Motive, echte Wirbelsäule)
+  const root = path.dirname(path.resolve(file));
+  const srv = require('http').createServer((q, r) => { const f = path.join(root, decodeURIComponent(q.url.split('?')[0])); if (!f.startsWith(root) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.writeHead(404); r.end(); return; } r.writeHead(200, { 'content-type': f.endsWith('.html') ? 'text/html; charset=utf-8' : 'application/octet-stream' }); fs.createReadStream(f).pipe(r); });
+  await new Promise((ok) => srv.listen(0, '127.0.0.1', ok));
+  await p.goto(`http://127.0.0.1:${srv.address().port}/${path.basename(file)}?gl=1`);
   await p.waitForTimeout(2500);
   const to = async (sel, off) => { await p.evaluate(([s, o]) => { const y = document.querySelector(s).getBoundingClientRect().top + scrollY; scrollTo(0, y + o * innerHeight); }, [sel, off]); };
   // ---- Leistungs-Motive ----
@@ -52,5 +56,5 @@ const path = require('path'), fs = require('fs');
   await q.setContent(`<body style="margin:0;background:#0A161B;color:#EDE8DC;font:14px sans-serif"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:6px">${shots.map((s) => `<figure style="margin:0;background:#0B1418"><img src="data:image/png;base64,${fs.readFileSync(s.f).toString('base64')}" style="width:100%;display:block"><figcaption style="padding:4px 8px">${s.name}</figcaption></figure>`).join('')}</div></body>`);
   await q.screenshot({ path: `${out}/motive-${mode}.png`, fullPage: true });
   console.log(`${out}/motive-${mode}.png`);
-  await b.close();
+  await b.close(); srv.close();
 })();

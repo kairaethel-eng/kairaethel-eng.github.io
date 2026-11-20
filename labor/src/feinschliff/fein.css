@@ -55,3 +55,9 @@
 .kf-still.kf-fein .kf-hero>*{animation:none}
 html:not(.js) .kf-st>*,html:not(.js) .kf-end>*{opacity:1;transform:none}
 @media print{.kf-fein .kf-st>*,.kf-fein .kf-end>*{opacity:1;transform:none}}
+
+/* 20.11.2026: Logo groß am Start (Kai: „ja“) – drei Kreise mit H · O · P vor der Kennzeile */
+.kf-fein .kf-brand{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.kf-fein .kf-logo{width:clamp(9rem,13vw,13.5rem);height:auto;display:block;flex:none;filter:drop-shadow(0 .25rem 1.25rem rgba(10,22,27,.55))}
+@media (max-width:920px){.kf-fein .kf-brand{gap:.75rem}.kf-fein .kf-logo{width:7.5rem}}
+@media (max-width:380px){.kf-fein .kf-logo{width:6.25rem}}

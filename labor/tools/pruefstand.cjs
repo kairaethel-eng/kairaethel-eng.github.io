@@ -52,8 +52,10 @@ const STATES = [
   { id: 'achse', go: go('#achse', 0.3), key: 1, wait: 6000 },
   ...STOPS.map((n, i) => ({ id: 'achse-' + n, go: stop(i), key: 1, wait: 5000 })),
   { id: 'auftakt-04', go: go('.auftakt-blk[data-for="dach"]', -0.3) }, { id: 'dach', go: go('#dach', 0) }, { id: 'leistungen', go: go('#allTitle', -0.1) }, { id: 'manuthera', go: go('#manuthera', 0), wait: 5000 },
-  { id: 'stosswelle', go: go('#stosswelle', 0) }, { id: 'auftakt-05', go: go('.auftakt-blk[data-for="tuer"]', -0.3) }, { id: 'tuer', go: go('#doorTrack', 0), wait: 4000 }, // Tür-Bühne (19.11.): Tür geschlossen, Überschrift oben
-  { id: 'tuer-halb', go: go('#doorTrack', 0.6), wait: 4000 }, { id: 'tuer-drin', go: go('#doorTrack', 1.3), wait: 4000 }, // halb hindurch · drinnen, Knöpfe da
+  { id: 'stosswelle', go: go('#stosswelle', 0) }, { id: 'auftakt-05', go: go('.auftakt-blk[data-for="tuer"]', -0.3) }, { id: 'tuer', go: async (p) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#doorTrack', 0)(p); }, wait: 6500 }, // Tür-Bühne (19.11.): Tür geschlossen, Überschrift oben
+  // seit 20.11.2026 geht die Tür auf Antippen auf und man geht über die Zeit hindurch (vorher am Scrollweg)
+  // (der Prüfstand rollt beim Laden einmal durch die ganze Seite – dabei gilt die Tür als „vorbeigescrollt“ und steht offen; deshalb reset())
+  { id: 'tuer-halb', go: async (p, settle) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#doorTrack', 0)(p); await settle(4000); await p.evaluate(() => window.__door && window.__door.open()); }, wait: 1900 }, { id: 'tuer-drin', go: go('#doorTrack', 0), wait: 6000 }, // halb hindurch · drinnen, Knöpfe da
   { id: 'kontakt', go: go('#kontakt', -0.1) },
 ];
 // jump: eigene Schwelle für den Sprung (Regel 4 gilt für Kapitelübergänge; allgemein 8)
@@ -67,7 +69,7 @@ const FILMS = [
   { id: '04-zurueck-nach-03', go: go('#dach', 0.1), k: -0.9 },
   { id: 'leistungen-nach-manuthera', go: go('#manuthera', -0.7), k: 0.9 },
   { id: 'stosswelle-nach-05', go: go('#tuer', -0.7), k: 0.9 },
-  { id: 'tuer-hindurch', go: go('#doorTrack', 0), k: 1.3, jump: 8 }, // ganzer Weg durch die Tür in einem Wisch: der Rahmen zieht am Bild vorbei (gewollt)
+  { id: 'tuer-hindurch', go: async (p, settle) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#doorTrack', 0)(p); await settle(4500); await p.evaluate(() => window.__door && window.__door.open()); }, k: 0, wait: 100, jump: 8 }, // Tür antippen: der Rahmen zieht am Bild vorbei (gewollt) // ganzer Weg durch die Tür in einem Wisch: der Rahmen zieht am Bild vorbei (gewollt)
 ];
 
 // ---------- Auswertung im Browser (eigene leere Seite, keine Zusatzpakete) ----------

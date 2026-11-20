@@ -3,6 +3,14 @@
 Stand: 20.11.2026 (Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Arbeitsblatt 3 abgearbeitet (Kai 20.11.2026 nachts, Antworten im Arbeitsblatt)
+- **Entschieden:** Anatomie in den Motiven = echte Knochen (BodyParts3D 4.0, CC BY 4.0, Namensnennung im Fuß und Impressum § 9); gerechnete Formen nur noch als Rückfall und für Geräte/Hände.
+- **Entschieden:** Tür öffnet auf Antippen/Klick und läuft dann über die Zeit – „Hineingehen am Scrollweg“ (19.11.) ist damit abgelöst. Am Scrollweg bleiben nur die Fahrt an der Figur und die Haltestellen der Wirbelsäule.
+- **Entschieden:** Übergänge langsamer (Formwechsel 2,8 s) · nur eine Dachlinie · Streifen bleiben, am PC leiser · Logo groß am Start · lebende Überschriften behalten ihr Spiel · Entwurfsseiten bleiben als Archiv · PC-Start bleibt.
+- **Merkregel:** Kleines Motiv und große Bühne derselben Sache kommen aus EINER Quelle (Manuthera: `src/manu/formen.js`).
+- **Merkregel:** Eine Auslöse-Schwelle auf einem langen Messbereich prüfen bei hohen Fenstern (20.11.: die HOP-Kreise lösten sich bei 844 px Höhe schon auf, während die Hausordnung im Bild stand → Schwelle 0,62).
+- **Offen (Arbeitsblatt 4):** Stoßwelle/Linienhaus als Punkt-Grafik (erst Entwurf, dann Urteil) · Schildformen Kapitel 03 · was an den HOP-Kreisen noch stört.
+
 ## Stil von Figur/Wirbelsäule auf alle Punkt-Grafiken, Übergänge über die Zeit (Auftrag Kai 20.11.2026) – umgesetzt, wartet auf Sichtprüfung
 - **Entschieden (Auftrag):** Leistungs-Motive und Manuthera folgen demselben Stil wie Figur und Wirbelsäule: geordnete Zeilen, Kantenlicht, gestochene gleich große Punkte, verdeckte Rückseite, Antwort unter Maus/Finger.
 - **Entschieden (Auftrag):** Übergänge sind überall feiner Staub und laufen über die Zeit, ausgelöst beim Hereinscrollen – nicht mehr am Scrollweg. Damit ist „der Übergang hängt allein am Scrollen“ (Stand bis 19.11.) für Formwechsel, HOP-Kreise, Abtastlinie und Tür-Sammeln aufgehoben.

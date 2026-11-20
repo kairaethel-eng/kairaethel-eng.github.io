@@ -9,7 +9,7 @@
 import * as THREE from 'three';
 import { stage, FRAG, COL, C, reduced, dragYaw, ease, damp, isDesktop, smooth } from './common.js';
 import { orderedGen, coreOfRasterGen, coreMaterial, stipSize, DEFORM } from './stipple.js';
-import * as RA from '../shared/raster.js';
+import { manuFormen, PIV_U, PIV_L } from './formen.js';
 import { pointer, PTR_GLSL } from '../shared/zeiger.js';
 import { runSync } from '../shared/slice.js';
 
@@ -20,7 +20,6 @@ export const MODES = [
   { id: 'rot', name: 'Rotation', txt: 'Das Beckenteil dreht sich um die Längsachse. So lässt sich die Wirbelsäule gezielt in die Drehung führen.' },
 ];
 
-const PIV_U = -0.855, PIV_L = 0.0; // Gelenke zwischen den Liegeteilen (x)
 const FOV = 30, NSEG = 3;
 
 // Als Generator (Zeitscheiben, A1 4.11.2026); initA() baut am Stück.
@@ -43,49 +42,12 @@ export function* initAGen(canvas, ui) {
   // Arme: Schulter gehört zum Brustteil, Unterarm liegt auf der festen Armstütze
   const mapArm = (v) => ({ la: v, lb: v, a: 1, b: 0, w: smooth(0.2, -0.12, v.y) });
   const noDown = (n) => n.y > -0.5;
-  const parts = [];
-  // Punktabstand auf der Oberfläche: Liege · Gestell (lichter) · Figur (feiner)
-  const SPL = desk ? 0.028 : 0.037, SPF = SPL * 1.3, SPB = SPL * 0.78;
-  const add = (r, kind, map, grp = kind) => parts.push({ r, kind, map, keep: noDown, grp });
-  const bx = (c, s, sp = SPL) => RA.box(c, s, sp);
-
-  // ---------- Liege ----------
-  add(bx([-1.965, -0.08, 0], [0.57, 0.16, 0.62]), 0, UP);
-  add(bx([-1.255, -0.08, 0], [0.75, 0.16, 1.3]), 0, UP);
-  add(bx([-0.43, -0.08, 0], [0.8, 0.16, 1.3]), 0, F);
-  add(bx([0.5, -0.08, 0], [0.94, 0.16, 1.3]), 0, LO);
-  add(bx([1.62, -0.08, 0], [1.22, 0.16, 1.3]), 0, LO);
-  for (const z of [-0.9, 0.9]) add(bx([-1.5, -0.3, z], [0.5, 0.11, 0.3]), 0, F);
-  // Rahmen und Gestell
-  add(bx([-1.6, -0.22, 0], [1.25, 0.06, 0.9], SPF), 1, UP);
-  add(bx([-0.43, -0.22, 0], [0.7, 0.06, 0.9], SPF), 1, F);
-  add(bx([1.1, -0.22, 0], [2.0, 0.06, 0.9], SPF), 1, LO);
-  for (const z of [-0.9, 0.9]) add(bx([-1.5, -0.33, z * 0.78], [0.06, 0.05, 0.42], SPF), 1, F);
-  add(bx([0, -0.55, 0], [1.9, 0.4, 0.5], SPF), 1, F);
-  for (const x of [-0.55, 0.55]) add(bx([x, -1.05, 0], [0.22, 0.62, 0.22], SPF), 1, F);
-  for (const z of [-0.5, 0.5]) add(bx([0, -1.38, z], [2.6, 0.07, 0.1], SPF), 1, F);
-  add(bx([0, -1.38, 0], [0.12, 0.06, 1.0], SPF), 1, F);
-  for (const x of [-1.25, 1.25]) for (const z of [-0.5, 0.5]) parts.push({ r: RA.cyl([x, -1.48, z], 0.07, 0.08, SPF, { axis: 'z' }), kind: 1, map: F, grp: 1 });
-
-  // ---------- Liegende Figur (Bauchlage, Gesicht in der Gesichtsöffnung) – aus einem Guss ----------
+  // Formen aus einer Quelle (./formen.js, auch für das kleine Leistungs-Motiv); hier bekommt jedes Teil seine Segment-Zuordnung
   const bb = mapX(blend(0.3));
-  add(RA.ell([-1.99, 0.2, 0], [0.21, 0.17, 0.16], SPB, { axis: 'x' }), 2, bb);
-  // Rumpf: Hals → Schultern → Brustkorb → Taille → Becken (ovale Schnitte entlang der Liege, weich verbunden)
-  add(RA.loft([
-    { x: -1.84, y: 0.215, ry: 0.082, rz: 0.088 }, { x: -1.72, y: 0.225, ry: 0.092, rz: 0.11 }, { x: -1.62, y: 0.235, ry: 0.15, rz: 0.3 },
-    { x: -1.5, y: 0.24, ry: 0.195, rz: 0.475 }, { x: -1.28, y: 0.235, ry: 0.215, rz: 0.45 }, { x: -1.0, y: 0.225, ry: 0.205, rz: 0.405 },
-    { x: -0.7, y: 0.2, ry: 0.178, rz: 0.345 }, { x: -0.45, y: 0.19, ry: 0.172, rz: 0.335 }, { x: -0.2, y: 0.195, ry: 0.185, rz: 0.375 },
-    { x: 0.05, y: 0.21, ry: 0.205, rz: 0.41 }, { x: 0.28, y: 0.225, ry: 0.215, rz: 0.4 }, { x: 0.46, y: 0.2, ry: 0.17, rz: 0.36 },
-  ], SPB), 2, bb);
-  for (const s of [-1, 1]) {
-    // Gesäß, Bein (Oberschenkel → Knie → Wade → Knöchel), Fuß
-    add(RA.ell([0.3, 0.27, s * 0.17], [0.25, 0.15, 0.19], SPB, { axis: 'x' }), 2, bb);
-    add(RA.tube([{ p: [0.34, 0.165, s * 0.195], r: 0.15 }, { p: [0.8, 0.14, s * 0.2], r: 0.132 }, { p: [1.2, 0.115, s * 0.2], r: 0.098 }, { p: [1.52, 0.115, s * 0.195], r: 0.106 }, { p: [1.86, 0.095, s * 0.185], r: 0.072 }, { p: [2.0, 0.09, s * 0.18], r: 0.058 }], SPB, { capA: false }), 2, bb);
-    add(RA.tube([{ p: [2.0, 0.1, s * 0.18], r: 0.058 }, { p: [2.1, 0.085, s * 0.185], r: 0.06 }, { p: [2.19, 0.04, s * 0.19], r: 0.045 }], SPB), 2, bb);
-    // Arm: Schulter → Ellbogen → Handgelenk, Hand auf der Armstütze
-    add(RA.tube([{ p: [-1.5, 0.22, s * 0.44], r: 0.092 }, { p: [-1.49, 0.07, s * 0.66], r: 0.078 }, { p: [-1.47, -0.11, s * 0.84], r: 0.066 }, { p: [-1.6, -0.165, s * 0.88], r: 0.058 }, { p: [-1.78, -0.18, s * 0.9], r: 0.05 }], SPB, { capA: false }), 2, mapArm);
-    add(RA.ell([-1.87, -0.19, s * 0.9], [0.085, 0.032, 0.055], SPB, { axis: 'x' }), 2, mapArm);
-  }
+  const MAP = { UP, F, LO, BB: bb, ARM: mapArm };
+  const SPL = desk ? 0.0235 : 0.032; // Punktabstand der Liege (20.11.: feiner – Kai: „noch detailliertere Ansicht“)
+  const { parts: FORM, SPB } = manuFormen(SPL);
+  const parts = FORM.map((q) => ({ r: q.r, kind: q.kind, map: MAP[q.seg], keep: q.kind === 3 ? null : noDown, grp: q.grp }));
 
   yield;
   const pts = yield* orderedGen(parts, SPB);
@@ -115,13 +77,15 @@ export function* initAGen(canvas, ui) {
         vec3 p = deformP(position, pos2), n = deformN(normal);
         float lam = max(dot(n, normalize(LDIR)), 0.);
         float rim = pow(1. - clamp(dot(n, normalize(cameraPosition - p)), 0., 1.), 1.5);
-        vec3 deep = aKind < .5 ? mix(cDeep, cBone, .55) : aKind < 1.5 ? cFrame : cBody;
-        vec3 hi = aKind < .5 ? cBone : aKind < 1.5 ? cFrameHi : cBodyHi;
+        vec3 deep = aKind < .5 ? mix(cDeep, cBone, .55) : aKind < 1.5 ? cFrame : aKind < 2.5 ? cBody : cBone;
+        vec3 hi = aKind < .5 ? cBone : aKind < 1.5 ? cFrameHi : aKind < 2.5 ? cBodyHi : cBone;
         vec3 col = mix(deep, hi, .2 + .8 * rim) * (aKind < .5 ? .5 + .5 * lam : .62 + .38 * lam);
         int sa = int(aSegA + .5);
         float hl = sa == 1 ? uHi.y : sa == 2 ? uHi.z : 0.;
         if (aKind < .5) col = mix(col, cAmber * (.45 + .85 * lam), hl * .28);
-        float sz = aKind > 1.5 ? 1. : aKind > .5 ? 1.3 / uSpB : 1. / uSpB; // Scheibe passend zum Punktabstand des Teils
+        float naht = step(2.5, aKind);
+        if (naht > .5) { col = mix(cBone, cDeep, .25); if (aSegA > .5 || aSegB > .5) col = mix(col, cAmber, hl * .5); }
+        float sz = naht > .5 ? .72 / uSpB : aKind > 1.5 ? 1. : aKind > .5 ? 1.3 / uSpB : 1. / uSpB; // Scheibe passend zum Punktabstand des Teils
         // Auftritt: vor der Linie feiner Staub (klein, gedämpft), der sich beim Näherkommen setzt
         float dx = p.x - uCut, dust = smoothstep(0., .55, dx), far = smoothstep(.9, 2.2, dx);
         p += normalize(aRnd - .5 + 1e-4) * dust * (.18 + aRnd.z * .42);

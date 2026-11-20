@@ -15,6 +15,8 @@ import { stage, reduced, isDesktop, C } from '../manu/common.js';
 import { runSync } from '../shared/slice.js';
 import { pointer, PTR_GLSL } from '../shared/zeiger.js';
 import { surf, ell, tube, cap, box, cyl, torus, line, seg, moved, assemble, V } from '../shared/raster.js';
+import { rows, bounds, achsen } from '../shared/netz.js';
+import { manuFormen } from '../manu/formen.js';
 
 // fester Zufall (gleiche Reihenfolge der Punkte bei jedem Laden)
 function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -27,18 +29,19 @@ const MOTION = /* glsl */`
   vec3 rotX(vec3 p, float a){ float c = cos(a), s = sin(a); return vec3(p.x, c*p.y - s*p.z, s*p.y + c*p.z); }
   vec3 rotZ(vec3 p, float a){ float c = cos(a), s = sin(a); return vec3(c*p.x - s*p.y, s*p.x + c*p.y, p.z); }
   float zig(float x){ return (abs(fract(x * 1.6) - .5) * 4. - 1.) * .2; }
+  uniform vec3 uPiv;
   float motion(inout vec3 b, inout vec3 n, float type, float ph, float t){
     float al = 1.;
     if (type > 1.5 && type < 2.5) al = .3 + .85 * pow(fract(ph - t * .4), 2.);
     else if (type > 2.5 && type < 3.5) { float a = sin(t * .8) * .45; b = rotY(b, a); n = rotY(n, a); }
-    else if (type > 3.5 && type < 4.5) { vec3 pv = vec3(0., .4, -.42); float a = (.5 + .5 * sin(t * 1.3)) * .2; b = rotX(b - pv, a) + pv; n = rotX(n, a); }
+    else if (type > 3.5 && type < 4.5) { vec3 pv = uPiv; float a = (.5 + .5 * sin(t * 1.3)) * .2; b = rotX(b - pv, a) + pv; n = rotX(n, a); }
     else if (type > 4.5 && type < 5.5) al = .25 + .85 * pow(fract(ph - t * .3), 2.);
     else if (type > 5.5 && type < 6.5) b.x += sin(t * 1.1) * .09 * ph;
     else if (type > 6.5 && type < 7.5) b.y += abs(sin(t * 2.2)) * .32;
     else if (type > 7.5 && type < 8.5) b.y += sin(b.x * 3.5 + t * 1.6) * .07 + cos(b.z * 5. + t) * .03;
     else if (type > 8.5 && type < 9.5) al = .35 + .8 * pow(fract(ph - t * .55), 4.);
     else if (type > 9.5 && type < 10.5) { float calm = smoothstep(-.3, .7, sin(t * .55)); b.y += mix(zig(b.x + ph), sin(b.x * 2.6 + t * 1.2 + ph * 2.) * .14, calm); }
-    else if (type > 10.5 && type < 11.5) { float a = sin(t * .9) * .22; b = rotZ(b - vec3(.22, 0., 0.), a) + vec3(.22, 0., 0.); n = rotZ(n, a); }
+    else if (type > 10.5 && type < 11.5) { float a = (.5 - .5 * cos(t * .9)) * -.3; b = rotZ(b - uPiv, a) + uPiv; n = rotZ(n, a); }
     else if (type > 11.5 && type < 12.5) b.y += (.5 + .5 * sin(t * 1.4)) * .3;
     else if (type > 12.5) b.x += sign(b.x) * .035 * (.5 + .5 * sin(t * 1.1));
     return al;
@@ -125,9 +128,77 @@ function flatHand(sp, y) {
   return gs;
 }
 
+
+// ---------- Echte Anatomie (20.11.2026, Kai im Arbeitsblatt: „Alle anatomischen Animationen bitte deutlich realer … die reale Anatomie
+// ziemlich perfekt“) ----------
+// Knochen aus BodyParts3D (assets/motive-anatomie.bin, tools/anatomie-motive.mjs; Namensnennung im Fuß der Seite), als geordnete
+// Punktzeilen (../shared/netz.js). Lädt die Datei nicht (z. B. file://), bleiben die gerechneten Motive (parts) als Rückfall.
+// A = { id → { pos (cm: x links, y oben, z vorn), idx } }. Jedes Motiv legt seine Knochen selbst in seinen Raum (Drehung M, Bezug c, Maßstab s).
+const LIEGEND = [0, -1, 0, 0, 0, 1, 1, 0, 0]; // Bein liegt: Längsachse → x (Hüfte links), Vorderseite → oben
+const smooth01 = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+// Mittel der Ecken, die eine Bedingung erfüllen
+function meanOf(m, ok) { const a = [0, 0, 0]; let n = 0; for (let i = 0; i < m.pos.length; i += 3) { const p = [m.pos[i], m.pos[i + 1], m.pos[i + 2]]; if (ok(p)) { a[0] += p[0]; a[1] += p[1]; a[2] += p[2]; n++; } } return a.map((v) => v / Math.max(1, n)); }
+
+function echtKnie(sp, A) {
+  GRIP.rl = 0.27; GRIP.xh = 0.7; // echtes Knie größer gezeigt → die Hände greifen um ein dickeres Bein
+  const { yl, rl } = GRIP, fe = A['bein/femur'], ti = A['bein/tibia'], fi = A['bein/fibula'], pa = A['bein/patella'];
+  const bt = bounds(ti), bf = bounds(fe), yJ = (bf.lo[1] + bt.hi[1]) / 2, top = meanOf(ti, (p) => p[1] > bt.hi[1] - 2.5);
+  const S = 0.052, o = { M: LIEGEND, c: [top[0], yJ, top[2] - 0.5], s: S, t: [0, yl, 0], axis: 'x', w: (p) => 1 - 0.9 * smooth01(0.85, 1.32, Math.abs(p[0])), clip: (p) => Math.abs(p[0]) < 1.36 };
+  // Haut des Beins nur als feiner Schleier (kein Kern), die Knochen liegen sichtbar darin
+  const rad = (x) => { const a = Math.abs(x); return rl + 0.04 * Math.exp(-(((a - 0.12) / 0.16) ** 2)) - (x > 0 ? 0.03 * Math.min(1, a / 1.2) : 0); };
+  const skin = (sg) => surf((u, v) => { const x = sg * (0.02 + v * 1.3), ph = u * 6.2831853, r = rad(x); return [x, yl + Math.cos(ph) * r, Math.sin(ph) * r]; }, sp * 1.7,
+    { closedU: true, out: (p) => [0, p[1] - yl, p[2]], w: (u, v) => 0.2 * (1 - 0.85 * Math.max(0, (v - 0.55) / 0.45) ** 2), core: false });
+  const parts = [T(rows(fe, sp, o), 0, 13), T(rows(ti, sp, o), 0, 13), T(rows(fi, sp, o), 0, 13), T(rows(pa, sp, o), 0, 0), T(skin(-1), 4, 13, 0, { cut: false }), T(skin(1), 4, 13, 0, { cut: false })];
+  for (const sx of [-1, 1]) gripHand(sx, sp).forEach((g) => parts.push(T(g, 0, 13, 0, { cut: false })));
+  // Gelenkspalt: ein Bernstein-Ring, das Licht läuft um
+  parts.push(T(line((t) => { const g = t * 6.2831853, r = rl + 0.06; return [0, yl + Math.cos(g) * r, Math.sin(g) * r]; }, sp * 0.7), 1, 2, (p) => Math.atan2(p[2], p[1] - yl) / 6.2831853 + 0.5));
+  return parts;
+}
+function echtKiefer(sp, A, m) {
+  const sk = A['kopf/schaedel'], uk = A['kopf/unterkiefer'], bs = bounds(sk, uk), bu = bounds(uk), S = 0.1;
+  // Kiefergelenk: die Köpfchen des Unterkiefers (höchste hintere Punkte) – darum dreht er sich
+  const piv = meanOf(uk, (p) => p[1] > bu.hi[1] - 0.9 && p[2] < bu.lo[2] + 2.5), c = [bs.mid[0], bs.mid[1], bs.mid[2]];
+  const P = [(piv[0] - c[0]) * S, (piv[1] - c[1]) * S, (piv[2] - c[2]) * S]; m.piv = [0, P[1], P[2]];
+  const nahe = (q) => (Math.hypot(q[1] - P[1], q[2] - P[2]) < 0.17 && Math.abs(Math.abs(q[0]) - Math.abs(P[0])) < 0.22 ? 1 : 0); // Gelenk in Bernstein
+  const o = { c, s: S, t: [0, 0.06, 0], axis: 'y' }; P[1] += 0.06; m.piv = [0, P[1], P[2]];
+  return [T(rows(sk, sp, { ...o, keep: (p, n) => n[0] * p[0] + n[1] * (p[1] - 0.37) + n[2] * (p[2] + 0.1) > -0.12 }), nahe, 0),
+    T(rows(uk, sp, o), nahe, 4)];
+}
+function echtAtlas(sp, A) {
+  const at = A['hals/atlas'], ax = A['hals/axis'], c3 = A['hals/c3'], ba = bounds(at), bx = bounds(ax), S = 0.21;
+  const dens = meanOf(ax, (p) => p[1] > bx.hi[1] - 0.8), o = { c: [dens[0], ba.mid[1], dens[2]], s: S, t: [0, 0.22, 0], axis: 'y' };
+  const yA = (ba.lo[1] - ba.mid[1]) * S + 0.22; // Unterkante des Atlas: darüber ist der Zahn des Axis zu sehen
+  return [T(rows(at, sp, o), 0, 3), T(rows(ax, sp, o), (q) => (q[1] > yA - 0.02 && Math.hypot(q[0], q[2]) < 0.2 ? 1 : 4), 0), T(rows(c3, sp, { ...o, w: (p) => 0.75 }), 4, 0)];
+}
+function echtBein(sp, A) {
+  const B = ['bein/femur', 'bein/tibia', 'bein/fibula', 'bein/patella', 'bein/fuss'].map((k) => A[k]), b = bounds(...B), S = 2.16 / b.size[1];
+  const o = { M: LIEGEND, c: [b.mid[0], b.mid[1], bounds(B[0]).mid[2]], s: S, t: [0, -0.2, 0], axis: 'x' };
+  return [T(box([0, 1.0, 0], [2.3, 0.06, 0.12], sp), 4, 0),
+    ...[-0.62, 0.52].flatMap((x) => [
+      ...[-0.03, 0.03].map((z) => T(seg([x, 0.97, z], [x, -0.06, z], sp * 0.75), 2, 6, (p) => (0.97 - p[1]) / 1.03)),
+      ...[-0.05, 0, 0.05].map((z) => T(line((t) => { const a = Math.PI + t * Math.PI; return [x + Math.cos(a) * 0.19, -0.08 + Math.sin(a) * 0.21, z]; }, sp * 0.72), 2, 6, 1))]),
+    ...B.map((mm) => T(rows(mm, sp, o), 0, 6, 1)),
+    // Haut als feiner Schleier
+    T(tube([{ p: [-1.1, -0.17, 0], r: 0.2 }, { p: [-0.5, -0.19, 0], r: 0.175 }, { p: [-0.02, -0.2, 0], r: 0.13 }, { p: [0.35, -0.22, 0], r: 0.135 }, { p: [0.8, -0.2, 0], r: 0.09 }, { p: [1.0, -0.2, 0], r: 0.075 }], sp * 1.5, { capA: false, capB: false, core: false, w: (u, v) => 0.55 * Math.min(1, 0.15 + v * 5) }), 4, 6, 1, { cut: false }),
+    GROUND(sp)];
+}
+function echtHand(sp, A) {
+  const ha = A['hand/hand'], ra = A['hand/speiche'], el = A['hand/elle'], bh = bounds(ha), S = 0.058;
+  // Hand liegt flach über dem Netz: Finger nach links, Handfläche nach unten
+  const wr = meanOf(ha, (p) => p[1] > bh.hi[1] - 2), tip = meanOf(ha, (p) => p[1] < bh.lo[1] + 2.5);
+  const [f0, , n0] = achsen(ha), f = V.mul(f0, V.dot(f0, V.sub(tip, wr)) > 0 ? 1 : -1), n = V.mul(n0, HAND_SEITE), w = V.cross(n, f), sg = 1; // Fingerrichtung und Flächen-Normale aus den Daten
+  const o = { M: [-f[0], -f[1], -f[2], sg * n[0], sg * n[1], sg * n[2], w[0], w[1], w[2]], c: wr, s: S, t: [0.42, 0.3, 0], axis: 'x' };
+  const arm = { ...o, w: (p) => 1 - 0.92 * smooth01(0.6, 1.3, p[0]), clip: (p) => p[0] < 1.34 };
+  return [
+    ...Array.from({ length: 7 }, (_, i) => T(seg([-1.15, -0.35, (i - 3) * 0.18], [1.15, -0.35, (i - 3) * 0.18], sp * 0.72, { w: (t) => 0.3 + 0.7 * Math.sin(Math.PI * t) ** 0.5 }), 2, 8)),
+    ...Array.from({ length: 11 }, (_, i) => T(seg([(i - 5) * 0.23, -0.35, -0.54], [(i - 5) * 0.23, -0.35, 0.54], sp * 0.72, { w: () => 0.35 + 0.65 * Math.sin(Math.PI * i / 10) ** 0.5 }), 2, 8)),
+    T(rows(ha, sp, o), 0, 0), T(rows(ra, sp, arm), 0, 0), T(rows(el, sp, arm), 0, 0)];
+}
+const HAND_SEITE = 1; // welche Seite der Hand oben liegt (Handrücken)
+
 const GROUND = (sp, y = -0.75) => T(seg([-1.25, y, -0.4], [1.25, y, 0.4], sp * 0.8, { w: (t) => 0.75 * Math.sin(Math.PI * t) ** 0.5 }), 4, 0);
 export const MOTIFS = [
-  { name: 'Manuelle Therapie', parts: manualGrip },
+  { name: 'Manuelle Therapie', parts: manualGrip, echt: echtKnie, se: 1.12 },
   // Hantel wird gehoben, darunter der Weg als Bogen
   { name: 'Krankengymnastik', s: 1.22, parts: (sp) => [
     T(cap([-0.5, 0, 0], [0.5, 0, 0], 0.042, sp), 0, 12),
@@ -145,7 +216,7 @@ export const MOTIFS = [
   { name: 'Schmerztherapie', parts: (sp) => [-0.42, 0, 0.42].flatMap((y, i) => [-2, -1, 0, 1, 2].map((j) =>
     T(seg([-1.2, y, j * 0.055], [1.2, y, j * 0.055], sp * 0.72, { half: !!(j & 1), w: (t) => (1 - Math.abs(j) * 0.2) * (0.35 + 0.65 * Math.sin(Math.PI * t) ** 0.6) }), i === 0 ? 1 : i === 1 ? 0 : 2, 10, i / 2))) },
   // Unterkiefer öffnet sich; Kiefergelenke in Bernstein, oberer Zahnbogen ruht
-  { name: 'CMD-Therapie', s: 1.5, parts: (sp) => {
+  { name: 'CMD-Therapie', s: 1.5, echt: echtKiefer, se: 0.84, rot: -0.62, parts: (sp) => {
     const U = (y, rx, rz, r, n = 9) => Array.from({ length: n }, (_, i) => { const t = -1.5 + (i / (n - 1)) * 3.0; return { p: [Math.sin(t) * rx, y, Math.cos(t) * rz - 0.12], r }; });
     const parts = [T(tube(U(-0.33, 0.56, 0.5, 0.07), sp, { ref: [0, 1, 0], fl: 1.35 }), 0, 4), T(tube(U(0.04, 0.6, 0.52, 0.045), sp, { ref: [0, 1, 0], fl: 1.2 }), 4, 0)];
     [-1, 1].forEach((s) => {
@@ -160,7 +231,7 @@ export const MOTIFS = [
     }
     return parts; } },
   // Atlas (Ring mit Seitenmassen und Querfortsätzen) dreht auf dem Axis; der Zahn des Axis in Bernstein
-  { name: 'Atlas-Axis-Therapie', s: 1.25, parts: (sp) => [
+  { name: 'Atlas-Axis-Therapie', s: 1.25, echt: echtAtlas, se: 1.5, parts: (sp) => [
     T(torus([0, 0.25, -0.05], 0.48, 0.062, sp, { axis: 'y', fl: 1.15 }), 0, 3),
     ...[-1, 1].flatMap((s) => [T(ell([s * 0.42, 0.25, 0], [0.16, 0.12, 0.21], sp, { axis: 'z' }), 0, 3), T(tube([{ p: [s * 0.52, 0.25, 0], r: 0.07 }, { p: [s * 0.74, 0.262, -0.03], r: 0.058 }, { p: [s * 0.93, 0.27, -0.06], r: 0.05 }], sp), 0, 3)]),
     T(ell([0, -0.38, 0.12], [0.25, 0.26, 0.23], sp, { axis: 'y' }), 4, 0),
@@ -175,7 +246,7 @@ export const MOTIFS = [
     T(line((t) => [-1.08 - t * 0.2, 0.93 + Math.sin(t * 3) * 0.12 + t * 0.15, 0], sp * 0.75, { w: (t) => 1 - 0.7 * t }), 4, 0),
     ...[0, 1, 2, 3, 4, 5].flatMap((i) => [-0.03, 0.03].map((z) => T(line((t) => { const a = -1.75 + t * 1.6, r = 0.22 + i * 0.18; return [-0.14 + Math.cos(a) * r, Math.sin(a) * r, z]; }, sp * 0.72, { w: () => 1 - i * 0.11 }), 1, 2, i / 5)))] },
   // Bein hängt in zwei Schlingen am Gestell und pendelt
-  { name: 'Traktion im Schlingentisch', parts: (sp) => [
+  { name: 'Traktion im Schlingentisch', echt: echtBein, se: 1.12, parts: (sp) => [
     T(box([0, 1.0, 0], [2.3, 0.06, 0.12], sp), 4, 0),
     ...[-0.65, 0.55].flatMap((x) => [
       ...[-0.03, 0.03].map((z) => T(seg([x, 0.97, z], [x, -0.1, z], sp * 0.75), 2, 6, (p) => (0.97 - p[1]) / 1.07)),
@@ -184,7 +255,7 @@ export const MOTIFS = [
     T(tube([{ p: [1.03, -0.24, 0], r: 0.06 }, { p: [1.07, -0.08, 0], r: 0.058 }, { p: [1.09, 0.1, 0], r: 0.04 }], sp), 0, 6, 1),
     GROUND(sp)] },
   // Faszien als Netz, das unter der Hand wogt
-  { name: 'Osteopathische Ansätze', parts: (sp) => [
+  { name: 'Osteopathische Ansätze', echt: echtHand, se: 1.12, parts: (sp) => [
     ...Array.from({ length: 7 }, (_, i) => T(seg([-1.15, -0.35, (i - 3) * 0.18], [1.15, -0.35, (i - 3) * 0.18], sp * 0.72, { w: (t) => 0.3 + 0.7 * Math.sin(Math.PI * t) ** 0.5 }), 2, 8)),
     ...Array.from({ length: 11 }, (_, i) => T(seg([(i - 5) * 0.23, -0.35, -0.54], [(i - 5) * 0.23, -0.35, 0.54], sp * 0.72, { w: () => 0.35 + 0.65 * Math.sin(Math.PI * i / 10) ** 0.5 }), 2, 8)),
     ...flatHand(sp, 0.27).map((g) => T(moved(g, [-0.55, 0, 0]), 0, 0))] },
@@ -205,15 +276,16 @@ export const MOTIFS = [
     ...[-0.03, 0.03].map((z) => T(line((t) => [-0.5 + t * 1.0, -0.12 + Math.abs(Math.sin(t * 15.708)) * 0.2 * Math.sin(Math.PI * t) ** 0.4, z], sp * 0.7, { n: 400 }), 1, 9, (p) => (p[0] + 0.5))),
     T(seg([-0.9, -0.42, 0], [0.9, -0.42, 0], sp * 0.8, { w: (t) => 0.6 * Math.sin(Math.PI * t) ** 0.5 }), 4, 0)] },
   // Manuthera im Kleinen: Kopf-, Brust-, Mittel- und Beckenteil, das Beckenteil kippt
-  { name: 'Lojer Manuthera', s: 1.12, parts: (sp) => [
-    T(box([-1.0, 0, 0], [0.3, 0.1, 0.34], sp), 0, 0), T(box([-0.57, 0, 0], [0.46, 0.1, 0.62], sp), 0, 0), T(box([-0.06, 0, 0], [0.48, 0.1, 0.62], sp), 0, 0), T(box([0.63, 0, 0], [0.82, 0.1, 0.62], sp), 1, 11),
-    T(box([0, -0.34, 0], [0.9, 0.24, 0.26], sp), 4, 0, 0, { grp: 1 }), T(box([0, -0.7, 0], [1.5, 0.05, 0.52], sp), 4, 0, 0, { grp: 1 })] },
+  // dieselbe Liege wie auf der großen Bühne (../manu/formen.js), ohne Figur; das Beckenteil kippt
+  { name: 'Lojer Manuthera', s: 0.56, piv: [-0.1, 0.78, 0], parts: (sp) => manuFormen(sp * 1.05, { figur: false }).parts.map((q) =>
+    T(moved(q.r, [-0.1, 0.78, 0]), q.kind === 1 ? 4 : q.kind === 0 && q.seg === 'LO' ? 1 : 0, q.seg === 'LO' ? 11 : 0, 0, { grp: q.grp })) },
 ];
 
 // Ein Motiv ausrechnen: Punkte (Lage, Normale, Farbe, Deckkraft, Bewegung) und Kern-Dreiecke
-function buildMotif(m, sp0, rnd) {
-  const sp = sp0 / (m.s || 1), parts = m.parts(sp), P = [], K = []; // Motiv wird um s vergrößert gezeigt → enger rechnen, damit der Punktabstand im Bild gleich bleibt
-  for (const { part, pts } of assemble(parts, sp)) for (const q of pts) P.push({ q, k: part.k, a: part.a, ph: typeof part.ph === 'function' ? part.ph(q) : part.ph });
+function buildMotif(m, sp0, rnd, A) {
+  const echt = !!(A && m.echt); m.sNow = (echt && m.se) || m.s || 1; m.rotNow = echt ? m.rot || 0 : 0;
+  const sp = sp0 / m.sNow, def = echt ? m.echt : m.parts, parts = def(sp, A, m), P = [], K = []; // Motiv wird um s vergrößert gezeigt → enger rechnen, damit der Punktabstand im Bild gleich bleibt
+  for (const { part, pts } of assemble(parts, sp)) for (const q of pts) P.push({ q, k: typeof part.k === 'function' ? part.k(q) : part.k, a: part.a, ph: typeof part.ph === 'function' ? part.ph(q) : part.ph });
   // Reihenfolge mischen (fester Zufall), damit die Teile beim Wechsel gleichmäßig wandern
   for (let a = P.length - 1; a > 0; a--) { const b = Math.floor(rnd() * (a + 1)), t = P[a]; P[a] = P[b]; P[b] = t; }
   for (const part of parts) { const A = part.g.tris; for (let i = 0; i < A.length; i += 6) K.push(A[i], A[i + 1], A[i + 2], A[i + 3], A[i + 4], A[i + 5], part.a, typeof part.ph === 'function' ? part.ph([A[i], A[i + 1], A[i + 2]]) : part.ph); }
@@ -227,13 +299,14 @@ export function* initServicesGen(canvas, ui = {}) {
   if (!st) return null;
   const SP = isDesktop() ? 0.034 : 0.04; // Abstand der Punkte auf der Oberfläche (Welt-Einheiten)
   const rnd = rng(20261120), built = [];
-  for (const m of MOTIFS) { yield; built.push(buildMotif(m, SP, rnd)); }
+  const AN = ui.anat || null; // echte Knochen (oder null → gerechnete Motive)
+  for (const m of MOTIFS) { yield; built.push(buildMotif(m, SP, rnd, AN)); yield; }
   const N = Math.max(...built.map((b) => b.P.length));
   // je Motiv feste Felder gleicher Länge; überzählige Plätze liegen unsichtbar (Deckkraft 0) auf Punkten des Motivs
   const sets = built.map(({ P, core }, mi) => {
     const pos = new Float32Array(N * 3), nrm = new Float32Array(N * 3), kind = new Float32Array(N), w = new Float32Array(N), anim = new Float32Array(N * 2);
     for (let i = 0; i < N; i++) { const s = P[i % P.length], q = s.q; pos.set([q[0], q[1], q[2]], i * 3); nrm.set([q[3], q[4], q[5]], i * 3); kind[i] = s.k; w[i] = i < P.length ? q[6] : 0; anim[i * 2] = s.a; anim[i * 2 + 1] = s.ph; }
-    return { pos, nrm, kind, w, anim, core, n: P.length, s: MOTIFS[mi].s || 1 };
+    return { pos, nrm, kind, w, anim, core, n: P.length, s: MOTIFS[mi].sNow, rot: MOTIFS[mi].rotNow, piv: MOTIFS[mi].piv || [0, 0.4, -0.42] };
   });
   yield;
   const rndA = new Float32Array(N * 3); for (let i = 0; i < rndA.length; i++) rndA[i] = rnd();
@@ -251,7 +324,7 @@ export function* initServicesGen(canvas, ui = {}) {
   g.setAttribute('aRnd', new THREE.BufferAttribute(rndA, 3));
   // Farben wie die Figur: ruhige Fläche (tief) → heller Rand; 0 Knochen · 1 Bernstein · 2 Blau · 3 (frei) · 4 Petrol
   const U = {
-    uT: { value: 1 }, uIn: { value: reduced ? 1 : 0 }, uTime: { value: 0 }, uPx: { value: 1 }, uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 }, uInset: { value: 0.014 }, uS: { value: s0.s },
+    uT: { value: 1 }, uIn: { value: reduced ? 1 : 0 }, uTime: { value: 0 }, uPx: { value: 1 }, uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 }, uInset: { value: 0.014 }, uS: { value: s0.s }, uRot: { value: s0.rot }, uPiv: { value: new THREE.Vector3(...s0.piv) },
     cDeep: { value: [C('#44788E'), C('#A9661A'), C('#3F7FAE'), C('#44788E'), C('#2C5263')] },
     cHi: { value: [C('#E4E3D8'), C('#F2B04E'), C('#9CCBEB'), C('#E4E3D8'), C('#6FA3B8')] },
   };
@@ -259,13 +332,13 @@ export function* initServicesGen(canvas, ui = {}) {
     uniforms: U, transparent: true, depthWrite: false, depthTest: true,
     vertexShader: /* glsl */`
       attribute vec3 pos2, nrmA, nrm2, aRnd; attribute float aKind, aKindA, aWA, aW2; attribute vec2 aAnim;
-      uniform float uT, uIn, uTime, uPx, uAsp, uS; uniform vec4 uPtr; uniform vec3 cDeep[5], cHi[5];
+      uniform float uT, uIn, uTime, uPx, uAsp, uS, uRot; uniform vec4 uPtr; uniform vec3 cDeep[5], cHi[5];
       varying vec3 vCol; varying float vA; varying float vSize;
       ` + PTR_GLSL + MOTION + /* glsl */`
       void main(){
         vec3 b = pos2, nb = nrm2;
         float al = motion(b, nb, aAnim.x, aAnim.y, uTime);
-        b *= uS; // Maßstab des Motivs (die Bewegung rechnet in den Maßen des Motivs)
+        b = rotY(b * uS, uRot); nb = rotY(nb, uRot); // Maßstab und Blickrichtung des Motivs (die Bewegung rechnet in den Maßen des Motivs)
         // Wechsel: jeder Punkt wandert zu seinem neuen Platz, unterwegs als feiner Staub
         float k = smoothstep(aRnd.y * .35, aRnd.y * .35 + .65, uT);
         vec3 dir = normalize(aRnd - .5 + 1e-4);
@@ -317,11 +390,11 @@ export function* initServicesGen(canvas, ui = {}) {
   const core = new THREE.Mesh(cg, new THREE.ShaderMaterial({
     uniforms: U, side: THREE.DoubleSide, colorWrite: false,
     vertexShader: /* glsl */`
-      attribute vec2 aAnim; uniform float uTime, uInset, uS;` + MOTION + /* glsl */`
+      attribute vec2 aAnim; uniform float uTime, uInset, uS, uRot;` + MOTION + /* glsl */`
       void main(){
         vec3 b = position - normal * uInset, n = normal;
         motion(b, n, aAnim.x, aAnim.y, uTime);
-        b = rotY(b * uS, sin(uTime * .25) * .35);
+        b = rotY(b * uS, uRot + sin(uTime * .25) * .35);
         gl_Position = projectionMatrix * modelViewMatrix * vec4(b, 1.);
       }`,
     fragmentShader: 'void main(){ gl_FragColor = vec4(0.); }',
@@ -333,17 +406,19 @@ export function* initServicesGen(canvas, ui = {}) {
   function show(i) {
     if (i === cur || i < 0 || i >= sets.length) return;
     // aktuellen Zwischenstand als neuen Start übernehmen (ohne Sprung)
-    const B = g.attributes.pos2.array, NB = g.attributes.nrm2.array, KB = g.attributes.aKind.array, WB = g.attributes.aW2.array, u = U.uT.value, sOld = U.uS.value;
+    const B = g.attributes.pos2.array, NB = g.attributes.nrm2.array, KB = g.attributes.aKind.array, WB = g.attributes.aW2.array, u = U.uT.value, sOld = U.uS.value, cR = Math.cos(U.uRot.value), sR = Math.sin(U.uRot.value);
     for (let n = 0; n < N; n++) {
       const r = rndA[n * 3 + 1] * 0.35, x = Math.min(1, Math.max(0, (u - r) / 0.65)), k = x * x * (3 - 2 * x);
-      for (let c = 0; c < 3; c++) { A[n * 3 + c] += (B[n * 3 + c] * sOld - A[n * 3 + c]) * k; NA[n * 3 + c] += (NB[n * 3 + c] - NA[n * 3 + c]) * k; }
+      const bx = (cR * B[n * 3] + sR * B[n * 3 + 2]) * sOld, bz = (-sR * B[n * 3] + cR * B[n * 3 + 2]) * sOld, nx = cR * NB[n * 3] + sR * NB[n * 3 + 2], nz = -sR * NB[n * 3] + cR * NB[n * 3 + 2];
+      A[n * 3] += (bx - A[n * 3]) * k; A[n * 3 + 1] += (B[n * 3 + 1] * sOld - A[n * 3 + 1]) * k; A[n * 3 + 2] += (bz - A[n * 3 + 2]) * k;
+      NA[n * 3] += (nx - NA[n * 3]) * k; NA[n * 3 + 1] += (NB[n * 3 + 1] - NA[n * 3 + 1]) * k; NA[n * 3 + 2] += (nz - NA[n * 3 + 2]) * k;
       WA[n] += (WB[n] - WA[n]) * k;
       KA[n] = k > 0.5 ? KB[n] : KA[n];
     }
     const s = sets[i];
     B.set(s.pos); NB.set(s.nrm); KB.set(s.kind); WB.set(s.w); g.attributes.aAnim.array.set(s.anim);
     ['position', 'nrmA', 'aKindA', 'aWA', 'pos2', 'nrm2', 'aKind', 'aW2', 'aAnim'].forEach((a) => (g.attributes[a].needsUpdate = true));
-    setCore(i); U.uS.value = s.s;
+    setCore(i); U.uS.value = s.s; U.uRot.value = s.rot; U.uPiv.value.set(...s.piv);
     U.uT.value = reduced ? 1 : 0; cur = i;
     ui.onShow && ui.onShow(i, MOTIFS[i].name);
   }
@@ -358,7 +433,7 @@ export function* initServicesGen(canvas, ui = {}) {
     t += dt * (reduced ? 0.5 : 1);
     U.uTime.value = t;
     U.uIn.value = Math.min(1, U.uIn.value + dt / 1.9);
-    if (U.uIn.value > 0.55) U.uT.value = Math.min(1, U.uT.value + dt / 1.5);
+    if (U.uIn.value > 0.55) U.uT.value = Math.min(1, U.uT.value + dt / 1.9);
     core.visible = U.uT.value >= 1 && U.uIn.value >= 1;
     U.uPx.value = st.renderer.getPixelRatio() * st.h * 0.5 / Math.tan(THREE.MathUtils.degToRad(15)) * SP * 0.62;
     if (pointer.k() > 0 || U.uPtr.value.w > 0) { U.uPtr.value.fromArray(pointer.ndc(st.renderer.domElement.getBoundingClientRect(), PV, 50)); U.uAsp.value = st.aspect; }

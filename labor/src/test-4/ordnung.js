@@ -62,11 +62,11 @@ export function roofForm(N, desk) {
 // Form 4: HOP-Kreise. kind 0/1/2 = Kreisfarbe, 3 = offener Außenring; w = Sichtbarkeit (Rand heller)
 export function logoForm(N, desk) {
   const pos = new Float32Array(N * 3), kind = new Float32Array(N), w = new Float32Array(N);
-  const cx = [-2.75, 0, 2.75], R = 1.18, dr = desk ? 0.064 : 0.13, list = [];
+  const cx = [-2.75, 0, 2.75], R = 1.18, dr = desk ? 0.064 : 0.098, list = []; // Handy seit 20.11. feiner (0,13 → 0,098; Kai: „nachbessern“): rundere Kreise, glattere Buchstaben
   // Buchstaben H · O · P (19.11.2026, Kai: „Logo deutlich kenntlich, gerne die Buchstaben h o p einsetzen“): je Kreis ein Buchstabe
   // aus hellen Punkten auf eigenem, geordnetem Raster (Art 4); die Ring-Perlen weichen ihm mit etwas Abstand aus.
   // Maße in Kreis-Radien: Höhe ±0,5, Strichstärke 0,2.
-  const T = 0.115, inLetter = (d, x, y, m = 0) => {
+  const T = 0.125, inLetter = (d, x, y, m = 0) => {
     const ax = Math.abs(x), ay = Math.abs(y);
     if (d === 0) return ay <= 0.54 + m && ((ax >= 0.42 - 2 * T - m && ax <= 0.42 + m) || (ay <= T + m && ax <= 0.42 + m)); // H
     if (d === 1) { const q = Math.hypot(x / 0.46, y / 0.56); return q <= 1 + m * 2.2 && Math.hypot(x / (0.46 - 2 * T), y / (0.56 - 2 * T)) >= 1 - m * 3.2; } // O
@@ -75,14 +75,14 @@ export function logoForm(N, desk) {
     const bx = x + 0.07, by = y - 0.23, q = Math.hypot(bx, by);
     return x >= -0.07 - m && q <= 0.31 + m && q >= 0.31 - 2 * T - m;
   };
-  const gap = dr * 0.55 / R, ls = dr * 0.72;
+  const gap = dr * 0.6 / R, ls = dr * (desk ? 0.72 : 0.6);
   for (let d = 0; d < 3; d++) {
     for (let j = 0; (j + 0.5) * dr < R; j++) {
       const rr = (j + 0.5) * dr, n = Math.max(1, Math.round(2 * Math.PI * rr / dr)), u = rr / R;
       for (let k = 0; k < n; k++) {
         const a = (k + (j & 1 ? 0.5 : 0)) / n * Math.PI * 2;
         if (inLetter(d, Math.cos(a) * rr / R, Math.sin(a) * rr / R, gap)) continue; // Platz für den Buchstaben
-        list.push([cx[d] + Math.cos(a) * rr, Math.sin(a) * rr + 0.2, Math.sqrt(Math.max(0, 1 - u * u)) * 0.3, d, 0.55 + 0.45 * u * u]);
+        list.push([cx[d] + Math.cos(a) * rr, Math.sin(a) * rr + 0.2, Math.sqrt(Math.max(0, 1 - u * u)) * 0.3, d, 0.66 + 0.34 * u * u]);
       }
     }
     for (let gy = -Math.ceil(0.6 * R / ls); gy <= Math.ceil(0.6 * R / ls); gy++) for (let gx = -Math.ceil(0.5 * R / ls); gx <= Math.ceil(0.5 * R / ls); gx++) {
