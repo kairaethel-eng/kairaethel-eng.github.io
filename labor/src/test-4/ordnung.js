@@ -73,9 +73,12 @@ export function logoForm(N, desk) {
     if (d === 0) return ay <= 0.42 + m && ((ax >= 0.31 - 2 * T - m && ax <= 0.31 + m) || (ay <= T + m && ax <= 0.31 + m)); // H
     if (d === 1) { const q = Math.hypot(x / 0.36, y / 0.42); return q <= 1 + m * 2.4 && Math.hypot(x / (0.36 - 2 * T), y / (0.42 - 2 * T)) >= 1 - m * 3.6; } // O
     if (ay > 0.42 + m) return false; // P: Stamm links, Bauch oben rechts
-    if (x >= -0.25 - m && x <= -0.25 + 2 * T + m) return true;
-    const bx = x + 0.06, by = y - 0.18, q = Math.hypot(bx, by);
-    return x >= -0.06 - m && q <= 0.24 + m && q >= 0.24 - 2 * T - m;
+    // 21.11. (Kai: „der Buchstabe P verbessert“): Bauch als klarer Bogen mit offenem Innenraum, der oben und in der Mitte gerade am Stamm
+    // ansetzt (vorher ein fast voller Halbkreis, der im Punktraster wie ein Klotz aussah)
+    if (x >= -0.27 - m && x <= -0.27 + 2 * T + m) return true;
+    const ro = 0.235, yc = 0.42 - ro, bx = x - 0.02, by = y - yc; // Bauch: Halbring um (0,02 | 0,185), dazu zwei waagrechte Arme zum Stamm
+    if (x >= 0.02 - m) { const q = Math.hypot(bx, by); return q <= ro + m && q >= ro - 2 * T - m; }
+    return x >= -0.27 && Math.abs(by) <= ro + m && Math.abs(by) >= ro - 2 * T - m;
   };
   const gap = dr * 0.6 / R, ls = dr * (desk ? 0.72 : 0.6);
   for (let d = 0; d < 3; d++) {
@@ -84,7 +87,7 @@ export function logoForm(N, desk) {
       for (let k = 0; k < n; k++) {
         const a = (k + (j & 1 ? 0.5 : 0)) / n * Math.PI * 2;
         if (inLetter(d, Math.cos(a) * rr / R, Math.sin(a) * rr / R, gap)) continue; // Platz für den Buchstaben
-        list.push([cx[d] + Math.cos(a) * rr, Math.sin(a) * rr + 0.2, Math.sqrt(Math.max(0, 1 - u * u)) * 0.3, d, 0.66 + 0.34 * u * u]);
+        list.push([cx[d] + Math.cos(a) * rr, Math.sin(a) * rr + 0.2, Math.sqrt(Math.max(0, 1 - u * u)) * 0.3, d, 0.82 + 0.18 * u * u]);
       }
     }
     for (let gy = -Math.ceil(0.6 * R / ls); gy <= Math.ceil(0.6 * R / ls); gy++) for (let gx = -Math.ceil(0.5 * R / ls); gx <= Math.ceil(0.5 * R / ls); gx++) {

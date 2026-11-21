@@ -9,7 +9,8 @@ import { spinePointsGen, spineStippleGen, ZONES, CURVE_W, BODY_W, BODY_H, BODY_S
 import { figureForm, roofForm, logoForm } from './ordnung.js';
 import { pointer, PTR_GLSL } from '../shared/zeiger.js';
 import { initAGen as initManuGen, MODES as MANU_MODES } from '../manu/ideaA.js';
-import { initServicesGen } from './services.js';
+import { initServicesGen, motifStageGen } from './services.js';
+import { MOTIVE as SW_MOTIVE, MARKEN as SW_MARKEN } from '../stosswelle-punkte/motiv.js';
 import { decode as decodeAnat } from '../wirbel-echt/anatomie.js';
 import { runSliced } from '../shared/slice.js';
 import { initHouse } from '../haus-licht/house.js';
@@ -293,7 +294,9 @@ const vert = /* glsl */`
       vec3 gH = lx < .45 ? mix(vec3(.004, .14, .095), vec3(.2, .53, .055), lx / .45) : mix(vec3(.2, .53, .055), vec3(.62, .8, .46), (lx - .45) / .55);
       vec3 gO = ly < .35 ? mix(vec3(.6, .72, .78), vec3(.2, .36, .44), ly / .35) : mix(vec3(.2, .36, .44), vec3(.035, .13, .17), (ly - .35) / .65);
       vec3 gP = lx < .4 ? mix(vec3(.6, .82, .9), vec3(0., .45, .72), lx / .4) : mix(vec3(0., .45, .72), vec3(.012, .1, .2), (lx - .4) / .6);
-      col = kind4 < .5 ? gH * 1.25 : kind4 < 1.5 ? gO * 1.35 : kind4 < 2.5 ? gP * 1.3 : kind4 < 3.5 ? cBone*.62 : kind4 < 4.5 ? cBone0*1.3 : cLogoP*1.9; // 3 = grauer Bogen · 4 = Buchstaben H · O · P · 5 = Sichel
+      // 21.11. (Kai: „Es sollte heller sein“): Verläufe aufgehellt – die dunklen Enden bleiben farbig statt fast schwarz
+      gH = mix(gH, vec3(.36, .7, .2), .3); gO = mix(gO, vec3(.34, .55, .65), .38); gP = mix(gP, vec3(.12, .6, .88), .34);
+      col = kind4 < .5 ? gH * 1.7 : kind4 < 1.5 ? gO * 1.75 : kind4 < 2.5 ? gP * 1.7 : kind4 < 3.5 ? cBone*.8 : kind4 < 4.5 ? cBone0*1.45 : cLogoP*2.4; // 3 = grauer Bogen · 4 = Buchstaben H · O · P · 5 = Sichel
       al = aW.y; dw = uDr4 * (kind4 > 4.5 ? .46 : kind4 > 3.5 ? .64 : kind4 > 2.5 ? .42 : .58) * uXf[4].w;
     }
     p = p * uXf[i].w + uXf[i].xyz;
@@ -1704,7 +1707,8 @@ function updateAxis(dt) {
   const p = clamp(-r.top / Math.max(1, r.height - VH));
   // Handy-Scanner (18.11., „1a“): die Wirbelsäule hängt am Kapitel, nicht mehr am Formwechsel der Punktwolke – sie bleibt, bis ihr
   // Kapitel aus dem Bild ist (weiche Unterkante), und ist beim Zurückscrollen sofort wieder da (vorher: erst nach dem Formwechsel)
-  const inSec = r.top < VH && r.bottom > 0 && morphNow > 1.6 && (morphNow < 2.4 || (desk ? pcScan() : scanOn()));
+  // 21.11.: Schwelle 1,3 statt 1,6 – bei 3,6 s je Formwechsel blieb die Bühne sonst gut zwei Sekunden leer, bevor die Abtastlinie begann
+  const inSec = r.top < VH && r.bottom > 0 && morphNow > 1.3 && (morphNow < 2.4 || (desk ? pcScan() : scanOn()));
   // noch nicht fertig gerechnet: grobe Partikel bleiben, danach fahren Scan und Kamera sanft nach
   spineK = bones ? ramp(spineK, dt) : 0;
   if (desk ? pcScan() : scanOn()) { updateScan(dt, r, inSec); return; } // Handy: Scanner (6.11.), PC: Hybrid-Scanner (7.11.)
@@ -2117,14 +2121,23 @@ if (manuSec) {
 // ---------- Stoßwellen-Therapie (Kapitel 04, nach der Manuthera): Linien-Bühne ohne WebGL, Baustein ../stosswelle ----------
 const swSec = $('#stosswelle');
 const sw = initStosswelle({ root: swSec, isPaused: () => paused, reduced });
+// 21.11.2026 (Kai im Arbeitsblatt zum Entwurf stosswelle-punkte.html: „so in Puls übernehmen“): Punkt-Grafik mit echtem Fersenbein auf
+// derselben Motiv-Bühne wie die Leistungen. Sie entsteht erst in der Nähe; ohne Grafikchip oder ohne die Knochen-Datei bleibt die
+// Linien-Zeichnung. Stärke, Knöpfe und Texte führt weiter der Linien-Baustein (welle.js) – hier wird nur seine Stufe übernommen.
+let swP = null;
+const SW_LAB = { sehne: [-1, -5, 1, -12], ansatz: [-0.5, 34, 1], ferse: [-0.5, 18, 1], hand: [-0.5, 30, 1] }; // Versatz der Beschriftung: [x (× Breite, wenn 3. Wert 1), y, …, zusätzlich px]
+const swLabs = $('#swLabs'), swLabEls = swLabs ? [...swLabs.children] : [];
+if (swSec && $('#glSw') && renderer) whenNear(swSec, () => loadAnat().then((anat) => { if (!anat) return null; $('#glSw').hidden = false; return runSliced(motifStageGen($('#glSw'), { anat, isPaused: () => paused, sp: isDesktop() ? 0.027 : 0.033, sway: reduced ? 0 : 0.1, cam: { y: 0.55, d: 5.2, look: 0.02 } }, SW_MOTIVE)); })
+  .then((m) => { if (!m) { $('#glSw').hidden = true; return; } swP = m; swSec.classList.add('sw-punkte'); }));
 // ---------- Leistungen: Partikel-Bühne mit Motiv je Leistung (Haus tritt hier zurück) ----------
 const servList = $('.roof-list'), servName = $('#servName');
 // Aufbau erst, wenn „Alle Leistungen“ in Reichweite kommt (A1)
 let serv = null;
 glWait($('#glServ'));
 // echte Knochen für die anatomischen Motive (20.11.): eigene Datei neben der Seite; lädt sie nicht (file://, Funkloch), bleiben die gerechneten Motive
-const loadAnat = () => fetch(HOP_ASSETS + 'motive-anatomie.bin').then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
-  .then((buf) => { const A = {}; for (const q of decodeAnat(new Uint8Array(buf)).parts) A[q.id] = q; return A; }).catch((e) => { console.warn('Anatomie der Motive nicht geladen – gerechnete Motive:', e && e.message); return null; });
+let anatMemo = null;
+const loadAnat = () => anatMemo || (anatMemo = fetch(HOP_ASSETS + 'motive-anatomie.bin').then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+  .then((buf) => { const A = {}; for (const q of decodeAnat(new Uint8Array(buf)).parts) A[q.id] = q; return A; }).catch((e) => { console.warn('Anatomie der Motive nicht geladen – gerechnete Motive:', e && e.message); return null; }));
 whenNear(roofHead, () => loadAnat().then((anat) => runSliced(initServicesGen($('#glServ'), { anat, isPaused: () => paused, onShow: (i, name) => { if (servName) servName.textContent = name; } }))).then((m) => { serv = m; if (!m) document.documentElement.classList.add('no-gl-serv'); glReady($('#glServ')); }));
 let servLock = -1e9, servAutoT = 0;
 const servItems = $$('#index li');
@@ -2306,6 +2319,13 @@ function tick() {
   if (renderer && !document.hidden && (anyVis || glDirty)) { renderer.render(scene, camera); glDirty = anyVis; }
   if (manu && manu.st.visible && !document.hidden) { manu.update(0, dt); manu.st.renderer.render(manu.st.scene, manu.st.camera); }
   if (sw && !document.hidden) sw.update();
+  // Stoßwelle in Punkten (21.11.): zeichnet nur, wenn sie im Bild steht; die Stärke kommt vom Linien-Baustein (Knöpfe, Wechsel von selbst)
+  if (swP && swP.st.visible && !document.hidden) {
+    const lv = +swSec.dataset.level || 0; if (lv !== swP.current) swP.show(lv);
+    swP.update(0, dt); swP.st.renderer.render(swP.st.scene, swP.st.camera);
+    swLabs.classList.toggle('on', swP.ready());
+    for (const el of swLabEls) { const q = SW_MARKEN[el.dataset.m]; if (!q) continue; const xy = swP.project(q), w = el.offsetWidth, o = SW_LAB[el.dataset.m] || [12, -5]; el.style.transform = `translate(${Math.max(0, Math.min(swP.st.w - w, xy[0] + o[0] * (o[2] ? w : 1) + (o[3] || 0))).toFixed(1)}px, ${(xy[1] + o[1] * Math.max(1, swP.st.h / 330)).toFixed(1)}px)`; }
+  }
   if (!document.hidden) updateServices(dt);
   updateHints(dt);
 }

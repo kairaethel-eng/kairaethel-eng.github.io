@@ -121,3 +121,16 @@ html:not(.js) .sw-hint{display:none}
   .sw-q,.sw-faq .sw-sub + .sw-q{border:0!important}
   .sw-q summary::after{display:none!important}
 }
+
+/* 21.11.2026: Punkt-Grafik statt Linien-Zeichnung (Klasse sw-punkte setzt main.js, sobald die Bühne steht) */
+.sw-gl{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .9s ease;pointer-events:none}
+.sw-gl[hidden]{display:none}
+.sw-labs{display:none}
+.sw.sw-punkte .sw-gl{opacity:1}
+.sw.sw-punkte .sw-svg{visibility:hidden}
+.sw.sw-punkte .sw-labs{display:block;position:absolute;inset:0;pointer-events:none}
+.sw-labs span{position:absolute;left:0;top:0;white-space:nowrap;font:600 .6875rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);opacity:0;transition:opacity .6s ease;text-shadow:0 0 .375rem rgba(10,22,27,1),0 0 .75rem rgba(10,22,27,.95)}
+.sw-labs span.is-a{color:var(--amber)}
+.sw-labs.on span{opacity:1}
+@media (max-width:920px){.sw-labs span{font-size:.625rem;letter-spacing:.1em}}
+.sw.sw-punkte .sw-lab{display:none}
