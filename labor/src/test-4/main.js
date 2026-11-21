@@ -55,9 +55,9 @@ const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t *
 // Die bisherigen Scrollwerte (0…1) bleiben als Messung, sind aber nur noch der Auslöser: über `an` startet der Ablauf, unter `aus`
 // läuft er zurück. Der Ablauf selbst läuft über die Zeit – gleich ruhig, egal wie schnell gescrollt oder gewischt wird.
 // Beim ersten Aufruf (Laden mitten in der Seite) steht der Wert sofort am Ziel; bei „Bewegung anhalten/reduzieren“ ohne Ablauf.
-const FORM_SEK = 2.8;  // ein Formwechsel der Punktwolke (Figur → Bänder → Wirbelsäule → Dachlinie)
-const LOGO_SEK = 2.6;  // HOP-Kreise entstehen / lösen sich
-const SCAN_SEK = 2.3;  // Abtastlinie baut die Wirbelsäule auf
+const FORM_SEK = 3.6;  // ein Formwechsel der Punktwolke (Figur → Bänder → Wirbelsäule → Dachlinie)
+const LOGO_SEK = 3.2;  // HOP-Kreise entstehen / lösen sich
+const SCAN_SEK = 2.9;  // Abtastlinie baut die Wirbelsäule auf
 function riegel(sek, an = 0.3, aus = 0.12) {
   let want = -1, v = 0;
   const f = (scrub, dt) => {
@@ -287,15 +287,24 @@ const vert = /* glsl */`
       float br = 1. + sin(uTime*1.2 + pos4.x*.8)*.03;
       p = pos4 * vec3(br, br, 1.);
       p = rotY(p, sin(uTime*.3)*.25);
-      col = kind4 < .5 ? cGreen : kind4 < 1.5 ? cLogoP*1.5 : kind4 < 2.5 ? cBlue : kind4 < 3.5 ? cBone*.8 : cBone0*1.3; // 4 = Buchstaben H · O · P
-      al = aW.y; dw = uDr4 * (kind4 > 3.5 ? .64 : kind4 > 2.5 ? .42 : .58) * uXf[4].w;
+      // 20.11. nachts (Kai: „Besser an das Original anpassen“): Farbverläufe wie im Original-Logo – H von dunklem Grün über Hellgrün
+      // nach hell (quer), O von hell über Petrol nach dunkel (von oben), P von hell über Cyan nach Dunkelblau (quer)
+      float lx = clamp((pos4.x - (kind4 < .5 ? -2.75 : kind4 < 1.5 ? 0. : 2.75)) / 1.18 * .5 + .5, 0., 1.), ly = clamp(.5 - (pos4.y - .2) / 1.18 * .5, 0., 1.);
+      vec3 gH = lx < .45 ? mix(vec3(.004, .14, .095), vec3(.2, .53, .055), lx / .45) : mix(vec3(.2, .53, .055), vec3(.62, .8, .46), (lx - .45) / .55);
+      vec3 gO = ly < .35 ? mix(vec3(.6, .72, .78), vec3(.2, .36, .44), ly / .35) : mix(vec3(.2, .36, .44), vec3(.035, .13, .17), (ly - .35) / .65);
+      vec3 gP = lx < .4 ? mix(vec3(.6, .82, .9), vec3(0., .45, .72), lx / .4) : mix(vec3(0., .45, .72), vec3(.012, .1, .2), (lx - .4) / .6);
+      col = kind4 < .5 ? gH * 1.25 : kind4 < 1.5 ? gO * 1.35 : kind4 < 2.5 ? gP * 1.3 : kind4 < 3.5 ? cBone*.62 : kind4 < 4.5 ? cBone0*1.3 : cLogoP*1.9; // 3 = grauer Bogen · 4 = Buchstaben H · O · P · 5 = Sichel
+      al = aW.y; dw = uDr4 * (kind4 > 4.5 ? .46 : kind4 > 3.5 ? .64 : kind4 > 2.5 ? .42 : .58) * uXf[4].w;
     }
     p = p * uXf[i].w + uXf[i].xyz;
     if(i==2){
       // Abtastlinie: oberhalb ist die Wirbelsäule schon „fest“, darunter noch Partikel
       float g = exp(-pow((p.y - uCut)*7., 2.));
       al *= smoothstep(uCut + .1, uCut - .1, p.y);
-      col = mix(col, cAmber, g); dw *= 1. + g*1.2; al = max(al, g);
+      // 21.11. (Abläufe laufen langsamer → die grobe Wolke unter der Abtastlinie steht länger neben der Überschrift): als feiner Staub –
+      // kleiner und höchstens halb deckend; nur die Bernstein-Linie selbst bleibt kräftig
+      al *= .5; dw *= .6;
+      col = mix(col, cAmber, g); dw *= 1. + g*2.2; al = max(al, g);
     }
   }
 
@@ -1992,7 +2001,7 @@ new IntersectionObserver((es, ob) => es.forEach((e) => { if (e.isIntersecting) {
 // kein Grafikchip) stehen Überschrift und Knöpfe einfach da. Die Zeichenfläche ist nur in der Nähe der Bühne eingeschaltet
 // (Go „1b“: sie lag am 18.11. dauernd bildschirmgroß über der Seite). Prüfhilfe: window.__door.
 const doorStage = (() => {
-  const doorGate = riegel(3.0); // Staub sammelt sich zur Tür: Auslöser beim Hereinkommen, Ablauf über die Zeit
+  const doorGate = riegel(3.6); // Staub sammelt sich zur Tür: Auslöser beim Hereinkommen, Ablauf über die Zeit
   const cv = $('#cStage'), glowEl = $('#cGlow'), track = $('#doorTrack'), inEl = $('#doorIn');
   if (!cv || !track || !inEl) return null;
   const sticky = $('.door-sticky', track), cue = $('.door-cue', track), H = document.documentElement;

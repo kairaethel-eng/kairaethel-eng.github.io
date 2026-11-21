@@ -45,6 +45,8 @@ const PAGES = {
   'feinschliff': { out: 'feinschliff.html' },
   // Tür (16.11.2026, Go Kai): Entwurf zu Kap. 05 – Knöpfe erscheinen erst mit der offenen Partikel-Tür, Varianten A | C (Canvas 2D, kein WebGL)
   'tuer': { out: 'tuer.html' },
+  // Stoßwelle in Punkten (20.11.2026 nachts, Kai im Arbeitsblatt 4): Entwurf – Punkt-Grafik mit echtem Fersenbein, Vergleich mit der Linien-Bühne in Puls
+  'stosswelle-punkte': { out: 'stosswelle-punkte.html' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
   'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true, noTermin: true }, // Übergangsseite hat kein Termin-Blatt

@@ -3,6 +3,14 @@
 Stand: 20.11.2026 (Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Arbeitsblatt 4 abgearbeitet (Kai 20.11.2026 gegen Mitternacht, Antworten im Arbeitsblatt)
+- **Entschieden:** Das Logo folgt dem Original (Verläufe, Schwünge um H und P) – in der Kopfleiste und in den HOP-Kreisen aus Punkten. Kein großes Logo am Start.
+- **Entschieden:** CMD-Motiv zeigt Kiefer und Kiefergelenk von der Seite, nicht den ganzen Schädel.
+- **Entschieden:** Übergänge noch langsamer (Formwechsel 3,6 s). Schilder an der Wirbelsäule einheitlich als schlichter Text mit Linie. Gezeichnete Hände bleiben.
+- **Entschieden (Vorgehen):** Stoßwelle und Linienhaus als Punkt-Grafik nur über Entwurfsseiten – zuerst die Stoßwelle (`stosswelle-punkte.html`), nach Kais Urteil das Haus. Maßstab von Kai: „sehr scharf und kenntlich, nicht verspielt weich, professionell kreativ“.
+- **Merkregel:** Für „ans Original anpassen“ das Original ansehen (Logo-Bild der öffentlichen Praxis-Website), nicht aus der Beschreibung raten.
+- **Offen (Arbeitsblatt 4, neue Punkte):** Urteil zum Stoßwellen-Entwurf · Tempo · Logo.
+
 ## Arbeitsblatt 3 abgearbeitet (Kai 20.11.2026 nachts, Antworten im Arbeitsblatt)
 - **Entschieden:** Anatomie in den Motiven = echte Knochen (BodyParts3D 4.0, CC BY 4.0, Namensnennung im Fuß und Impressum § 9); gerechnete Formen nur noch als Rückfall und für Geräte/Hände.
 - **Entschieden:** Tür öffnet auf Antippen/Klick und läuft dann über die Zeit – „Hineingehen am Scrollweg“ (19.11.) ist damit abgelöst. Am Scrollweg bleiben nur die Fahrt an der Figur und die Haltestellen der Wirbelsäule.
