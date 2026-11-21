@@ -52,7 +52,7 @@ const STATES = [
   { id: 'achse', go: go('#achse', 0.3), key: 1, wait: 6000 },
   ...STOPS.map((n, i) => ({ id: 'achse-' + n, go: stop(i), key: 1, wait: 5000 })),
   { id: 'auftakt-04', go: go('.auftakt-blk[data-for="dach"]', -0.3) }, { id: 'dach', go: go('#dach', 0) }, { id: 'leistungen', go: go('#allTitle', -0.1) }, { id: 'manuthera', go: go('#manuthera', 0), wait: 5000 },
-  { id: 'stosswelle', go: go('#stosswelle', 0) }, { id: 'auftakt-05', go: go('.auftakt-blk[data-for="tuer"]', -0.3) }, { id: 'tuer', go: async (p) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#doorTrack', 0)(p); }, wait: 6500 }, // Tür-Bühne (19.11.): Tür geschlossen, Überschrift oben
+  { id: 'stosswelle', go: go('#stosswelle', 0), wait: 6000 }, { id: 'auftakt-05', go: go('.auftakt-blk[data-for="tuer"]', -0.3) }, { id: 'tuer', go: async (p) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#doorTrack', 0)(p); }, wait: 6500 }, // Tür-Bühne (19.11.): Tür geschlossen, Überschrift oben
   // seit 20.11.2026 geht die Tür auf Antippen auf und man geht über die Zeit hindurch (vorher am Scrollweg)
   // (der Prüfstand rollt beim Laden einmal durch die ganze Seite – dabei gilt die Tür als „vorbeigescrollt“ und steht offen; deshalb reset())
   { id: 'tuer-halb', go: async (p, settle) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#doorTrack', 0)(p); await settle(4000); await p.evaluate(() => window.__door && window.__door.open()); }, wait: 1900 }, { id: 'tuer-drin', go: go('#doorTrack', 0), wait: 6000 }, // halb hindurch · drinnen, Knöpfe da

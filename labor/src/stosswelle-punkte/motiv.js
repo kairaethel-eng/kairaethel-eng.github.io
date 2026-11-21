@@ -12,17 +12,20 @@ export const STUFEN = [
   { id: 'mittel', name: 'Mittel', n: 5, txt: 'Mittel: mehr Impulse, etwas mehr Druck – angepasst an das, was Sie spüren.' },
   { id: 'kraeftig', name: 'Kräftig', n: 7, txt: 'Kräftig: dichte Impulsfolge für belastbares Gewebe, jederzeit zurücknehmbar.' },
 ];
+export const MARKEN = {};
 const SEITE = [0, 0, 1, 0, 1, 0, -1, 0, 0]; // Fuß von der Seite: Zehen nach rechts (x), oben bleibt oben, Tiefe = quer durch den Fuß
 
 function szene(n) {
   return (sp, A) => {
     const fu = A['bein/fuss'], ti = A['bein/tibia'], fi = A['bein/fibula'], bf = bounds(fu), S = 0.086;
     // Fersenhöcker: hinterste Punkte des Fußes (Ansatz der Achillessehne)
-    const hk = meanOf(fu, (p) => p[2] < bf.lo[2] + 1.0), c = [bf.mid[0], bf.lo[1] + 9.5, bf.lo[2] + 5.8];
+    const hk = meanOf(fu, (p) => p[2] < bf.lo[2] + 1.0), c = [bf.mid[0], bf.lo[1] + 8.6, bf.lo[2] + 3.2];
     const tr = (p) => [(p[2] - c[2]) * S, (p[1] - c[1]) * S, -(p[0] - c[0]) * S];
     const H = tr(hk), o = { M: SEITE, c, s: S, axis: 'y' };
     const hoch = { ...o, w: (p) => 1 - 0.95 * Math.min(1, Math.max(0, (p[1] - 0.6) / 0.75)), clip: (p) => p[1] < 1.4 };
     const ansatz = (q) => (Math.hypot(q[0] - H[0], q[1] - H[1]) < 0.17 ? 1 : 0); // Sehnenansatz in Bernstein
+    // Anker für die Beschriftung (HTML über der Zeichenfläche, siehe test-4/main.js)
+    Object.assign(MARKEN, { ansatz: [H[0] + 0.02, H[1] + 0.02, 0], sehne: [H[0] + 0.07, 0.86, 0], ferse: [H[0] + 0.42, (bf.lo[1] - c[1]) * S, 0.2], hand: [H[0] - 0.6, H[1] - 0.2, 0] });
     const parts = [T(rows(fu, sp, o), ansatz, 0), T(rows(ti, sp, hoch), 0, 0), T(rows(fi, sp, hoch), 0, 0)];
     // Achillessehne: vom Fersenhöcker straff nach oben, neun Stränge, oben breiter und lichter
     const top = [H[0] + 0.12, 1.36, 0];

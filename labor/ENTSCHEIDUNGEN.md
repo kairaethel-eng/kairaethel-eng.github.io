@@ -3,6 +3,12 @@
 Stand: 21.11.2026 (Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Arbeitsblatt 4, zweite Runde (Kai 21.11.2026)
+- **Entschieden:** Die Stoßwelle ist in Puls eine Punkt-Grafik mit echtem Fersenbein (Kai zum Entwurf: „so in Puls übernehmen“). Die Linien-Zeichnung bleibt als Rückfall.
+- **Entschieden:** In der Kopfleiste bleibt das flache Logo vom 20.11. („dein altes Logo lassen“). Die Fassung nach dem Original ist damit für die Kopfleiste zurückgenommen; Auswahl A/B/C über `logo.html`.
+- **Bleibt (noch):** Die HOP-Kreise aus Punkten folgen weiter dem Original (Verläufe, Schwünge), nur heller und mit besserem P – bis Kai nach der Logo-Wahl anders entscheidet.
+- **Offen:** Linienhaus mit lebenden Partikeln (Vorschläge im Arbeitsblatt) · Logo-Wahl.
+
 ## Kais Screenshots 21.11.2026 – „Go alle Empfehlungen“ (umgesetzt, wartet auf Sichtprüfung)
 - **Entschieden:** Auftakt vor Kapitel 02 am Handy/Tablet 40svh (nach der klebenden Bühne von 01); Figur im Schlussbild kleiner und tiefer.
 - **Entschieden:** Leitsatz als eigener Zitatblock mit großem Bernstein-Anführungszeichen, Linie zeichnet sich über die Zeit ein.

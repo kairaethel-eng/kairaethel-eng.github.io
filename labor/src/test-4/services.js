@@ -453,5 +453,8 @@ export function* motifStageGen(canvas, ui = {}, MOTIFS) {
     st.camera.position.set(0, CAM.y, d); st.camera.lookAt(0, CAM.look, 0);
   }
   ui.onShow && ui.onShow(0, MOTIFS[0].name);
-  return { st, update, show, counts: sets.map((s) => s.n), get current() { return cur; } };
+  // Lage eines Punkts des Motivs auf der Zeichenfläche (CSS-Bildpunkte) – für Beschriftungen in HTML
+  const _pv = new THREE.Vector3();
+  const project = (q) => { const sc = U.uS.value, an = U.uRot.value + Math.sin(U.uTime.value * 0.25) * U.uSway.value, x = q[0] * sc, z = q[2] * sc; _pv.set(Math.cos(an) * x + Math.sin(an) * z, q[1] * sc, -Math.sin(an) * x + Math.cos(an) * z).project(st.camera); return [(_pv.x * 0.5 + 0.5) * st.w, (-_pv.y * 0.5 + 0.5) * st.h]; };
+  return { st, update, show, project, ready: () => U.uIn.value >= 1, counts: sets.map((s) => s.n), get current() { return cur; } };
 }
