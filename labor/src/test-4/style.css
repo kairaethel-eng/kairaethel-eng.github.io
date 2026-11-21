@@ -936,6 +936,11 @@ html:not(.js) .index button{cursor:default}
 .ncall.ncall-exit{color:var(--amber)}
 @media (max-width:920px){.ncall:not(.ncall-typ){font-size:.8125rem}}
 
+/* 21.11.2026 abends: Staub beim Raumwechsel im Linienhaus (Baustein src/haus-staub/staub.js) */
+.staub{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4;opacity:0;transition:opacity .3s}
+.staub.on{opacity:1}
+@media print{.staub{display:none}}
+
 /* ---------- Text ruhig (Studie textruhe.html, 21.11.2026, Go Kai „A“) ----------
    Je Block bleibt ein Kernsatz stehen; der Rest liegt hinter einem Leuchtpunkt-Knopf (.lp-btn) und klappt am Ort auf.
    Nur mit html.ruhe (setzt das Bauziel textruhe). Ohne die Klasse – Puls, live, ohne JavaScript, Druck – steht alles offen

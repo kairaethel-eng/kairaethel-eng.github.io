@@ -62,50 +62,45 @@ export function roofForm(N, desk) {
 // Form 4: HOP-Kreise. kind 0/1/2 = Kreisfarbe, 3 = offener Außenring; w = Sichtbarkeit (Rand heller)
 export function logoForm(N, desk) {
   const pos = new Float32Array(N * 3), kind = new Float32Array(N), w = new Float32Array(N);
-  const cx = [-2.75, 0, 2.75], R = 1.18, dr = desk ? 0.064 : 0.098, list = []; // Handy seit 20.11. feiner (0,13 → 0,098; Kai: „nachbessern“): rundere Kreise, glattere Buchstaben
-  // Buchstaben H · O · P (19.11.2026, Kai: „Logo deutlich kenntlich, gerne die Buchstaben h o p einsetzen“): je Kreis ein Buchstabe
-  // aus hellen Punkten auf eigenem, geordnetem Raster (Art 4); die Ring-Perlen weichen ihm mit etwas Abstand aus.
-  // Maße in Kreis-Radien: Höhe ±0,5, Strichstärke 0,2.
-  // 20.11. nachts (Kai: „Besser an das Original anpassen“, „Buchstaben anders“): Buchstaben in den Verhältnissen des Original-Logos –
-  // kleiner im Kreis (Höhe ±0,42 statt ±0,54), H breit mit kräftigen Stämmen, O als runder Ring, P mit kleinem Bauch-Innenraum.
-  const T = 0.095, inLetter = (d, x, y, m = 0) => {
-    const ax = Math.abs(x), ay = Math.abs(y);
-    if (d === 0) return ay <= 0.42 + m && ((ax >= 0.31 - 2 * T - m && ax <= 0.31 + m) || (ay <= T + m && ax <= 0.31 + m)); // H
-    if (d === 1) { const q = Math.hypot(x / 0.36, y / 0.42); return q <= 1 + m * 2.4 && Math.hypot(x / (0.36 - 2 * T), y / (0.42 - 2 * T)) >= 1 - m * 3.6; } // O
-    if (ay > 0.42 + m) return false; // P: Stamm links, Bauch oben rechts
-    // 21.11. (Kai: „der Buchstabe P verbessert“): Bauch als klarer Bogen mit offenem Innenraum, der oben und in der Mitte gerade am Stamm
-    // ansetzt (vorher ein fast voller Halbkreis, der im Punktraster wie ein Klotz aussah)
-    if (x >= -0.27 - m && x <= -0.27 + 2 * T + m) return true;
-    const ro = 0.235, yc = 0.42 - ro, bx = x - 0.02, by = y - yc; // Bauch: Halbring um (0,02 | 0,185), dazu zwei waagrechte Arme zum Stamm
-    if (x >= 0.02 - m) { const q = Math.hypot(bx, by); return q <= ro + m && q >= ro - 2 * T - m; }
-    return x >= -0.27 && Math.abs(by) <= ro + m && Math.abs(by) >= ro - 2 * T - m;
+  // 21.11.2026 abends (Kai im Arbeitsblatt: „das Logo an der Hausordnung im Partikel-Stil perfekt an das Hauptlogo der Startseite
+  // anpassen“): Maße, Farben und Buchstaben wie das flache Logo A der Kopfleiste (SVG viewBox 424×140: Kreise r 66 im Abstand 142,
+  // feiner heller Rand, weiße Buchstaben als Striche der Stärke 15,5). Keine Schwünge, keine Verläufe mehr.
+  const R = 1.18, step = R * 142 / 66, cx = [-step, 0, step], dr = desk ? 0.064 : 0.098, list = [];
+  const t = 7.75 / 66; // halbe Strichstärke der Buchstaben, in Kreis-Radien
+  // Buchstaben in Kreis-Radien (x rechts, y oben), aus den Pfaden des Logos umgerechnet (Mitte 70|70, Teiler 66)
+  const inLetter = (d, x, y, m = 0) => {
+    const ax = Math.abs(x), ay = Math.abs(y), T = t + m;
+    if (d === 0) return (Math.abs(ax - 21.5 / 66) <= T && ay <= 31 / 66 + m) || (ay <= T && ax <= 21.5 / 66 + m); // H: Stämme bei ±21,5, Höhe ±31
+    if (d === 1) { // O: Ellipse rx 25,5 · ry 23,25 als Strich
+      const rx = 25.5 / 66, ry = 23.25 / 66;
+      return Math.hypot(x / (rx + T), y / (ry + T)) <= 1 && Math.hypot(x / Math.max(1e-3, rx - T), y / Math.max(1e-3, ry - T)) >= 1;
+    }
+    // P: Stamm bei −18,5 (Höhe ±31), oberer Arm y +23,25, unterer Arm y −8,25, Bogen um (5 | 7,5) mit Radius 15,75
+    const sx = -18.5 / 66, bx = 5 / 66, by = 7.5 / 66, br = 15.75 / 66, yt = 23.25 / 66, yb = -8.25 / 66;
+    if (Math.abs(x - sx) <= T && ay <= 31 / 66 + m) return true;
+    if (x >= sx && x <= bx && (Math.abs(y - yt) <= T || Math.abs(y - yb) <= T)) return true;
+    return x >= bx && Math.abs(Math.hypot(x - bx, y - by) - br) <= T;
   };
-  const gap = dr * 0.6 / R, ls = dr * (desk ? 0.72 : 0.6);
+  const gap = dr * 0.55 / R, ls = dr * (desk ? 0.62 : 0.55);
   for (let d = 0; d < 3; d++) {
+    // Kreisfläche in Ringen von der Mitte nach außen, flache Farbe (Art 0, 1, 2), Platz für den Buchstaben
     for (let j = 0; (j + 0.5) * dr < R; j++) {
       const rr = (j + 0.5) * dr, n = Math.max(1, Math.round(2 * Math.PI * rr / dr)), u = rr / R;
       for (let k = 0; k < n; k++) {
         const a = (k + (j & 1 ? 0.5 : 0)) / n * Math.PI * 2;
-        if (inLetter(d, Math.cos(a) * rr / R, Math.sin(a) * rr / R, gap)) continue; // Platz für den Buchstaben
-        list.push([cx[d] + Math.cos(a) * rr, Math.sin(a) * rr + 0.2, Math.sqrt(Math.max(0, 1 - u * u)) * 0.3, d, 0.92 + 0.08 * u * u]);
+        if (inLetter(d, Math.cos(a) * rr / R, Math.sin(a) * rr / R, gap)) continue;
+        list.push([cx[d] + Math.cos(a) * rr, Math.sin(a) * rr + 0.2, Math.sqrt(Math.max(0, 1 - u * u)) * 0.3, d, 1]);
       }
     }
-    for (let gy = -Math.ceil(0.6 * R / ls); gy <= Math.ceil(0.6 * R / ls); gy++) for (let gx = -Math.ceil(0.5 * R / ls); gx <= Math.ceil(0.5 * R / ls); gx++) {
-      const x = gx * ls, y = gy * ls;
+    // Buchstabe: weiße Punkte auf eigenem Raster (Art 4)
+    const lim = Math.ceil(0.55 * R / ls);
+    for (let gy = -lim; gy <= lim; gy++) for (let gx = -lim; gx <= lim; gx++) {
+      const x = (gx + (gy & 1 ? 0.5 : 0)) * ls, y = gy * ls * 0.866;
       if (inLetter(d, x / R, y / R)) list.push([cx[d] + x, y + 0.2, 0.34, 4, 1]);
     }
-    // Schwünge wie im Original-Logo: nur um H und P (um das P gespiegelt), das O steht frei.
-    // grauer Bogen links/oben (Art 3) und eine kräftigere Sichel unten (Art 5, Petrol), beide laufen an den Enden aus
-    if (d !== 1) {
-      const mir = d === 2 ? -1 : 1, arc = (rr, a0, a1, kind, al, strands) => {
-        for (let st = 0; st < strands; st++) {
-          const r2 = rr + st * dr * 0.75, n = Math.round(Math.abs(a1 - a0) * r2 / (dr * 0.8));
-          for (let k = 0; k <= n; k++) { const f = k / n, a = a0 + (a1 - a0) * f, e = Math.sin(Math.PI * f) ** 0.6; if (st && e < 0.45 + st * 0.2) continue; list.push([cx[d] + mir * Math.cos(a) * r2, Math.sin(a) * r2 + 0.2, 0, kind, al * (0.35 + 0.65 * e)]); }
-        }
-      };
-      arc(R * 1.46, 0.98, 3.8, 3, 0.85, 1);   // grau: von oben rechts über links bis unten links
-      arc(R * 1.34, 3.3, 6.0, 5, 0.95, 3);    // Sichel: links unten herum bis rechts
-    }
+    // feiner heller Rand wie im Logo (Art 3)
+    const rr = R + dr * 0.3, n = Math.round(2 * Math.PI * rr / (dr * 0.7));
+    for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; list.push([cx[d] + Math.cos(a) * rr, Math.sin(a) * rr + 0.2, 0, 3, 0.6]); }
   }
   const S = slots(N, 404), r = rng(41);
   // der Reihe nach gemischt verteilen, damit jeder Kreis gleich viele verborgene Punkte bekommt

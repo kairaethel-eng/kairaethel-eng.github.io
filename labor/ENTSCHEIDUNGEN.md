@@ -12,6 +12,11 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 Stand: 21.11.2026 (Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Arbeitsblatt 4, vierte Runde (Kai 21.11.2026 spät)
+- **Entschieden:** Im Linienhaus zieht beim Raumwechsel Staub hinüber (in Puls). Kein zusätzlicher Licht-Staub im Raum.
+- **Entschieden:** Die HOP-Kreise aus Punkten sind ein Abbild von Logo A der Kopfleiste (Farben, Buchstaben, Rand) – nicht mehr vom Original-Logo der alten Website. Damit ist der Eintrag „HOP-Kreise folgen weiter dem Original“ (21.11. nachmittags) aufgehoben.
+- **Merkregel:** Ändert sich Logo A, werden die Punkt-Kreise mitgeändert (`ordnung.js` `logoForm` – Maße aus dem SVG, Teiler 66; Farben `cLg0–2` in `main.js`).
+
 ## Arbeitsblatt 4, dritte Runde (Kai 21.11.2026 abends)
 - **Entschieden:** In der Kopfleiste bleibt Logo A (flach). Die Stoßwelle als Punkt-Grafik in Puls passt.
 - **Entschieden (Richtung Haus):** Die Linien bleiben; Partikel kommen nur als Staub beim Raumwechsel dazu (Licht-Staub im Raum und Perlen an der Kontur nicht gewählt). Erst als Entwurf `haus-staub.html`, Übernahme in Puls nach Kais Urteil.
