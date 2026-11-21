@@ -890,3 +890,42 @@ html:not(.js) .index button{cursor:default}
 }
 /* 18.11.: sehr schmale Handys (bis 380 px) – „Die Tür steht“ und „drei Dimensionen.“ bleiben je in einer Zeile */
 @media (max-width:380px){.door h2{font-size:2.125rem}.manu-h{font-size:1.9375rem}}
+
+/* ---------- Text ruhig (Studie textruhe.html, 21.11.2026, Go Kai „A“) ----------
+   Je Block bleibt ein Kernsatz stehen; der Rest liegt hinter einem Leuchtpunkt-Knopf (.lp-btn) und klappt am Ort auf.
+   Nur mit html.ruhe (setzt das Bauziel textruhe). Ohne die Klasse – Puls, live, ohne JavaScript, Druck – steht alles offen
+   und die Knöpfe fehlen. Es pulsiert höchstens ein Punkt (der oberste sichtbare, noch nicht geöffnete; ruhe.js). */
+.lp-btn,.tx-kurz{display:none}
+.facts-box{display:contents}
+html.ruhe .tx-lang{display:none}
+html.ruhe .tx-kurz{display:inline}
+html.ruhe .facts-box{display:block}
+@media screen{html.ruhe .lp-zone:not(.is-open) .lp-x{display:none}}
+html.ruhe .lp-zone.is-open .lp-x{animation:lpIn .55s var(--ease) both}
+@keyframes lpIn{from{opacity:0}}
+html.ruhe .lp-btn{appearance:none;display:inline-flex;align-items:center;gap:.625rem;min-height:2.75rem;margin:.375rem 0 0;padding:0 .25rem 0 0;border:0;background:none;color:var(--amber);font:600 .75rem/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+html.ruhe .lp-btn:hover span{color:var(--txt)}
+html.ruhe .lp-btn span{transition:color .3s}
+.lp-dot{position:relative;width:.5rem;height:.5rem;border-radius:50%;background:var(--amber);flex:none;box-shadow:0 0 .5rem rgba(224,154,53,.55)}
+.lp-btn.is-pulse .lp-dot{animation:dot 2.4s ease-out infinite}
+.lp-btn svg{width:.9375rem;height:.9375rem;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .45s var(--ease)}
+.lp-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
+html.paused .lp-btn .lp-dot{animation:none}
+@media (prefers-reduced-motion:reduce){.lp-btn .lp-dot,html.ruhe .lp-zone.is-open .lp-x{animation:none}}
+html.ruhe .sw-where > .sw-sub{display:none} /* der Knopf trägt die Überschrift */
+html.ruhe .sw-where > .lp-btn{margin:-.75rem 0 .25rem}
+html.ruhe .sw-where.is-open > .lp-btn{margin-bottom:.75rem}
+html.ruhe .sw-steps + .lp-btn{margin-top:.75rem}
+html.ruhe .facts-box > .lp-btn{margin-top:.75rem}
+@media (max-width:920px){
+  .manu-text > .lp-btn{order:5}
+  .sw-text > .lp-btn{order:5;justify-self:start}
+}
+@media print{.lp-btn,.vsw-ruhe{display:none!important}}
+/* Umschalter der Studie (unten links, nur auf textruhe.html) */
+.vsw-ruhe{position:fixed;z-index:40;left:max(.75rem,env(safe-area-inset-left,0px));bottom:max(.75rem,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:.25rem;padding:.1875rem;border-radius:1.5rem;border:1px solid var(--line);background:rgba(10,22,27,.9);box-shadow:0 .5rem 1.5rem rgba(0,0,0,.4)}
+.vsw-ruhe{transition:opacity .4s,visibility 0s}
+.vsw-ruhe.is-away{opacity:0;visibility:hidden;transition:opacity .4s,visibility 0s .4s}
+.vsw-ruhe b{padding:0 .5rem 0 .625rem;font:600 .625rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.vsw-ruhe button{appearance:none;min-height:2.25rem;padding:0 .875rem;border:0;border-radius:1.25rem;background:transparent;color:var(--dim);font:600 .6875rem/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+.vsw-ruhe button[aria-pressed="true"]{background:var(--amber);color:#14110A}

@@ -45,6 +45,9 @@ const PAGES = {
   'feinschliff': { out: 'feinschliff.html' },
   // Tür (16.11.2026, Go Kai): Entwurf zu Kap. 05 – Knöpfe erscheinen erst mit der offenen Partikel-Tür, Varianten A | C (Canvas 2D, kein WebGL)
   'tuer': { out: 'tuer.html' },
+  // Text ruhig (21.11.2026, Go Kai „A“): Studie – Puls mit Leuchtpunkt-Knöpfen statt offenem Erklärtext, Umschalter bisher / ruhig.
+  // Gleiche Quellen wie Puls (src/test-4); nur die Klassen ruhe + studie-ruhe am <html> sind hier gesetzt. Puls und live unverändert.
+  'textruhe': { out: 'textruhe.html', dir: 'test-4', studie: 'ruhe' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
   'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true, noTermin: true }, // Übergangsseite hat kein Termin-Blatt
@@ -192,6 +195,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   tpl = tpl.replace(/<!--@include ([^>]+?)-->/g, (m, f) => readFileSync(join(dir, f.trim()), 'utf8'));
   { const acts = tpl.match(/<!--KF-ACTS-->([\s\S]*?)<!--\/KF-ACTS-->/); if (acts) tpl = tpl.replace(acts[0], '').replace('<!--KF-ACTS-SLOT-->', () => acts[1]); }
   if (P) tpl = applyPatches(tpl, P.page, 'page.html');
+  if (cfg.studie === 'ruhe') tpl = applyPatches(tpl, [["classList.add('js')", "classList.add('js','ruhe','studie-ruhe')"], ["classList.remove('js','door-walk')", "classList.remove('js','door-walk','ruhe')"], ['<title>HOP Puls Scan</title>', '<title>HOP Text ruhig</title>']], 'textruhe');
   if (cfg.root) ROOT_LINKS.forEach(([re, to]) => { tpl = tpl.replace(re, to); });
   // Datenschutz § 4 Online-Terminbuchung (<!--TERMIN-->…): ohne Termin-Blatt heraus, folgende §§ eins zurück
   if (cfg.noTermin) tpl = tpl.replace(/[ \t]*<!--TERMIN-->[\s\S]*?<!--\/TERMIN-->\r?\n?/g, '').replace(/<i>§ ([5-9])<\/i>/g, (m, n) => `<i>§ ${n - 1}</i>`);

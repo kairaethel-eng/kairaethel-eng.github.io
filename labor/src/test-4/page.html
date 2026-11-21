@@ -71,7 +71,7 @@
         <div class="axis-head">
           <p class="kicker"><i>03</i> Achse</p>
           <h2 id="a-title">Jedes Segment<br>erzählt <em>etwas.</em></h2>
-          <p class="axis-hint"><span class="only-desk">Ziehen Sie den runden Knopf am rechten Rand<span class="only-fine">, drehen Sie dort das Mausrad</span> oder wählen Sie einen Abschnitt.</span><span class="only-mob">Scrollen Sie weiter: Jede Karte holt ihren Abschnitt heran.</span><span class="only-scan">Ziehen Sie den Knopf am rechten Rand auf und ab oder tippen Sie dort auf einen Abschnitt.</span></p>
+          <p class="axis-hint"><span class="only-desk"><span class="tx-lang">Ziehen Sie den runden Knopf am rechten Rand<span class="only-fine">, drehen Sie dort das Mausrad</span> oder wählen Sie einen Abschnitt.</span><span class="tx-kurz">Wählen Sie einen Abschnitt oder ziehen Sie den Knopf rechts.</span></span><span class="only-mob">Scrollen Sie weiter: Jede Karte holt ihren Abschnitt heran.</span><span class="only-scan"><span class="tx-lang">Ziehen Sie den Knopf am rechten Rand auf und ab oder tippen Sie dort auf einen Abschnitt.</span><span class="tx-kurz">Ziehen Sie den Knopf rechts oder tippen Sie einen Abschnitt an.</span></span></p>
         </div>
         <div class="segnav" role="group" aria-label="Wirbelsäulen-Abschnitt wählen">
           <button type="button" data-seg="0" class="is-on"><b>C1–C2</b><span>Kopf</span></button>
@@ -141,7 +141,7 @@
         <p class="kicker"><i>04</i> Dach</p>
         <h2 id="d-title">Alles unter<br><em>einem</em> Dach.</h2>
         <p class="lead">Treten Sie ein. Ein Rundgang durch die Praxis, bevor Sie zum ersten Mal da sind.</p>
-        <p class="hint" id="lhHint"><span class="only-fine">Raum anklicken, mit ‹ › oder den Pfeiltasten weitergehen. Oder den Rundgang starten – auch aus Augenhöhe.</span><span class="only-touch">Wischen Sie unter dem Dach von Raum zu Raum oder tippen Sie auf einen Raum. Oder starten Sie den Rundgang – auch aus Augenhöhe.</span></p>
+        <p class="hint" id="lhHint"><span class="only-fine"><span class="tx-lang">Raum anklicken, mit ‹ › oder den Pfeiltasten weitergehen. Oder den Rundgang starten – auch aus Augenhöhe.</span><span class="tx-kurz">Klicken Sie einen Raum an oder starten Sie den Rundgang.</span></span><span class="only-touch"><span class="tx-lang">Wischen Sie unter dem Dach von Raum zu Raum oder tippen Sie auf einen Raum. Oder starten Sie den Rundgang – auch aus Augenhöhe.</span><span class="tx-kurz">Wischen oder tippen Sie von Raum zu Raum.</span></span></p>
       </div>
 
       <div class="house" id="house">
@@ -301,7 +301,8 @@
         <div class="manu-text">
           <p class="kicker hi"><b class="dot" aria-hidden="true"></b> Highlight der Praxis · Behandlung 2</p>
           <h2 id="mt-title" class="manu-h">Bewegung in <em>drei Dimensionen.</em></h2>
-          <p class="lead">In Behandlungsraum 2 steht die Lojer Manuthera 242. Kopf-, Brust- und Beckenteil bewegen sich unabhängig voneinander: Sie liegen entspannt, die Liege führt die Bewegung. So kann ich Ihre Wirbelsäule und große Gelenke in Positionen mobilisieren, die auf einer normalen Liege nicht möglich sind.</p>
+          <p class="lead lp-zone" id="manuLead"><span class="lp-x">In Behandlungsraum 2 steht die Lojer Manuthera 242. </span>Kopf-, Brust- und Beckenteil bewegen sich unabhängig voneinander: Sie liegen entspannt, die Liege führt die Bewegung.<span class="lp-x"> So kann ich Ihre Wirbelsäule und große Gelenke in Positionen mobilisieren, die auf einer normalen Liege nicht möglich sind.</span></p>
+          <button type="button" class="lp-btn" data-lp-for="manuLead" aria-controls="manuLead" aria-expanded="true"><b class="lp-dot" aria-hidden="true"></b><span>Mehr zur Liege</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
           <div class="manu-modes" id="manuModes" role="group" aria-label="Bewegung der Liege zeigen">
             <button type="button" aria-pressed="false"><span>Traktion</span><i></i></button>
             <button type="button" aria-pressed="false"><span>Flexion</span><i></i></button>
@@ -392,7 +393,8 @@
         <div class="sw-text">
           <p class="kicker hi"><b class="dot" aria-hidden="true"></b> Neu in der Praxis · Behandlung 1</p>
           <h2 id="sw-title" class="sw-h">Impuls für <em>Impuls.</em></h2>
-          <p class="lead">Die radiale Stoßwellen-Therapie arbeitet mit kurzen mechanischen Druckimpulsen. Das Handstück gibt sie über die Haut an das Gewebe darunter weiter, an Sehnenansätze und verspannte Muskulatur. Stärke und Takt stelle ich auf Sie ein und passe sie während der Behandlung laufend an.</p>
+          <p class="lead lp-zone" id="swLead">Die radiale Stoßwellen-Therapie arbeitet mit kurzen mechanischen Druckimpulsen.<span class="lp-x"> Das Handstück gibt sie über die Haut an das Gewebe darunter weiter, an Sehnenansätze und verspannte Muskulatur. Stärke und Takt stelle ich auf Sie ein und passe sie während der Behandlung laufend an.</span></p>
+          <button type="button" class="lp-btn" data-lp-for="swLead" aria-controls="swLead" aria-expanded="true"><b class="lp-dot" aria-hidden="true"></b><span>Mehr zur Stoßwelle</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
           <div class="manu-modes sw-modes" id="swModes" role="group" aria-label="Stärke der Impulse zeigen">
             <button type="button" aria-pressed="false"><span>Sanft</span><i></i></button>
             <button type="button" aria-pressed="false"><span>Mittel</span><i></i></button>
@@ -402,18 +404,20 @@
         </div>
       </div>
       <div class="wrap sw-more">
-        <ol class="sw-steps">
-          <li><i aria-hidden="true">01</i><h3>Erst der Befund.</h3><p>Ich untersuche, woher Ihre Beschwerden kommen, und sage Ihnen ehrlich, ob die Stoßwelle dazu passt.</p></li>
-          <li><i aria-hidden="true">02</i><h3>Dann die Impulse.</h3><p>Etwas Kontaktgel, dann führe ich das Handstück über die betroffene Stelle. Das dauert wenige Minuten.</p></li>
-          <li><i aria-hidden="true">03</i><h3>Immer mit Bewegung.</h3><p>Die Stoßwelle steht nie allein. Sie ist ein Baustein Ihrer Therapie, zusammen mit Handgriffen und Übungen.</p></li>
+        <ol class="sw-steps lp-zone" id="swSteps">
+          <li><i aria-hidden="true">01</i><h3>Erst der Befund.</h3><p class="lp-x">Ich untersuche, woher Ihre Beschwerden kommen, und sage Ihnen ehrlich, ob die Stoßwelle dazu passt.</p></li>
+          <li><i aria-hidden="true">02</i><h3>Dann die Impulse.</h3><p class="lp-x">Etwas Kontaktgel, dann führe ich das Handstück über die betroffene Stelle. Das dauert wenige Minuten.</p></li>
+          <li><i aria-hidden="true">03</i><h3>Immer mit Bewegung.</h3><p class="lp-x">Die Stoßwelle steht nie allein. Sie ist ein Baustein Ihrer Therapie, zusammen mit Handgriffen und Übungen.</p></li>
         </ol>
+        <button type="button" class="lp-btn" data-lp-for="swSteps" aria-controls="swSteps" aria-expanded="true"><b class="lp-dot" aria-hidden="true"></b><span>So läuft es ab</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
         <div class="sw-info">
-          <div class="sw-where">
+          <div class="sw-where lp-zone" id="swWhere">
             <h3 class="sw-sub">Wo sie häufig eingesetzt wird</h3>
-            <ul class="chips"><li>Ferse und Fußsohle</li><li>Achillessehne</li><li>Ellenbogen</li><li>Schulter</li><li>Kniescheibensehne</li><li>Verspannte Muskulatur</li></ul>
-            <p class="sw-fit">Ob sie in Ihrem Fall sinnvoll ist, zeigt der Befund.</p>
+            <button type="button" class="lp-btn" data-lp-for="swWhere" aria-controls="swWhere" aria-expanded="true"><b class="lp-dot" aria-hidden="true"></b><span>Wo sie häufig eingesetzt wird</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+            <ul class="chips lp-x"><li>Ferse und Fußsohle</li><li>Achillessehne</li><li>Ellenbogen</li><li>Schulter</li><li>Kniescheibensehne</li><li>Verspannte Muskulatur</li></ul>
+            <p class="sw-fit lp-x">Ob sie in Ihrem Fall sinnvoll ist, zeigt der Befund.</p>
             <div class="actions"><a class="btn" href="#tuer" data-termin aria-haspopup="dialog">Termin buchen</a></div>
-            <p class="sw-dev-line">Gerät: Zimmer enPuls 2.0 · radiale Stoßwelle · elektromagnetisch, ohne Kompressor</p>
+            <p class="sw-dev-line lp-x">Gerät: Zimmer enPuls 2.0 · radiale Stoßwelle · elektromagnetisch, ohne Kompressor</p>
           </div>
           <div class="sw-faq">
             <h3 class="sw-sub">Häufige Fragen</h3>
@@ -460,16 +464,19 @@
         <p class="copy-state" id="copyState" role="status"></p>
         <p class="small">Bitte keine ausführlichen Gesundheitsangaben per E-Mail oder auf dem Anrufbeantworter. Die besprechen wir persönlich.</p>
       </div>
-      <dl class="facts">
+      <div class="facts-box">
+      <dl class="facts lp-zone" id="facts">
         <div><dt>E-Mail</dt><dd><a id="mailAddr" href="mailto:kontakt@hopphysio.de">kontakt@hopphysio.de</a></dd></div>
-        <div><dt>Telefon</dt><dd><a href="tel:+4971819931470">07181 9931470</a><span class="dd-note">Nur Anrufbeantworter. Ich rufe Sie zurück, schneller geht es per E-Mail.</span><a class="vc" href="hop-physiotherapie.vcf" download>Praxis im Telefon speichern</a></dd></div>
-        <div><dt>Adresse</dt><dd><a href="https://www.google.com/maps/search/?api=1&amp;query=Schlichtener%20Stra%C3%9Fe%2087%2C%2073614%20Schorndorf" target="_blank" rel="noopener">Schlichtener Straße 87, 73614 Schorndorf</a><span class="dd-note">In Google Maps öffnen</span></dd></div>
-        <div><dt>Zeiten</dt><dd>Mo–Fr 8:30–19:30 Uhr<br>Sa nach Absprache<br>So und feiertags geschlossen<span class="dd-note">Termine nach Vereinbarung</span><span class="dd-open" id="openNow" hidden></span></dd></div>
-        <div><dt>Abrechnung</dt><dd>Kassenpatienten, Privatpatienten und Selbstzahler<span class="dd-note">Ihre ärztliche Verordnung (falls vorhanden) bitte zum ersten Termin mitbringen.</span></dd></div>
-        <div><dt>Parken</dt><dd>Direkt vor dem Haus und in der Nähe</dd></div>
-        <div><dt>ÖPNV</dt><dd>VVS-Bus „Schlichtener Straße“ / „Grauhalde“</dd></div>
-        <div><dt>Inhaber</dt><dd>Kai Raethel · Manuelle Therapie · CMD</dd></div>
+        <div><dt>Telefon</dt><dd><a href="tel:+4971819931470">07181 9931470</a><span class="dd-note">Nur Anrufbeantworter. Ich rufe Sie zurück, schneller geht es per E-Mail.</span><a class="vc lp-x" href="hop-physiotherapie.vcf" download>Praxis im Telefon speichern</a></dd></div>
+        <div><dt>Adresse</dt><dd><a href="https://www.google.com/maps/search/?api=1&amp;query=Schlichtener%20Stra%C3%9Fe%2087%2C%2073614%20Schorndorf" target="_blank" rel="noopener">Schlichtener Straße 87, 73614 Schorndorf</a><span class="dd-note lp-x">In Google Maps öffnen</span></dd></div>
+        <div><dt>Zeiten</dt><dd>Mo–Fr 8:30–19:30 Uhr<br>Sa nach Absprache<br>So und feiertags geschlossen<span class="dd-note lp-x">Termine nach Vereinbarung</span><span class="dd-open" id="openNow" hidden></span></dd></div>
+        <div class="lp-x"><dt>Abrechnung</dt><dd>Kassenpatienten, Privatpatienten und Selbstzahler<span class="dd-note">Ihre ärztliche Verordnung (falls vorhanden) bitte zum ersten Termin mitbringen.</span></dd></div>
+        <div class="lp-x"><dt>Parken</dt><dd>Direkt vor dem Haus und in der Nähe</dd></div>
+        <div class="lp-x"><dt>ÖPNV</dt><dd>VVS-Bus „Schlichtener Straße“ / „Grauhalde“</dd></div>
+        <div class="lp-x"><dt>Inhaber</dt><dd>Kai Raethel · Manuelle Therapie · CMD</dd></div>
       </dl>
+      <button type="button" class="lp-btn" data-lp-for="facts" aria-controls="facts" aria-expanded="true"><b class="lp-dot" aria-hidden="true"></b><span>Abrechnung, Anfahrt und mehr</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      </div>
     </div>
     <footer class="foot wrap">
       <span>© 2026 HOP – Home of Physiotherapy · Kai Raethel</span>

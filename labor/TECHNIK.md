@@ -43,6 +43,7 @@ Stand, offene Punkte und Kais Rückmeldungen: `UEBERGABE.md` · Entscheidungen: 
 - Manuthera-Bühne (Kapitel 04, `#manuthera`): kommt aus `../manu/ideaA.js` (+ `common.js`, `stipple.js`), eigene WebGL-Bühne; in `main.js` `manu`, `manuVisible()` blendet Hintergrund und Röntgenblick aus.
 - `../shared/spine.js` – prozedurale Wirbelsäule (C1–Co), Zonen, Nervenwurzeln.
 - `page.html`, `style.css` – Inhalt/Gestaltung. Desktop-Grenze 920 px.
+- **Text ruhig (21.11.2026, Go Kai „A“) – `ruhe.js` + Abschnitt am Ende von `style.css`:** Leuchtpunkt-Knopf `.lp-btn` (`data-lp-for` = id des Bereichs `.lp-zone`, `aria-controls`, `aria-expanded`) klappt die Teile `.lp-x` dieses Bereichs auf (Klasse `is-open`). Kurzfassungen der Bedien-Hinweise: `.tx-lang` / `.tx-kurz`. Alles wirkt nur mit `html.ruhe`; ohne die Klasse sind Knöpfe und Kurzfassungen aus und alles steht offen (Puls und `live/` am 21.11. nachgemessen: Lage aller 194 Textblöcke gleich). Eingeklappt wird nur `@media screen` → Druck zeigt alles. Kontakt: `.facts-box` umschließt `dl.facts` + Knopf (ohne `ruhe` `display:contents`, damit das Raster von `.door-inner` gleich bleibt). Studie `textruhe.html` = Bauziel `textruhe` (gleiche Quellen, setzt `ruhe studie-ruhe` im Kopf-Skript, Umschalter unten links, `?text=bisher` startet „bisher“). **Übernahme in Puls/live:** in `page.html` im Kopf-Skript `classList.add('js','ruhe')` und im Rückfall `remove(…,'ruhe')`.
 
 ## Bauen, prüfen, veröffentlichen – Einzelheiten
 ```bash

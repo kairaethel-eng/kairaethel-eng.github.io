@@ -1,7 +1,13 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 20.11.2026 (Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 21.11.2026 (Text ruhig: Studie `textruhe.html`, wartet auf Kais Urteil · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Text ruhig – Leuchtpunkte statt offenem Erklärtext (Kai 21.11.2026: „an ein paar Stellen zu viel Text im Vordergrund, Inhalte sollen nicht verloren gehen“ → „Go A“)
+- **Entschieden (A):** ein einziges Aufklapp-Muster für die Seite – je Block bleibt ein Kernsatz stehen, darunter ein Bernstein-Leuchtpunkt mit Stichwort; Antippen klappt den Rest am Ort auf. Verworfen: B (Punkte an der Grafik, nur für Manuthera/Stoßwelle denkbar – ggf. später), C (Blatt „Kurz erklärt“ – Text weg von seiner Stelle, verdeckt die Grafik).
+- **Stand:** zuerst als Studie `textruhe.html` (Umschalter bisher / ruhig); Puls und `live/` unverändert, bis Kai urteilt. Übernahme = die Klasse `ruhe` am `<html>` in `page.html` setzen (siehe TECHNIK „Text ruhig“).
+- **Merkregel:** Immer sichtbar bleiben Überschriften, Termin-Knöpfe, Gesundheits-Hinweise (`.note`, `.sw-note`), der Datenschutz-Hinweis am Kalender, die Bitte „keine Gesundheitsangaben per E-Mail“, „Nur Anrufbeantworter“ und der Satz „Ob sie in Ihrem Fall sinnvoll ist, zeigt der Befund.“ neben den Einsatzorten (HWG). Ohne JavaScript und im Druck steht alles offen.
+- **Merkregel:** Es pulsiert höchstens ein Leuchtpunkt im Bild (der oberste noch nie geöffnete); nach dem Öffnen leuchtet er still, bei „Bewegung anhalten/reduzieren“ pulsiert nichts.
 
 ## Arbeitsblatt 3 abgearbeitet (Kai 20.11.2026 nachts, Antworten im Arbeitsblatt)
 - **Entschieden:** Anatomie in den Motiven = echte Knochen (BodyParts3D 4.0, CC BY 4.0, Namensnennung im Fuß und Impressum § 9); gerechnete Formen nur noch als Rückfall und für Geräte/Hände.

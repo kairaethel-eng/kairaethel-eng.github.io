@@ -18,6 +18,7 @@ import { initStosswelle } from '../stosswelle/welle.js';
 import { initVorfall, SEG as VF_SEG } from '../vorfall/film.js';
 import { initKopfFuss } from '../feinschliff/kapitel.js';
 import { initDoorStage, DOOR_PLAN } from '../tuer/buehne.js';
+import { initRuhe } from './ruhe.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -2645,4 +2646,5 @@ window.__vf = VF; // Prüfhilfe (Konsole): __vf.film.state(), __vf.film.seek(t),
 
 // Hinweis „hochkant halten“ (Handy quer, 13.11. G4): schließen gilt bis zum Neuladen, gespeichert wird nichts
 $('#turnClose')?.addEventListener('click', () => $('#turnNote')?.classList.add('gone'));
+initRuhe(); // „Text ruhig“ (Studie textruhe.html, 21.11.2026) – ohne html.ruhe wirkungslos
 window.__hop = 1; // Start ist durchgelaufen (sonst zeigt die Seite alle Inhalte ohne Skript-Layout, siehe page.html/style.css „html:not(.js)“)
