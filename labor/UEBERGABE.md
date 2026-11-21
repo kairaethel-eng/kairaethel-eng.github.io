@@ -3,7 +3,7 @@
 ## ▶ Stand 21.11.2026 spät – Kai (Screenshot Rotation): „irgendwas an den Beinen nicht mehr richtig“ → „Go A“, umgesetzt in Puls + `live/`, **wartet auf Kais Sichtprüfung**
 - **Ursache [B] (eigener Fehler der Runde davor):** Haut-Übergang nur 0,1 breit am Gelenk L4/L5 → Becken mit Beinen schwenkte als starres Stück, an der Taille ein Knick, an der Hüfte eine senkrechte Kante; Kreuzbein sprang gegen die Lendenwirbel. Die Beindaten selbst waren unverändert (Abgleich alt/neu je 0,1 entlang der Körperachse).
 - **Umsetzung (A):** Haut und Wirbel teilen eine Zone (`ZONE_ECHT` in `ideaA.js`): oben schmal am Brustgelenk (T10–T12), unten weich über die ganze Lende bis vor die Hüfte. Oberkörper und Becken mit Beinen bleiben fest, nichts dehnt sich; Hub weiter 55 %.
-**Geprüft [B]:** alle vier Bewegungen im iPhone-Format (dreifache Auflösung) und Rotation vom Fußende am PC, alt/neu nebeneinander: Taille ohne Knick, Wirbelsäule durchgehend; `sizes.cjs` alles ok; Prüfstand siehe unten.
+**Geprüft [B]:** alle vier Bewegungen im iPhone-Format (dreifache Auflösung) und Rotation vom Fußende am PC, alt/neu nebeneinander: Taille ohne Knick, Wirbelsäule durchgehend; `sizes.cjs` alles ok; Prüfstand iPhone und PC voll: alles ok (Skriptfehler keine).
 **[O] nur Kai:** Wirkung am iPhone in Bewegung (Rotation zuerst).
 **Rückweg:** Stand davor = Commit `bbff55b`.
 
