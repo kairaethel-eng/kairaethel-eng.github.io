@@ -135,8 +135,17 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 .statement{font-family:var(--sans);font-weight:500;font-size:clamp(1.75rem,3.9vw,3.875rem);line-height:1.12;letter-spacing:-.02em;max-width:22ch}
 .statement .word{opacity:.16;transition:opacity .4s}
 .statement .word.lit{opacity:1}
-.sign{margin-top:2.875rem;font:italic 400 clamp(1.125rem,1.6vw,1.5rem)/1.4 var(--serif);color:var(--dim);max-width:44ch}
-.sign b{display:block;margin-top:.625rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;font-style:normal;color:var(--txt)}
+.sign{position:relative;margin:4rem 0 0;padding:1.75rem 0 0 clamp(2.75rem,5vw,4.25rem);max-width:40rem}
+/* 21.11.2026 (Go Kai 2a): Leitsatz als eigener Block – großes Anführungszeichen in Bernstein, Satz in Knochenweiß, Linie zeichnet sich ein */
+.sign .q-mark{position:absolute;left:-.25rem;top:-1.5rem;font:italic 400 clamp(6.5rem,10vw,9rem)/1 var(--serif);color:var(--amber);pointer-events:none}
+.sign blockquote{margin:0}
+.sign blockquote p{margin:0;font:italic 400 clamp(1.625rem,2.6vw,2.375rem)/1.25 var(--serif);letter-spacing:-.005em;color:var(--txt);text-wrap:balance}
+.sign .q-hl{background:linear-gradient(90deg,var(--amber),rgba(224,154,53,.45)) no-repeat 0 92%/0 1px;transition:background-size 2.4s var(--ease) 1.1s;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.sign.fein-in .q-hl,html.paused .sign .q-hl,html:not(.js) .sign .q-hl{background-size:100% 1px}
+.sign figcaption{display:flex;align-items:center;gap:.875rem;margin-top:1.375rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.sign .q-rule{display:block;width:2.5rem;height:1px;background:var(--amber)}
+@media print{.sign .q-hl{background:none}}
+@media (prefers-reduced-motion:reduce){.sign .q-hl{background-size:100% 1px;transition:none}}
 
 /* Achse: Partikel-Wirbelsäule materialisiert sich zur 3D-Wirbelsäule, Kamerafahrt */
 .axis{height:160svh} /* PC: Scanner-Bühne klebt 60svh (Kai 7.11. spät, alte Kamerafahrt 530vh entfernt) */
@@ -188,6 +197,18 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 @media (min-width:1100px){#lhRoot .rooms{height:clamp(13rem,min(50cqi,100svh - 17rem),40rem)}}
 .lh{position:relative;z-index:2}
 .roof-grid .roof-head{text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
+/* 21.11.2026 (Kai: „Text-Erklärung erst beim Weiterwischen sichtbar“, Go 4a+c): Handy/Tablet hochkant – Überschrift, ein Satz,
+   Haus, darunter die kurze Wisch-Zeile und gleich der Text zum Raum; die Rundgang-Knöpfe folgen danach (vorher: Text erst
+   rund 1,5 Bildhöhen nach dem Kapitelanfang, hinter Hinweis-Absatz und drei Knöpfen) */
+@media (max-width:920px){
+  html.js .roof-grid .roof-head{display:contents}
+  html.js .roof-grid .roof-head>*{order:1}
+  html.js .roof-grid .roof-head .lead{margin-bottom:1.25rem}
+  html.js .roof-grid .house{order:2}
+  html.js .roof-grid .hint{order:3;margin:.75rem 0 0;max-width:none;text-align:center;font-size:.8125rem}
+  html.js .roof-grid .cards{order:4;margin-top:1.125rem}
+  html.js .roof-grid .tour-ctrl{order:5;margin-top:1.5rem}
+}
 @media (max-width:920px){.roof{padding-top:calc(var(--gap-chap) - 1rem)}}
 
 @media (min-width:921px){
@@ -242,6 +263,9 @@ html.paused .fein{opacity:1;transform:none;transition:none}
    Wird von main.js eingefügt (html.auftakt); der kleine Kicker im Kapitel entfällt dann. */
 .auftakt-blk{position:relative;z-index:1;box-sizing:border-box;display:flex;align-items:flex-end;min-height:56svh;padding-top:var(--gap-chap)} /* 56 % der Bildhöhe insgesamt (Abstand zum Kapitel davor inbegriffen) */
 .auftakt-blk .wrap{width:100%}
+/* 21.11.2026 (Kai: „Abstände anpassen“ am Ende von Kapitel 01, Go 1c): Handy/Tablet – nach der klebenden Bühne von Kapitel 01 stand
+   bis zur „02“ fast eine halbe Bildhöhe leer (56svh + Kapitelabstand; am iPhone kommt der Streifen unter der eingefahrenen Leiste dazu) */
+@media (max-width:920px){.auftakt-blk[data-for="bewegung"]{min-height:40svh}}
 .auftakt-blk .au-row{display:flex;align-items:flex-end;gap:clamp(1rem,2.6vw,2.5rem);margin:0}
 .auftakt-blk .au-no{font:italic 400 clamp(7.5rem,17vw,15rem)/.78 var(--serif);color:var(--amber);letter-spacing:-.02em}
 .auftakt-blk .au-txt{display:flex;flex-direction:column;gap:.625rem;padding-bottom:.4em}
@@ -440,7 +464,7 @@ html:not(.js) button.ix-link{display:none}
   html.seg-scan #achse .note::before{content:"";position:absolute;z-index:-1;inset:-1.25rem -50vw -1rem;background:linear-gradient(rgba(10,22,27,0),rgba(10,22,27,.9) 1.25rem)} /* Nahansicht: Wirbelsäule läuft hinter dem Hinweis aus */
   html.seg-scan .ncall-typ{white-space:pre-line}
   .ncall{white-space:normal;padding:.3125rem .625rem;font-size:.8125rem;line-height:1.35;border-radius:.625rem;background:rgba(10,22,27,.86);backdrop-filter:none;-webkit-backdrop-filter:none;transition:opacity .35s var(--ease)} /* ohne Weichzeichner: spart am iPhone Rechenzeit über der 3D-Szene */
-  .ncall-exit{font-size:.75rem;letter-spacing:.12em}
+  .ncall-exit{font-size:.75rem;letter-spacing:.12em;white-space:nowrap} /* 21.11. (Kai: „Überlappung Text“): „Nervenaustritt C1–C2“ in einer Zeile – vorher brach es bei „C1–“ / „C2“ */
   .ncall-ziel{font-size:1.0625rem;line-height:1.2}
   .ncall-typ{white-space:pre-line;text-align:left;font-size:.8125rem;line-height:1.45;padding:.4375rem .75rem;color:#C2D0D4;background:rgba(10,22,27,.86);border:1px solid rgba(207,232,250,.14);border-radius:.375rem}
   .peri-label{display:none}
@@ -526,9 +550,21 @@ html:not(.js) button.ix-link{display:none}
 .scan-chips .sc-t{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:.5rem;row-gap:.125rem}
 .scan-chips .sc-no{font:italic 400 1.375rem/1 var(--serif);color:var(--amber)}
 .scan-chips .sc-h{font:600 1rem/1.15 var(--disp);letter-spacing:-.02em;color:var(--txt)}
-.scan-chips .sc-x{flex:none;position:relative;width:2rem;height:2rem;border-radius:50%;border:1px solid rgba(224,154,53,.6)}
-.scan-chips .sc-x::before{content:"";position:absolute;left:50%;top:50%;width:.5rem;height:.5rem;margin:-.125rem 0 0 -.25rem;border-left:2px solid var(--amber);border-top:2px solid var(--amber);transform:rotate(45deg);transition:transform .25s var(--ease)}
-.scan-chips.is-open .sc-x::before{margin-top:-.375rem;transform:rotate(225deg)}
+/* 21.11.2026 (Kai: „Button um mehr Text lebendig, auffälliger“, Go 3): Bernstein-Pille „Mehr“ mit Pfeil, pulsiert einmal beim Erscheinen;
+   darunter die erste Zeile von „Typisch“ als Vorschau (vorher kleiner Ring mit Pfeil in Rahmenfarbe) */
+.scan-chips .sc-x{flex:none;position:relative;display:inline-flex;align-items:center;gap:.375rem;height:2.25rem;padding:0 .75rem 0 .875rem;border-radius:1.125rem;background:var(--amber);color:#0A161B;font:700 .75rem/1 var(--sans);letter-spacing:.06em;text-transform:uppercase}
+.scan-chips .sc-x b{font-weight:700}
+.scan-chips .sc-x b+b,.scan-chips.is-open .sc-x b:first-child{display:none}
+.scan-chips.is-open .sc-x b+b{display:inline}
+.scan-chips .sc-x::after{content:"";width:.375rem;height:.375rem;margin-top:.1875rem;border-left:2px solid currentColor;border-top:2px solid currentColor;transform:rotate(45deg);transition:transform .25s var(--ease),margin .25s var(--ease)}
+.scan-chips.is-open .sc-x{background:transparent;color:var(--amber);box-shadow:inset 0 0 0 1px rgba(224,154,53,.7)}
+.scan-chips.is-open .sc-x::after{margin-top:-.1875rem;transform:rotate(225deg)}
+.scan-chips.sc-pulse .sc-x{animation:scPulse 1.8s var(--ease) .5s 1 both}
+@keyframes scPulse{0%{box-shadow:0 0 0 0 rgba(224,154,53,.55);transform:scale(1)}30%{transform:scale(1.06)}60%{transform:scale(1)}100%{box-shadow:0 0 0 .875rem rgba(224,154,53,0);transform:scale(1)}}
+.scan-chips .sc-tease{flex-basis:100%;min-width:0;margin-top:.1875rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:500 .75rem/1.3 var(--sans);color:#A8BABF}
+.scan-chips.is-open .sc-tease{display:none}
+.scan-chips .sc-bar.has-film .sc-x{width:2.25rem;padding:0;justify-content:center}
+.scan-chips .sc-bar.has-film .sc-x b{display:none}
 .scan-chips .sc-film{flex:none;display:inline-flex;align-items:center;gap:.25rem;height:2.25rem;padding:0 .75rem 0 .5rem;border-radius:1.125rem;background:var(--amber);color:#0A161B;font:700 .75rem/1 var(--sans);letter-spacing:.04em}
 .scan-chips .sc-film svg{width:1rem;height:1rem;fill:currentColor}
 .scan-chips.is-open .sc-film{display:none}
@@ -544,10 +580,13 @@ html:not(.js) button.ix-link{display:none}
 .scan-chips .sc-c:empty{display:none}
 .scan-chips .sc-c span{font:600 .6875rem/1 var(--sans);padding:.3125rem .4375rem;border-radius:3px;border:1px solid rgba(224,154,53,.35);color:var(--txt);background:rgba(224,154,53,.07)}
 @media (max-width:360px){.scan-chips .sc-no{font-size:1.25rem}.scan-chips .sc-h{font-size:.9375rem}}
-@media (prefers-reduced-motion:reduce){.scan-chips .sc-x::before{transition:none}}
+@media (prefers-reduced-motion:reduce){.scan-chips .sc-x::after{transition:none}.scan-chips.sc-pulse .sc-x{animation:none}}
 /* Handy: Aufzug als schmale Schiene ohne Fläche – die Wirbelsäule bleibt dahinter sichtbar; Haltestellen als kleine dunkle Marken */
 @media (max-width:920px){
   .scan-rail{background:none;border-color:transparent}
+  /* 21.11.2026 (Kai: „Überlappung Text“, Go 3a): dunkler Grund hinter der Skala – die Beschriftung steht nie auf Knochen */
+  .scan-rail.on{background:linear-gradient(90deg,rgba(10,22,27,0),rgba(10,22,27,.72) 38%,rgba(10,22,27,.72))}
+  .scan-coach svg{left:-.25rem} /* Hand weiter rechts: verdeckt beim Vorführen nicht die Beschriftung der nächsten Haltestelle */
   .scan-stop{left:0;width:1.5rem;height:1.5rem;margin-top:-.75rem;border-radius:.375rem;background:rgba(10,22,27,.82);font-size:.625rem;letter-spacing:0}
   .scan-stop.is-on{background:rgba(42,32,16,.92)}
 }
@@ -890,6 +929,12 @@ html:not(.js) .index button{cursor:default}
 }
 /* 18.11.: sehr schmale Handys (bis 380 px) – „Die Tür steht“ und „drei Dimensionen.“ bleiben je in einer Zeile */
 @media (max-width:380px){.door h2{font-size:2.125rem}.manu-h{font-size:1.9375rem}}
+
+/* 20.11.2026 nachts (Kai im Arbeitsblatt 4: Schilder an der Wirbelsäule „alle gleich: schlichter Text mit Linie“): Austritt, Nerv, Gefühl
+   und Ziel sind dieselbe schlichte Zeile ohne Rahmen und Fläche – nur der Austritt bleibt Bernstein. Der Kasten „Typisch …“ bleibt (Fließtext). */
+.ncall:not(.ncall-typ){padding:.125rem .25rem;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;font:500 .875rem/1.25 var(--sans);letter-spacing:.01em;text-transform:none;color:var(--txt);text-shadow:0 0 .375rem rgba(10,22,27,1),0 0 .875rem rgba(10,22,27,.95),0 1px 2px rgba(10,22,27,.9)}
+.ncall.ncall-exit{color:var(--amber)}
+@media (max-width:920px){.ncall:not(.ncall-typ){font-size:.8125rem}}
 
 /* ---------- Text ruhig (Studie textruhe.html, 21.11.2026, Go Kai „A“) ----------
    Je Block bleibt ein Kernsatz stehen; der Rest liegt hinter einem Leuchtpunkt-Knopf (.lp-btn) und klappt am Ort auf.

@@ -48,7 +48,7 @@ const MOTION = /* glsl */`
   }`;
 
 // Teil = { g (Form aus raster.js), k (Farbe 0 Knochen · 1 Bernstein · 2 Blau · 4 Petrol), a (Bewegung), ph (Zahl oder ph(p)) }
-const T = (g, k = 0, a = 0, ph = 0, o = {}) => ({ g, k, a, ph, ...o });
+export const T = (g, k = 0, a = 0, ph = 0, o = {}) => ({ g, k, a, ph, ...o });
 const { add: vAdd, mul: vSc, sub: vSub, norm: vN, cross: vX } = V;
 
 // ---------- Manuelle Therapie: zwei Hände umgreifen ein Kniegelenk (Aufbau der Hand wie seit 7.11., jetzt als geordnete Flächen) ----------
@@ -137,7 +137,7 @@ function flatHand(sp, y) {
 const LIEGEND = [0, -1, 0, 0, 0, 1, 1, 0, 0]; // Bein liegt: Längsachse → x (Hüfte links), Vorderseite → oben
 const smooth01 = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
 // Mittel der Ecken, die eine Bedingung erfüllen
-function meanOf(m, ok) { const a = [0, 0, 0]; let n = 0; for (let i = 0; i < m.pos.length; i += 3) { const p = [m.pos[i], m.pos[i + 1], m.pos[i + 2]]; if (ok(p)) { a[0] += p[0]; a[1] += p[1]; a[2] += p[2]; n++; } } return a.map((v) => v / Math.max(1, n)); }
+export function meanOf(m, ok) { const a = [0, 0, 0]; let n = 0; for (let i = 0; i < m.pos.length; i += 3) { const p = [m.pos[i], m.pos[i + 1], m.pos[i + 2]]; if (ok(p)) { a[0] += p[0]; a[1] += p[1]; a[2] += p[2]; n++; } } return a.map((v) => v / Math.max(1, n)); }
 
 function echtKnie(sp, A) {
   GRIP.rl = 0.27; GRIP.xh = 0.7; // echtes Knie größer gezeigt → die Hände greifen um ein dickeres Bein
@@ -159,9 +159,15 @@ function echtKiefer(sp, A, m) {
   // Kiefergelenk: die Köpfchen des Unterkiefers (höchste hintere Punkte) – darum dreht er sich
   const piv = meanOf(uk, (p) => p[1] > bu.hi[1] - 0.9 && p[2] < bu.lo[2] + 2.5), c = [bs.mid[0], bs.mid[1], bs.mid[2]];
   const P = [(piv[0] - c[0]) * S, (piv[1] - c[1]) * S, (piv[2] - c[2]) * S]; m.piv = [0, P[1], P[2]];
-  const nahe = (q) => (Math.hypot(q[1] - P[1], q[2] - P[2]) < 0.17 && Math.abs(Math.abs(q[0]) - Math.abs(P[0])) < 0.22 ? 1 : 0); // Gelenk in Bernstein
-  const o = { c, s: S, t: [0, 0.06, 0], axis: 'y' }; P[1] += 0.06; m.piv = [0, P[1], P[2]];
-  return [T(rows(sk, sp, { ...o, keep: (p, n) => n[0] * p[0] + n[1] * (p[1] - 0.37) + n[2] * (p[2] + 0.1) > -0.12 }), nahe, 0),
+  // seitlicher Abstand der Köpfchen von der Mitte (das Mittel beider Seiten liegt in der Mitte – für die Farbe zählt der Abstand)
+  let px = 0, pn = 0; for (let i = 0; i < uk.pos.length; i += 3) if (uk.pos[i + 1] > bu.hi[1] - 0.9 && uk.pos[i + 2] < bu.lo[2] + 2.5) { px += Math.abs(uk.pos[i] - c[0]) * S; pn++; } px /= Math.max(1, pn);
+  const nahe = (q) => (Math.hypot(q[1] - P[1], q[2] - P[2]) < 0.27 && Math.abs(Math.abs(q[0]) - px) < 0.16 ? 1 : 0); // Gelenk in Bernstein
+  // 20.11. nachts (Kai im Arbeitsblatt 4: „Mehr auf das Kiefergelenk; den Kiefer konzentrieren“): der Blick liegt seitlich auf Unterkiefer und
+  // Gelenk; vom Schädel bleibt, was das Gelenk hält (Schläfenbein, Jochbogen, Oberkiefer) – das Schädeldach läuft nach oben aus.
+  const ty = 0.3 - P[1], tz = -P[2] * 0.55; P[1] += ty; P[2] += tz; m.piv = [0, P[1], P[2]];
+  const o = { c, s: S, t: [0, ty, tz], axis: 'y' };
+  const oben = (p) => 1 - smooth01(P[1] + 0.12, P[1] + 0.62, p[1]);
+  return [T(rows(sk, sp, { ...o, keep: (p, n) => n[0] * p[0] + n[1] * (p[1] - ty - 0.3) + n[2] * (p[2] - tz + 0.1) > -0.12, w: oben, clip: (p) => p[1] < P[1] + 0.66 }), nahe, 0),
     T(rows(uk, sp, o), nahe, 4)];
 }
 function echtAtlas(sp, A) {
@@ -183,12 +189,12 @@ function echtBein(sp, A) {
     GROUND(sp)];
 }
 function echtHand(sp, A) {
-  const ha = A['hand/hand'], ra = A['hand/speiche'], el = A['hand/elle'], bh = bounds(ha), S = 0.058;
+  const ha = A['hand/hand'], ra = A['hand/speiche'], el = A['hand/elle'], bh = bounds(ha), S = 0.08; // 20.11. nachts größer (Kai: „nachbessern“)
   // Hand liegt flach über dem Netz: Finger nach links, Handfläche nach unten
   const wr = meanOf(ha, (p) => p[1] > bh.hi[1] - 2), tip = meanOf(ha, (p) => p[1] < bh.lo[1] + 2.5);
   const [f0, , n0] = achsen(ha), f = V.mul(f0, V.dot(f0, V.sub(tip, wr)) > 0 ? 1 : -1), n = V.mul(n0, HAND_SEITE), w = V.cross(n, f), sg = 1; // Fingerrichtung und Flächen-Normale aus den Daten
-  const o = { M: [-f[0], -f[1], -f[2], sg * n[0], sg * n[1], sg * n[2], w[0], w[1], w[2]], c: wr, s: S, t: [0.42, 0.3, 0], axis: 'x' };
-  const arm = { ...o, w: (p) => 1 - 0.92 * smooth01(0.6, 1.3, p[0]), clip: (p) => p[0] < 1.34 };
+  const o = { M: [-f[0], -f[1], -f[2], sg * n[0], sg * n[1], sg * n[2], w[0], w[1], w[2]], c: wr, s: S, t: [0.62, 0.36, 0], axis: 'x' };
+  const arm = { ...o, w: (p) => 1 - 0.92 * smooth01(0.8, 1.32, p[0]), clip: (p) => p[0] < 1.36 };
   return [
     ...Array.from({ length: 7 }, (_, i) => T(seg([-1.15, -0.35, (i - 3) * 0.18], [1.15, -0.35, (i - 3) * 0.18], sp * 0.72, { w: (t) => 0.3 + 0.7 * Math.sin(Math.PI * t) ** 0.5 }), 2, 8)),
     ...Array.from({ length: 11 }, (_, i) => T(seg([(i - 5) * 0.23, -0.35, -0.54], [(i - 5) * 0.23, -0.35, 0.54], sp * 0.72, { w: () => 0.35 + 0.65 * Math.sin(Math.PI * i / 10) ** 0.5 }), 2, 8)),
@@ -216,7 +222,7 @@ export const MOTIFS = [
   { name: 'Schmerztherapie', parts: (sp) => [-0.42, 0, 0.42].flatMap((y, i) => [-2, -1, 0, 1, 2].map((j) =>
     T(seg([-1.2, y, j * 0.055], [1.2, y, j * 0.055], sp * 0.72, { half: !!(j & 1), w: (t) => (1 - Math.abs(j) * 0.2) * (0.35 + 0.65 * Math.sin(Math.PI * t) ** 0.6) }), i === 0 ? 1 : i === 1 ? 0 : 2, 10, i / 2))) },
   // Unterkiefer öffnet sich; Kiefergelenke in Bernstein, oberer Zahnbogen ruht
-  { name: 'CMD-Therapie', s: 1.5, echt: echtKiefer, se: 0.84, rot: -0.62, parts: (sp) => {
+  { name: 'CMD-Therapie', s: 1.5, echt: echtKiefer, se: 1.3, rot: -1.5, parts: (sp) => {
     const U = (y, rx, rz, r, n = 9) => Array.from({ length: n }, (_, i) => { const t = -1.5 + (i / (n - 1)) * 3.0; return { p: [Math.sin(t) * rx, y, Math.cos(t) * rz - 0.12], r }; });
     const parts = [T(tube(U(-0.33, 0.56, 0.5, 0.07), sp, { ref: [0, 1, 0], fl: 1.35 }), 0, 4), T(tube(U(0.04, 0.6, 0.52, 0.045), sp, { ref: [0, 1, 0], fl: 1.2 }), 4, 0)];
     [-1, 1].forEach((s) => {
@@ -255,7 +261,7 @@ export const MOTIFS = [
     T(tube([{ p: [1.03, -0.24, 0], r: 0.06 }, { p: [1.07, -0.08, 0], r: 0.058 }, { p: [1.09, 0.1, 0], r: 0.04 }], sp), 0, 6, 1),
     GROUND(sp)] },
   // Faszien als Netz, das unter der Hand wogt
-  { name: 'Osteopathische Ansätze', echt: echtHand, se: 1.12, parts: (sp) => [
+  { name: 'Osteopathische Ansätze', echt: echtHand, se: 1.05, parts: (sp) => [
     ...Array.from({ length: 7 }, (_, i) => T(seg([-1.15, -0.35, (i - 3) * 0.18], [1.15, -0.35, (i - 3) * 0.18], sp * 0.72, { w: (t) => 0.3 + 0.7 * Math.sin(Math.PI * t) ** 0.5 }), 2, 8)),
     ...Array.from({ length: 11 }, (_, i) => T(seg([(i - 5) * 0.23, -0.35, -0.54], [(i - 5) * 0.23, -0.35, 0.54], sp * 0.72, { w: () => 0.35 + 0.65 * Math.sin(Math.PI * i / 10) ** 0.5 }), 2, 8)),
     ...flatHand(sp, 0.27).map((g) => T(moved(g, [-0.55, 0, 0]), 0, 0))] },
@@ -294,10 +300,14 @@ function buildMotif(m, sp0, rnd, A) {
 
 // Als Generator (ein Motiv je Zeitscheibe, A1 4.11.2026); initServices() baut am Stück.
 export const initServices = (canvas, ui = {}) => runSync(initServicesGen(canvas, ui));
-export function* initServicesGen(canvas, ui = {}) {
+export function* initServicesGen(canvas, ui = {}) { return yield* motifStageGen(canvas, ui, MOTIFS); }
+// Dieselbe Bühne für andere Motiv-Listen (20.11. nachts: Entwurf „Stoßwelle in Punkten“, src/stosswelle-punkte).
+// ui: anat (echte Knochen), isPaused, onShow, sp (Punktabstand), sway (Wiegen der Ansicht, Standard 0,35), cam { y, d, look } (Blick)
+export function* motifStageGen(canvas, ui = {}, MOTIFS) {
   const st = stage(canvas, { fov: 30, transparent: true });
   if (!st) return null;
-  const SP = isDesktop() ? 0.034 : 0.04; // Abstand der Punkte auf der Oberfläche (Welt-Einheiten)
+  const SP = ui.sp || (isDesktop() ? 0.034 : 0.04); // Abstand der Punkte auf der Oberfläche (Welt-Einheiten)
+  const CAM = { y: 1.75, d: 5.0, look: -0.04, ...(ui.cam || {}) };
   const rnd = rng(20261120), built = [];
   const AN = ui.anat || null; // echte Knochen (oder null → gerechnete Motive)
   for (const m of MOTIFS) { yield; built.push(buildMotif(m, SP, rnd, AN)); yield; }
@@ -324,7 +334,7 @@ export function* initServicesGen(canvas, ui = {}) {
   g.setAttribute('aRnd', new THREE.BufferAttribute(rndA, 3));
   // Farben wie die Figur: ruhige Fläche (tief) → heller Rand; 0 Knochen · 1 Bernstein · 2 Blau · 3 (frei) · 4 Petrol
   const U = {
-    uT: { value: 1 }, uIn: { value: reduced ? 1 : 0 }, uTime: { value: 0 }, uPx: { value: 1 }, uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 }, uInset: { value: 0.014 }, uS: { value: s0.s }, uRot: { value: s0.rot }, uPiv: { value: new THREE.Vector3(...s0.piv) },
+    uT: { value: 1 }, uIn: { value: reduced ? 1 : 0 }, uTime: { value: 0 }, uPx: { value: 1 }, uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 }, uInset: { value: 0.014 }, uSway: { value: ui.sway === undefined ? 0.35 : ui.sway }, uS: { value: s0.s }, uRot: { value: s0.rot }, uPiv: { value: new THREE.Vector3(...s0.piv) },
     cDeep: { value: [C('#44788E'), C('#A9661A'), C('#3F7FAE'), C('#44788E'), C('#2C5263')] },
     cHi: { value: [C('#E4E3D8'), C('#F2B04E'), C('#9CCBEB'), C('#E4E3D8'), C('#6FA3B8')] },
   };
@@ -332,7 +342,7 @@ export function* initServicesGen(canvas, ui = {}) {
     uniforms: U, transparent: true, depthWrite: false, depthTest: true,
     vertexShader: /* glsl */`
       attribute vec3 pos2, nrmA, nrm2, aRnd; attribute float aKind, aKindA, aWA, aW2; attribute vec2 aAnim;
-      uniform float uT, uIn, uTime, uPx, uAsp, uS, uRot; uniform vec4 uPtr; uniform vec3 cDeep[5], cHi[5];
+      uniform float uT, uIn, uTime, uPx, uAsp, uS, uRot, uSway; uniform vec4 uPtr; uniform vec3 cDeep[5], cHi[5];
       varying vec3 vCol; varying float vA; varying float vSize;
       ` + PTR_GLSL + MOTION + /* glsl */`
       void main(){
@@ -348,7 +358,7 @@ export function* initServicesGen(canvas, ui = {}) {
         // Auftritt: von links nach rechts sammelt sich der Staub zum Motiv
         float li = clamp(uIn * 1.7 - clamp((b.x + 1.4) / 2.8, 0., 1.) * .7, 0., 1.); li = li * li * (3. - 2. * li);
         p += dir * (1. - li) * (1. - li) * (.35 + aRnd.z * .55);
-        float sw = sin(uTime * .25) * .35;
+        float sw = sin(uTime * .25) * uSway;
         p = rotY(p, sw); n = rotY(n, sw);
         vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
         float dust = max(mid, 1. - li);
@@ -390,11 +400,11 @@ export function* initServicesGen(canvas, ui = {}) {
   const core = new THREE.Mesh(cg, new THREE.ShaderMaterial({
     uniforms: U, side: THREE.DoubleSide, colorWrite: false,
     vertexShader: /* glsl */`
-      attribute vec2 aAnim; uniform float uTime, uInset, uS, uRot;` + MOTION + /* glsl */`
+      attribute vec2 aAnim; uniform float uTime, uInset, uS, uRot, uSway;` + MOTION + /* glsl */`
       void main(){
         vec3 b = position - normal * uInset, n = normal;
         motion(b, n, aAnim.x, aAnim.y, uTime);
-        b = rotY(b * uS, uRot + sin(uTime * .25) * .35);
+        b = rotY(b * uS, uRot + sin(uTime * .25) * uSway);
         gl_Position = projectionMatrix * modelViewMatrix * vec4(b, 1.);
       }`,
     fragmentShader: 'void main(){ gl_FragColor = vec4(0.); }',
@@ -439,9 +449,12 @@ export function* initServicesGen(canvas, ui = {}) {
     if (pointer.k() > 0 || U.uPtr.value.w > 0) { U.uPtr.value.fromArray(pointer.ndc(st.renderer.domElement.getBoundingClientRect(), PV, 50)); U.uAsp.value = st.aspect; }
     // breite, niedrige Bühne (Handy: Streifen über der Liste): näher heran, die Höhe begrenzt dort das Motiv
     const wide = Math.min(1, Math.max(0, (st.aspect - 1.3) / 0.5));
-    const d = (5.0 - 0.9 * wide * wide * (3 - 2 * wide)) * (st.aspect < 1.15 ? 1.15 / st.aspect : 1);
-    st.camera.position.set(0, 1.75, d); st.camera.lookAt(0, -0.04, 0);
+    const d = (CAM.d - 0.9 * wide * wide * (3 - 2 * wide)) * (st.aspect < 1.15 ? 1.15 / st.aspect : 1);
+    st.camera.position.set(0, CAM.y, d); st.camera.lookAt(0, CAM.look, 0);
   }
   ui.onShow && ui.onShow(0, MOTIFS[0].name);
-  return { st, update, show, counts: sets.map((s) => s.n), get current() { return cur; } };
+  // Lage eines Punkts des Motivs auf der Zeichenfläche (CSS-Bildpunkte) – für Beschriftungen in HTML
+  const _pv = new THREE.Vector3();
+  const project = (q) => { const sc = U.uS.value, an = U.uRot.value + Math.sin(U.uTime.value * 0.25) * U.uSway.value, x = q[0] * sc, z = q[2] * sc; _pv.set(Math.cos(an) * x + Math.sin(an) * z, q[1] * sc, -Math.sin(an) * x + Math.cos(an) * z).project(st.camera); return [(_pv.x * 0.5 + 0.5) * st.w, (-_pv.y * 0.5 + 0.5) * st.h]; };
+  return { st, update, show, project, ready: () => U.uIn.value >= 1, counts: sets.map((s) => s.n), get current() { return cur; } };
 }

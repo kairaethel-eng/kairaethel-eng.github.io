@@ -15,7 +15,7 @@
 <nav class="top" id="top">
   <a class="brand" href="#start" aria-label="HOP – Home of Physiotherapy, zum Anfang">
     <!-- 19.11.2026 (Kai: „Logo deutlich kenntlich, Buchstaben H O P“): Kreise enger gesetzt und größer, Buchstaben kräftig – vorher 78 px breit, Buchstaben rund 7 px -->
-    <!-- 20.11.2026 (Kai: „deutlicher hervorheben, schärfen, Schrift verbessern“): Buchstaben als gezeichnete Formen (gleich scharf in jeder Größe, unabhängig von der Schrift), kräftigere Kreisfarben, feiner heller Rand -->
+    <!-- 21.11.2026 (Kai im Arbeitsblatt: „Bitte dein altes Logo lassen“): wieder das flache Logo vom 20.11. (Kreise in Grün, Petrol, Blau, weiße gezeichnete Buchstaben). Die Fassung nach dem Original und eine Mischung stehen zum Vergleich auf logo.html. -->
     <svg viewBox="0 0 424 140" aria-hidden="true"><g stroke="rgba(255,255,255,.34)" stroke-width="3"><circle cx="70" cy="70" r="66" fill="#6FA02F"/><circle cx="212" cy="70" r="66" fill="#305869"/><circle cx="354" cy="70" r="66" fill="#3F86B5"/></g><g fill="none" stroke="#fff" stroke-width="15.5"><path d="M48.5 39V101M91.5 39V101M48.5 70H91.5"/><ellipse cx="212" cy="70" rx="25.5" ry="23.25"/><path d="M335.5 39V101M335.5 46.75H359a15.75 15.75 0 0 1 0 31.5H335.5"/></g></svg>
     <span class="brand-name" aria-hidden="true">Home of<br>Physiotherapy</span>
   </a>
@@ -43,7 +43,8 @@
     <div class="wrap">
       <p class="kicker"><i>02</i> Bewegung</p>
       <h2 id="m-title" class="statement">Ein <em>Zuhause</em> für Ihren Körper. Ein Haus, in dem Sie ankommen, sich wohlfühlen und das ganze Spektrum der Physiotherapie unter einem Dach finden.</h2>
-      <p class="sign">„Ich betrachte nicht nur das Symptom, sondern den ganzen Menschen.“ <b>Kai Raethel</b></p>
+      <!-- 21.11.2026 (Kai: „Leitsatz besser, kreativer hervorheben“, Go 2a): eigener Block mit großem Anführungszeichen, Linie zeichnet sich beim Hereinscrollen unter „den ganzen Menschen“ -->
+      <figure class="sign"><span class="q-mark" aria-hidden="true">„</span><blockquote><p>Ich betrachte nicht nur das Symptom, sondern <span class="q-hl">den ganzen Menschen.</span></p></blockquote><figcaption><i class="q-rule" aria-hidden="true"></i>Kai Raethel</figcaption></figure>
     </div>
   </section>
 
@@ -140,8 +141,8 @@
       <div class="roof-head">
         <p class="kicker"><i>04</i> Dach</p>
         <h2 id="d-title">Alles unter<br><em>einem</em> Dach.</h2>
-        <p class="lead">Treten Sie ein. Ein Rundgang durch die Praxis, bevor Sie zum ersten Mal da sind.</p>
-        <p class="hint" id="lhHint"><span class="only-fine"><span class="tx-lang">Raum anklicken, mit ‹ › oder den Pfeiltasten weitergehen. Oder den Rundgang starten – auch aus Augenhöhe.</span><span class="tx-kurz">Klicken Sie einen Raum an oder starten Sie den Rundgang.</span></span><span class="only-touch"><span class="tx-lang">Wischen Sie unter dem Dach von Raum zu Raum oder tippen Sie auf einen Raum. Oder starten Sie den Rundgang – auch aus Augenhöhe.</span><span class="tx-kurz">Wischen oder tippen Sie von Raum zu Raum.</span></span></p>
+        <p class="lead">Treten Sie ein: ein Rundgang durch die Praxis, bevor Sie zum ersten Mal da sind.</p>
+        <p class="hint" id="lhHint"><span class="only-fine"><span class="tx-lang">Raum anklicken, mit ‹ › oder den Pfeiltasten weitergehen. Oder den Rundgang starten – auch aus Augenhöhe.</span><span class="tx-kurz">Klicken Sie einen Raum an oder starten Sie den Rundgang.</span></span><span class="only-touch">Wischen Sie von Raum zu Raum oder tippen Sie auf einen Raum.</span></p>
       </div>
 
       <div class="house" id="house">
@@ -382,6 +383,9 @@
                 <path class="sw-l sw-cap sw-draw" d="M-15-24V-9C-15-2-8 0 0 0C8 0 15-2 15-9V-24z"/>
               </g></g>
             </svg>
+            <!-- 21.11.2026 (Kai im Arbeitsblatt: Entwurf „so in Puls übernehmen“): Punkt-Grafik mit echtem Fersenbein; steht sie (Grafikchip + Knochen-Datei geladen), ersetzt sie die Linien-Zeichnung darüber, sonst bleibt die Zeichnung -->
+            <canvas class="sw-gl" id="glSw" role="img" aria-label="Schematische Darstellung in Punkten: Das Handstück liegt hinten an der Ferse. Druckwellen laufen als Bögen durch die Haut zum Ansatz der Achillessehne am Fersenbein." hidden></canvas>
+            <div class="sw-labs" id="swLabs" aria-hidden="true"><span data-m="sehne">Achillessehne</span><span data-m="ansatz" class="is-a">Sehnenansatz</span><span data-m="ferse">Fersenbein</span><span data-m="hand">Handstück</span></div>
             <span class="sw-lab" style="right:0;top:51.6%" aria-hidden="true">Haut</span>
             <span class="sw-lab" style="right:0;top:58.6%" aria-hidden="true">Unterhaut</span>
             <span class="sw-lab" style="left:0;top:73.5%" aria-hidden="true">Sehne</span>
@@ -482,7 +486,7 @@
       <span>© 2026 HOP – Home of Physiotherapy · Kai Raethel</span>
       <span><a href="recht-impressum.html">Impressum</a> · <a href="recht-datenschutz.html">Datenschutz</a></span>
       <span class="lab">Testseite 4 · Puls · Scan</span>
-      <span class="credit">Wirbelsäule, Film „Bandscheibenvorfall“ und Knochen in den Leistungs-Motiven: BodyParts3D, © The Database Center for Life Science licensed under <a href="https://creativecommons.org/licenses/by/4.0/deed.de" rel="license noopener" target="_blank">CC Attribution 4.0 International</a> · <a href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html" rel="noopener" target="_blank">Quelle</a>. Verändert: vereinfacht und als Punktwolke dargestellt.</span>
+      <span class="credit">Wirbelsäule, Film „Bandscheibenvorfall“, Knochen in den Leistungs-Motiven und bei der Stoßwelle sowie die Figur auf der Manuthera: BodyParts3D, © The Database Center for Life Science licensed under <a href="https://creativecommons.org/licenses/by/4.0/deed.de" rel="license noopener" target="_blank">CC Attribution 4.0 International</a> · <a href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html" rel="noopener" target="_blank">Quelle</a>. Verändert: vereinfacht und als Punktwolke dargestellt.</span>
     </footer>
   </section>
 </main>

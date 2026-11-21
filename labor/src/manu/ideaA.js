@@ -30,24 +30,42 @@ export function* initAGen(canvas, ui) {
   const desk = isDesktop();
 
   // Segment-Zuordnung: 0 fest (Mittelteil, Gestell, Armstützen), 1 Kopf-/Brustteil, 2 Beckenteil
+  let PL = PIV_L; // echte Figur: Gelenk zwischen L4 und L5 (formen.js PIV_L_ECHT)
   const blend = (b) => (x) => {
     if (x < PIV_U - b) return [1, 1, 0];
     if (x < PIV_U + b) return [1, 0, smooth(PIV_U - b, PIV_U + b, x)];
-    if (x < PIV_L - b) return [0, 0, 0];
-    if (x < PIV_L + b) return [0, 2, smooth(PIV_L - b, PIV_L + b, x)];
+    if (x < PL - b) return [0, 0, 0];
+    if (x < PL + b) return [0, 2, smooth(PL - b, PL + b, x)];
     return [2, 2, 0];
   };
+  // echte Figur (Kai 21.11.2026 abends, „Go A“): Übergänge mit eigenen Grenzen – oben schmal um das Brustgelenk (T10–T12), unten weich
+  // über die ganze Lende bis vor die Hüfte (L1 … Kreuzbein). Haut und Wirbel teilen dieselben Zonen: die Haut über der Lende biegt sich mit
+  // der Wirbelsäule, Oberkörper und Becken mit Beinen bleiben fest (vorher 0,1 breit → Knick an der Taille, Beine wirkten weggeklappt).
+  const zone = (u0, u1, l0, l1) => (x) => {
+    if (x < u0) return [1, 1, 0];
+    if (x < u1) return [1, 0, smooth(u0, u1, x)];
+    if (x < l0) return [0, 0, 0];
+    if (x < l1) return [0, 2, smooth(l0, l1, x)];
+    return [2, 2, 0];
+  };
+  const ZONE_ECHT = zone(-1.05, -0.8, -0.78, -0.1);
   const mapX = (fn) => (v) => { const s = fn(v.x); return { la: v, lb: v, a: s[0], b: s[1], w: s[2] }; };
   const F = mapX(() => [0, 0, 0]), UP = mapX(() => [1, 1, 0]), LO = mapX(() => [2, 2, 0]);
   // Arme: Schulter gehört zum Brustteil, Unterarm liegt auf der festen Armstütze
   const mapArm = (v) => ({ la: v, lb: v, a: 1, b: 0, w: smooth(0.2, -0.12, v.y) });
   const noDown = (n) => n.y > -0.5;
   // Formen aus einer Quelle (./formen.js, auch für das kleine Leistungs-Motiv); hier bekommt jedes Teil seine Segment-Zuordnung
-  const bb = mapX(blend(0.3));
+  const echt = !!(ui && ui.figur && ui.figur['figur/koerper']);
+  // 21.11.2026 (Kai: „nicht der ganze Körper streckt sich, nur die innere Wirbelsäule“): echte Figur liegt als feste Blöcke auf den
+  // Liegeteilen; nur die Haut über der Lende geht weich mit der Wirbelsäule mit (ZONE_ECHT oben)
+  const bb = mapX(echt ? ZONE_ECHT : blend(0.3));
   const MAP = { UP, F, LO, BB: bb, ARM: mapArm };
   const SPL = desk ? 0.0235 : 0.032; // Punktabstand der Liege (20.11.: feiner – Kai: „noch detailliertere Ansicht“)
-  const { parts: FORM, SPB } = manuFormen(SPL);
-  const parts = FORM.map((q) => ({ r: q.r, kind: q.kind, map: MAP[q.seg], keep: q.kind === 3 ? null : noDown, grp: q.grp }));
+  const { parts: FORM, SPB, wirbel, wirbelNetz, WSP, PL: plF } = manuFormen(SPL, { echt: ui && ui.figur });
+  if (plF !== undefined) PL = plF;
+  // echte Figur: auch die nach unten zeigenden Flanken behalten (sonst Löcher, Kai 21.11.) – nur was auf dem Polster aufliegt, entfällt
+  const keepFig = (n, v) => n.y > -0.5 || v.y > 0.06;
+  const parts = FORM.map((q) => ({ r: q.r, kind: q.kind, map: MAP[q.seg], keep: q.kind === 3 ? null : echt && q.kind === 2 ? keepFig : noDown, grp: q.grp }));
 
   yield;
   const pts = yield* orderedGen(parts, SPB);
@@ -59,7 +77,7 @@ export function* initAGen(canvas, ui) {
     uM: { value: M }, uStip: { value: 1 }, uMaxSize: { value: 6 }, uCut: { value: reduced ? 99 : -3.2 }, uInset: { value: 0.008 },
     uHi: { value: new THREE.Vector3() }, uTime: { value: 0 }, uPix: { value: 1 }, uSpineHi: { value: new THREE.Vector2() },
     cCore: { value: C('#0E1C22') }, cBone: { value: C('#EDE5D3') }, cDeep: { value: C('#44788E') }, cFrame: { value: C('#2F5B6D') }, cFrameHi: { value: C('#7FAFC2') }, cBody: { value: C('#3F7FAE') }, cBodyHi: { value: C('#C4E1F5') },
-    uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 }, uSpB: { value: 0.78 },
+    uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 }, uSpB: { value: 0.78 }, uMove: { value: 0 }, uWsz: { value: 0.8 },
     cBlue: { value: COL.blue }, cAmber: { value: COL.amber },
   };
   const coreMesh = new THREE.Mesh(core, coreMaterial(U, NSEG));
@@ -69,7 +87,7 @@ export function* initAGen(canvas, ui) {
     uniforms: U,
     vertexShader: DEFORM(NSEG) + /* glsl */`
       attribute vec3 aRnd;
-      uniform float uStip, uMaxSize, uCut, uAsp, uSpB; uniform vec4 uPtr; uniform vec3 uHi;
+      uniform float uStip, uMaxSize, uCut, uAsp, uSpB, uMove; uniform vec4 uPtr; uniform vec3 uHi;
       uniform vec3 cAmber, cBone, cDeep, cFrame, cFrameHi, cBody, cBodyHi;
       varying vec3 vCol; varying float vSize;
       ` + PTR_GLSL + /* glsl */`
@@ -80,6 +98,7 @@ export function* initAGen(canvas, ui) {
         vec3 deep = aKind < .5 ? mix(cDeep, cBone, .55) : aKind < 1.5 ? cFrame : aKind < 2.5 ? cBody : cBone;
         vec3 hi = aKind < .5 ? cBone : aKind < 1.5 ? cFrameHi : aKind < 2.5 ? cBodyHi : cBone;
         vec3 col = mix(deep, hi, .2 + .8 * rim) * (aKind < .5 ? .5 + .5 * lam : .62 + .38 * lam);
+        if (aKind > 1.5 && aKind < 2.5) col *= mix(1., .42, uMove); // Figur tritt zurück, solange sich die Wirbelsäule bewegt
         int sa = int(aSegA + .5);
         float hl = sa == 1 ? uHi.y : sa == 2 ? uHi.z : 0.;
         if (aKind < .5) col = mix(col, cAmber * (.45 + .85 * lam), hl * .28);
@@ -117,13 +136,20 @@ export function* initAGen(canvas, ui) {
   const LV = 24;
   // Perlenkette: je Wirbel ein Kern + Dornfortsatz, dazwischen feine Bandscheiben-Punkte
   const SZ = [];
-  for (let i = 0; i < LV; i++) {
+  if (wirbelNetz && wirbelNetz.length) { /* echte Wirbel: eigene Punkt-Grafik weiter unten, keine Perlenkette */ } else if (wirbel) {
+    // echte Figur (21.11.2026): Wirbelkörper C1 … L5 und Kreuzbein aus BodyParts3D (assets/manu-figur.bin), Dornfortsatz zum Rücken hin
+    for (let i = 0; i < wirbel.length; i++) {
+      const [x, y, z] = wirbel[i], f = i / (wirbel.length - 1), last = i === wirbel.length - 1;
+      pushS(x, y, z); SZ.push(last ? 2.6 : 1.5 + f * 1.2);
+      if (!last) { pushS(x + 0.01, y + 0.07 + f * 0.03, z); SZ.push(0.8); const n = wirbel[i + 1]; pushS((x + n[0]) / 2, (y + n[1]) / 2, (z + n[2]) / 2); SZ.push(0.55); }
+    }
+  } else for (let i = 0; i < LV; i++) {
     const f = i / (LV - 1), x = -1.76 + f * 2.06, y = 0.33 + Math.sin(f * Math.PI * 2) * 0.02;
     pushS(x, y, 0); SZ.push(1.6 + f * 1.1);
     pushS(x + 0.01, y + 0.06, 0); SZ.push(0.8);
     if (i < LV - 1) { pushS(x + 0.043, y, 0); SZ.push(0.55); }
   }
-  for (let j = 0; j < 5; j++) { const u = j / 4; pushS(0.36 + u * 0.24, 0.32 - u * 0.03, 0); SZ.push(2.6 - u * 1.4); }
+  if (!wirbel) for (let j = 0; j < 5; j++) { const u = j / 4; pushS(0.36 + u * 0.24, 0.32 - u * 0.03, 0); SZ.push(2.6 - u * 1.4); }
   const sg = new THREE.BufferGeometry();
   sg.setAttribute('position', new THREE.Float32BufferAttribute(SP, 3));
   sg.setAttribute('pos2', new THREE.Float32BufferAttribute(SP, 3));
@@ -148,13 +174,60 @@ export function* initAGen(canvas, ui) {
   }));
   spine.frustumCulled = false; st.scene.add(spine);
 
+  // ---------- echte Wirbelsäule (21.11.2026, Kai: „nur die innere Wirbelsäule bewegen, deutlicher erkennbar“) ----------
+  // Wirbel C1 … L5 und Kreuzbein aus BodyParts3D als feine geordnete Punkte mit Kantenlicht. Jeder Wirbel folgt als Ganzes dem Liegeteil
+  // unter ihm; über die Lendenwirbel (und den Übergang Brust/Lende) verteilt sich die Bewegung – so biegt, streckt und dreht sich nur die
+  // Wirbelsäule. Sie wird nach allem anderen gezeichnet (Tiefe vorher gelöscht): immer sichtbar wie im Röntgenbild, Rückseiten entfallen.
+  if (wirbelNetz && wirbelNetz.length) {
+    const sbW = ZONE_ECHT;
+    const sParts = wirbelNetz.map((w, i) => {
+      const Pw = w.r.pts; let cx = 0; for (let k = 0; k < Pw.length; k += 7) cx += Pw[k]; cx /= Math.max(1, Pw.length / 7);
+      const sg = sbW(cx);
+      return { r: w.r, kind: i, map: (v) => ({ la: v, lb: v, a: sg[0], b: sg[1], w: sg[2] }), keep: null, grp: 20 + i };
+    });
+    yield;
+    const spw = yield* orderedGen(sParts, WSP);
+    const real = new THREE.Points(spw.geo, new THREE.ShaderMaterial({
+      uniforms: U,
+      vertexShader: DEFORM(NSEG) + /* glsl */`
+        uniform float uStip, uMaxSize, uCut, uMove, uWsz; uniform vec3 cBone, cAmber, cDeep;
+        varying vec3 vCol; varying float vSize;
+        void main(){
+          vec3 p = deformP(position, pos2), n = deformN(normal);
+          float fa = dot(n, normalize(cameraPosition - p)), lam = max(dot(n, normalize(LDIR)), 0.);
+          float rim = pow(1. - clamp(fa, 0., 1.), 1.5);
+          vec3 col = mix(mix(cDeep, cBone, .7), cBone, .35 + .65 * rim) * (.7 + .3 * lam);
+          float zone = clamp(step(.01, aW) + step(.5, abs(aSegA - aSegB)), 0., 1.); // Wirbel im Übergang: hier bewegt sich die Säule
+          col = mix(col, cAmber * (.8 + .4 * lam), zone * uMove * .6);
+          vec4 mv = viewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
+          vCol = col * mix(.95, 1.12, uMove);
+          vSize = clamp(uStip * uWsz / -mv.z, 1., uMaxSize) * step(-.12, fa) * step(p.x, uCut);
+          gl_PointSize = vSize;
+        }`,
+      fragmentShader: /* glsl */`
+        varying vec3 vCol; varying float vSize;
+        void main(){
+          float d = length(gl_PointCoord - .5);
+          if (d > .5 || vSize < .5) discard;
+          gl_FragColor = vec4(vCol * (1. - smoothstep(.3, .5, d) * .35), 1.);
+          #include <colorspace_fragment>
+        }`,
+    }));
+    U.uWsz.value = (WSP / SPB) * 1.55; // Punktgröße passend zum feineren Abstand, leicht überlappend → geschlossene Wirbel
+    real.renderOrder = 10; real.frustumCulled = false;
+    real.onBeforeRender = (r) => r.clearDepth();
+    st.scene.add(real);
+  }
+
   // ---------- Bewegungs-Anzeige (Bernstein, fest im Raum) ----------
   const IP = [], IM = [], IS = [];
   const ind = (mode, fn, cnt) => { for (let i = 0; i < cnt; i++) { const s = i / (cnt - 1), p = fn(s); IP.push(p[0], p[1], p[2]); IM.push(mode); IS.push(s); } };
-  ind(0, (s) => [2.32 + s * 0.9, -0.08, 0], 90);
-  ind(0, (s) => [3.22 - Math.abs(s - 0.5) * 0.3, -0.08, (s - 0.5) * 0.36], 30);
-  ind(1, (s) => { const a = -s * 0.5, r = 2.38; return [PIV_L + Math.cos(a) * r, Math.sin(a) * r - 0.02, 0.72]; }, 90);
-  ind(2, (s) => { const a = s * 0.32, r = 2.38; return [PIV_L + Math.cos(a) * r, -0.08, -Math.sin(a) * r]; }, 90);
+  // echte Figur (21.11.2026): ihre Füße hängen über das Fußende → Zug- und Seitneigungs-Anzeige laufen unter den Füßen durch
+  const yInd = wirbel ? -0.56 : -0.08;
+  ind(0, (s) => [2.32 + s * 0.9, yInd, 0], 90);
+  ind(0, (s) => [3.22 - Math.abs(s - 0.5) * 0.3, yInd, (s - 0.5) * 0.36], 30);
+  ind(1, (s) => { const a = -s * 0.5, r = 2.38; return [PL + Math.cos(a) * r, Math.sin(a) * r - 0.02, 0.72]; }, 90);
+  ind(2, (s) => { const a = s * 0.32, r = 2.38; return [PL + Math.cos(a) * r, yInd, -Math.sin(a) * r]; }, 90);
   ind(3, (s) => { const a = Math.PI / 2 + (s - 0.25) * 1.3, r = 0.78; return [2.36, Math.sin(a) * r - 0.08, Math.cos(a) * r]; }, 90);
   const ig = new THREE.BufferGeometry();
   ig.setAttribute('position', new THREE.Float32BufferAttribute(IP, 3));
@@ -181,7 +254,7 @@ export function* initAGen(canvas, ui) {
   // ---------- Kamera & Bewegung ----------
   const cam = { yaw: 0, yawTarget: 0, lastUser: -1e9, dragging: false };
   dragYaw(canvas, cam);
-  const target = new THREE.Vector3(0.1, -0.5, 0);
+  const target = new THREE.Vector3(wirbel ? 0.42 : 0.1, -0.5, 0); // echte Figur: Hände und Füße reichen über beide Enden der Liege
   const SPEED = reduced ? 0.5 : 1;
   const DUR = { in: 1.7, hold: 1.5, out: 1.5, rest: 0.7 };
   const CYCLE = DUR.in + DUR.hold + DUR.out + DUR.rest;
@@ -226,10 +299,12 @@ export function* initAGen(canvas, ui) {
     const amt = p < DUR.in ? ease(p / DUR.in) : p < DUR.in + DUR.hold ? 1 : p < DUR.in + DUR.hold + DUR.out ? 1 - ease((p - DUR.in - DUR.hold) / DUR.out) : 0;
     for (let i = 0; i < 4; i++) cur[i] = damp(cur[i], i === mode ? amt : 0, 8, dt);
     const [tr, fl, se, ro] = cur;
-    pivotMat(M[1], PIV_U, 0, -0.13 * se, 0.12 * fl, -0.07 * tr);
-    pivotMat(M[2], PIV_L, 0.36 * ro, 0.31 * se, -0.42 * fl, 0.34 * tr);
+    const hub = echt ? 0.55 : 1; // echte Figur: ruhiger Hub – die Bewegung zeigt die Wirbelsäule, nicht die ganze Liege
+    pivotMat(M[1], PIV_U, 0, -0.13 * se * hub, 0.12 * fl * hub, -0.07 * tr * hub);
+    pivotMat(M[2], PL, 0.36 * ro * hub, 0.31 * se * hub, -0.42 * fl * hub, 0.34 * tr * hub);
     U.uHi.value.set(0, Math.max(tr, fl, se) * 0.7, Math.max(tr, fl, se, ro));
-    U.uSpineHi.value.set(mode === 0 ? -0.25 : 0.05, Math.max(tr, fl, se, ro) * 0.9);
+    U.uMove.value = Math.max(tr, fl, se, ro);
+    U.uSpineHi.value.set(wirbel ? (mode === 0 ? -0.55 : -0.32) : mode === 0 ? -0.25 : 0.05, Math.max(tr, fl, se, ro) * 0.9); // echte Figur: Lendenwirbel liegen weiter kopfwärts
     IU.uModeW.value.set(cur[0], cur[1], cur[2], cur[3]);
     ui && ui.onAmount && ui.onAmount(amt);
 
@@ -238,7 +313,7 @@ export function* initAGen(canvas, ui) {
     cam.yaw = damp(cam.yaw, cam.yawTarget, 5, dtCam);
     const yaw = 0.8 + cam.yaw, el = 0.44;
     const fit = st.aspect < 1.3 ? 1.3 / st.aspect : 1;
-    const R = 7.3 * Math.pow(Math.min(fit, 1.8), 0.72);
+    const R = (wirbel ? 8.1 : 7.3) * Math.pow(Math.min(fit, 1.8), 0.72);
     st.camera.position.set(target.x + Math.sin(yaw) * Math.cos(el) * R, target.y + Math.sin(el) * R, target.z + Math.cos(yaw) * Math.cos(el) * R);
     st.camera.lookAt(target);
   }

@@ -1,6 +1,6 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 21.11.2026 (Text ruhig: Studie `textruhe.html`, wartet auf Kais Urteil · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 21.11.2026 (Text ruhig: Studie `textruhe.html`, wartet auf Kais Urteil · Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
 ## Text ruhig – Leuchtpunkte statt offenem Erklärtext (Kai 21.11.2026: „an ein paar Stellen zu viel Text im Vordergrund, Inhalte sollen nicht verloren gehen“ → „Go A“)
@@ -8,6 +8,48 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **Stand:** zuerst als Studie `textruhe.html` (Umschalter bisher / ruhig); Puls und `live/` unverändert, bis Kai urteilt. Übernahme = die Klasse `ruhe` am `<html>` in `page.html` setzen (siehe TECHNIK „Text ruhig“).
 - **Merkregel:** Immer sichtbar bleiben Überschriften, Termin-Knöpfe, Gesundheits-Hinweise (`.note`, `.sw-note`), der Datenschutz-Hinweis am Kalender, die Bitte „keine Gesundheitsangaben per E-Mail“, „Nur Anrufbeantworter“ und der Satz „Ob sie in Ihrem Fall sinnvoll ist, zeigt der Befund.“ neben den Einsatzorten (HWG). Ohne JavaScript und im Druck steht alles offen.
 - **Merkregel:** Es pulsiert höchstens ein Leuchtpunkt im Bild (der oberste noch nie geöffnete); nach dem Öffnen leuchtet er still, bei „Bewegung anhalten/reduzieren“ pulsiert nichts.
+
+Stand: 21.11.2026 (Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Arbeitsblatt 4, dritte Runde (Kai 21.11.2026 abends)
+- **Entschieden:** In der Kopfleiste bleibt Logo A (flach). Die Stoßwelle als Punkt-Grafik in Puls passt.
+- **Entschieden (Richtung Haus):** Die Linien bleiben; Partikel kommen nur als Staub beim Raumwechsel dazu (Licht-Staub im Raum und Perlen an der Kontur nicht gewählt). Erst als Entwurf `haus-staub.html`, Übernahme in Puls nach Kais Urteil.
+- **Merkregel:** Zusätze zum Linienhaus hören von außen auf das Haus (Klasse `on` am Raum) – `house.js` bleibt unberührt, damit Entwurf und Puls denselben Baustein behalten.
+## Manuthera: nur die Wirbelsäule bewegt sich (Auftrag Kai 21.11.2026 abends, umgesetzt, wartet auf Sichtprüfung)
+- **Entschieden (Auftrag):** Der Körper dehnt sich nicht; er liegt als feste Blöcke auf den Liegeteilen. Biegen, Strecken, Drehen zeigt allein die echte Wirbelsäule (BodyParts3D), deutlich sichtbar wie im Röntgenbild; die Haut tritt während der Bewegung zurück.
+- **Entschieden:** Gelenk zum Beckenteil zwischen L4 und L5 (Becken liegt auf dem Beckenteil); ruhiger Hub (55 %).
+- **Entschieden (Kai „Go A“, 21.11. spät):** Oberkörper und Becken mit Beinen bleiben fest; nur die Haut über der Lende (L1 bis vor die Hüfte) geht weich mit der Wirbelsäule mit – kein Knick an der Taille, Beine schwenken aus der Hüfte. Körper ganz still (B) und Rückweg (C) verworfen.
+- **Merkregel:** Haut und Wirbel bekommen dieselbe Übergangszone – sonst schiebt sich die Wirbelsäule gegen die Haut.
+- **Merkregel:** Haut aus BodyParts3D: Außenfläche per Strahltest („sieht ins Freie“) bestimmen, danach Öffnungen schließen – kein Normalen-Knochen-Test.
+- **Merkregel:** Punkt-Filter für eine Form („Unterseite weglassen“) bei neuer Form neu prüfen – flach von der Seite und von beiden Seiten ansehen.
+
+## Echte Figur auf der Manuthera (Auftrag Kai 21.11.2026 nachmittags, umgesetzt, wartet auf Sichtprüfung)
+- **Entschieden (Auftrag):** Die liegende Figur ist die echte Körperoberfläche aus BodyParts3D (Haut FJ2810, Außenfläche), in Bauchlage gebracht – nicht mehr aus Grundformen gerechnet.
+- **Entschieden:** Füße hängen über das Fußende; Arme gebeugt auf tieferen, längeren Armstützen; Brustteil schmaler.
+- **Merkregel:** Haut aus BodyParts3D ist eine Schicht (außen + innen) – immer nur die Außenfläche verwenden.
+- **Merkregel:** Ändert sich die Liege für die echte Figur, behält der Rückfall (Datei lädt nicht) die alten Maße, damit die gerechnete Figur passt.
+
+## Arbeitsblatt 4, zweite Runde (Kai 21.11.2026)
+- **Entschieden:** Die Stoßwelle ist in Puls eine Punkt-Grafik mit echtem Fersenbein (Kai zum Entwurf: „so in Puls übernehmen“). Die Linien-Zeichnung bleibt als Rückfall.
+- **Entschieden:** In der Kopfleiste bleibt das flache Logo vom 20.11. („dein altes Logo lassen“). Die Fassung nach dem Original ist damit für die Kopfleiste zurückgenommen; Auswahl A/B/C über `logo.html`.
+- **Bleibt (noch):** Die HOP-Kreise aus Punkten folgen weiter dem Original (Verläufe, Schwünge), nur heller und mit besserem P – bis Kai nach der Logo-Wahl anders entscheidet.
+- **Offen:** Linienhaus mit lebenden Partikeln (Vorschläge im Arbeitsblatt) · Logo-Wahl.
+
+## Kais Screenshots 21.11.2026 – „Go alle Empfehlungen“ (umgesetzt, wartet auf Sichtprüfung)
+- **Entschieden:** Auftakt vor Kapitel 02 am Handy/Tablet 40svh (nach der klebenden Bühne von 01); Figur im Schlussbild kleiner und tiefer.
+- **Entschieden:** Leitsatz als eigener Zitatblock mit großem Bernstein-Anführungszeichen, Linie zeichnet sich über die Zeit ein.
+- **Entschieden:** Wirbelsäule am Handy: Nahansicht nur zwischen Schildern und Skala, endet weich über der Karte; Skala auf dunklem Grund; „Mehr“ als Bernstein-Pille mit Vorschau-Zeile, pulsiert einmal.
+- **Entschieden:** Dach am Handy/Tablet: Raumtext direkt unter dem Haus, Knöpfe danach; Einleitung ein Satz.
+- **Merkregel:** Klebende Bühnen mit 100svh lassen am iPhone bei eingefahrener Leiste unten einen Streifen frei – Abstände danach knapp halten.
+
+## Arbeitsblatt 4 abgearbeitet (Kai 20.11.2026 gegen Mitternacht, Antworten im Arbeitsblatt)
+- **Entschieden:** Das Logo folgt dem Original (Verläufe, Schwünge um H und P) – in der Kopfleiste und in den HOP-Kreisen aus Punkten. Kein großes Logo am Start.
+- **Entschieden:** CMD-Motiv zeigt Kiefer und Kiefergelenk von der Seite, nicht den ganzen Schädel.
+- **Entschieden:** Übergänge noch langsamer (Formwechsel 3,6 s). Schilder an der Wirbelsäule einheitlich als schlichter Text mit Linie. Gezeichnete Hände bleiben.
+- **Entschieden (Vorgehen):** Stoßwelle und Linienhaus als Punkt-Grafik nur über Entwurfsseiten – zuerst die Stoßwelle (`stosswelle-punkte.html`), nach Kais Urteil das Haus. Maßstab von Kai: „sehr scharf und kenntlich, nicht verspielt weich, professionell kreativ“.
+- **Merkregel:** Für „ans Original anpassen“ das Original ansehen (Logo-Bild der öffentlichen Praxis-Website), nicht aus der Beschreibung raten.
+- **Offen (Arbeitsblatt 4, neue Punkte):** Urteil zum Stoßwellen-Entwurf · Tempo · Logo.
 
 ## Arbeitsblatt 3 abgearbeitet (Kai 20.11.2026 nachts, Antworten im Arbeitsblatt)
 - **Entschieden:** Anatomie in den Motiven = echte Knochen (BodyParts3D 4.0, CC BY 4.0, Namensnennung im Fuß und Impressum § 9); gerechnete Formen nur noch als Rückfall und für Geräte/Hände.

@@ -66,14 +66,19 @@ export function logoForm(N, desk) {
   // Buchstaben H · O · P (19.11.2026, Kai: „Logo deutlich kenntlich, gerne die Buchstaben h o p einsetzen“): je Kreis ein Buchstabe
   // aus hellen Punkten auf eigenem, geordnetem Raster (Art 4); die Ring-Perlen weichen ihm mit etwas Abstand aus.
   // Maße in Kreis-Radien: Höhe ±0,5, Strichstärke 0,2.
-  const T = 0.125, inLetter = (d, x, y, m = 0) => {
+  // 20.11. nachts (Kai: „Besser an das Original anpassen“, „Buchstaben anders“): Buchstaben in den Verhältnissen des Original-Logos –
+  // kleiner im Kreis (Höhe ±0,42 statt ±0,54), H breit mit kräftigen Stämmen, O als runder Ring, P mit kleinem Bauch-Innenraum.
+  const T = 0.095, inLetter = (d, x, y, m = 0) => {
     const ax = Math.abs(x), ay = Math.abs(y);
-    if (d === 0) return ay <= 0.54 + m && ((ax >= 0.42 - 2 * T - m && ax <= 0.42 + m) || (ay <= T + m && ax <= 0.42 + m)); // H
-    if (d === 1) { const q = Math.hypot(x / 0.46, y / 0.56); return q <= 1 + m * 2.2 && Math.hypot(x / (0.46 - 2 * T), y / (0.56 - 2 * T)) >= 1 - m * 3.2; } // O
-    if (ay > 0.54 + m) return false; // P: Stamm links, Bogen oben rechts
-    if (x >= -0.3 - m && x <= -0.3 + 2 * T + m) return true;
-    const bx = x + 0.07, by = y - 0.23, q = Math.hypot(bx, by);
-    return x >= -0.07 - m && q <= 0.31 + m && q >= 0.31 - 2 * T - m;
+    if (d === 0) return ay <= 0.42 + m && ((ax >= 0.31 - 2 * T - m && ax <= 0.31 + m) || (ay <= T + m && ax <= 0.31 + m)); // H
+    if (d === 1) { const q = Math.hypot(x / 0.36, y / 0.42); return q <= 1 + m * 2.4 && Math.hypot(x / (0.36 - 2 * T), y / (0.42 - 2 * T)) >= 1 - m * 3.6; } // O
+    if (ay > 0.42 + m) return false; // P: Stamm links, Bauch oben rechts
+    // 21.11. (Kai: „der Buchstabe P verbessert“): Bauch als klarer Bogen mit offenem Innenraum, der oben und in der Mitte gerade am Stamm
+    // ansetzt (vorher ein fast voller Halbkreis, der im Punktraster wie ein Klotz aussah)
+    if (x >= -0.27 - m && x <= -0.27 + 2 * T + m) return true;
+    const ro = 0.235, yc = 0.42 - ro, bx = x - 0.02, by = y - yc; // Bauch: Halbring um (0,02 | 0,185), dazu zwei waagrechte Arme zum Stamm
+    if (x >= 0.02 - m) { const q = Math.hypot(bx, by); return q <= ro + m && q >= ro - 2 * T - m; }
+    return x >= -0.27 && Math.abs(by) <= ro + m && Math.abs(by) >= ro - 2 * T - m;
   };
   const gap = dr * 0.6 / R, ls = dr * (desk ? 0.72 : 0.6);
   for (let d = 0; d < 3; d++) {
@@ -82,17 +87,24 @@ export function logoForm(N, desk) {
       for (let k = 0; k < n; k++) {
         const a = (k + (j & 1 ? 0.5 : 0)) / n * Math.PI * 2;
         if (inLetter(d, Math.cos(a) * rr / R, Math.sin(a) * rr / R, gap)) continue; // Platz für den Buchstaben
-        list.push([cx[d] + Math.cos(a) * rr, Math.sin(a) * rr + 0.2, Math.sqrt(Math.max(0, 1 - u * u)) * 0.3, d, 0.66 + 0.34 * u * u]);
+        list.push([cx[d] + Math.cos(a) * rr, Math.sin(a) * rr + 0.2, Math.sqrt(Math.max(0, 1 - u * u)) * 0.3, d, 0.92 + 0.08 * u * u]);
       }
     }
     for (let gy = -Math.ceil(0.6 * R / ls); gy <= Math.ceil(0.6 * R / ls); gy++) for (let gx = -Math.ceil(0.5 * R / ls); gx <= Math.ceil(0.5 * R / ls); gx++) {
       const x = gx * ls, y = gy * ls;
       if (inLetter(d, x / R, y / R)) list.push([cx[d] + x, y + 0.2, 0.34, 4, 1]);
     }
-    // offener Ring wie im Logo (Lücke oben rechts), zwei Stränge
-    for (const [rr, al] of [[R * 1.3, 0.9], [R * 1.3 + dr * 0.8, 0.4]]) {
-      const n = Math.round(2 * Math.PI * rr / (dr * 0.8));
-      for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; if (a > 0.25 && a < 1.05) continue; list.push([cx[d] + Math.cos(a) * rr, Math.sin(a) * rr + 0.2, 0, 3, al]); }
+    // Schwünge wie im Original-Logo: nur um H und P (um das P gespiegelt), das O steht frei.
+    // grauer Bogen links/oben (Art 3) und eine kräftigere Sichel unten (Art 5, Petrol), beide laufen an den Enden aus
+    if (d !== 1) {
+      const mir = d === 2 ? -1 : 1, arc = (rr, a0, a1, kind, al, strands) => {
+        for (let st = 0; st < strands; st++) {
+          const r2 = rr + st * dr * 0.75, n = Math.round(Math.abs(a1 - a0) * r2 / (dr * 0.8));
+          for (let k = 0; k <= n; k++) { const f = k / n, a = a0 + (a1 - a0) * f, e = Math.sin(Math.PI * f) ** 0.6; if (st && e < 0.45 + st * 0.2) continue; list.push([cx[d] + mir * Math.cos(a) * r2, Math.sin(a) * r2 + 0.2, 0, kind, al * (0.35 + 0.65 * e)]); }
+        }
+      };
+      arc(R * 1.46, 0.98, 3.8, 3, 0.85, 1);   // grau: von oben rechts über links bis unten links
+      arc(R * 1.34, 3.3, 6.0, 5, 0.95, 3);    // Sichel: links unten herum bis rechts
     }
   }
   const S = slots(N, 404), r = rng(41);

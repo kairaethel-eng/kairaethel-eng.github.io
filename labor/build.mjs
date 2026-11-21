@@ -45,6 +45,12 @@ const PAGES = {
   'feinschliff': { out: 'feinschliff.html' },
   // Tür (16.11.2026, Go Kai): Entwurf zu Kap. 05 – Knöpfe erscheinen erst mit der offenen Partikel-Tür, Varianten A | C (Canvas 2D, kein WebGL)
   'tuer': { out: 'tuer.html' },
+  // Stoßwelle in Punkten (20.11.2026 nachts, Kai im Arbeitsblatt 4): Entwurf – Punkt-Grafik mit echtem Fersenbein, Vergleich mit der Linien-Bühne in Puls
+  'stosswelle-punkte': { out: 'stosswelle-punkte.html' },
+  // Logo-Vergleich (21.11.2026, Kai: altes Logo lassen, zusätzlich eine Mischung zeigen): A flach · B Mischung · C nach dem Original
+  'logo': { out: 'logo.html' },
+  // Haus mit Staub (21.11.2026, Kai im Arbeitsblatt: Linien behalten, beim Raumwechsel zieht Staub hinüber): Entwurf auf der Grundlage von haus-licht
+  'haus-staub': { out: 'haus-staub.html' },
   // Text ruhig (21.11.2026, Go Kai „A“): Studie – Puls mit Leuchtpunkt-Knöpfen statt offenem Erklärtext, Umschalter bisher / ruhig.
   // Gleiche Quellen wie Puls (src/test-4); nur die Klassen ruhe + studie-ruhe am <html> sind hier gesetzt. Puls und live unverändert.
   'textruhe': { out: 'textruhe.html', dir: 'test-4', studie: 'ruhe' },
@@ -185,7 +191,8 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   const js = res.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
   let css = readFileSync(join(dir, 'style.css'), 'utf8');
   // Baustein-CSS einbinden (14.11.2026, Linienhaus): /*@include pfad*/ relativ zum Quellordner der Seite
-  css = css.replace(/\/\*@include ([^*]+?)\*\//g, (m, f) => readFileSync(join(dir, f.trim()), 'utf8'));
+  // (21.11.2026: auch verschachtelt – ein eingebundener Baustein darf selbst einbinden, Pfade gelten relativ zu seiner eigenen Datei)
+  { const inc = (text, base) => text.replace(/\/\*@include ([^*]+?)\*\//g, (m, f) => { const file = join(base, f.trim()); return inc(readFileSync(file, 'utf8'), dirname(file)); }); css = inc(css, dir); }
   if (cfg.live) css = css.replace(/\/\*[\s\S]*?\*\//g, ''); // Live: Arbeitskommentare („Testseite 4 …“) raus
   if (cfg.live) css = css.replace(/url\(assets\//g, 'url('); // Standbilder (ohne WebGL) liegen neben der Live-Seite
   if (P) css += P.css;
@@ -215,7 +222,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   if (cfg.live === 'index.html') {
     // Bilder für Link-Vorschau und Home-Bildschirm (Quelle labor/assets/, erzeugt aus der Seite selbst)
     // + Standbilder für Browser ohne WebGL (A2): eigene Dateien, nicht eingebettet
-    for (const img of ['og.jpg', 'apple-touch-icon.png', 'still-hero.webp', 'still-achse.webp', 'still-dach.webp', 'still-manu.webp', 'hop-physiotherapie.vcf', 'wirbelsaeule-echt.bin', 'motive-anatomie.bin', 'vorfall-1.webp', 'vorfall-2.webp', 'vorfall-3.webp', 'vorfall-4.webp', 'vorfall-5.webp']) {
+    for (const img of ['og.jpg', 'apple-touch-icon.png', 'still-hero.webp', 'still-achse.webp', 'still-dach.webp', 'still-manu.webp', 'hop-physiotherapie.vcf', 'wirbelsaeule-echt.bin', 'motive-anatomie.bin', 'manu-figur.bin', 'vorfall-1.webp', 'vorfall-2.webp', 'vorfall-3.webp', 'vorfall-4.webp', 'vorfall-5.webp']) {
       const src = join(root, 'assets', img);
       if (existsSync(src)) copyFileSync(src, join(root, liveDir, img)); else console.warn(`⚠ fehlt: assets/${img}`);
     }
