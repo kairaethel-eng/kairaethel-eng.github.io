@@ -296,7 +296,9 @@ const vert = /* glsl */`
       vec3 gP = lx < .4 ? mix(vec3(.6, .82, .9), vec3(0., .45, .72), lx / .4) : mix(vec3(0., .45, .72), vec3(.012, .1, .2), (lx - .4) / .6);
       // 21.11. (Kai: „Es sollte heller sein“): Verläufe aufgehellt – die dunklen Enden bleiben farbig statt fast schwarz
       gH = mix(gH, vec3(.36, .7, .2), .3); gO = mix(gO, vec3(.34, .55, .65), .38); gP = mix(gP, vec3(.12, .6, .88), .34);
-      col = kind4 < .5 ? gH * 1.7 : kind4 < 1.5 ? gO * 1.75 : kind4 < 2.5 ? gP * 1.7 : kind4 < 3.5 ? cBone*.8 : kind4 < 4.5 ? cBone0*1.45 : cLogoP*2.4; // 3 = grauer Bogen · 4 = Buchstaben H · O · P · 5 = Sichel
+      // 21.11. abends (Kai: „noch heller“): Farben weiter aufgehellt (zu den Kreisfarben des flachen Logos hin), Buchstaben und Bögen kräftiger
+      gH = mix(gH, vec3(.45, .78, .25), .35); gO = mix(gO, vec3(.42, .64, .74), .4); gP = mix(gP, vec3(.25, .68, .92), .35);
+      col = kind4 < .5 ? gH * 2.1 : kind4 < 1.5 ? gO * 2.15 : kind4 < 2.5 ? gP * 2.1 : kind4 < 3.5 ? cBone*1. : kind4 < 4.5 ? cBone0*1.6 : cLogoP*3.; // 3 = grauer Bogen · 4 = Buchstaben H · O · P · 5 = Sichel
       al = aW.y; dw = uDr4 * (kind4 > 4.5 ? .46 : kind4 > 3.5 ? .64 : kind4 > 2.5 ? .42 : .58) * uXf[4].w;
     }
     p = p * uXf[i].w + uXf[i].xyz;
@@ -1535,7 +1537,11 @@ function updateScan(dt, r, inSec) {
   // Wirbelsäule endet weich an der Unterkante des Kapitels und blendet als Ganzes aus (outK → uFade), sobald „04 Dach“ ins Bild kommt.
   // 20.11. (Auftrag Kai: Abläufe über die Zeit): die Abtastlinie startet, sobald das Kapitel hereinkommt, und läuft dann von selbst.
   // Kommt man von unten zurück (Kapitel steht schon über dem Bild), ist die Wirbelsäule wie bisher sofort wieder da.
-  if (!inSec) scanGate.set(0); else if (!scanGate.inSec && r.top < VH * 0.25) scanGate.set(1);
+  // 21.11. abends: „sofort da“ nur, wenn man wirklich von unten zurückkommt (Seite wird nach oben gescrollt). Vorher galt das auch beim
+  // schnellen Wisch nach unten: der langsame Formwechsel (3,6 s) gab die Bühne erst frei, als Kapitel 03 schon oben stand → Sprung.
+  if (scanGate.prevTop !== undefined && Math.abs(r.top - scanGate.prevTop) > 1) scanGate.up = r.top > scanGate.prevTop;
+  scanGate.prevTop = r.top;
+  if (!inSec) scanGate.set(0); else if (!scanGate.inSec && r.top < VH * 0.25 && scanGate.up) scanGate.set(1);
   scanGate.inSec = inSec;
   const solidIn = inSec ? weich(scanGate(smooth(VH * 1.0, VH * 0.25, r.top), dt)) * spineK : 0;
   // PC ebenso (18.11. mittags): der genauere Prüfstand zeigte dort dieselbe helle Wolke beim Verlassen und beim Zurückkommen

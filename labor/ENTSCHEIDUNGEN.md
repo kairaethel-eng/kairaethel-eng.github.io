@@ -3,6 +3,11 @@
 Stand: 21.11.2026 (Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Arbeitsblatt 4, dritte Runde (Kai 21.11.2026 abends)
+- **Entschieden:** In der Kopfleiste bleibt Logo A (flach). Die Stoßwelle als Punkt-Grafik in Puls passt.
+- **Entschieden (Richtung Haus):** Die Linien bleiben; Partikel kommen nur als Staub beim Raumwechsel dazu (Licht-Staub im Raum und Perlen an der Kontur nicht gewählt). Erst als Entwurf `haus-staub.html`, Übernahme in Puls nach Kais Urteil.
+- **Merkregel:** Zusätze zum Linienhaus hören von außen auf das Haus (Klasse `on` am Raum) – `house.js` bleibt unberührt, damit Entwurf und Puls denselben Baustein behalten.
+
 ## Echte Figur auf der Manuthera (Auftrag Kai 21.11.2026 nachmittags, umgesetzt, wartet auf Sichtprüfung)
 - **Entschieden (Auftrag):** Die liegende Figur ist die echte Körperoberfläche aus BodyParts3D (Haut FJ2810, Außenfläche), in Bauchlage gebracht – nicht mehr aus Grundformen gerechnet.
 - **Entschieden:** Füße hängen über das Fußende; Arme gebeugt auf tieferen, längeren Armstützen; Brustteil schmaler.

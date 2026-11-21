@@ -49,6 +49,8 @@ const PAGES = {
   'stosswelle-punkte': { out: 'stosswelle-punkte.html' },
   // Logo-Vergleich (21.11.2026, Kai: altes Logo lassen, zusätzlich eine Mischung zeigen): A flach · B Mischung · C nach dem Original
   'logo': { out: 'logo.html' },
+  // Haus mit Staub (21.11.2026, Kai im Arbeitsblatt: Linien behalten, beim Raumwechsel zieht Staub hinüber): Entwurf auf der Grundlage von haus-licht
+  'haus-staub': { out: 'haus-staub.html' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
   'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true, noTermin: true }, // Übergangsseite hat kein Termin-Blatt
@@ -186,7 +188,8 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   const js = res.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
   let css = readFileSync(join(dir, 'style.css'), 'utf8');
   // Baustein-CSS einbinden (14.11.2026, Linienhaus): /*@include pfad*/ relativ zum Quellordner der Seite
-  css = css.replace(/\/\*@include ([^*]+?)\*\//g, (m, f) => readFileSync(join(dir, f.trim()), 'utf8'));
+  // (21.11.2026: auch verschachtelt – ein eingebundener Baustein darf selbst einbinden, Pfade gelten relativ zu seiner eigenen Datei)
+  { const inc = (text, base) => text.replace(/\/\*@include ([^*]+?)\*\//g, (m, f) => { const file = join(base, f.trim()); return inc(readFileSync(file, 'utf8'), dirname(file)); }); css = inc(css, dir); }
   if (cfg.live) css = css.replace(/\/\*[\s\S]*?\*\//g, ''); // Live: Arbeitskommentare („Testseite 4 …“) raus
   if (cfg.live) css = css.replace(/url\(assets\//g, 'url('); // Standbilder (ohne WebGL) liegen neben der Live-Seite
   if (P) css += P.css;

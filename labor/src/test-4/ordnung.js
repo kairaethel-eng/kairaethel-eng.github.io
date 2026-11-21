@@ -87,7 +87,7 @@ export function logoForm(N, desk) {
       for (let k = 0; k < n; k++) {
         const a = (k + (j & 1 ? 0.5 : 0)) / n * Math.PI * 2;
         if (inLetter(d, Math.cos(a) * rr / R, Math.sin(a) * rr / R, gap)) continue; // Platz für den Buchstaben
-        list.push([cx[d] + Math.cos(a) * rr, Math.sin(a) * rr + 0.2, Math.sqrt(Math.max(0, 1 - u * u)) * 0.3, d, 0.82 + 0.18 * u * u]);
+        list.push([cx[d] + Math.cos(a) * rr, Math.sin(a) * rr + 0.2, Math.sqrt(Math.max(0, 1 - u * u)) * 0.3, d, 0.92 + 0.08 * u * u]);
       }
     }
     for (let gy = -Math.ceil(0.6 * R / ls); gy <= Math.ceil(0.6 * R / ls); gy++) for (let gx = -Math.ceil(0.5 * R / ls); gx <= Math.ceil(0.5 * R / ls); gx++) {
