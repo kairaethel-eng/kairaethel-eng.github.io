@@ -3,6 +3,12 @@
 Stand: 21.11.2026 (Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Manuthera: nur die Wirbelsäule bewegt sich (Auftrag Kai 21.11.2026 abends, umgesetzt, wartet auf Sichtprüfung)
+- **Entschieden (Auftrag):** Der Körper dehnt sich nicht; er liegt als feste Blöcke auf den Liegeteilen. Biegen, Strecken, Drehen zeigt allein die echte Wirbelsäule (BodyParts3D), deutlich sichtbar wie im Röntgenbild; die Haut tritt während der Bewegung zurück.
+- **Entschieden:** Gelenk zum Beckenteil zwischen L4 und L5 (Becken liegt auf dem Beckenteil); ruhiger Hub (55 %).
+- **Merkregel:** Haut aus BodyParts3D: Außenfläche per Strahltest („sieht ins Freie“) bestimmen, danach Öffnungen schließen – kein Normalen-Knochen-Test.
+- **Merkregel:** Punkt-Filter für eine Form („Unterseite weglassen“) bei neuer Form neu prüfen – flach von der Seite und von beiden Seiten ansehen.
+
 ## Echte Figur auf der Manuthera (Auftrag Kai 21.11.2026 nachmittags, umgesetzt, wartet auf Sichtprüfung)
 - **Entschieden (Auftrag):** Die liegende Figur ist die echte Körperoberfläche aus BodyParts3D (Haut FJ2810, Außenfläche), in Bauchlage gebracht – nicht mehr aus Grundformen gerechnet.
 - **Entschieden:** Füße hängen über das Fußende; Arme gebeugt auf tieferen, längeren Armstützen; Brustteil schmaler.
