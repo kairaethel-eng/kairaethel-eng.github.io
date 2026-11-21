@@ -154,19 +154,77 @@ await MeshoptSimplifier.ready;
 let skin = load(filesOf(['skin']));
 const t0 = skin.idx.length / 3;
 { const o = orient(skin); console.log(`Umlaufsinn: ${o.comps} Zusammenhänge, ${o.flipped} Dreiecke gedreht`); }
-// Die Haut ist eine Schicht (Außen- und Innenfläche, rund 2 mm auseinander). Außen zeigt die Flächen-Normale vom nächsten Knochen weg,
-// innen zu ihm hin → Innenfläche entfällt (sonst doppelte Punkte, und ihr Kern stieße durch die Außenfläche).
+// Die Haut ist eine Schicht (Außen- und Innenfläche, rund 2 mm auseinander – gemessen: 99,7 % der Dreiecke haben 2 mm hinter sich die
+// andere Fläche). Außenhaut = von dort entkommt mindestens ein Strahl (Normale, acht um 45° und sechzehn um 75° geneigte) ins Freie; die Innenfläche ist
+// rundum eingeschlossen. (Der frühere Test „Normale zeigt vom Knochen weg“ war fleckig → ausgefranste Ränder, Löcher.)
 {
-  const I = skin.idx, Pp = skin.pos, keep = [];
-  for (let t = 0; t < I.length; t += 3) {
-    const a = I[t] * 3, b = I[t + 1] * 3, c = I[t + 2] * 3;
-    const g = [(Pp[a] + Pp[b] + Pp[c]) / 3, (Pp[a + 1] + Pp[b + 1] + Pp[c + 1]) / 3, (Pp[a + 2] + Pp[b + 2] + Pp[c + 2]) / 3];
-    const nn = V3.cross([Pp[b] - Pp[a], Pp[b + 1] - Pp[a + 1], Pp[b + 2] - Pp[a + 2]], [Pp[c] - Pp[a], Pp[c + 1] - Pp[a + 1], Pp[c + 2] - Pp[a + 2]]);
-    const q = nearPt(g);
-    if (V3.dot(nn, V3.sub(g, q)) > 0) keep.push(I[t], I[t + 1], I[t + 2]);
+  const I = skin.idx, Pp = skin.pos, nt = I.length / 3, CS = 15;
+  const lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
+  for (let i = 0; i < Pp.length; i++) { lo[i % 3] = Math.min(lo[i % 3], Pp[i]); hi[i % 3] = Math.max(hi[i % 3], Pp[i]); }
+  const dim = [0, 1, 2].map((k) => Math.max(1, Math.ceil((hi[k] - lo[k]) / CS) + 1)), cells = new Map();
+  const cid = (x, y, z) => (z * dim[1] + y) * dim[0] + x;
+  for (let t = 0; t < nt; t++) {
+    const v = [0, 1, 2].map((e) => I[t * 3 + e] * 3), mn = [0, 1, 2].map((k) => Math.floor((Math.min(...v.map((o) => Pp[o + k])) - lo[k]) / CS)), mx = [0, 1, 2].map((k) => Math.floor((Math.max(...v.map((o) => Pp[o + k])) - lo[k]) / CS));
+    for (let z = mn[2]; z <= mx[2]; z++) for (let y = mn[1]; y <= mx[1]; y++) for (let x = mn[0]; x <= mx[0]; x++) { const c = cid(x, y, z); let l = cells.get(c); if (!l) cells.set(c, (l = [])); l.push(t); }
   }
-  console.log(`Innenfläche: ${(I.length - keep.length) / 3} von ${I.length / 3} Dreiecken entfallen`);
+  const hitTri = (t, o, d) => { // Möller–Trumbore, nur Treffer mit Abstand > 0,05 mm
+    const a = I[t * 3] * 3, b = I[t * 3 + 1] * 3, c = I[t * 3 + 2] * 3;
+    const e1 = [Pp[b] - Pp[a], Pp[b + 1] - Pp[a + 1], Pp[b + 2] - Pp[a + 2]], e2 = [Pp[c] - Pp[a], Pp[c + 1] - Pp[a + 1], Pp[c + 2] - Pp[a + 2]];
+    const pv = V3.cross(d, e2), det = V3.dot(e1, pv); if (Math.abs(det) < 1e-12) return false;
+    const inv = 1 / det, tv = [o[0] - Pp[a], o[1] - Pp[a + 1], o[2] - Pp[a + 2]], u = V3.dot(tv, pv) * inv; if (u < 0 || u > 1) return false;
+    const qv = V3.cross(tv, e1), v = V3.dot(d, qv) * inv; if (v < 0 || u + v > 1) return false;
+    return V3.dot(e2, qv) * inv > 0.05;
+  };
+  const escapes = (o, d, self) => { // Rasterlauf (Amanatides–Woo); true = kein Treffer bis aus dem Raster
+    let c = [0, 1, 2].map((k) => Math.floor((o[k] - lo[k]) / CS)); const st = d.map((x) => (x > 0 ? 1 : -1));
+    const tMax = [0, 1, 2].map((k) => (d[k] === 0 ? Infinity : ((lo[k] + (c[k] + (d[k] > 0 ? 1 : 0)) * CS) - o[k]) / d[k]));
+    const tD = d.map((x) => (x === 0 ? Infinity : CS / Math.abs(x)));
+    for (;;) {
+      if (c.some((x, k) => x < 0 || x >= dim[k])) return true;
+      const l = cells.get(cid(c[0], c[1], c[2]));
+      if (l) for (const t of l) if (t !== self && hitTri(t, o, d)) return false;
+      const k = tMax[0] < tMax[1] ? (tMax[0] < tMax[2] ? 0 : 2) : (tMax[1] < tMax[2] ? 1 : 2);
+      c[k] += st[k]; tMax[k] += tD[k];
+    }
+  };
+  const keep = []; let out = 0;
+  for (let t = 0; t < nt; t++) {
+    const a = I[t * 3] * 3, b = I[t * 3 + 1] * 3, c = I[t * 3 + 2] * 3;
+    const g = [(Pp[a] + Pp[b] + Pp[c]) / 3, (Pp[a + 1] + Pp[b + 1] + Pp[c + 1]) / 3, (Pp[a + 2] + Pp[b + 2] + Pp[c + 2]) / 3];
+    const n = V3.nrm(V3.cross([Pp[b] - Pp[a], Pp[b + 1] - Pp[a + 1], Pp[b + 2] - Pp[a + 2]], [Pp[c] - Pp[a], Pp[c + 1] - Pp[a + 1], Pp[c + 2] - Pp[a + 2]]));
+    const o = V3.add(g, V3.sc(n, 0.02));
+    const t1 = V3.nrm(V3.cross(n, Math.abs(n[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0])), t2 = V3.cross(n, t1);
+    let free = escapes(o, n, t);
+    for (let k = 0; k < 8 && !free; k++) { const ang = k * Math.PI / 4, dd = V3.nrm(V3.add(n, V3.add(V3.sc(t1, Math.cos(ang)), V3.sc(t2, Math.sin(ang))))); free = escapes(o, dd, t); }
+    // flach (75°): z. B. Oberschenkel-Außenseite hinter der Hand, die in der Ausgangslage dicht daneben hängt
+    for (let k = 0; k < 16 && !free; k++) { const ang = k * Math.PI / 8, dd = V3.nrm(V3.add(V3.sc(n, 0.27), V3.add(V3.sc(t1, Math.cos(ang)), V3.sc(t2, Math.sin(ang))))); free = escapes(o, dd, t); }
+    if (free) { keep.push(I[t * 3], I[t * 3 + 1], I[t * 3 + 2]); out++; }
+  }
+  console.log(`Außenhaut: ${out} von ${nt} Dreiecken (Innenfläche ${nt - out} entfällt)`);
   skin = reorder({ pos: skin.pos, idx: keep });
+}
+// Natürliche Öffnungen der Haut (Augen, Mund, Nase, Ohren, Nägel, Nabel) und einzelne Fehlstellen schließen: jeden offenen Rand
+// (Umfang bis 400 mm) mit einem Fächer um seinen Mittelpunkt füllen (21.11.2026, Kai: „Figur hat nur Löcher“)
+{
+  const I = skin.idx, Pp = skin.pos, has = new Set(), from = new Map(), E = [];
+  for (let t = 0; t < I.length; t += 3) for (let e = 0; e < 3; e++) has.add(I[t + e] + ',' + I[t + (e + 1) % 3]);
+  for (let t = 0; t < I.length; t += 3) for (let e = 0; e < 3; e++) { const a = I[t + e], b = I[t + (e + 1) % 3]; if (!has.has(b + ',' + a)) { const k = E.length; E.push([a, b]); let l = from.get(a); if (!l) from.set(a, (l = [])); l.push(k); } }
+  // Ränder kantenweise ablaufen (an Engstellen mit zwei Randkanten je Ecke trotzdem geschlossene Züge)
+  const usedE = new Uint8Array(E.length); let filled = 0, kept = 0;
+  for (let e0 = 0; e0 < E.length; e0++) {
+    if (usedE[e0]) continue;
+    const loop = []; let e = e0, endV = -1;
+    while (e >= 0 && !usedE[e]) { usedE[e] = 1; loop.push(E[e][0]); endV = E[e][1]; const l = from.get(endV) || []; e = -1; for (const k of l) if (!usedE[k]) { e = k; break; } }
+    const closed = endV === E[e0][0];
+    if (loop.length < 3) { kept++; continue; }
+    let per = 0; const c = [0, 0, 0];
+    loop.forEach((a, i) => { const b = loop[(i + 1) % loop.length]; per += Math.hypot(Pp[a * 3] - Pp[b * 3], Pp[a * 3 + 1] - Pp[b * 3 + 1], Pp[a * 3 + 2] - Pp[b * 3 + 2]); for (let k = 0; k < 3; k++) c[k] += Pp[a * 3 + k] / loop.length; });
+    if (per > 400 || !closed) { kept++; console.log(`  offen: Umfang ${per.toFixed(0)} mm, ${loop.length} Kanten, Mitte z ${c[2].toFixed(0)} mm${closed ? '' : ' (nicht geschlossen)'}`); continue; }
+    const ci = Pp.length / 3; Pp.push(...c);
+    loop.forEach((a, i) => { const b = loop[(i + 1) % loop.length]; I.push(b, a, ci); }); // Rand a→b gehört zum Netz → Füllung b→a
+    filled++;
+  }
+  console.log(`Öffnungen geschlossen: ${filled}, offen gelassen: ${kept}`);
 }
 { const [si] = MeshoptSimplifier.simplify(new Uint32Array(skin.idx), new Float32Array(skin.pos), 3, ZIEL_DREIECKE * 3, 0.01, []); skin = reorder({ pos: skin.pos, idx: Array.from(si) }); }
 const nv = skin.pos.length / 3, P = (i) => [skin.pos[i * 3], skin.pos[i * 3 + 1], skin.pos[i * 3 + 2]];
@@ -255,7 +313,15 @@ for (let t = 0; t < skin.idx.length; t += 3) {
 // Wirbelkörper (Schwerpunkt je Wirbel) für die durchschimmernde Wirbelsäule
 const ORDER = ['atlas', 'axis', ...['third', 'fourth', 'fifth', 'sixth', 'seventh'].map((n) => `${n} cervical vertebra`), ...ribs.map((n) => `${n} thoracic vertebra`), ...['first', 'second', 'third', 'fourth', 'fifth'].map((n) => `${n} lumbar vertebra`), 'sacrum'];
 const wirbel = [];
-for (const n of ORDER) { const pos = bone([n]); const c = [0, 0, 0]; for (let i = 0; i < pos.length; i++) c[i % 3] += pos[i] / (pos.length / 3); wirbel.push(...toLiege(c)); }
+const WN = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', ...ribs.map((_, i) => 'T' + (i + 1)), 'L1', 'L2', 'L3', 'L4', 'L5', 'S'];
+const wNetz = []; // echte Wirbel als Netze (21.11.2026, Kai: „nur die innere Wirbelsäule bewegen, deutlicher erkennbar“)
+for (const [j, n] of ORDER.entries()) {
+  let m = load(filesOf([n])); const c = [0, 0, 0]; for (let i = 0; i < m.pos.length; i++) c[i % 3] += m.pos[i] / (m.pos.length / 3); wirbel.push(...toLiege(c));
+  const [si] = MeshoptSimplifier.simplify(new Uint32Array(m.idx), new Float32Array(m.pos), 3, (n === 'sacrum' ? 1400 : 700) * 3, 0.02, []);
+  m = reorder({ pos: m.pos, idx: Array.from(si) });
+  const pos = []; for (let i = 0; i < m.pos.length; i += 3) pos.push(...toLiege([m.pos[i], m.pos[i + 1], m.pos[i + 2]], c[2]));
+  wNetz.push(['wirbel/' + WN[j], pos, m.idx]);
+}
 
 // ---------- schreiben (wie tools/anatomie-motive.mjs) ----------
 const head = { quelle: QUELLE, bearbeitung: 'Haut vereinfacht, in Bauchlage auf die Liege gelegt, Arme gebeugt; Koordinaten im Raum der Liege', einheit: 'Liege', k, parts: [] };
@@ -276,6 +342,7 @@ const put = (id, kind, pos, idx) => {
 };
 for (const [id, I] of Object.entries(tri)) { const m = reorder({ pos: Array.from(out), idx: I }); put('figur/' + id, 'skin', m.pos, m.idx); }
 put('figur/wirbel', 'points', wirbel, []);
+for (const [id, pos, idx] of wNetz) put(id, 'bone', pos, idx);
 const hj = Buffer.from(JSON.stringify(head), 'utf8'), len = Buffer.alloc(4); len.writeUInt32LE(hj.length);
 const raw = Buffer.concat([len, hj, ...chunks.map((c) => Buffer.from(c.buffer, c.byteOffset, c.byteLength))]);
 const gz = gzipSync(raw, { level: 9 });

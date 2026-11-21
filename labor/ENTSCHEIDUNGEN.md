@@ -7,6 +7,11 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **Entschieden:** In der Kopfleiste bleibt Logo A (flach). Die Stoßwelle als Punkt-Grafik in Puls passt.
 - **Entschieden (Richtung Haus):** Die Linien bleiben; Partikel kommen nur als Staub beim Raumwechsel dazu (Licht-Staub im Raum und Perlen an der Kontur nicht gewählt). Erst als Entwurf `haus-staub.html`, Übernahme in Puls nach Kais Urteil.
 - **Merkregel:** Zusätze zum Linienhaus hören von außen auf das Haus (Klasse `on` am Raum) – `house.js` bleibt unberührt, damit Entwurf und Puls denselben Baustein behalten.
+## Manuthera: nur die Wirbelsäule bewegt sich (Auftrag Kai 21.11.2026 abends, umgesetzt, wartet auf Sichtprüfung)
+- **Entschieden (Auftrag):** Der Körper dehnt sich nicht; er liegt als feste Blöcke auf den Liegeteilen. Biegen, Strecken, Drehen zeigt allein die echte Wirbelsäule (BodyParts3D), deutlich sichtbar wie im Röntgenbild; die Haut tritt während der Bewegung zurück.
+- **Entschieden:** Gelenk zum Beckenteil zwischen L4 und L5 (Becken liegt auf dem Beckenteil); ruhiger Hub (55 %).
+- **Merkregel:** Haut aus BodyParts3D: Außenfläche per Strahltest („sieht ins Freie“) bestimmen, danach Öffnungen schließen – kein Normalen-Knochen-Test.
+- **Merkregel:** Punkt-Filter für eine Form („Unterseite weglassen“) bei neuer Form neu prüfen – flach von der Seite und von beiden Seiten ansehen.
 
 ## Echte Figur auf der Manuthera (Auftrag Kai 21.11.2026 nachmittags, umgesetzt, wartet auf Sichtprüfung)
 - **Entschieden (Auftrag):** Die liegende Figur ist die echte Körperoberfläche aus BodyParts3D (Haut FJ2810, Außenfläche), in Bauchlage gebracht – nicht mehr aus Grundformen gerechnet.
