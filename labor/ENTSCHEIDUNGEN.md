@@ -15,6 +15,8 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 ## Manuthera: nur die Wirbelsäule bewegt sich (Auftrag Kai 21.11.2026 abends, umgesetzt, wartet auf Sichtprüfung)
 - **Entschieden (Auftrag):** Der Körper dehnt sich nicht; er liegt als feste Blöcke auf den Liegeteilen. Biegen, Strecken, Drehen zeigt allein die echte Wirbelsäule (BodyParts3D), deutlich sichtbar wie im Röntgenbild; die Haut tritt während der Bewegung zurück.
 - **Entschieden:** Gelenk zum Beckenteil zwischen L4 und L5 (Becken liegt auf dem Beckenteil); ruhiger Hub (55 %).
+- **Entschieden (Kai „Go A“, 21.11. spät):** Oberkörper und Becken mit Beinen bleiben fest; nur die Haut über der Lende (L1 bis vor die Hüfte) geht weich mit der Wirbelsäule mit – kein Knick an der Taille, Beine schwenken aus der Hüfte. Körper ganz still (B) und Rückweg (C) verworfen.
+- **Merkregel:** Haut und Wirbel bekommen dieselbe Übergangszone – sonst schiebt sich die Wirbelsäule gegen die Haut.
 - **Merkregel:** Haut aus BodyParts3D: Außenfläche per Strahltest („sieht ins Freie“) bestimmen, danach Öffnungen schließen – kein Normalen-Knochen-Test.
 - **Merkregel:** Punkt-Filter für eine Form („Unterseite weglassen“) bei neuer Form neu prüfen – flach von der Seite und von beiden Seiten ansehen.
 
