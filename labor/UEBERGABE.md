@@ -5,6 +5,7 @@
 - **Liege angepasst** (nur für die echte Figur; Rückfall behält die alten Maße): Kopfteil länger, Brustteil schmaler (die Arme hängen an den Schultern vorbei), Armstützen tiefer und länger, Fußgriff unter das Beinteil, Bernstein-Anzeigen Zug/Seitneigung unter den Füßen, Kamera etwas weiter weg. Das kleine Leistungs-Motiv „Lojer Manuthera“ zeigt dieselbe neue Liege.
 - **Gefunden und behoben:** dunkle Querstreifen über der Figur – die Haut in BodyParts3D ist eine Schicht mit Innenfläche; die Innenfläche entfällt jetzt (Normale zum Knochen hin).
 **Geprüft [B]:** Bühne über lokalen Server am PC (1440×900) und Handy (390×692) in allen vier Modi; Kontaktbogen `motive.cjs` (alle zwölf Motive unverändert, Manuthera in vier Modi); Rückfall über `file://` (Datei lädt nicht → gerechnete Figur, Konsole meldet es). Punkte Handy 60 000 statt 53 000 (+12 %).
+**Prüfstand (nach Zusammenführen mit Arbeitsblatt 4, zweite Runde):** iPhone alles ok, `sizes.cjs` alles ok; PC ein FEHLER im Film „Hausordnung → 03“ (Sprung 6,2; vorher 5,0) – Abtastlinie der Wirbelsäule baut sich aus dem Staub auf, nicht die Manuthera; **an die Sitzung, die die Abtastlinie zuletzt geändert hat („startet früher“): ansehen.**
 **[O] nur Kai:** Wirkung am iPhone (Größe der Figur in der Bühne, Flüssigkeit mit 12 % mehr Punkten), ob die Figur so „preisgekrönt“ wirkt oder z. B. heller/anders gefärbt sein soll. Prüfstand läuft über `file://` → misst die Manuthera mit der Rückfall-Figur.
 **Rückweg:** Stand davor = Commit `493d39e`.
 
