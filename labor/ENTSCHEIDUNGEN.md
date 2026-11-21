@@ -1,7 +1,14 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 20.11.2026 (Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 21.11.2026 (Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Kais Screenshots 21.11.2026 – „Go alle Empfehlungen“ (umgesetzt, wartet auf Sichtprüfung)
+- **Entschieden:** Auftakt vor Kapitel 02 am Handy/Tablet 40svh (nach der klebenden Bühne von 01); Figur im Schlussbild kleiner und tiefer.
+- **Entschieden:** Leitsatz als eigener Zitatblock mit großem Bernstein-Anführungszeichen, Linie zeichnet sich über die Zeit ein.
+- **Entschieden:** Wirbelsäule am Handy: Nahansicht nur zwischen Schildern und Skala, endet weich über der Karte; Skala auf dunklem Grund; „Mehr“ als Bernstein-Pille mit Vorschau-Zeile, pulsiert einmal.
+- **Entschieden:** Dach am Handy/Tablet: Raumtext direkt unter dem Haus, Knöpfe danach; Einleitung ein Satz.
+- **Merkregel:** Klebende Bühnen mit 100svh lassen am iPhone bei eingefahrener Leiste unten einen Streifen frei – Abstände danach knapp halten.
 
 ## Arbeitsblatt 3 abgearbeitet (Kai 20.11.2026 nachts, Antworten im Arbeitsblatt)
 - **Entschieden:** Anatomie in den Motiven = echte Knochen (BodyParts3D 4.0, CC BY 4.0, Namensnennung im Fuß und Impressum § 9); gerechnete Formen nur noch als Rückfall und für Geräte/Hände.

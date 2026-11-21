@@ -112,10 +112,11 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
     W = stage.clientWidth; H = stage.clientHeight; desk = W > 920;
     if (!W || !H) return;
     const topH = desk ? 84 : 70, figH = SOLE - CROWN;
-    const full = (bottom, top = topH) => {
-      const s = Math.min((bottom - top) / figH, (desk ? W * 0.34 : W * 0.86) / BODY_W);
+    // k < 1: Figur kleiner, lo > .5: sie rückt im freien Raum nach unten (21.11.2026, Go Kai 1c: Schlussbild am Handy – Kopf frei unter der Überschrift)
+    const full = (bottom, top = topH, k = 1, lo = 0.5) => {
+      const s = Math.min((bottom - top) / figH, (desk ? W * 0.34 : W * 0.86) / BODY_W) * k;
       const ax = desk ? W * 0.23 : W / 2;
-      const ay = top + ((bottom - top) - figH * s) / 2 + (BODY_H / 2 - CROWN) * s;
+      const ay = top + ((bottom - top) - figH * s) * lo + (BODY_H / 2 - CROWN) * s;
       return { fx: 0, fy: 0, s, ax, ay };
     };
     // Handy: die Figur endet über dem jeweiligen Textblock (Start bzw. Schluss); ohne Fahrt über dem höchsten Stationstext
@@ -131,7 +132,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
       const hBot = Math.max(...arts.map((a) => bot(a, 'h2'))), tTop = Math.min(...arts.map((a) => top(a, '.kf-txt')));
       TXT.head = hBot; TXT.txt = tTop;
       V.A = full(top(heroEl, '.kf-sub') - 16, bot(heroEl, 'h1') + 12);
-      V.E = full(top(endEl, '.kf-txt') - 16, bot(endEl, 'h2') + 12);
+      V.E = full(top(endEl, '.kf-txt') - 16, bot(endEl, 'h2') + 28, 0.88, 0.72);
       V.S = full(Math.min(tTop, top(heroEl, '.kf-sub'), top(endEl, '.kf-txt')) - 18, Math.max(hBot, bot(heroEl, 'h1'), bot(endEl, 'h2')) + 12);
       stAy = (hBot + tTop) / 2;
       if (progEl) progEl.style.top = `${Math.round(stAy)}px`;

@@ -960,7 +960,9 @@ function mobTexts(zoneKey) {
   const info = NINFO[zoneKey], card = cardOf(zoneKey);
   const dd = card ? card.querySelectorAll('dd') : [];
   const typ = dd[1] ? 'Typisch: ' + dd[1].textContent.trim() : info.typ;
-  return [info.exit, info.nerv, info.gef, info.ziel, info.pre ? info.pre + '\n' + typ : typ];
+  // 21.11.2026 (Kai: „Überlappung Text“, Go 3): am Handy passt „Nervenaustritt C1–C2“ nicht in eine Zeile neben der Wirbelsäule
+  // → fester Umbruch nach dem Wort, der Abschnitt bleibt zusammen (vorher brach er bei „C1–“ / „C2“)
+  return [info.exit.replace(/^Nervenaustritt /, 'Nervenaustritt\n'), info.nerv, info.gef, info.ziel, info.pre ? info.pre + '\n' + typ : typ];
 }
 // Scanner (Kai 6.11. spät): Karte oben als Überschrift – Abschnitt + Titel, „Typisch“, Therapien; die vier Zeilen links daneben
 const chipsEl = document.createElement('div'); chipsEl.className = 'scan-chips'; chipsEl.setAttribute('aria-hidden', 'true'); document.body.appendChild(chipsEl);
@@ -994,6 +996,8 @@ function mobMeasure(zoneKey) {
     bar.type = 'button'; bar.className = 'sc-bar'; bar.tabIndex = -1;
     head.className = 'sc-t'; no.className = 'sc-no'; no.textContent = card ? ($('.seg-no', card) || card).textContent.trim() : '';
     h.className = 'sc-h'; h.textContent = card && $('h3', card) ? $('h3', card).textContent.trim() : ''; head.append(no, h);
+    // 21.11.2026 (Go Kai 3): erste Zeile von „Typisch“ als Vorschau – zeigt, dass hinter der Leiste mehr steht
+    const tease = document.createElement('span'); tease.className = 'sc-tease'; tease.textContent = info.typ.split('\n')[0]; head.append(tease);
     bar.append(head);
     // Film-Knopf (Auftrag Z): sichtbare Kopien nur für Finger/Maus – der echte Knopf steht in der (für Vorleseprogramme lesbaren) Karte.
     // In der Leiste klein („Film“), aufgeklappt mit vollem Text.
@@ -1007,7 +1011,8 @@ function mobMeasure(zoneKey) {
       vfBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bandscheibenvorfall ansehen</span><small>Film · 37 s</small>';
       vfBtn.addEventListener('click', VF.open);
     }
-    const chev = document.createElement('span'); chev.className = 'sc-x'; bar.append(chev);
+    // 21.11.2026 (Kai: „Button um mehr Text lebendig, auffälliger“, Go 3): Bernstein-Pille „Mehr“ statt des kleinen Rings
+    const chev = document.createElement('span'); chev.className = 'sc-x'; chev.innerHTML = '<b>Mehr</b><b>Weniger</b>'; bar.append(chev);
     more.className = 'sc-more';
     const typ = document.createElement('p'); typ.className = 'sc-typ'; typ.textContent = (info.pre ? info.pre + '\n' : '') + info.typ;
     const rows = document.createElement('div'); rows.className = 'sc-rows';
@@ -1068,7 +1073,10 @@ function updateCalloutsMob(zoneKey, on, prog, opt = null) {
     el.style.opacity = vis ? 1 : 0; el.style.transitionDuration = dur;
     if (i < 4) nl[i].style.opacity = nring[i].style.opacity = vis && (!opt || opt.lines) ? 1 : 0;
   });
-  { const on = !!(sc && show && prog > (opt ? opt.chip : MTH[4] + 0.06)); chipsEl.style.opacity = on ? 1 : 0; chipsEl.classList.toggle('is-on', on); } chipsEl.style.transitionDuration = dur; // is-on: Film-Knopf nur sichtbar tippbar
+  { const on = !!(sc && show && prog > (opt ? opt.chip : MTH[4] + 0.06)); chipsEl.style.opacity = on ? 1 : 0;
+    // 21.11.2026 (Go Kai 3): „Mehr“ pulsiert einmal, sobald die Karte eines Abschnitts erscheint
+    if (on && !chipsEl.classList.contains('is-on') && !paused && !reduced) { chipsEl.classList.remove('sc-pulse'); void chipsEl.offsetWidth; chipsEl.classList.add('sc-pulse'); }
+    chipsEl.classList.toggle('is-on', on); } chipsEl.style.transitionDuration = dur; // is-on: Film-Knopf nur sichtbar tippbar
   if (!show) return;
   ncalls.forEach((el, i) => { el.style.transform = `translate(${ML.x}px, ${(i < 4 ? ML.ys[i] : ML.typY).toFixed(1)}px)`; });
   if (sc) { chipsEl.style.transform = `translate(${ML.x}px, ${ML.chipsY.toFixed(1)}px) translateY(-100%)`; chipsEl.style.maxHeight = Math.max(120, ML.chipsY - SCAN.cardTop - 4).toFixed(0) + 'px'; } // unten verankert
@@ -1583,15 +1591,19 @@ function updateScan(dt, r, inSec) {
       if (ML.key === st.zone && ML.hs[0]) mobPlaceScan();
       const py = ML.key === st.zone && ML.hs[0] ? ML.y0 + ML.hs[0] / 2 : SCAN.top + (SCAN.bot - SCAN.top) * 0.36;
       // Abschnitt mittig zwischen Zeilen-Spalte und Ziehstreifen
-      screenToWorld(Math.max(VW * 0.5, (ML.x + Math.max(ML.ws[0], ML.ws[3]) + 12 + VW - RAIL_W) / 2), py, _zc.z * zw, _zw);
-      zx = _zw.x - _zc.x * zw; zy = _zw.y - _zc.y * zw;
+      const place = () => { screenToWorld(Math.max(VW * 0.5, (ML.x + Math.max(ML.ws[0], ML.ws[3]) + 12 + VW - RAIL_W) / 2), py, _zc.z * zw, _zw); zx = _zw.x - _zc.x * zw; zy = _zw.y - _zc.y * zw; };
+      place();
       // Kai 7.11.: Wirbelkörper des Abschnitts rechts neben den Zeilen (sonst liegt der Nerv auf dem Knochen),
       // höchstens bis vor den Ziehstreifen
+      // 21.11.2026 (Kai: „Überlappung Text“, Go 3a): freie Fläche = zwischen Schildern und Skala. Ist der Abschnitt breiter,
+      // wird die Nahansicht kleiner (nie kleiner als die Übersicht) – vorher durfte er bis unter die Beschriftung der Skala reichen
       if (ML.key === st.zone && ML.hs[0]) {
-        const ppw = GLH / 8.197, rowR = ML.x + Math.max(ML.ws[0], ML.ws[1], ML.ws[2], ML.ws[3]) + 12;
-        let left = 1e9, right = -1e9;
-        st.ids.forEach((id) => { const lv = det.levels.find((l) => l.id === id), cx = toPx(lvLocal(lv, _zc2).multiplyScalar(zw).add(_sv2.set(zx, zy, 0)))[0], h = lv.R * SC * zw * 1.15 * ppw; left = Math.min(left, cx - h); right = Math.max(right, cx + h); });
-        const need = clamp(rowR - left, 0, Math.max(0, VW - RAIL_W * 0.6 - right));
+        const ppw = GLH / 8.197, rowR = ML.x + Math.max(ML.ws[0], ML.ws[1], ML.ws[2], ML.ws[3]) + 12, railL = VW - RAIL_W - 4;
+        const span = () => { let left = 1e9, right = -1e9; st.ids.forEach((id) => { const lv = det.levels.find((l) => l.id === id), cx = toPx(lvLocal(lv, _zc2).multiplyScalar(zw).add(_sv2.set(zx, zy, 0)))[0], h = lv.R * SC * zw * 1.15 * ppw; left = Math.min(left, cx - h); right = Math.max(right, cx + h); }); return [left, right]; };
+        let [left, right] = span();
+        const k = (railL - rowR) / Math.max(1, right - left);
+        if (k < 1) { zw = Math.max(OV.w, zw * k); place(); [left, right] = span(); }
+        const need = clamp(rowR - left, 0, Math.max(0, railL - right));
         zx += need / ppw;
       }
       // Wurzelende (links außen) bei voller Nahansicht → Bildschirmhöhe für die Zeilen (mobPlaceScan)
@@ -1609,6 +1621,12 @@ function updateScan(dt, r, inSec) {
     if (fx) fxPose(X);
   }
   const zoomE = ZM.k * ZM.k * (3 - 2 * ZM.k);
+  // 21.11.2026 (Kai: „Überlappung Text“, Go 3a): Handy-Nahansicht – die Wirbelsäule endet weich über der Karte unten statt
+  // unter ihr weiterzulaufen (gleiche weiche Kante wie am Kapitelende, uClip)
+  if (!pc && near && ML.chH && zoomE > 0.001) {
+    const cardTop = ML.chipsY - (chipsEl.classList.contains('is-open') ? chipsEl.offsetHeight : ML.chH) - 6, base = r.bottom - 4;
+    if (cardTop < base) sU.uClip.value = 1 - 2 * (base + (cardTop - base) * zoomE) / VH;
+  }
   // Aufbau beim Hereinkommen (Scan von oben), Auflösen nach oben beim Weiterscrollen
   const topY = X.y + 4.35 * X.w, botY = X.y - 4.35 * X.w;
   uniforms.uCut.value = solid <= 0 ? 100 : THREE.MathUtils.lerp(topY + 0.05, botY - 0.05, solidIn);
