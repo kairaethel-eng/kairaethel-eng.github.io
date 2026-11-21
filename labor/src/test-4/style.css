@@ -56,10 +56,10 @@ em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--amber)
 .top{position:fixed;z-index:20;top:env(safe-area-inset-top,0px);left:0;right:0;display:flex;align-items:center;gap:1.875rem;padding:1rem max(var(--gut-r),3vw) 1rem max(var(--gut),3vw);transition:background .4s}
 .top.scrolled{background:rgba(10,22,27,.72);backdrop-filter:blur(.75rem) saturate(1.2);-webkit-backdrop-filter:blur(.75rem) saturate(1.2);box-shadow:0 1px 0 var(--line)}
 .brand{display:flex;align-items:center;gap:.75rem;text-decoration:none}
-.brand svg{width:7.25rem;height:auto;display:block} /* 19.11.: Kreise rund 36 px, Buchstaben lesbar (vorher 4,875rem über alle drei Kreise mit großen Lücken) */
+.brand svg{width:10.5rem;height:auto;display:block} /* 19.11.: Kreise rund 36 px, Buchstaben lesbar (vorher 4,875rem über alle drei Kreise mit großen Lücken) */
 .brand-name{display:none;font:600 .6875rem/1.25 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
 @media (min-width:1500px){.brand-name{display:block}}
-@media (max-width:1300px){.brand svg{width:6rem}}
+@media (max-width:1300px){.brand svg{width:8.5rem}}
 .chapters{list-style:none;margin:0 0 0 auto;padding:0;display:flex;gap:1.625rem}
 .chapters a{display:flex;align-items:baseline;gap:.4375rem;text-decoration:none;font:500 .8438rem/1 var(--sans);color:var(--mute);transition:color .3s}
 .chapters i{font:italic 400 .875rem/1 var(--serif);color:var(--mute);transition:color .3s}
@@ -464,7 +464,7 @@ html:not(.js) button.ix-link{display:none}
   html.seg-scan #achse .note::before{content:"";position:absolute;z-index:-1;inset:-1.25rem -50vw -1rem;background:linear-gradient(rgba(10,22,27,0),rgba(10,22,27,.9) 1.25rem)} /* Nahansicht: Wirbelsäule läuft hinter dem Hinweis aus */
   html.seg-scan .ncall-typ{white-space:pre-line}
   .ncall{white-space:normal;padding:.3125rem .625rem;font-size:.8125rem;line-height:1.35;border-radius:.625rem;background:rgba(10,22,27,.86);backdrop-filter:none;-webkit-backdrop-filter:none;transition:opacity .35s var(--ease)} /* ohne Weichzeichner: spart am iPhone Rechenzeit über der 3D-Szene */
-  .ncall-exit{font-size:.75rem;letter-spacing:.12em;white-space:pre-line} /* 21.11.: Umbruch nur nach „Nervenaustritt“ (main.js mobTexts) */
+  .ncall-exit{font-size:.75rem;letter-spacing:.12em;white-space:nowrap} /* 21.11. (Kai: „Überlappung Text“): „Nervenaustritt C1–C2“ in einer Zeile – vorher brach es bei „C1–“ / „C2“ */
   .ncall-ziel{font-size:1.0625rem;line-height:1.2}
   .ncall-typ{white-space:pre-line;text-align:left;font-size:.8125rem;line-height:1.45;padding:.4375rem .75rem;color:#C2D0D4;background:rgba(10,22,27,.86);border:1px solid rgba(207,232,250,.14);border-radius:.375rem}
   .peri-label{display:none}
@@ -490,7 +490,7 @@ html:not(.js) button.ix-link{display:none}
 }
 @media (max-width:600px){
   body{font-size:1rem}
-  .brand svg{width:5.5rem}
+  .brand svg{width:6.5rem}
   .top{gap:.5rem}
   .chap-now{margin-right:auto}
   .facts{grid-template-columns:1fr}
@@ -499,14 +499,14 @@ html:not(.js) button.ix-link{display:none}
 @media (max-width:400px){
   .actions .btn{flex:1 1 100%}
   /* schmale Handys: Leiste kompakter, damit „Termin“ im Bild bleibt */
-  .brand svg{width:4.875rem}
+  .brand svg{width:5.75rem}
   .chap-now{gap:.3125rem;padding:0}
   .chap-now::after{margin-left:.125rem}
   .top .btn-small{margin-left:0;padding:0 .75rem;letter-spacing:.1em}
 }
 @media (max-width:350px){
   .top{gap:.375rem}
-  .brand svg{width:3.625rem}
+  .brand svg{width:4.25rem}
   .chap-now{font-size:.75rem}
   .chap-now small{display:none} /* 19.11.: Untertitel des Kapitels entfällt bis 350 px – „Termin“ lag dort schon vorher 13 px außerhalb des Bilds */
   .top .btn-small{padding:0 .625rem}
@@ -929,3 +929,9 @@ html:not(.js) .index button{cursor:default}
 }
 /* 18.11.: sehr schmale Handys (bis 380 px) – „Die Tür steht“ und „drei Dimensionen.“ bleiben je in einer Zeile */
 @media (max-width:380px){.door h2{font-size:2.125rem}.manu-h{font-size:1.9375rem}}
+
+/* 20.11.2026 nachts (Kai im Arbeitsblatt 4: Schilder an der Wirbelsäule „alle gleich: schlichter Text mit Linie“): Austritt, Nerv, Gefühl
+   und Ziel sind dieselbe schlichte Zeile ohne Rahmen und Fläche – nur der Austritt bleibt Bernstein. Der Kasten „Typisch …“ bleibt (Fließtext). */
+.ncall:not(.ncall-typ){padding:.125rem .25rem;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;font:500 .875rem/1.25 var(--sans);letter-spacing:.01em;text-transform:none;color:var(--txt);text-shadow:0 0 .375rem rgba(10,22,27,1),0 0 .875rem rgba(10,22,27,.95),0 1px 2px rgba(10,22,27,.9)}
+.ncall.ncall-exit{color:var(--amber)}
+@media (max-width:920px){.ncall:not(.ncall-typ){font-size:.8125rem}}
