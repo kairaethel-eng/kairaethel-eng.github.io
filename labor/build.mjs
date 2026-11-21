@@ -213,7 +213,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   if (cfg.live === 'index.html') {
     // Bilder für Link-Vorschau und Home-Bildschirm (Quelle labor/assets/, erzeugt aus der Seite selbst)
     // + Standbilder für Browser ohne WebGL (A2): eigene Dateien, nicht eingebettet
-    for (const img of ['og.jpg', 'apple-touch-icon.png', 'still-hero.webp', 'still-achse.webp', 'still-dach.webp', 'still-manu.webp', 'hop-physiotherapie.vcf', 'wirbelsaeule-echt.bin', 'motive-anatomie.bin', 'vorfall-1.webp', 'vorfall-2.webp', 'vorfall-3.webp', 'vorfall-4.webp', 'vorfall-5.webp']) {
+    for (const img of ['og.jpg', 'apple-touch-icon.png', 'still-hero.webp', 'still-achse.webp', 'still-dach.webp', 'still-manu.webp', 'hop-physiotherapie.vcf', 'wirbelsaeule-echt.bin', 'motive-anatomie.bin', 'manu-figur.bin', 'vorfall-1.webp', 'vorfall-2.webp', 'vorfall-3.webp', 'vorfall-4.webp', 'vorfall-5.webp']) {
       const src = join(root, 'assets', img);
       if (existsSync(src)) copyFileSync(src, join(root, liveDir, img)); else console.warn(`⚠ fehlt: assets/${img}`);
     }

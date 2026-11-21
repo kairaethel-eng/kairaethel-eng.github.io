@@ -3,6 +3,12 @@
 Stand: 21.11.2026 (Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Echte Figur auf der Manuthera (Auftrag Kai 21.11.2026 nachmittags, umgesetzt, wartet auf Sichtprüfung)
+- **Entschieden (Auftrag):** Die liegende Figur ist die echte Körperoberfläche aus BodyParts3D (Haut FJ2810, Außenfläche), in Bauchlage gebracht – nicht mehr aus Grundformen gerechnet.
+- **Entschieden:** Füße hängen über das Fußende; Arme gebeugt auf tieferen, längeren Armstützen; Brustteil schmaler.
+- **Merkregel:** Haut aus BodyParts3D ist eine Schicht (außen + innen) – immer nur die Außenfläche verwenden.
+- **Merkregel:** Ändert sich die Liege für die echte Figur, behält der Rückfall (Datei lädt nicht) die alten Maße, damit die gerechnete Figur passt.
+
 ## Kais Screenshots 21.11.2026 – „Go alle Empfehlungen“ (umgesetzt, wartet auf Sichtprüfung)
 - **Entschieden:** Auftakt vor Kapitel 02 am Handy/Tablet 40svh (nach der klebenden Bühne von 01); Figur im Schlussbild kleiner und tiefer.
 - **Entschieden:** Leitsatz als eigener Zitatblock mit großem Bernstein-Anführungszeichen, Linie zeichnet sich über die Zeit ein.

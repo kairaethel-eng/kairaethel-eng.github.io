@@ -2108,7 +2108,11 @@ const glWait = (cv) => cv && cv.classList.add('gl-wait');
 const glReady = (cv) => cv && cv.classList.remove('gl-wait');
 if (manuSec) {
   glWait($('#glManu'));
-  whenNear(manuSec, () => runSliced(initManuGen($('#glManu'), manuUi)).then((m) => { manu = m; if (!m) document.documentElement.classList.add('no-gl-manu'); glReady($('#glManu')); }));
+  // 21.11.2026 (Kai: „preisgekrönte, bessere Figur auf der Manuthera“): echte Körperoberfläche aus assets/manu-figur.bin; lädt sie nicht,
+  // bleibt die gerechnete Figur
+  const loadFigur = () => fetch(HOP_ASSETS + 'manu-figur.bin').then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+    .then((buf) => { const A = {}; for (const q of decodeAnat(new Uint8Array(buf)).parts) A[q.id] = q; return A; }).catch((e) => { console.warn('Figur der Manuthera nicht geladen – gerechnete Figur:', e && e.message); return null; });
+  whenNear(manuSec, () => loadFigur().then((figur) => runSliced(initManuGen($('#glManu'), { ...manuUi, figur }))).then((m) => { manu = m; if (!m) document.documentElement.classList.add('no-gl-manu'); glReady($('#glManu')); }));
 }
 // ---------- Stoßwellen-Therapie (Kapitel 04, nach der Manuthera): Linien-Bühne ohne WebGL, Baustein ../stosswelle ----------
 const swSec = $('#stosswelle');

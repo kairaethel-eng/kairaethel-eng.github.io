@@ -46,7 +46,7 @@ export function* initAGen(canvas, ui) {
   const bb = mapX(blend(0.3));
   const MAP = { UP, F, LO, BB: bb, ARM: mapArm };
   const SPL = desk ? 0.0235 : 0.032; // Punktabstand der Liege (20.11.: feiner – Kai: „noch detailliertere Ansicht“)
-  const { parts: FORM, SPB } = manuFormen(SPL);
+  const { parts: FORM, SPB, wirbel } = manuFormen(SPL, { echt: ui && ui.figur });
   const parts = FORM.map((q) => ({ r: q.r, kind: q.kind, map: MAP[q.seg], keep: q.kind === 3 ? null : noDown, grp: q.grp }));
 
   yield;
@@ -117,13 +117,20 @@ export function* initAGen(canvas, ui) {
   const LV = 24;
   // Perlenkette: je Wirbel ein Kern + Dornfortsatz, dazwischen feine Bandscheiben-Punkte
   const SZ = [];
-  for (let i = 0; i < LV; i++) {
+  if (wirbel) {
+    // echte Figur (21.11.2026): Wirbelkörper C1 … L5 und Kreuzbein aus BodyParts3D (assets/manu-figur.bin), Dornfortsatz zum Rücken hin
+    for (let i = 0; i < wirbel.length; i++) {
+      const [x, y, z] = wirbel[i], f = i / (wirbel.length - 1), last = i === wirbel.length - 1;
+      pushS(x, y, z); SZ.push(last ? 2.6 : 1.5 + f * 1.2);
+      if (!last) { pushS(x + 0.01, y + 0.07 + f * 0.03, z); SZ.push(0.8); const n = wirbel[i + 1]; pushS((x + n[0]) / 2, (y + n[1]) / 2, (z + n[2]) / 2); SZ.push(0.55); }
+    }
+  } else for (let i = 0; i < LV; i++) {
     const f = i / (LV - 1), x = -1.76 + f * 2.06, y = 0.33 + Math.sin(f * Math.PI * 2) * 0.02;
     pushS(x, y, 0); SZ.push(1.6 + f * 1.1);
     pushS(x + 0.01, y + 0.06, 0); SZ.push(0.8);
     if (i < LV - 1) { pushS(x + 0.043, y, 0); SZ.push(0.55); }
   }
-  for (let j = 0; j < 5; j++) { const u = j / 4; pushS(0.36 + u * 0.24, 0.32 - u * 0.03, 0); SZ.push(2.6 - u * 1.4); }
+  if (!wirbel) for (let j = 0; j < 5; j++) { const u = j / 4; pushS(0.36 + u * 0.24, 0.32 - u * 0.03, 0); SZ.push(2.6 - u * 1.4); }
   const sg = new THREE.BufferGeometry();
   sg.setAttribute('position', new THREE.Float32BufferAttribute(SP, 3));
   sg.setAttribute('pos2', new THREE.Float32BufferAttribute(SP, 3));
@@ -151,10 +158,12 @@ export function* initAGen(canvas, ui) {
   // ---------- Bewegungs-Anzeige (Bernstein, fest im Raum) ----------
   const IP = [], IM = [], IS = [];
   const ind = (mode, fn, cnt) => { for (let i = 0; i < cnt; i++) { const s = i / (cnt - 1), p = fn(s); IP.push(p[0], p[1], p[2]); IM.push(mode); IS.push(s); } };
-  ind(0, (s) => [2.32 + s * 0.9, -0.08, 0], 90);
-  ind(0, (s) => [3.22 - Math.abs(s - 0.5) * 0.3, -0.08, (s - 0.5) * 0.36], 30);
+  // echte Figur (21.11.2026): ihre Füße hängen über das Fußende → Zug- und Seitneigungs-Anzeige laufen unter den Füßen durch
+  const yInd = wirbel ? -0.56 : -0.08;
+  ind(0, (s) => [2.32 + s * 0.9, yInd, 0], 90);
+  ind(0, (s) => [3.22 - Math.abs(s - 0.5) * 0.3, yInd, (s - 0.5) * 0.36], 30);
   ind(1, (s) => { const a = -s * 0.5, r = 2.38; return [PIV_L + Math.cos(a) * r, Math.sin(a) * r - 0.02, 0.72]; }, 90);
-  ind(2, (s) => { const a = s * 0.32, r = 2.38; return [PIV_L + Math.cos(a) * r, -0.08, -Math.sin(a) * r]; }, 90);
+  ind(2, (s) => { const a = s * 0.32, r = 2.38; return [PIV_L + Math.cos(a) * r, yInd, -Math.sin(a) * r]; }, 90);
   ind(3, (s) => { const a = Math.PI / 2 + (s - 0.25) * 1.3, r = 0.78; return [2.36, Math.sin(a) * r - 0.08, Math.cos(a) * r]; }, 90);
   const ig = new THREE.BufferGeometry();
   ig.setAttribute('position', new THREE.Float32BufferAttribute(IP, 3));
@@ -181,7 +190,7 @@ export function* initAGen(canvas, ui) {
   // ---------- Kamera & Bewegung ----------
   const cam = { yaw: 0, yawTarget: 0, lastUser: -1e9, dragging: false };
   dragYaw(canvas, cam);
-  const target = new THREE.Vector3(0.1, -0.5, 0);
+  const target = new THREE.Vector3(wirbel ? 0.42 : 0.1, -0.5, 0); // echte Figur: Hände und Füße reichen über beide Enden der Liege
   const SPEED = reduced ? 0.5 : 1;
   const DUR = { in: 1.7, hold: 1.5, out: 1.5, rest: 0.7 };
   const CYCLE = DUR.in + DUR.hold + DUR.out + DUR.rest;
@@ -229,7 +238,7 @@ export function* initAGen(canvas, ui) {
     pivotMat(M[1], PIV_U, 0, -0.13 * se, 0.12 * fl, -0.07 * tr);
     pivotMat(M[2], PIV_L, 0.36 * ro, 0.31 * se, -0.42 * fl, 0.34 * tr);
     U.uHi.value.set(0, Math.max(tr, fl, se) * 0.7, Math.max(tr, fl, se, ro));
-    U.uSpineHi.value.set(mode === 0 ? -0.25 : 0.05, Math.max(tr, fl, se, ro) * 0.9);
+    U.uSpineHi.value.set(wirbel ? (mode === 0 ? -0.55 : -0.32) : mode === 0 ? -0.25 : 0.05, Math.max(tr, fl, se, ro) * 0.9); // echte Figur: Lendenwirbel liegen weiter kopfwärts
     IU.uModeW.value.set(cur[0], cur[1], cur[2], cur[3]);
     ui && ui.onAmount && ui.onAmount(amt);
 
@@ -238,7 +247,7 @@ export function* initAGen(canvas, ui) {
     cam.yaw = damp(cam.yaw, cam.yawTarget, 5, dtCam);
     const yaw = 0.8 + cam.yaw, el = 0.44;
     const fit = st.aspect < 1.3 ? 1.3 / st.aspect : 1;
-    const R = 7.3 * Math.pow(Math.min(fit, 1.8), 0.72);
+    const R = (wirbel ? 8.1 : 7.3) * Math.pow(Math.min(fit, 1.8), 0.72);
     st.camera.position.set(target.x + Math.sin(yaw) * Math.cos(el) * R, target.y + Math.sin(el) * R, target.z + Math.cos(yaw) * Math.cos(el) * R);
     st.camera.lookAt(target);
   }
