@@ -38,6 +38,17 @@ export function* initAGen(canvas, ui) {
     if (x < PL + b) return [0, 2, smooth(PL - b, PL + b, x)];
     return [2, 2, 0];
   };
+  // echte Figur (Kai 21.11.2026 abends, „Go A“): Übergänge mit eigenen Grenzen – oben schmal um das Brustgelenk (T10–T12), unten weich
+  // über die ganze Lende bis vor die Hüfte (L1 … Kreuzbein). Haut und Wirbel teilen dieselben Zonen: die Haut über der Lende biegt sich mit
+  // der Wirbelsäule, Oberkörper und Becken mit Beinen bleiben fest (vorher 0,1 breit → Knick an der Taille, Beine wirkten weggeklappt).
+  const zone = (u0, u1, l0, l1) => (x) => {
+    if (x < u0) return [1, 1, 0];
+    if (x < u1) return [1, 0, smooth(u0, u1, x)];
+    if (x < l0) return [0, 0, 0];
+    if (x < l1) return [0, 2, smooth(l0, l1, x)];
+    return [2, 2, 0];
+  };
+  const ZONE_ECHT = zone(-1.05, -0.8, -0.78, -0.1);
   const mapX = (fn) => (v) => { const s = fn(v.x); return { la: v, lb: v, a: s[0], b: s[1], w: s[2] }; };
   const F = mapX(() => [0, 0, 0]), UP = mapX(() => [1, 1, 0]), LO = mapX(() => [2, 2, 0]);
   // Arme: Schulter gehört zum Brustteil, Unterarm liegt auf der festen Armstütze
@@ -46,8 +57,8 @@ export function* initAGen(canvas, ui) {
   // Formen aus einer Quelle (./formen.js, auch für das kleine Leistungs-Motiv); hier bekommt jedes Teil seine Segment-Zuordnung
   const echt = !!(ui && ui.figur && ui.figur['figur/koerper']);
   // 21.11.2026 (Kai: „nicht der ganze Körper streckt sich, nur die innere Wirbelsäule“): echte Figur liegt als feste Blöcke auf den
-  // Liegeteilen (schmaler Übergang), die Biegung übernimmt die Wirbelsäule (unten, eigener Übergang über die Lendenwirbel)
-  const bb = mapX(blend(echt ? 0.1 : 0.3));
+  // Liegeteilen; nur die Haut über der Lende geht weich mit der Wirbelsäule mit (ZONE_ECHT oben)
+  const bb = mapX(echt ? ZONE_ECHT : blend(0.3));
   const MAP = { UP, F, LO, BB: bb, ARM: mapArm };
   const SPL = desk ? 0.0235 : 0.032; // Punktabstand der Liege (20.11.: feiner – Kai: „noch detailliertere Ansicht“)
   const { parts: FORM, SPB, wirbel, wirbelNetz, WSP, PL: plF } = manuFormen(SPL, { echt: ui && ui.figur });
@@ -168,7 +179,7 @@ export function* initAGen(canvas, ui) {
   // unter ihm; über die Lendenwirbel (und den Übergang Brust/Lende) verteilt sich die Bewegung – so biegt, streckt und dreht sich nur die
   // Wirbelsäule. Sie wird nach allem anderen gezeichnet (Tiefe vorher gelöscht): immer sichtbar wie im Röntgenbild, Rückseiten entfallen.
   if (wirbelNetz && wirbelNetz.length) {
-    const sbW = blend(0.2);
+    const sbW = ZONE_ECHT;
     const sParts = wirbelNetz.map((w, i) => {
       const Pw = w.r.pts; let cx = 0; for (let k = 0; k < Pw.length; k += 7) cx += Pw[k]; cx /= Math.max(1, Pw.length / 7);
       const sg = sbW(cx);
