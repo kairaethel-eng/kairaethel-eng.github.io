@@ -10,6 +10,7 @@ import { figureForm, roofForm, logoForm } from './ordnung.js';
 import { pointer, PTR_GLSL } from '../shared/zeiger.js';
 import { initAGen as initManuGen, MODES as MANU_MODES } from '../manu/ideaA.js';
 import { initServicesGen, motifStageGen } from './services.js';
+import { initStaub } from '../haus-staub/staub.js';
 import { MOTIVE as SW_MOTIVE, MARKEN as SW_MARKEN } from '../stosswelle-punkte/motiv.js';
 import { decode as decodeAnat } from '../wirbel-echt/anatomie.js';
 import { runSliced } from '../shared/slice.js';
@@ -220,6 +221,7 @@ const uniforms = {
   uWave: { value: 2 }, // Lichtwelle beim Entspannen (15.11., Go Kai 4A): Lage in Körperhöhe 1.2 (über dem Kopf) → -0.2 (unter den Füßen), 2 = aus
   uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 }, uVeil: { value: 0 }, uDust: { value: 0 }, uKeep: { value: 0 },
   cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') },
+  cLg0: { value: C('#6FA02F') }, cLg1: { value: C('#305869') }, cLg2: { value: C('#3F86B5') }, // Logo A (Kopfleiste)
   cBlue: { value: C('#5AA2D6') }, cGreen: { value: C('#8BC34A') }, cLogoP: { value: C('#2C6478') }, cGrey: { value: C('#8C979B') },
   // Feinschliff (17.11.): Farben der Figur wie in Kapitel 01, Zeilen leicht von oben (uTilt), Punktgröße aus Welt-Durchmessern
   // (uProj = Bildpunkte je Welt-Einheit × Abstand), Perlenbänder (uRib: Stränge je Bahn, Perlen je Strang), Zeiger (uPtr)
@@ -237,7 +239,7 @@ const vert = /* glsl */`
   uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uRoofH, uRoofA, uLogo;
   uniform float uTilt, uProj, uPr, uDr4, uAsp, uRibA; uniform vec2 uRib; uniform vec4 uPtr;
   uniform sampler2D uRelax; uniform vec2 uBodyWH; uniform vec4 uXf[5];
-  uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey, cDeep, cCalm, cBone0;
+  uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey, cDeep, cCalm, cBone0, cLg0, cLg1, cLg2;
   varying vec3 vCol; varying float vA; varying float vSize;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
   float hash1(float n){ return fract(sin(n*12.9898)*43758.5453); }
@@ -288,18 +290,10 @@ const vert = /* glsl */`
       float br = 1. + sin(uTime*1.2 + pos4.x*.8)*.03;
       p = pos4 * vec3(br, br, 1.);
       p = rotY(p, sin(uTime*.3)*.25);
-      // 20.11. nachts (Kai: „Besser an das Original anpassen“): Farbverläufe wie im Original-Logo – H von dunklem Grün über Hellgrün
-      // nach hell (quer), O von hell über Petrol nach dunkel (von oben), P von hell über Cyan nach Dunkelblau (quer)
-      float lx = clamp((pos4.x - (kind4 < .5 ? -2.75 : kind4 < 1.5 ? 0. : 2.75)) / 1.18 * .5 + .5, 0., 1.), ly = clamp(.5 - (pos4.y - .2) / 1.18 * .5, 0., 1.);
-      vec3 gH = lx < .45 ? mix(vec3(.004, .14, .095), vec3(.2, .53, .055), lx / .45) : mix(vec3(.2, .53, .055), vec3(.62, .8, .46), (lx - .45) / .55);
-      vec3 gO = ly < .35 ? mix(vec3(.6, .72, .78), vec3(.2, .36, .44), ly / .35) : mix(vec3(.2, .36, .44), vec3(.035, .13, .17), (ly - .35) / .65);
-      vec3 gP = lx < .4 ? mix(vec3(.6, .82, .9), vec3(0., .45, .72), lx / .4) : mix(vec3(0., .45, .72), vec3(.012, .1, .2), (lx - .4) / .6);
-      // 21.11. (Kai: „Es sollte heller sein“): Verläufe aufgehellt – die dunklen Enden bleiben farbig statt fast schwarz
-      gH = mix(gH, vec3(.36, .7, .2), .3); gO = mix(gO, vec3(.34, .55, .65), .38); gP = mix(gP, vec3(.12, .6, .88), .34);
-      // 21.11. abends (Kai: „noch heller“): Farben weiter aufgehellt (zu den Kreisfarben des flachen Logos hin), Buchstaben und Bögen kräftiger
-      gH = mix(gH, vec3(.45, .78, .25), .35); gO = mix(gO, vec3(.42, .64, .74), .4); gP = mix(gP, vec3(.25, .68, .92), .35);
-      col = kind4 < .5 ? gH * 2.1 : kind4 < 1.5 ? gO * 2.15 : kind4 < 2.5 ? gP * 2.1 : kind4 < 3.5 ? cBone*1. : kind4 < 4.5 ? cBone0*1.6 : cLogoP*3.; // 3 = grauer Bogen · 4 = Buchstaben H · O · P · 5 = Sichel
-      al = aW.y; dw = uDr4 * (kind4 > 4.5 ? .46 : kind4 > 3.5 ? .64 : kind4 > 2.5 ? .42 : .58) * uXf[4].w;
+      // 21.11. abends (Kai: „perfekt an das Hauptlogo der Startseite anpassen“): flache Farben des Logos A (#6FA02F · #305869 · #3F86B5),
+      // weiße Buchstaben, feiner heller Rand – aufgehellt, weil die Punkte mit Lücken stehen (sonst wirkt die Fläche dunkler als das Logo)
+      col = kind4 < .5 ? cLg0 * 1.75 : kind4 < 1.5 ? cLg1 * 2.1 : kind4 < 2.5 ? cLg2 * 1.75 : kind4 < 3.5 ? vec3(1.) : vec3(1.15);
+      al = aW.y; dw = uDr4 * (kind4 > 3.5 ? .6 : kind4 > 2.5 ? .38 : .62) * uXf[4].w;
     }
     p = p * uXf[i].w + uXf[i].xyz;
     if(i==2){
@@ -400,7 +394,7 @@ function layout() {
     X[1].set(0, -0.2, 0, Math.max(1, a * 0.75));
     X[2].set(hw * 0.47, -0.3, 0, 0.84);
     X[3].set(hw * 0.5, 0.1, 0, 0.74);
-    X[4].set(hw * 0.46, 0, 0, 0.72);
+    X[4].set(hw * 0.5, 0, 0, 0.66);   // 21.11.: etwas kleiner und weiter rechts – der H-Kreis berührte „Der Mensch“
   } else {
     X[0].set(0, 2.35, 0, 0.40);        // Platzhalter, bodyFit() legt die Figur auf das Schlussbild von Kapitel 01
     X[1].set(0, 0, 0, 1.25);           // 1A: Bewegungslinien über den ganzen Bildschirm
@@ -1973,6 +1967,10 @@ const lh = initHouse({
   onDialog: (open) => { if (open) lenis?.stop(); else lenis?.start(); },
   goto: (h) => { const t = $(h); if (t) scrollToY((auftakt[t.id] || t).getBoundingClientRect().top + scrollY); },
 });
+// 21.11.2026 abends (Kai im Arbeitsblatt zum Entwurf haus-staub.html: „so in die Website übernehmen“): beim Raumwechsel zieht das Licht
+// als feiner Staub in den neuen Raum (eigene kleine Zeichenfläche im Haus, läuft nur während des Wechsels; house.js bleibt unberührt)
+const hausStaub = initStaub({ house: $('#house'), rooms: $('#rooms'), isPaused: () => paused });
+window.__staub = hausStaub;
 const tourWant = null; // die Kamera der Partikel-Szene fährt in Kapitel 04 nicht mehr
 // Form 3 auf das SVG-Dach legen: Bildschirm-Pixel → Welt (Ebene z = 0, Übersichtskamera wie logoPlace)
 function roofPlace() {
