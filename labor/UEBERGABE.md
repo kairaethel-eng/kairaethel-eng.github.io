@@ -4,7 +4,7 @@
 - „ruhig“ ist jetzt Standard: Leuchtpunkt-Knöpfe an Manuthera, Stoßwelle (Text, Schritte, Einsatzorte) und Kontakt; kürzere Bedien-Hinweise in Kapitel 03/04. `textruhe.html` bleibt als Vergleich mit Umschalter.
 - **Offen an Kai [O]:** weitere Stellen (Leitsatz Kapitel 02, Raumkarten)? · „Mehr“-Pille der Wirbelsäule (pulsiert eigenständig) auf den Leuchtpunkt umstellen? · Knopf-Wörter passend?
 - **Rückweg:** `ruhe` aus dem Kopf-Skript von `src/test-4/page.html` nehmen und neu bauen (siehe TECHNIK „Text ruhig“); Stand davor = Commit `d28d490`.
-<!--PRUEF-22-->
+- **Geprüft [B] (22.11., `live/`):** Prüfstand iPhone 390×692 und PC 1440×900 voll: alles ok (Filmstreifen Leistungen → Manuthera und Stoßwelle → 05 am Handy angesehen). `sizes.cjs`: alles ok (u. a. ohne JavaScript und Druck: alles offen). `gaps.cjs` m/d: keine Meldungen. `heads.cjs`: Überschriften unverändert. axe: je ein Kontrast-Befund an Handy/PC – das noch nicht aufgeleuchtete „Zuhause“ im Leitsatz von 02 und die Auftakt-Ziffer beim Einblenden (vorbestehend, gewollt), keiner an den neuen Knöpfen. **[O] nur Kai:** Wirkung am iPhone.
 
 ## ▶ Stand 21.11.2026 – Kai: „sichtbaren Erklärtext durch leuchtende Aufklapp-Knöpfe von der Hauptseite nehmen, Inhalte sollen nicht verloren gehen“ → Vorschlag A/B/C, **„Go A“**
 **Umgesetzt als Studie `textruhe.html`** (https://kairaethel-eng.github.io/labor/textruhe.html) mit Umschalter **bisher / ruhig** unten links (`?text=bisher` startet „bisher“). Puls und `live/` sind unverändert (Lage aller 194 Textblöcke in drei Fenstergrößen nachgemessen [B]).
