@@ -1,0 +1,126 @@
+<title>HOP Tür · Raum</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Labor, Entwurf zu Kapitel 05: Die Tür geht auf, der Rahmen wird zum Bildschirmrand, drinnen sehen Sie sich am Empfang um – Termin, Zeiten, Telefon und Anfahrt stehen dort, wo Sie hinschauen.">
+<script>document.documentElement.classList.add('js')</script>
+<style>/*FONTS*//*CSS*/</style>
+<!--BODY-->
+<a class="skip" href="#tuer">Zu Kapitel 05</a>
+<div class="grain" aria-hidden="true"></div>
+<div class="c-glow" id="cGlow" aria-hidden="true"></div>
+<canvas class="c-stage" id="cStage" aria-hidden="true"></canvas>
+
+<nav class="top" aria-label="Entwurf">
+  <a class="brand" href="./" aria-label="HOP Labor, alle Testseiten">
+    <svg viewBox="0 0 424 140" aria-hidden="true"><g stroke="rgba(255,255,255,.34)" stroke-width="3"><circle cx="70" cy="70" r="66" fill="#6FA02F"/><circle cx="212" cy="70" r="66" fill="#305869"/><circle cx="354" cy="70" r="66" fill="#3F86B5"/></g><g fill="none" stroke="#fff" stroke-width="15.5"><path d="M48.5 39V101M91.5 39V101M48.5 70H91.5"/><ellipse cx="212" cy="70" rx="25.5" ry="23.25"/><path d="M335.5 39V101M335.5 46.75H359a15.75 15.75 0 0 1 0 31.5H335.5"/></g></svg>
+  </a>
+  <p class="top-name">Entwurf · Tür · Raum</p>
+  <button type="button" class="motion-btn" id="motionBtn" aria-pressed="false" aria-label="Bewegung anhalten" title="Bewegung anhalten"><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bewegung</span></button>
+</nav>
+
+<main>
+  <section class="vor" aria-labelledby="v-title">
+    <div class="wrap">
+      <p class="kicker"><i>05</i> Tür · Entwurf</p>
+      <h1 id="v-title">Hinein und <em>umsehen.</em></h1>
+      <p class="lead">Tippen Sie unten auf die Tür. Sie geht auf, Sie treten ein, der Türrahmen wird zum Rand Ihres Bildschirms. Drinnen stehen Sie am Empfang und sehen sich um.</p>
+      <ul class="v-list">
+        <li><b>←→</b><span><strong>Umsehen.</strong> Zur Seite wischen, die Pfeile oder die Punkte unten: vorne Empfang, rechts die Uhr, hinten die Ablage mit Telefon, links das Fenster zur Straße.</span></li>
+        <li><b>↻</b><span><strong>Kopf drehen.</strong> Am PC folgt der Raum leicht der Maus. Am Handy folgt er beim Wischen Ihrem Finger.</span></li>
+      </ul>
+      <p class="small">„Termin buchen“ steht drinnen immer da. Mit „Bewegung anhalten“ (oben rechts) stehen alle Angaben einfach untereinander, wie heute.</p>
+    </div>
+    <p class="v-end wrap" aria-hidden="true"><span>Platzhalter · hier endet Kapitel 04</span><svg viewBox="0 0 24 24"><path d="M12 4v15M6 13l6 6 6-6"/></svg></p>
+  </section>
+
+  <section class="chapter door" id="tuer" aria-labelledby="t-title" tabindex="-1">
+    <div class="auftakt-blk" aria-hidden="true">
+      <div class="wrap"><p class="au-row"><span class="au-no">05</span><span class="au-txt"><span class="au-name">Tür</span><span class="au-sub">Kontakt &amp; Termin</span></span></p><span class="au-line"></span></div>
+    </div>
+    <div class="door-track" id="doorTrack">
+      <div class="door-sticky">
+        <div class="wrap door-top">
+          <h2 id="t-title">Die Tür steht<br><em>offen.</em></h2>
+        </div>
+        <button type="button" class="door-hit" id="doorHit" aria-label="Tür öffnen und eintreten"></button>
+        <p class="door-cue" aria-hidden="true"><span class="only-touch">Tippen Sie auf die Tür</span><span class="only-fine">Klicken Sie auf die Tür</span></p>
+
+        <div class="raum" id="raum">
+          <div class="raum-mot" aria-hidden="true"></div>
+
+          <article class="rp" id="rp0" role="tabpanel" aria-labelledby="rt0">
+            <header class="rp-head"><p class="rp-dir"><i>vorne</i> Empfang</p><h3>Ihr <em>Termin.</em></h3></header>
+            <div class="rp-body">
+              <p>Buchen Sie online. Oder fragen Sie per E-Mail an, dann melde ich mich mit einem Terminvorschlag.</p>
+              <p class="rp-acts">
+                <a class="rp-mail" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage&amp;body=Guten%20Tag%20Herr%20Raethel%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20einen%20Termin%20anfragen.%0D%0A%0D%0AName%3A%0D%0AR%C3%BCckrufnummer%3A%0D%0AWunschzeiten%3A%0D%0A%C3%84rztliche%20Verordnung%20vorhanden%20%28ja%2Fnein%29%3A%0D%0A%0D%0AMeine%20Beschwerde%20schildere%20ich%20Ihnen%20bitte%20erst%20im%20Gespr%C3%A4ch%2C%20nicht%20per%20E-Mail.%0D%0A%0D%0AVielen%20Dank">Per E-Mail anfragen</a>
+                <button type="button" class="rp-copy" id="copyMail" hidden>Adresse kopieren</button>
+              </p>
+              <p class="rp-note"><a id="mailAddr" href="mailto:kontakt@hopphysio.de">kontakt@hopphysio.de</a> · Gesundheitsangaben bitte erst im Gespräch.<span class="copy-state" id="copyState" role="status"></span></p>
+            </div>
+          </article>
+
+          <article class="rp" id="rp1" role="tabpanel" aria-labelledby="rt1">
+            <header class="rp-head"><p class="rp-dir"><i>rechts</i> Uhr</p><h3>Meine <em>Zeiten.</em></h3></header>
+            <div class="rp-body">
+              <p class="rp-big">Mo–Fr 8:30–19:30 Uhr</p>
+              <p>Samstag nach Absprache, sonntags und feiertags geschlossen.</p>
+              <p class="dd-open" hidden></p>
+            </div>
+          </article>
+
+          <article class="rp" id="rp2" role="tabpanel" aria-labelledby="rt2">
+            <header class="rp-head"><p class="rp-dir"><i>hinten</i> Ablage</p><h3>Gut zu <em>wissen.</em></h3></header>
+            <div class="rp-body">
+              <p class="rp-big"><a href="tel:+4971819931470">07181 9931470</a></p>
+              <p>Nur Anrufbeantworter, ich rufe Sie zurück. <a href="assets/hop-physiotherapie.vcf" download>Im Telefon speichern</a></p>
+              <p class="rp-note">Kassen, privat und Selbstzahler. Verordnung bitte zum ersten Termin mitbringen.</p>
+            </div>
+          </article>
+
+          <article class="rp" id="rp3" role="tabpanel" aria-labelledby="rt3">
+            <header class="rp-head"><p class="rp-dir"><i>links</i> Fenster</p><h3>So finden Sie <em>her.</em></h3></header>
+            <div class="rp-body">
+              <p class="rp-big"><a href="https://www.google.com/maps/search/?api=1&amp;query=Schlichtener%20Stra%C3%9Fe%2087%2C%2073614%20Schorndorf" target="_blank" rel="noopener">Schlichtener Straße 87, 73614 Schorndorf</a></p>
+              <p>Parken direkt vor dem Haus. Bus: „Schlichtener Straße“ oder „Grauhalde“.</p>
+            </div>
+          </article>
+
+          <div class="raum-bar">
+            <div class="raum-nav">
+              <button type="button" class="rn" id="rnPrev" aria-label="Nach links umsehen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+              <div class="raum-tabs" role="tablist" aria-label="Im Raum umsehen">
+                <button type="button" role="tab" id="rt0" aria-controls="rp0" aria-selected="true" aria-label="Vorne: Empfang und Termin"><i></i></button>
+                <button type="button" role="tab" id="rt1" aria-controls="rp1" aria-selected="false" tabindex="-1" aria-label="Rechts: Uhr und Zeiten"><i></i></button>
+                <button type="button" role="tab" id="rt2" aria-controls="rp2" aria-selected="false" tabindex="-1" aria-label="Hinten: Telefon und mehr"><i></i></button>
+                <button type="button" role="tab" id="rt3" aria-controls="rp3" aria-selected="false" tabindex="-1" aria-label="Links: Fenster und Anfahrt"><i></i></button>
+              </div>
+              <button type="button" class="rn" id="rnNext" aria-label="Nach rechts umsehen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+            </div>
+            <p class="raum-hint" aria-hidden="true"><span class="only-touch">Zur Seite wischen: umsehen</span><span class="only-fine">‹ › oder Pfeiltasten: umsehen</span></p>
+            <a class="btn raum-termin" href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener">Termin buchen</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap alles" aria-labelledby="k-title">
+      <h3 class="alles-h" id="k-title">Alles auf einen <em>Blick.</em></h3>
+      <dl class="facts">
+        <div><dt>E-Mail</dt><dd><a href="mailto:kontakt@hopphysio.de">kontakt@hopphysio.de</a></dd></div>
+        <div><dt>Telefon</dt><dd><a href="tel:+4971819931470">07181 9931470</a> · nur Anrufbeantworter</dd></div>
+        <div><dt>Adresse</dt><dd>Schlichtener Straße 87, 73614 Schorndorf</dd></div>
+        <div><dt>Zeiten</dt><dd>Mo–Fr 8:30–19:30 Uhr · Sa nach Absprache</dd></div>
+        <div><dt>Abrechnung</dt><dd>Kassen, privat und Selbstzahler</dd></div>
+        <div><dt>Inhaber</dt><dd>Kai Raethel · Manuelle Therapie · CMD</dd></div>
+      </dl>
+    </div>
+    <footer class="foot wrap">
+      <span>© 2026 HOP – Home of Physiotherapy · Kai Raethel</span>
+      <span><a href="recht-impressum.html">Impressum</a> · <a href="recht-datenschutz.html">Datenschutz</a></span>
+      <span class="lab">Entwurf · Tür · Raum</span>
+      <span class="credit">Entwurfsseite: „Termin buchen“ öffnet hier die Buchungsseite in einem neuen Fenster (in Puls das Termin-Blatt). Puls bleibt unverändert, bis Sie entscheiden.</span>
+    </footer>
+  </section>
+</main>
+<!--JS-->
