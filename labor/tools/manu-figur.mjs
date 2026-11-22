@@ -241,10 +241,29 @@ for (let i = 0; i < nv; i++) if (!side[i]) side[i] = skin.pos[i * 3] > 0 ? 1 : 2
 // weich machen über die Netz-Nachbarn (Übergänge an Schulter und Ellbogen)
 const nb = Array.from({ length: nv }, () => new Set());
 for (let k = 0; k < skin.idx.length; k += 3) { const a = skin.idx[k], b = skin.idx[k + 1], c = skin.idx[k + 2]; nb[a].add(b).add(c); nb[b].add(a).add(c); nb[c].add(a).add(b); }
+const W0 = new Float32Array(W); // Zuordnung vor dem Glätten
 for (let it = 0; it < 14; it++) {
   const N = new Float32Array(W);
   for (let i = 0; i < nv; i++) { let s0 = W[i * 3], s1 = W[i * 3 + 1], s2 = W[i * 3 + 2], n = 1; for (const j of nb[i]) { s0 += W[j * 3]; s1 += W[j * 3 + 1]; s2 += W[j * 3 + 2]; n++; } N[i * 3] = s0 / n; N[i * 3 + 1] = s1 / n; N[i * 3 + 2] = s2 / n; }
   W.set(N);
+}
+// Unterhalb des Ellbogens kein weicher Übergang Rumpf ↔ Arm (22.11.2026, Kai: „Spitze an der Hüfte“): in der Ausgangslage hängen
+// Unterarm und Hand dicht an Hüfte und Oberschenkel, das Glätten trug sonst ~20 % Arm auf die Außenseite des Oberschenkels → die Haut
+// dort zog mit dem Arm zum Kopf. Schulter und Oberarm bleiben wie bisher weich; ab 80 mm unter dem Ellbogen gilt wieder die Zuordnung
+// zum nächsten Knochen (zwischen Unterarm und Hand bleibt das Glätten erhalten).
+const unterEllbogen = (i) => { const E = J[side[i] === 1 ? 'l' : 'r'].E; return Math.max(0, Math.min(1, (E[2] - skin.pos[i * 3 + 2]) / 80)); };
+{ let fixed = 0;
+  for (let i = 0; i < nv; i++) {
+    const f = unterEllbogen(i);
+    if (f <= 0) continue;
+    const arm0 = 1 - W0[i * 3], arm = W[i * 3 + 1] + W[i * 3 + 2];
+    let w1, w2;
+    if (arm0 > 0.5) { w1 = arm > 1e-6 ? W[i * 3 + 1] / arm : W0[i * 3 + 1]; w2 = arm > 1e-6 ? W[i * 3 + 2] / arm : W0[i * 3 + 2]; } else { w1 = 0; w2 = 0; }
+    const t = [arm0 > 0.5 ? 0 : 1, w1, w2];
+    if (Math.abs(W[i * 3] - t[0]) > 0.01) fixed++;
+    for (let c = 0; c < 3; c++) W[i * 3 + c] = W[i * 3 + c] * (1 - f) + t[c] * f;
+  }
+  console.log(`Arm-Gewichte unter dem Ellbogen bereinigt: ${fixed} Ecken`);
 }
 
 // ---------- in den Raum der Liege (noch ohne Arm-Haltung) ----------
@@ -303,8 +322,14 @@ for (let i = 0; i < nv; i++) {
 }
 // ---------- Teile: Rumpf / Arme (Dreieck gehört zum Arm, wenn seine Ecken überwiegend Arm sind) ----------
 const tri = { koerper: [], 'arm-l': [], 'arm-r': [] };
+// Brücken zwischen Hand und Oberschenkel (in der Ausgangslage berührt die Hand den Oberschenkel, die Haut ist dort verbunden): Dreiecke,
+// die beim Umlegen des Arms stark gedehnt würden, entfallen (nur unterhalb des Ellbogens – Schulter und Oberarm bleiben unberührt);
+// die Ränder schließt danach je Teil ein Fächer (unten)
+const lenOf = (A, I) => Math.max(...[0, 1, 2].map((e) => { const a = I[e] * 3, b = I[(e + 1) % 3] * 3; return Math.hypot(A[a] - A[b], A[a + 1] - A[b + 1], A[a + 2] - A[b + 2]); }));
+let bruecke = 0; const anBruecke = new Set();
 for (let t = 0; t < skin.idx.length; t += 3) {
   const I = [skin.idx[t], skin.idx[t + 1], skin.idx[t + 2]], wa = I.reduce((a, i) => a + 1 - W[i * 3], 0) / 3;
+  if (I.every((i) => unterEllbogen(i) >= 1) && lenOf(out, I) > Math.max(0.06, 2.5 * lenOf(base, I))) { bruecke++; for (const i of I) anBruecke.add(i); continue; }
   // Intimbereich entfällt (liegt unten auf dem Polster, für eine Praxisseite ohne Belang): Dreiecke zwischen den Oberschenkeln unten
   const g = [0, 1, 2].map((c) => (out[I[0] * 3 + c] + out[I[1] * 3 + c] + out[I[2] * 3 + c]) / 3);
   if (wa < 0.5 && g[0] > INTIM.x[0] && g[0] < INTIM.x[1] && Math.abs(g[2]) < INTIM.z && g[1] < INTIM.y) continue;
@@ -340,7 +365,31 @@ const put = (id, kind, pos, idx) => {
   chunks.push(pb, ibuf); off += pb.length + ibuf.length;
   console.log(`${id.padEnd(14)} ${String(nvv).padStart(6)} Ecken ${String(idx.length / 3).padStart(6)} Dreiecke  x ${lo[0].toFixed(2)}…${hi[0].toFixed(2)}  y ${lo[1].toFixed(2)}…${hi[1].toFixed(2)}  z ${lo[2].toFixed(2)}…${hi[2].toFixed(2)}`);
 };
-for (const [id, I] of Object.entries(tri)) { const m = reorder({ pos: Array.from(out), idx: I }); put('figur/' + id, 'skin', m.pos, m.idx); }
+// Ränder an den entfernten Brücken je Teil schließen (Fächer um den Mittelpunkt, wie oben bei den Öffnungen der Haut)
+const outA = Array.from(out);
+{ let filled = 0;
+  for (const I of Object.values(tri)) {
+    const has = new Set(), from = new Map(), E = [];
+    for (let t = 0; t < I.length; t += 3) for (let e = 0; e < 3; e++) has.add(I[t + e] + ',' + I[t + (e + 1) % 3]);
+    for (let t = 0; t < I.length; t += 3) for (let e = 0; e < 3; e++) { const a = I[t + e], b = I[t + (e + 1) % 3]; if (!has.has(b + ',' + a)) { const k = E.length; E.push([a, b]); let l = from.get(a); if (!l) from.set(a, (l = [])); l.push(k); } }
+    const usedE = new Uint8Array(E.length);
+    for (let e0 = 0; e0 < E.length; e0++) {
+      if (usedE[e0]) continue;
+      const loop = []; let e = e0, endV = -1;
+      while (e >= 0 && !usedE[e]) { usedE[e] = 1; loop.push(E[e][0]); endV = E[e][1]; const l = from.get(endV) || []; e = -1; for (const k of l) if (!usedE[k]) { e = k; break; } }
+      if (endV !== E[e0][0] || loop.length < 3 || !loop.some((v) => anBruecke.has(v))) continue;
+      let per = 0; const c = [0, 0, 0];
+      loop.forEach((a, i) => { const b = loop[(i + 1) % loop.length]; per += Math.hypot(outA[a * 3] - outA[b * 3], outA[a * 3 + 1] - outA[b * 3 + 1], outA[a * 3 + 2] - outA[b * 3 + 2]); for (let q = 0; q < 3; q++) c[q] += outA[a * 3 + q] / loop.length; });
+      console.log(`  Brücken-Rand: Umfang ${per.toFixed(3)}, ${loop.length} Kanten, Mitte ${c.map((v) => v.toFixed(2)).join(' ')}`);
+      if (per > 1.2) continue; // Liege-Einheiten (~400 mm)
+      const ci = outA.length / 3; outA.push(...c);
+      loop.forEach((a, i) => { const b = loop[(i + 1) % loop.length]; I.push(b, a, ci); });
+      filled++;
+    }
+  }
+  console.log(`Brücken Hand ↔ Oberschenkel: ${bruecke} Dreiecke entfernt, ${filled} Ränder geschlossen`);
+}
+for (const [id, I] of Object.entries(tri)) { const m = reorder({ pos: outA, idx: I }); put('figur/' + id, 'skin', m.pos, m.idx); }
 put('figur/wirbel', 'points', wirbel, []);
 for (const [id, pos, idx] of wNetz) put(id, 'bone', pos, idx);
 const hj = Buffer.from(JSON.stringify(head), 'utf8'), len = Buffer.alloc(4); len.writeUInt32LE(hj.length);
