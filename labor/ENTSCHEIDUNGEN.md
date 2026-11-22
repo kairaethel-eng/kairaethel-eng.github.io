@@ -3,6 +3,12 @@
 Stand: 22.11.2026 (Text ruhig: in Puls + live übernommen, wartet auf Kais Sichtprüfung · Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Arbeitsblatt 4, fünfte Runde (Kai 22.11.2026)
+- **Erledigt (Kai):** Stottern der Partikel tritt nicht mehr auf.
+- **Entschieden (Claude, von Kai übertragen):** Sicherheitsregeln (CSP) per `<meta>` im Live-Build; eine HTML-Datei je Seite bleibt; `/labor/` bis zum Livegang öffentlich (noindex), danach `robots.txt` sperrt `/labor/`; keine `geo`/`sameAs`-Angaben ohne gepflegtes Profil.
+- **Merkregel:** Jede neue fremde Quelle (Skript, Bild, Schrift, Rahmen, Abruf) braucht eine Zeile in den Sicherheitsregeln in `build.mjs` – sonst blockiert der Browser sie. Vorher fragen: braucht es die fremde Quelle wirklich?
+- **Merkregel:** Links auf eigene Dateien im Kopf relativ schreiben (gleiche Herkunft auch unter `www.`).
+
 ## Kapitel 05 als Raum – „Tür · Raum“ (Kai 22.11.2026 nachts: „drauf klicken und dann erscheinen nur diese 2 Buttons“ ist zu wenig)
 - **Go Kai „a c“:** A „Der Empfang“ (Rahmen wird Bildschirmrand, vier Blickrichtungen mit den Kontakt-Infos) + C „Kopf drehen“ (Maus am PC, Finger beim Wischen). Erst Entwurfsseite `tuer-raum.html`; Puls unberührt bis Kais Urteil.
 - **Merkregeln:** „Termin buchen“ nie hinter dem Umsehen verstecken (immer sichtbar). Feste Blickrichtungen, Drehung über die Zeit (2 s), kein freies 360°. Keine Neigungssensoren (iOS fragt um Erlaubnis). Kästen (Tresen, Bank, Ablage) als Punkt-Zeichnung: helle Kanten + feine Füllung – ebene Flächen mit Kantenlicht wirkten am Handy wie Schraffur. Höchstens ein pulsierender Punkt (Anrufbeantworter, nur im Blick „hinten“).

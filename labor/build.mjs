@@ -107,11 +107,16 @@ function liveHead(head, page) {
   const url = page === 'index.html' ? BASE : `${BASE}${page}`;
   const title = LIVE_TITLE[page];
   const desc = (head.match(/<meta name="description" content="([^"]*)">/) || [, ''])[1];
+  // Sicherheitsregeln der Seite (21./22.11.2026, Kai im Arbeitsblatt zu den Technik-Entscheidungen: „du entscheidest, was sinnvoll ist“):
+  // die Seite darf nur Eigenes laden – keine fremden Skripte, Schriften, Bilder oder Abrufe; einzige Ausnahme der Optica-Kalender im Termin-Blatt
+  // (erst nach Klick, eigenes Fenster). Inline-Skript/-CSS sind nötig, weil alles in einer Datei steckt. Kein frame-ancestors (in <meta> wirkungslos).
+  const CSP = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src https://termine.opticaviva.de; form-action 'none'; base-uri 'self'; object-src 'none'";
   const extra = [
+    `<meta http-equiv="Content-Security-Policy" content="${CSP}">`,
     `<link rel="canonical" href="${url}">`,
     `<meta name="theme-color" content="#0B0F12">`,
     `<link rel="icon" href="${FAVICON}">`,
-    `<link rel="apple-touch-icon" href="${BASE}apple-touch-icon.png">`,
+    `<link rel="apple-touch-icon" href="apple-touch-icon.png">`, // relativ: gleiche Herkunft auch unter www. (Sicherheitsregeln)
     `<meta property="og:type" content="website">`,
     `<meta property="og:locale" content="de_DE">`,
     `<meta property="og:site_name" content="HOP – Home of Physiotherapy">`,
