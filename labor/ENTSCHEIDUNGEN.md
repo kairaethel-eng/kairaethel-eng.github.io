@@ -3,6 +3,10 @@
 Stand: 22.11.2026 (Text ruhig: in Puls + live übernommen, wartet auf Kais Sichtprüfung · Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Mehr Farbe (Kai 22.11.2026 abends: „zu einfarbig, eintönig“, vielleicht Logo-Farben) – **offen, nur Skizze**
+- **Vorschlag:** Farbdramaturgie „Raumlicht“ – jedes Kapitel ein Raum mit eigenem Licht, kühl → warm (Einzelheiten `UEBERGABE.md` oben). Skizze privat: https://claude.ai/artifact/8DdcvzRwKFPjh98XaTAFge (Heute · Leise · Mittel ★ · Kräftig). Empfehlung Claude: Mittel.
+- **Berührt:** Merkregel „Farben der Punkte … Grün nur im Logo“ (17.11.) – gilt weiter, bis Kai entscheidet.
+
 ## Text ruhig – Leuchtpunkte statt offenem Erklärtext (Kai 21.11.2026: „an ein paar Stellen zu viel Text im Vordergrund, Inhalte sollen nicht verloren gehen“ → „Go A“)
 - **Entschieden (A):** ein einziges Aufklapp-Muster für die Seite – je Block bleibt ein Kernsatz stehen, darunter ein Bernstein-Leuchtpunkt mit Stichwort; Antippen klappt den Rest am Ort auf. Verworfen: B (Punkte an der Grafik, nur für Manuthera/Stoßwelle denkbar – ggf. später), C (Blatt „Kurz erklärt“ – Text weg von seiner Stelle, verdeckt die Grafik).
 - **Entschieden (Kai 22.11.2026: „Go Übernahme“):** „ruhig“ ist Standard in Puls und `live/` (Klasse `ruhe` im Kopf-Skript von `page.html`). `textruhe.html` bleibt als Vergleichsseite mit Umschalter bisher / ruhig.
