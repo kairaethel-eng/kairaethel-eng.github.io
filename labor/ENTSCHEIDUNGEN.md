@@ -3,6 +3,10 @@
 Stand: 22.11.2026 (Text ruhig: in Puls + live übernommen, wartet auf Kais Sichtprüfung · Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Außenauftritt – Eingangsschild und Werbung zur Straße (Kai 22.11.2026) – **offen, nur Vorschläge**
+- **Vorschlag Claude:** Eingang B „Punkt-Kreise“ (gelaserter Leuchtkasten, Logo A aus Punkten) + Satz „Die Tür steht offen.“ auf dem Türglas; Straße „Figur aus Licht“ (Figur aus Kapitel 01 als Lochblech mit Licht). Projektor nicht als Werbung. Seite: https://claude.ai/artifact/73G6RX49t7Xu4cnEqsr5rc
+- **Merkregeln, falls umgesetzt:** Licht nur warm (≤ 2700 K, Bernstein ~2200 K), nach vorn statt auf die Fassade, Zeitschaltuhr; keine Bewegung, kein Blinken; die drei Kreise immer waagerecht (senkrecht + beleuchtet = Ampel); auf Schildern keine Heilversprechen, kein „Zentrum“.
+
 ## Mehr Farbe (Kai 22.11.2026 abends: „zu einfarbig, eintönig“, vielleicht Logo-Farben) – **offen, nur Skizze**
 - **Vorschlag:** Farbdramaturgie „Raumlicht“ – jedes Kapitel ein Raum mit eigenem Licht, kühl → warm (Einzelheiten `UEBERGABE.md` oben). Skizze privat: https://claude.ai/artifact/8DdcvzRwKFPjh98XaTAFge (Heute · Leise · Mittel ★ · Kräftig). Empfehlung Claude: Mittel.
 - **Berührt:** Merkregel „Farben der Punkte … Grün nur im Logo“ (17.11.) – gilt weiter, bis Kai entscheidet.
