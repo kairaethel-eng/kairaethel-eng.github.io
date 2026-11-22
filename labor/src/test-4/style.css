@@ -20,7 +20,8 @@ html.lenis,html.lenis body{height:auto}
 body{margin:0;background:var(--ink);color:var(--txt);font:400 1.0625rem/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
 a{color:inherit}
 p,li,dd{text-wrap:pretty}
-h1,h2,h3{margin:0;font-family:var(--disp);font-weight:800;letter-spacing:-.03em;line-height:.95;text-wrap:balance}
+h1,h2,h3{margin:0;font-family:var(--disp);font-weight:560;letter-spacing:-.035em;line-height:.98;text-wrap:balance} /* Feinschliff 17.11. (Go Kai): Überschriften leichter (vorher 800) */
+h3{font-weight:600;letter-spacing:-.025em}
 h2{font-size:clamp(2.5rem,6.4vw,6.5rem)}
 p{margin:0}
 em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--amber);letter-spacing:-.01em}
@@ -54,7 +55,11 @@ em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--amber)
 /* Navigation */
 .top{position:fixed;z-index:20;top:env(safe-area-inset-top,0px);left:0;right:0;display:flex;align-items:center;gap:1.875rem;padding:1rem max(var(--gut-r),3vw) 1rem max(var(--gut),3vw);transition:background .4s}
 .top.scrolled{background:rgba(10,22,27,.72);backdrop-filter:blur(.75rem) saturate(1.2);-webkit-backdrop-filter:blur(.75rem) saturate(1.2);box-shadow:0 1px 0 var(--line)}
-.brand svg{width:4.875rem;height:auto;display:block}
+.brand{display:flex;align-items:center;gap:.75rem;text-decoration:none}
+.brand svg{width:7.25rem;height:auto;display:block} /* 19.11.: Kreise rund 36 px, Buchstaben lesbar (vorher 4,875rem über alle drei Kreise mit großen Lücken) */
+.brand-name{display:none;font:600 .6875rem/1.25 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+@media (min-width:1500px){.brand-name{display:block}}
+@media (max-width:1300px){.brand svg{width:6rem}}
 .chapters{list-style:none;margin:0 0 0 auto;padding:0;display:flex;gap:1.625rem}
 .chapters a{display:flex;align-items:baseline;gap:.4375rem;text-decoration:none;font:500 .8438rem/1 var(--sans);color:var(--mute);transition:color .3s}
 .chapters i{font:italic 400 .875rem/1 var(--serif);color:var(--mute);transition:color .3s}
@@ -90,7 +95,7 @@ main{position:relative;z-index:2}
 .roofline{display:block;width:min(35rem,92%);height:clamp(1.375rem,3vw,2.5rem);margin:0 0 .625rem -2px;overflow:visible}
 .roofline path{fill:none;stroke:var(--amber);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
 .laws li.is-on span{animation:breathe 5.5s ease-in-out infinite}
-@keyframes breathe{0%,100%{letter-spacing:-.04em;font-weight:800}50%{letter-spacing:-.012em;font-weight:640}}
+@keyframes breathe{0%,100%{letter-spacing:-.04em;font-weight:560}50%{letter-spacing:-.016em;font-weight:470}}
 #t-title .lt{opacity:0}
 #t-title.open .lt{animation:rise .7s var(--ease) both calc(var(--i) * 35ms)}
 #t-title em{display:inline-block;transform-origin:0 55%}
@@ -106,26 +111,48 @@ html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift
 .manifest .wrap,.axis-head,.roof-head,.index,.laws,.door-inner{text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
 .btn{text-shadow:none}
 .chapter{position:relative;min-height:100svh}
+/* Abstände zwischen Kapiteln (18.11.2026, Kai: „Abstände zu neuen Kapiteln sehr genau ansehen“): EIN Maß vor jedem nummerierten Kapitel
+   (--gap-chap, gemessen vom letzten Inhalt bis zur Kennzeile) und ein kleineres vor den Blöcken innerhalb von Kapitel 04 (--gap-sub).
+   Vorher lagen die Abstände am PC zwischen 135 und 365 px, am Handy zwischen 55 und 580 px. */
+:root{--gap-chap:clamp(11rem,27vh,16rem);--gap-sub:clamp(7rem,17vh,10.5rem)}
+@media (max-width:920px){:root{--gap-chap:9rem;--gap-sub:6.5rem}}
 
 /* Kapitel 01 „Von Kopf bis Fuß“ (Auftrag K, Go Kai 16.11.2026: übernommen statt „Spannung lösen“) – Baustein, gleiche Regeln wie die Entwurfsseite */
 /*@include ../kopf-fuss/kapitel.css*/
+/*@include ../figur-plus/plus.css*/
+/*@include ../feinschliff/fein.css*/
+/* Text ruhig, seitenweit (Feinschliff 17.11.): EINE Einblend-Art für Kennzeile, Einleitung, Zitat und die Überschriften ohne eigenes
+   Spiel – von unten, weich, nacheinander (Klasse fein setzt main.js, fein-in beim Hereinkommen; ohne JS/angehalten/reduziert steht alles da) */
+.fein{opacity:0;transform:translateY(.875rem);transition:opacity 1.1s var(--ease) calc(var(--fi,0) * .11s),transform 1.3s var(--ease) calc(var(--fi,0) * .11s)}
+.fein.fein-in{opacity:1;transform:none}
+html.paused .fein{opacity:1;transform:none;transition:none}
+@media print{.fein{opacity:1!important;transform:none!important}}
 .only-touch{display:none}
 @media (hover:none){.only-fine{display:none}.only-touch{display:inline}}
 
 /* Manifest */
-.manifest{display:flex;align-items:center;padding-block:8.75rem}
+.manifest{min-height:0;padding-block:6rem 0} /* nach der Figur: der freie Teil ihrer Bühne zählt zum Abstand mit */
 .statement{font-family:var(--sans);font-weight:500;font-size:clamp(1.75rem,3.9vw,3.875rem);line-height:1.12;letter-spacing:-.02em;max-width:22ch}
 .statement .word{opacity:.16;transition:opacity .4s}
 .statement .word.lit{opacity:1}
-.sign{margin-top:2.875rem;font:italic 400 clamp(1.125rem,1.6vw,1.5rem)/1.4 var(--serif);color:var(--dim);max-width:44ch}
-.sign b{display:block;margin-top:.625rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;font-style:normal;color:var(--txt)}
+.sign{position:relative;margin:4rem 0 0;padding:1.75rem 0 0 clamp(2.75rem,5vw,4.25rem);max-width:40rem}
+/* 21.11.2026 (Go Kai 2a): Leitsatz als eigener Block – großes Anführungszeichen in Bernstein, Satz in Knochenweiß, Linie zeichnet sich ein */
+.sign .q-mark{position:absolute;left:-.25rem;top:-1.5rem;font:italic 400 clamp(6.5rem,10vw,9rem)/1 var(--serif);color:var(--amber);pointer-events:none}
+.sign blockquote{margin:0}
+.sign blockquote p{margin:0;font:italic 400 clamp(1.625rem,2.6vw,2.375rem)/1.25 var(--serif);letter-spacing:-.005em;color:var(--txt);text-wrap:balance}
+.sign .q-hl{background:linear-gradient(90deg,var(--amber),rgba(224,154,53,.45)) no-repeat 0 92%/0 1px;transition:background-size 2.4s var(--ease) 1.1s;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.sign.fein-in .q-hl,html.paused .sign .q-hl,html:not(.js) .sign .q-hl{background-size:100% 1px}
+.sign figcaption{display:flex;align-items:center;gap:.875rem;margin-top:1.375rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.sign .q-rule{display:block;width:2.5rem;height:1px;background:var(--amber)}
+@media print{.sign .q-hl{background:none}}
+@media (prefers-reduced-motion:reduce){.sign .q-hl{background-size:100% 1px;transition:none}}
 
 /* Achse: Partikel-Wirbelsäule materialisiert sich zur 3D-Wirbelsäule, Kamerafahrt */
 .axis{height:160svh} /* PC: Scanner-Bühne klebt 60svh (Kai 7.11. spät, alte Kamerafahrt 530vh entfernt) */
 .axis-sticky{position:sticky;top:0;height:100svh;overflow:hidden}
 .axis-inner{height:100%;display:grid;grid-template-columns:minmax(0,31.25rem) 1fr;grid-template-rows:auto auto 1fr auto;column-gap:2.5rem;padding-top:6.5rem;padding-bottom:1.75rem}
 .axis-head{grid-column:1}
-.axis-head h2{font-size:clamp(2.125rem,3.6vw,3.625rem);margin-bottom:.875rem}
+.axis-head h2{font-size:clamp(2.125rem,3.6vw,3.3rem);margin-bottom:.875rem}
 .axis-hint{font-size:.9375rem;color:var(--dim);max-width:42ch}
 .only-mob{display:none}
 .segnav{grid-column:1;grid-row:2;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.375rem;margin-top:1.625rem}
@@ -150,12 +177,12 @@ html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift
 .note{grid-column:1;grid-row:4;font-size:.75rem;color:var(--mute);margin-top:1rem;max-width:60ch}
 
 /* Dach / Index */
-.roof{padding-block:9.375rem 3rem}
+.roof{padding-block:calc(var(--gap-chap) - 1.75rem) 0} /* 1,75rem = Fuß der Wirbelsäulen-Bühne unter dem Hinweis */
 .roof-head{margin-bottom:3.125rem}
 .index{list-style:none;margin:0;padding:0;max-width:min(53.75rem,54vw);border-top:1px solid var(--line);counter-reset:ix}
 .index li{border-bottom:1px solid var(--line)}
 .index button{appearance:none;width:100%;background:none;border:0;color:var(--txt);display:flex;align-items:baseline;justify-content:space-between;gap:1.25rem;padding:1.25rem 0;cursor:pointer;text-align:left}
-.ix-name{font-family:var(--disp);font-weight:700;font-size:clamp(1.375rem,2.9vw,2.75rem);letter-spacing:-.025em;line-height:1.05;transition:transform .5s var(--ease),color .3s}
+.ix-name{font-family:var(--disp);font-weight:540;font-size:clamp(1.375rem,2.9vw,2.75rem);letter-spacing:-.025em;line-height:1.05;transition:transform .5s var(--ease),color .3s}
 .ix-tag{font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--mute);white-space:nowrap;transition:color .3s}
 .index button:hover .ix-name,.index button[aria-expanded="true"] .ix-name{transform:translateX(1rem);color:var(--amber)}
 .index button:hover .ix-tag,.index button[aria-expanded="true"] .ix-tag{color:var(--txt)}
@@ -170,7 +197,19 @@ html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift
 @media (min-width:1100px){#lhRoot .rooms{height:clamp(13rem,min(50cqi,100svh - 17rem),40rem)}}
 .lh{position:relative;z-index:2}
 .roof-grid .roof-head{text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
-@media (max-width:920px){.roof{padding-top:5.5rem}}
+/* 21.11.2026 (Kai: „Text-Erklärung erst beim Weiterwischen sichtbar“, Go 4a+c): Handy/Tablet hochkant – Überschrift, ein Satz,
+   Haus, darunter die kurze Wisch-Zeile und gleich der Text zum Raum; die Rundgang-Knöpfe folgen danach (vorher: Text erst
+   rund 1,5 Bildhöhen nach dem Kapitelanfang, hinter Hinweis-Absatz und drei Knöpfen) */
+@media (max-width:920px){
+  html.js .roof-grid .roof-head{display:contents}
+  html.js .roof-grid .roof-head>*{order:1}
+  html.js .roof-grid .roof-head .lead{margin-bottom:1.25rem}
+  html.js .roof-grid .house{order:2}
+  html.js .roof-grid .hint{order:3;margin:.75rem 0 0;max-width:none;text-align:center;font-size:.8125rem}
+  html.js .roof-grid .cards{order:4;margin-top:1.125rem}
+  html.js .roof-grid .tour-ctrl{order:5;margin-top:1.5rem}
+}
+@media (max-width:920px){.roof{padding-top:calc(var(--gap-chap) - 1rem)}}
 
 @media (min-width:921px){
 }
@@ -183,7 +222,7 @@ html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift
 .t-play .i-play{fill:currentColor}
 .t-play .i-pause{display:none;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
 .paused .room-tag.cta{animation:none}
-.roof-list{padding-top:clamp(3.75rem,8vw,6.875rem);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);column-gap:clamp(2rem,4vw,5rem);align-items:start}
+.roof-list{padding-top:calc(var(--gap-sub) - 1.5rem);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);column-gap:clamp(2rem,4vw,5rem);align-items:start}
 .roof-list .kicker{grid-column:1/-1}
 .roof-list .index{margin-top:.625rem;grid-column:1;max-width:none}
 /* Leistungen: Partikel-Bühne, die Punkte formen das Motiv der gewählten Leistung */
@@ -204,13 +243,13 @@ html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift
 @media (min-width:921px){.seg-card dl{position:absolute;width:1px;height:1px;margin:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.seg-card h3{margin-bottom:1.125rem}}
 
 /* Hausordnung */
-.rules{height:auto} /* Kai 7.11.: kein Scrollweg mehr, die Paragraphen wechseln von selbst (main.js LAW) */
-.rules-sticky{position:relative;height:100svh;display:flex;align-items:center}
+.rules{height:auto;min-height:0} /* Kai 7.11.: kein Scrollweg mehr, die Paragraphen wechseln von selbst (main.js LAW) */
+.rules-sticky{position:relative;padding-block:var(--gap-chap) calc(var(--gap-chap) - 6.5rem)} /* 6,5rem = Kopf der Wirbelsäulen-Bühne über „03 Achse“ */
 .laws{list-style:none;margin:0;padding:0;position:relative;min-height:46vh}
 .laws li{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;opacity:0;transform:translateY(2.5rem);filter:blur(.625rem);transition:opacity .7s var(--ease),transform .9s var(--ease),filter .7s}
 .laws li.is-on{opacity:1;transform:none;filter:none}
 .laws b{font:italic 400 clamp(3.75rem,9vw,9.375rem)/1 var(--serif);color:var(--amber);margin-bottom:.625rem}
-.laws span{font-family:var(--disp);font-weight:800;font-size:clamp(2.5rem,7.4vw,7.75rem);line-height:.95;letter-spacing:-.04em;max-width:11ch}
+.laws span{font-family:var(--disp);font-weight:560;font-size:clamp(2.5rem,7.4vw,7.75rem);line-height:.95;letter-spacing:-.04em;max-width:11ch}
 .laws small{margin-top:1.5rem;font-size:clamp(1.0625rem,1.5vw,1.375rem);color:var(--dim)}
 .laws{cursor:pointer}
 .law-prog{display:flex;gap:.375rem;margin-top:1.75rem;max-width:20rem} /* Puls-Striche: füllen sich, antippen = dorthin (7.11.) */
@@ -219,9 +258,76 @@ html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift
 .law-prog button:hover i{box-shadow:0 0 0 1px rgba(237,232,220,.25)}
 
 /* Tür */
-.door{padding-top:9.375rem}
+.door{padding-top:var(--gap-chap)}
+/* Kapitel-Auftakt (18.11., Kai: „A“): eigener Abschnitt vor den Kapiteln 02–05 – große Ziffer, Name, Untertitel, eine Linie.
+   Wird von main.js eingefügt (html.auftakt); der kleine Kicker im Kapitel entfällt dann. */
+.auftakt-blk{position:relative;z-index:1;box-sizing:border-box;display:flex;align-items:flex-end;min-height:56svh;padding-top:var(--gap-chap)} /* 56 % der Bildhöhe insgesamt (Abstand zum Kapitel davor inbegriffen) */
+.auftakt-blk .wrap{width:100%}
+/* 21.11.2026 (Kai: „Abstände anpassen“ am Ende von Kapitel 01, Go 1c): Handy/Tablet – nach der klebenden Bühne von Kapitel 01 stand
+   bis zur „02“ fast eine halbe Bildhöhe leer (56svh + Kapitelabstand; am iPhone kommt der Streifen unter der eingefahrenen Leiste dazu) */
+@media (max-width:920px){.auftakt-blk[data-for="bewegung"]{min-height:40svh}}
+.auftakt-blk .au-row{display:flex;align-items:flex-end;gap:clamp(1rem,2.6vw,2.5rem);margin:0}
+.auftakt-blk .au-no{font:italic 400 clamp(7.5rem,17vw,15rem)/.78 var(--serif);color:var(--amber);letter-spacing:-.02em}
+.auftakt-blk .au-txt{display:flex;flex-direction:column;gap:.625rem;padding-bottom:.4em}
+.auftakt-blk .au-name{font:560 clamp(2rem,3.6vw,3.25rem)/1 var(--disp);letter-spacing:-.035em;color:var(--txt)}
+.auftakt-blk .au-sub{font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.auftakt-blk .au-line{display:block;height:1px;margin-top:clamp(1.25rem,2.4vw,2rem);background:linear-gradient(90deg,var(--amber),rgba(224,154,53,.35) 60%,rgba(224,154,53,0));transform-origin:left center}
+.auftakt-blk .au-no,.auftakt-blk .au-txt{opacity:0;transform:translateY(1rem);transition:opacity 1.2s var(--ease),transform 1.4s var(--ease)}
+.auftakt-blk .au-txt{transition-delay:.25s}
+.auftakt-blk .au-line{transform:scaleX(0);transition:transform 1.8s var(--ease) .15s}
+.auftakt-blk.in .au-no,.auftakt-blk.in .au-txt{opacity:1;transform:none}
+.auftakt-blk.in .au-line{transform:none}
+html.auftakt .manifest{padding-block:clamp(3rem,8vh,5rem) 0}
+html.auftakt .roof{padding-top:clamp(4rem,10vh,6.5rem)}
+html.auftakt .door{padding-top:0}
+html.auftakt .manifest .wrap>.kicker,html.auftakt .axis-head .kicker,html.auftakt .roof-head .kicker,html.auftakt .door-top .kicker{display:none}
+/* 19.11.: bis 380 px Breite kleiner – „04 Dach / Praxis & Leistungen“ war bei 320 px 45 px breiter als das Fenster (die ganze Seite wurde dadurch verkleinert dargestellt) */
+.auftakt-blk{overflow-x:clip}
+.auftakt-blk .au-txt{min-width:0}
+@media (max-width:380px){.auftakt-blk .au-row{gap:.75rem}.auftakt-blk .au-no{font-size:5.75rem}.auftakt-blk .au-name{font-size:1.625rem}.auftakt-blk .au-sub{font-size:.625rem;letter-spacing:.1em}}
+@media (prefers-reduced-motion:reduce){.auftakt-blk .au-no,.auftakt-blk .au-txt,.auftakt-blk .au-line{transition:none;opacity:1;transform:none}}
+@media print{.auftakt-blk{min-height:0;padding-top:2rem}.auftakt-blk .au-no,.auftakt-blk .au-txt,.auftakt-blk .au-line{opacity:1;transform:none}}
+/* Tür-Bühne „Hineingehen“ (19.11., Go Kai „3a“, Baustein src/tuer/buehne.js): klebende Bühne, Überschrift oben, darunter die Tür
+   (Zeichenfläche fest hinter dem Text, nur in der Nähe eingeschaltet: Klasse on). html.door-walk = Bühne mit Scrollweg; ohne die
+   Klasse (ohne JavaScript, ohne Grafikchip, Bewegung angehalten) stehen Überschrift und Knöpfe einfach untereinander. */
+.c-stage,.c-glow{display:none;position:fixed;z-index:0;left:0;top:0;width:100%;height:100vh;height:100lvh;pointer-events:none}
+.c-stage.on,.c-glow.on{display:block}
+.c-glow{opacity:0;background:radial-gradient(70% 46% at 50% 66%,rgba(224,154,53,.15),rgba(224,154,53,.05) 55%,rgba(224,154,53,0) 78%)}
+.door-track{position:relative}
+/* Messanzeige (nur mit ?takt=1): Bilder je Sekunde usw. auf Kais Gerät, zwei Schalter zum Gegenprüfen */
+.takt{position:fixed;z-index:40;left:.5rem;bottom:calc(env(safe-area-inset-bottom,0px) + .5rem);padding:.5rem .625rem;border-radius:.375rem;border:1px solid rgba(224,154,53,.6);background:rgba(10,22,27,.94);color:var(--txt);font:500 .6875rem/1.45 ui-monospace,Menlo,Consolas,monospace}
+.takt pre{margin:0 0 .375rem;font:inherit;white-space:pre}
+.takt div{display:flex;gap:.375rem}
+.takt button{appearance:none;min-height:2rem;padding:0 .5rem;border-radius:.25rem;border:1px solid var(--line);background:none;color:var(--txt);font:inherit;cursor:pointer}
+.takt button.on{background:var(--amber);border-color:var(--amber);color:#0A161B}
+html.takt-klar .top.scrolled{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(10,22,27,.94)}
+.door-sticky{position:relative;padding-bottom:2.5rem}
+.door-top{padding-top:clamp(3rem,8vh,5rem);text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
+.door-top h2{margin-bottom:0}
+.door-in{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:2rem}
+.door-in .btn{min-width:min(100%,15rem);justify-content:center;text-align:center}
+.door-cue{display:none}
+html.door-walk .door-track{height:100svh}
+.door-hit{display:none}
+html.door-walk .door-hit{display:block;position:absolute;left:50%;top:24%;bottom:12%;width:min(86%,30rem);transform:translateX(-50%);background:none;border:0;padding:0;cursor:pointer;border-radius:4px;z-index:3;-webkit-tap-highlight-color:transparent}
+.door-hit[hidden]{display:none!important}
+html.door-walk .door-hit:focus-visible{outline:2px solid var(--amber);outline-offset:4px}
+html.door-walk .door-sticky{position:sticky;top:0;height:100svh;padding-bottom:0}
+html.door-walk .door-top{padding-top:calc(env(safe-area-inset-top,0px) + 6.25rem)}
+html.door-walk .door-in{position:absolute;left:0;right:0;bottom:clamp(2.5rem,13svh,7.5rem);margin:0 auto;justify-content:center;opacity:0;pointer-events:none}
+html.door-walk .door-in.is-on{pointer-events:auto}
+html.door-walk .door-cue{display:flex;align-items:center;justify-content:center;gap:.5rem;position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 1.25rem);margin:0;opacity:0;font:400 .9375rem/1.2 var(--sans);color:var(--dim);text-shadow:0 1px 2px rgba(10,22,27,.8),0 0 1rem rgba(10,22,27,.9)}
+.door-cue svg{width:1.125rem;height:1.125rem;fill:none;stroke:var(--amber);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.door-inner{padding-top:var(--gap-sub)}
+.door-h3{font:560 clamp(1.75rem,2.6vw,2.5rem)/1.05 var(--disp);letter-spacing:-.03em;margin:0 0 1.375rem}
+@media (max-width:920px){
+  html.door-walk .door-top{padding-top:calc(env(safe-area-inset-top,0px) + 5.75rem)}
+  html.door-walk .door-in{flex-direction:column;align-items:center;bottom:clamp(2.25rem,11svh,6rem)}
+  html.door-walk .door-in .btn{width:min(100%,20rem)}
+}
+@media print{.door-track{height:auto!important}.door-sticky{position:static!important;height:auto!important}.door-in{position:static!important;opacity:1!important;transform:none!important}}
 .door-inner{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.85fr);gap:3.75rem 5.625rem;align-items:end}
-.door h2{font-size:clamp(2.875rem,7.6vw,8rem);margin-bottom:1.625rem}
+.door h2{font-size:clamp(2.875rem,5.1vw,4.4rem);margin-bottom:1.625rem} /* 18.11.: „Die Tür steht“ passt in eine Zeile (vorher 7,6vw → drei Zeilen, doppelt so groß wie die anderen Kapitel) */
 .door .lead{margin-bottom:1.875rem}
 .door .small{margin-top:1.125rem}
 .facts{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:0 1.875rem;border-top:1px solid var(--line)}
@@ -256,14 +362,15 @@ html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift
   .motion-btn span{display:none}
 }
 /* Manuthera-Highlight (Kapitel 04, nach dem Rundgang): eigene Bühne, Partikel-Hintergrund tritt zurück */
-.manu{position:relative;padding:clamp(4.375rem,11vh,8.125rem) 0 clamp(1.875rem,5vh,4.375rem)}
+.manu{position:relative;padding:calc(var(--gap-sub) - 5.5rem) 0 0} /* 5,5rem: der Text steht mittig neben der höheren Bühne – gemessen wird bis zur Kennzeile */
 .manu-inner{display:grid;grid-template-columns:minmax(20rem,.8fr) 1.2fr;gap:4vw;align-items:center}
 .kicker.hi{color:var(--amber);align-items:center}
 .dot{display:inline-block;width:.5rem;height:.5rem;border-radius:50%;background:var(--amber);flex:none;animation:dot 2.4s ease-out infinite}
 @keyframes dot{0%{box-shadow:0 0 0 0 rgba(224,154,53,.55)}70%{box-shadow:0 0 0 .625rem rgba(224,154,53,0)}100%{box-shadow:0 0 0 0 rgba(224,154,53,0)}}
 .paused .dot{animation:none}
 @media (prefers-reduced-motion: reduce){.dot{animation:none}}
-.manu-h{font-size:clamp(2.25rem,4.6vw,4.5rem)}
+.manu-h{font-size:clamp(2.25rem,3.9vw,3.4rem)} /* 18.11.: zwei Zeilen „Bewegung in / drei Dimensionen.“ statt drei */
+@media (min-width:921px){.manu-h em{white-space:nowrap}}
 .manu .lead{margin-top:1.5rem}
 .manu-modes{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-top:2rem;max-width:32.5rem}
 .manu-modes button{position:relative;overflow:hidden;min-height:2.875rem;padding:0 .5rem;background:transparent;border:1px solid rgba(237,232,220,.22);border-radius:3px;color:var(--dim);font:600 .75rem/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:color .3s,border-color .3s}
@@ -357,7 +464,7 @@ html:not(.js) button.ix-link{display:none}
   html.seg-scan #achse .note::before{content:"";position:absolute;z-index:-1;inset:-1.25rem -50vw -1rem;background:linear-gradient(rgba(10,22,27,0),rgba(10,22,27,.9) 1.25rem)} /* Nahansicht: Wirbelsäule läuft hinter dem Hinweis aus */
   html.seg-scan .ncall-typ{white-space:pre-line}
   .ncall{white-space:normal;padding:.3125rem .625rem;font-size:.8125rem;line-height:1.35;border-radius:.625rem;background:rgba(10,22,27,.86);backdrop-filter:none;-webkit-backdrop-filter:none;transition:opacity .35s var(--ease)} /* ohne Weichzeichner: spart am iPhone Rechenzeit über der 3D-Szene */
-  .ncall-exit{font-size:.75rem;letter-spacing:.12em}
+  .ncall-exit{font-size:.75rem;letter-spacing:.12em;white-space:nowrap} /* 21.11. (Kai: „Überlappung Text“): „Nervenaustritt C1–C2“ in einer Zeile – vorher brach es bei „C1–“ / „C2“ */
   .ncall-ziel{font-size:1.0625rem;line-height:1.2}
   .ncall-typ{white-space:pre-line;text-align:left;font-size:.8125rem;line-height:1.45;padding:.4375rem .75rem;color:#C2D0D4;background:rgba(10,22,27,.86);border:1px solid rgba(207,232,250,.14);border-radius:.375rem}
   .peri-label{display:none}
@@ -368,21 +475,22 @@ html:not(.js) button.ix-link{display:none}
   .roof-list{display:flex;flex-direction:column;padding-top:2.5rem}
   .roof-list .kicker{order:1}
   .roof-list .index{order:3}
-  .serv-stage{order:2;position:sticky;top:calc(env(safe-area-inset-top,0px) + 4.25rem);z-index:3;height:30svh;margin:0 calc(-1 * max(var(--gut),5vw)) .5rem;background:linear-gradient(var(--ink) 90%,rgba(10,22,27,0))}
+  .serv-stage{order:2;align-self:stretch;position:sticky;top:calc(env(safe-area-inset-top,0px) + 4.25rem);z-index:3;height:30svh;margin:0 calc(-1 * max(var(--gut),5vw)) .5rem;background:linear-gradient(var(--ink) 90%,rgba(10,22,27,0))}
   .serv-name{bottom:12%;font-size:1.0625rem} /* im deckenden Teil des Verlaufs, sonst liegt der Name über den Leistungsnamen */
-  .door{background:linear-gradient(rgba(10,22,27,0),var(--ink) 8rem);padding-top:5.5rem}
-  .rules-sticky{align-items:flex-end;padding-bottom:9svh}
+  .door{padding-top:var(--gap-chap)} /* 19.11.: keine eigene dunkle Fläche mehr – die Tür-Bühne steht hinter dem Text, die Punktwolke ist hier ausgeblendet */
+  .rules-sticky{padding-block:var(--gap-chap) calc(var(--gap-chap) - 6rem)}
+  .rules .kicker{margin-bottom:14rem} /* 18.11.: Platz für die HOP-Kreise UNTER „§ Die Hausordnung“ (vorher 19rem über dem Kicker) – Überschrift oben, Animation darunter */
   .law-prog{margin-top:1.5rem;max-width:16rem}
   .laws{min-height:40svh}
   .laws b{font-size:3.5rem}
   .laws span{font-size:clamp(2.125rem,10vw,3rem)}
   .laws small{margin-top:.875rem;font-size:1rem}
-  .manifest{padding-block:6.875rem}
+  .manifest{padding-block:calc(var(--gap-chap) - 2rem) 0}
   .door-inner{grid-template-columns:1fr}
 }
 @media (max-width:600px){
   body{font-size:1rem}
-  .brand svg{width:4.125rem}
+  .brand svg{width:5.5rem}
   .top{gap:.5rem}
   .chap-now{margin-right:auto}
   .facts{grid-template-columns:1fr}
@@ -391,15 +499,16 @@ html:not(.js) button.ix-link{display:none}
 @media (max-width:400px){
   .actions .btn{flex:1 1 100%}
   /* schmale Handys: Leiste kompakter, damit „Termin“ im Bild bleibt */
-  .brand svg{width:3.5rem}
+  .brand svg{width:4.875rem}
   .chap-now{gap:.3125rem;padding:0}
   .chap-now::after{margin-left:.125rem}
   .top .btn-small{margin-left:0;padding:0 .75rem;letter-spacing:.1em}
 }
 @media (max-width:350px){
   .top{gap:.375rem}
-  .brand svg{width:3rem}
+  .brand svg{width:3.625rem}
   .chap-now{font-size:.75rem}
+  .chap-now small{display:none} /* 19.11.: Untertitel des Kapitels entfällt bis 350 px – „Termin“ lag dort schon vorher 13 px außerhalb des Bilds */
   .top .btn-small{padding:0 .625rem}
 }
 /* Scanner (Handy, 6.11.): Linie, Griff, Leiste – Lage aus main.js updateScan; nur mit .on sichtbar */
@@ -429,24 +538,58 @@ html:not(.js) button.ix-link{display:none}
 /* Ziehstreifen = Aufzug: Haltestellen links (Knöpfe), Rinne + Griff rechts; nur hier wird gezogen, links scrollt die Seite */
 .scan-rail{position:fixed;right:0;z-index:2;display:none;touch-action:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;border-radius:.875rem 0 0 .875rem;border:1px solid rgba(224,154,53,.22);border-right:0;background:linear-gradient(90deg,rgba(10,22,27,.55),rgba(224,154,53,.08))}
 .scan-rail.on{display:block}
-@media (max-width:920px){.scan-rail{background:linear-gradient(90deg,rgba(10,22,27,.84),rgba(18,28,30,.9))}} /* N5 (Auftrag Z): Handy deckender – Beschriftung Th1/Th7 lag über hellen Knochenpunkten der breiteren echten Säule */
 .scan-rail{cursor:grab}.scan-rail:active{cursor:grabbing}.scan-stop{cursor:pointer}
 .scan-stop{position:absolute;left:.25rem;width:2.125rem;height:1.75rem;margin-top:-.875rem;padding:0;border:0;border-radius:.875rem;background:transparent;color:#A8BABF;font:600 .6875rem/1 var(--sans);letter-spacing:.04em;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .3s,background .3s}
 .scan-stop.is-on{color:var(--amber);background:rgba(224,154,53,.14)}
 .scan-stop:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
 /* Karte oben als Überschrift (Kai 6.11. spät): Abschnitt + Titel, „Typisch“, Therapien */
-.scan-chips{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s var(--ease);padding:.75rem .875rem .875rem;border:1px solid rgba(224,154,53,.55);border-radius:.375rem;background:rgba(14,30,37,.95)}
-.scan-chips .sc-t{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:.625rem;margin:0}
-.scan-chips .sc-no{font:italic 400 1.625rem/1 var(--serif);color:var(--amber)}
-.scan-chips .sc-h{font:800 1.125rem/1.1 var(--disp);letter-spacing:-.02em;color:var(--txt)}
-.scan-chips .sc-typ{margin:.5rem 0 0;font:500 .8125rem/1.45 var(--sans);color:#C2D0D4;white-space:pre-line}
+.scan-chips{position:fixed;left:0;top:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s var(--ease);border:1px solid rgba(224,154,53,.55);border-radius:.5rem;background:rgba(14,30,37,.96);overflow:hidden auto;overscroll-behavior:contain}
+/* 18.11. (Go Kai „2a“): schmale Leiste unten – Abschnitt + Titel; Antippen klappt „Typisch“, Nerv, Gefühl und Therapien auf */
+.scan-chips.is-on{pointer-events:auto}
+.scan-chips .sc-bar{display:flex;align-items:center;gap:.5rem;width:100%;min-height:3rem;margin:0;padding:.4375rem .5rem .4375rem .8125rem;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.scan-chips .sc-t{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:.5rem;row-gap:.125rem}
+.scan-chips .sc-no{font:italic 400 1.375rem/1 var(--serif);color:var(--amber)}
+.scan-chips .sc-h{font:600 1rem/1.15 var(--disp);letter-spacing:-.02em;color:var(--txt)}
+/* 21.11.2026 (Kai: „Button um mehr Text lebendig, auffälliger“, Go 3): Bernstein-Pille „Mehr“ mit Pfeil, pulsiert einmal beim Erscheinen;
+   darunter die erste Zeile von „Typisch“ als Vorschau (vorher kleiner Ring mit Pfeil in Rahmenfarbe) */
+.scan-chips .sc-x{flex:none;position:relative;display:inline-flex;align-items:center;gap:.375rem;height:2.25rem;padding:0 .75rem 0 .875rem;border-radius:1.125rem;background:var(--amber);color:#0A161B;font:700 .75rem/1 var(--sans);letter-spacing:.06em;text-transform:uppercase}
+.scan-chips .sc-x b{font-weight:700}
+.scan-chips .sc-x b+b,.scan-chips.is-open .sc-x b:first-child{display:none}
+.scan-chips.is-open .sc-x b+b{display:inline}
+.scan-chips .sc-x::after{content:"";width:.375rem;height:.375rem;margin-top:.1875rem;border-left:2px solid currentColor;border-top:2px solid currentColor;transform:rotate(45deg);transition:transform .25s var(--ease),margin .25s var(--ease)}
+.scan-chips.is-open .sc-x{background:transparent;color:var(--amber);box-shadow:inset 0 0 0 1px rgba(224,154,53,.7)}
+.scan-chips.is-open .sc-x::after{margin-top:-.1875rem;transform:rotate(225deg)}
+.scan-chips.sc-pulse .sc-x{animation:scPulse 1.8s var(--ease) .5s 1 both}
+@keyframes scPulse{0%{box-shadow:0 0 0 0 rgba(224,154,53,.55);transform:scale(1)}30%{transform:scale(1.06)}60%{transform:scale(1)}100%{box-shadow:0 0 0 .875rem rgba(224,154,53,0);transform:scale(1)}}
+.scan-chips .sc-tease{flex-basis:100%;min-width:0;margin-top:.1875rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:500 .75rem/1.3 var(--sans);color:#A8BABF}
+.scan-chips.is-open .sc-tease{display:none}
+.scan-chips .sc-bar.has-film .sc-x{width:2.25rem;padding:0;justify-content:center}
+.scan-chips .sc-bar.has-film .sc-x b{display:none}
+.scan-chips .sc-film{flex:none;display:inline-flex;align-items:center;gap:.25rem;height:2.25rem;padding:0 .75rem 0 .5rem;border-radius:1.125rem;background:var(--amber);color:#0A161B;font:700 .75rem/1 var(--sans);letter-spacing:.04em}
+.scan-chips .sc-film svg{width:1rem;height:1rem;fill:currentColor}
+.scan-chips.is-open .sc-film{display:none}
+.scan-chips .sc-bar.has-film .sc-h{font-size:.9375rem}
+@media (max-width:380px){.scan-chips .sc-film{width:2.25rem;padding:0;justify-content:center;font-size:0;gap:0}}
+.scan-chips .sc-more{display:none;padding:0 .8125rem .8125rem}
+.scan-chips.is-open .sc-more{display:block}
+.scan-chips .sc-typ{margin:.125rem 0 0;font:500 .8125rem/1.45 var(--sans);color:#C2D0D4;white-space:pre-line}
+.scan-chips .sc-rows{margin-top:.5rem;padding-top:.5rem;border-top:1px solid rgba(207,232,250,.14)}
+.scan-chips .sc-rows p{margin:0;font:600 .8125rem/1.4 var(--sans);letter-spacing:.02em;color:var(--txt)}
+.scan-chips .sc-rows p+p{margin-top:.1875rem}
 .scan-chips .sc-c{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.625rem}
 .scan-chips .sc-c:empty{display:none}
-.scan-chips .sc-c span{font:600 .75rem/1 var(--sans);padding:.375rem .5rem;border-radius:3px;border:1px solid rgba(224,154,53,.35);color:var(--txt);background:rgba(224,154,53,.07)}
-.scan-chips .sc-c span{font-size:.6875rem;padding:.3125rem .4375rem} /* schmale Karte (Kai 7.11.): zwei Kästchen je Zeile */
-.scan-chips.sc-small{padding:.5rem .75rem .625rem}
-.scan-chips.sc-small .sc-no{font-size:1.25rem}.scan-chips.sc-small .sc-h{font-size:.9375rem}.scan-chips.sc-small .sc-typ{font-size:.75rem;line-height:1.4;margin-top:.375rem}
-@media (max-width:360px){.scan-chips{padding:.5625rem .75rem .6875rem}.scan-chips .sc-no{font-size:1.375rem}.scan-chips .sc-h{font-size:1rem}.scan-chips .sc-c span{padding:.3125rem .4375rem}}
+.scan-chips .sc-c span{font:600 .6875rem/1 var(--sans);padding:.3125rem .4375rem;border-radius:3px;border:1px solid rgba(224,154,53,.35);color:var(--txt);background:rgba(224,154,53,.07)}
+@media (max-width:360px){.scan-chips .sc-no{font-size:1.25rem}.scan-chips .sc-h{font-size:.9375rem}}
+@media (prefers-reduced-motion:reduce){.scan-chips .sc-x::after{transition:none}.scan-chips.sc-pulse .sc-x{animation:none}}
+/* Handy: Aufzug als schmale Schiene ohne Fläche – die Wirbelsäule bleibt dahinter sichtbar; Haltestellen als kleine dunkle Marken */
+@media (max-width:920px){
+  .scan-rail{background:none;border-color:transparent}
+  /* 21.11.2026 (Kai: „Überlappung Text“, Go 3a): dunkler Grund hinter der Skala – die Beschriftung steht nie auf Knochen */
+  .scan-rail.on{background:linear-gradient(90deg,rgba(10,22,27,0),rgba(10,22,27,.72) 38%,rgba(10,22,27,.72))}
+  .scan-coach svg{left:-.25rem} /* Hand weiter rechts: verdeckt beim Vorführen nicht die Beschriftung der nächsten Haltestelle */
+  .scan-stop{left:0;width:1.5rem;height:1.5rem;margin-top:-.75rem;border-radius:.375rem;background:rgba(10,22,27,.82);font-size:.625rem;letter-spacing:0}
+  .scan-stop.is-on{background:rgba(42,32,16,.92)}
+}
 html.no-gl .scan,html.no-gl .scan-rail,html.no-gl .scan-chips{display:none}
 @media (prefers-reduced-motion:reduce){.scan-coach{transition:none}.scan-coach>*{animation:none;opacity:1}}
 
@@ -491,7 +634,7 @@ html.paused .btn:not(.btn-ghost){box-shadow:0 0 0 3px rgba(224,154,53,.3)}
 .touch-hint{position:fixed;z-index:6;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:.5rem;pointer-events:none;opacity:0;transition:opacity .6s;font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--amber);white-space:nowrap;text-shadow:0 0 .75rem rgba(10,22,27,.95),0 0 .25rem rgba(10,22,27,.95)}
 .touch-hint.on{opacity:1}
 .touch-hint.in-stage{position:absolute;left:50%;top:auto;bottom:16%;transform:translateX(-50%)}
-.touch-hint.th-pill{flex-direction:row;gap:.375rem;padding:.375rem .875rem .375rem .375rem;border-radius:1.25rem;background:rgba(10,22,27,.88);border:1px solid rgba(224,154,53,.45);letter-spacing:.12em;text-shadow:none} /* Touch: ganze Wischhilfe als dunkle Pille (wie Kap. 03), lesbar über den Partikeln */
+.touch-hint.th-pill{flex-direction:row;gap:.5rem;padding:.25rem .5rem;border-radius:.25rem;background:rgba(10,22,27,.72);border:0;letter-spacing:.1em;text-transform:none;font-weight:500;font-size:.8125rem;color:var(--dim);text-shadow:none} /* Touch: ganze Wischhilfe als dunkle Pille (wie Kap. 03), lesbar über den Partikeln */
 .touch-hint.th-pill .th-track{width:4rem}
 .touch-hint.th-pill .th-dot{width:1rem;height:1rem;margin:-.5rem 0 0 -.5rem;animation-name:thSwayS}
 /* Haus am Handy (Go Kai 8.11. „b A“): Pille sitzt direkt über der Raumleiste, Tipp-Symbol statt Wischspur, Spitze zeigt auf die Punkte */
@@ -729,7 +872,7 @@ html:not(.js) .vf-open,html:not(.js) #vorfallSheet{display:none}
 /* G5 · Handy/Tablet: Knöpfe der Manuthera-Liege und ihre Erklärzeile stehen direkt unter Überschrift und Bühne, der lange Text folgt danach.
    Seit 14.11.2026 nachts (Kai): erst Kennzeichnung + Überschrift, dann die Bühne; Bühne nur so hoch, wie die Liege braucht (kein leerer Platz). */
 @media (max-width:920px){
-  .manu{padding-top:3rem}
+  .manu{padding-top:var(--gap-sub)}
   .manu-stage canvas{height:min(56vh,30rem,84vw)}
   .manu-text{display:contents}
   .manu-text > .kicker{order:0}
@@ -763,7 +906,7 @@ html:not(.js) .index button{cursor:default}
 @media print{
   :root{--txt:#111;--dim:#333;--mute:#555;--line:#ccc;--amber:#8a5a00}
   body{background:#fff;color:#111}
-  #gl,.grain,.top,.skip,.still,.axis-hint,.segnav,.seg-dots,.scan-rail,.tour-ctrl,.roof-grid .hint,.ego,.manu-stage,.manu-modes,.serv-stage,.law-prog,.touch-hint,.turn-note,.only-fine,.only-touch,dialog,.btn,#copyMail{display:none!important}
+  #gl,.c-stage,.c-glow,.takt,.grain,.top,.skip,.still,.axis-hint,.segnav,.seg-dots,.scan-rail,.tour-ctrl,.roof-grid .hint,.ego,.manu-stage,.manu-modes,.serv-stage,.law-prog,.touch-hint,.turn-note,.only-fine,.only-touch,dialog,.btn,#copyMail{display:none!important}
   .chapter,.wrap,.axis,.axis-sticky,.rules-sticky,.axis-inner,.manu,.roof,.door{position:static!important;display:block!important;height:auto!important;min-height:0!important;overflow:visible!important;padding-top:.5rem!important;padding-bottom:.5rem!important;background:none!important}
   .seg-card,.card,.laws li{position:static!important;opacity:1!important;visibility:visible!important;transform:none!important;filter:none!important;margin-bottom:1rem;break-inside:avoid;border:0!important;background:none!important}
   .seg-cards,.cards,.laws{min-height:0!important;opacity:1!important;visibility:visible!important}
@@ -784,4 +927,108 @@ html:not(.js) .index button{cursor:default}
   .seg-cards,.axis-head{position:static!important;width:auto!important;height:auto!important;max-height:none!important;clip:auto!important;white-space:normal!important;overflow:visible!important}
   #achse .note::before{display:none!important}
 }
+/* 18.11.: sehr schmale Handys (bis 380 px) – „Die Tür steht“ und „drei Dimensionen.“ bleiben je in einer Zeile */
+@media (max-width:380px){.door h2{font-size:2.125rem}.manu-h{font-size:1.9375rem}}
 
+/* 20.11.2026 nachts (Kai im Arbeitsblatt 4: Schilder an der Wirbelsäule „alle gleich: schlichter Text mit Linie“): Austritt, Nerv, Gefühl
+   und Ziel sind dieselbe schlichte Zeile ohne Rahmen und Fläche – nur der Austritt bleibt Bernstein. Der Kasten „Typisch …“ bleibt (Fließtext). */
+.ncall:not(.ncall-typ){padding:.125rem .25rem;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;font:500 .875rem/1.25 var(--sans);letter-spacing:.01em;text-transform:none;color:var(--txt);text-shadow:0 0 .375rem rgba(10,22,27,1),0 0 .875rem rgba(10,22,27,.95),0 1px 2px rgba(10,22,27,.9)}
+.ncall.ncall-exit{color:var(--amber)}
+@media (max-width:920px){.ncall:not(.ncall-typ){font-size:.8125rem}}
+
+/* 21.11.2026 abends: Staub beim Raumwechsel im Linienhaus (Baustein src/haus-staub/staub.js) */
+.staub{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4;opacity:0;transition:opacity .3s}
+.staub.on{opacity:1}
+@media print{.staub{display:none}}
+
+/* ---------- Text ruhig (Studie textruhe.html, 21.11.2026, Go Kai „A“) ----------
+   Je Block bleibt ein Kernsatz stehen; der Rest liegt hinter einem Leuchtpunkt-Knopf (.lp-btn) und klappt am Ort auf.
+   Nur mit html.ruhe (setzt das Bauziel textruhe). Ohne die Klasse – Puls, live, ohne JavaScript, Druck – steht alles offen
+   und die Knöpfe fehlen. Es pulsiert höchstens ein Punkt (der oberste sichtbare, noch nicht geöffnete; ruhe.js). */
+.lp-btn,.tx-kurz{display:none}
+.facts-box{display:contents}
+html.ruhe .tx-lang{display:none}
+html.ruhe .tx-kurz{display:inline}
+html.ruhe .facts-box{display:block}
+@media screen{html.ruhe .lp-zone:not(.is-open) .lp-x{display:none}}
+html.ruhe .lp-zone.is-open .lp-x{animation:lpIn .55s var(--ease) both}
+@keyframes lpIn{from{opacity:0}}
+/* 22.11.2026 (Kai: „sieht man nicht gleich, dass man klicken kann – Hinschauer, der auffällt, ohne sich aufzudrängen“, Go):
+   Leuchtpille statt Textzeile. Oben läuft die erste Zeile des verborgenen Texts aus (.lp-tease, von ruhe.js gefüllt), darunter
+   die Pille mit Bernstein-Kugel und „+“ (wird beim Öffnen zum „×“). Beim ersten Hereinkommen sammelt sich feiner Staub zur Kugel
+   (ruhe.js, einmalig); danach atmet ein Lichtring um die Kugel – nur am obersten noch nie geöffneten Knopf im Bild. */
+html.ruhe .lp-btn{appearance:none;display:flex;flex-direction:column;align-items:flex-start;gap:.5rem;width:100%;min-width:0;max-width:100%;margin:.75rem 0 0;padding:0;border:0;background:none;color:var(--amber);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.lp-tease{display:block;width:100%;max-width:40ch;contain:inline-size;overflow:hidden;white-space:nowrap;font:400 .9375rem/1.45 var(--sans);color:var(--dim);-webkit-mask-image:linear-gradient(90deg,#000 30%,transparent 95%);mask-image:linear-gradient(90deg,#000 30%,transparent 95%)}
+.lp-tease:empty,html.ruhe .lp-btn[aria-expanded="true"] .lp-tease{display:none}
+.lp-pill{position:relative;display:inline-flex;align-items:center;gap:.75rem;min-height:2.75rem;padding:.3125rem 1.125rem .3125rem .3125rem;border-radius:1.375rem;border:1px solid rgba(224,154,53,.5);background:rgba(224,154,53,.07);font:600 .75rem/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase;transition:background .3s,border-color .3s,box-shadow .3s}
+.lp-btn:hover .lp-pill,.lp-btn:focus-visible .lp-pill{background:rgba(224,154,53,.16);border-color:var(--amber);box-shadow:0 0 1.5rem rgba(224,154,53,.18)}
+.lp-btn:focus-visible{outline:none}
+.lp-btn:focus-visible .lp-pill{outline:2px solid var(--amber);outline-offset:3px}
+.lp-orb{position:relative;flex:none;width:2.125rem;height:2.125rem;border-radius:50%;background:var(--amber);box-shadow:0 0 .875rem rgba(224,154,53,.45);transition:background .3s,box-shadow .3s}
+.lp-orb i{position:absolute;inset:0;transition:transform .45s var(--ease)}
+.lp-orb i::before,.lp-orb i::after{content:"";position:absolute;left:50%;top:50%;width:.75rem;height:2px;margin:-1px 0 0 -.375rem;border-radius:1px;background:#14110A;transition:background .3s}
+.lp-orb i::after{transform:rotate(90deg)}
+.lp-orb::after{content:"";position:absolute;inset:-1px;border-radius:50%;border:2px solid var(--amber);opacity:0;pointer-events:none}
+html.ruhe .lp-btn[aria-expanded="true"] .lp-pill{background:transparent;border-color:rgba(224,154,53,.3)}
+html.ruhe .lp-btn[aria-expanded="true"] .lp-orb{background:transparent;box-shadow:inset 0 0 0 1.5px var(--amber)}
+html.ruhe .lp-btn[aria-expanded="true"] .lp-orb i{transform:rotate(45deg)}
+html.ruhe .lp-btn[aria-expanded="true"] .lp-orb i::before,html.ruhe .lp-btn[aria-expanded="true"] .lp-orb i::after{background:var(--amber)}
+.lp-btn.is-pulse .lp-orb{animation:lpGlow 2.8s ease-in-out infinite}
+.lp-btn.is-pulse .lp-orb::after{animation:lpRing 2.8s cubic-bezier(.2,.6,.3,1) infinite}
+@keyframes lpGlow{0%,100%{box-shadow:0 0 .875rem rgba(224,154,53,.45)}35%{box-shadow:0 0 1.75rem rgba(224,154,53,.85)}}
+@keyframes lpRing{0%{transform:scale(1);opacity:.7}70%,100%{transform:scale(1.9);opacity:0}}
+/* Auftritt: bis der Staub angekommen ist, ist die Kugel verborgen (lp-pre); dann leuchtet sie kurz auf (lp-pop) */
+.lp-btn.lp-pre .lp-orb{opacity:0;transform:scale(.4)}
+.lp-btn.lp-pop .lp-orb{animation:lpPop .7s var(--ease) both}
+.lp-btn.lp-pop.is-pulse .lp-orb{animation:lpPop .7s var(--ease) both,lpGlow 2.8s ease-in-out .7s infinite}
+@keyframes lpPop{0%{opacity:0;transform:scale(.4)}60%{opacity:1;transform:scale(1.14)}100%{opacity:1;transform:scale(1)}}
+.lp-dust{position:absolute;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:#F0B864;pointer-events:none;opacity:0}
+html.paused .lp-btn .lp-orb,html.paused .lp-btn .lp-orb::after{animation:none}
+html.paused .lp-btn.lp-pre .lp-orb{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.lp-btn .lp-orb,.lp-btn .lp-orb::after,html.ruhe .lp-zone.is-open .lp-x{animation:none!important}.lp-btn.lp-pre .lp-orb{opacity:1;transform:none}}
+html.ruhe .sw-where > .sw-sub{display:none} /* der Knopf trägt die Überschrift */
+html.ruhe .sw-where > .lp-btn{margin:-.5rem 0 .25rem}
+html.ruhe .sw-where.is-open > .lp-btn{margin-bottom:.75rem}
+html.ruhe .sw-steps + .lp-btn{margin-top:1rem}
+html.ruhe .facts-box > .lp-btn{margin-top:1rem}
+@media (max-width:920px){
+  .manu-text > .lp-btn{order:5}
+  .sw-text > .lp-btn{order:5;justify-self:start}
+}
+@media print{.lp-btn,.vsw-ruhe{display:none!important}}
+/* Umschalter der Studie (unten links, nur auf textruhe.html) */
+.vsw-ruhe{position:fixed;z-index:40;left:max(.75rem,env(safe-area-inset-left,0px));bottom:max(.75rem,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:.25rem;padding:.1875rem;border-radius:1.5rem;border:1px solid var(--line);background:rgba(10,22,27,.9);box-shadow:0 .5rem 1.5rem rgba(0,0,0,.4)}
+.vsw-ruhe{transition:opacity .4s,visibility 0s}
+.vsw-ruhe.is-away{opacity:0;visibility:hidden;transition:opacity .4s,visibility 0s .4s}
+.vsw-ruhe b{padding:0 .5rem 0 .625rem;font:600 .625rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.vsw-ruhe button{appearance:none;min-height:2.25rem;padding:0 .875rem;border:0;border-radius:1.25rem;background:transparent;color:var(--dim);font:600 .6875rem/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+.vsw-ruhe button[aria-pressed="true"]{background:var(--amber);color:#14110A}
+/* Raumlicht + Logo-Farben (Go Kai 22.11.2026: „Kräftig“; Baustein farbe.js, Vergleich farbstudie.html).
+   Die Lichtschicht liegt über der Seite (auch über der Kopfleiste), unter Hinweisen und Dialogen; „screen“ hellt nur auf. */
+#farblicht{position:fixed;inset:0;z-index:21;pointer-events:none;mix-blend-mode:screen;transition:opacity .9s ease}
+html.fx-aus #farblicht,html.licht #farblicht{display:none}
+@media (prefers-contrast:more){#farblicht{display:none}}
+@media print{#farblicht,.fx-wahl,.fx-info{display:none!important}}
+/* Logo-Farben als Raumfarben: Kapitel-Ziffern, Linien, Menü. Bernstein bleibt die Farbe für Handlung (Knöpfe, Leuchtpunkte, Kursivwort). */
+.auftakt-blk[data-for="bewegung"]{--cc:#8DBF55}
+.auftakt-blk[data-for="achse"]{--cc:#5AA2D6}
+.auftakt-blk[data-for="dach"]{--cc:#6FA8C0}
+.auftakt-blk[data-for="tuer"]{--cc:#E09A35}
+html.fx-logo .auftakt-blk .au-no{color:var(--cc,var(--amber))}
+html.fx-logo .auftakt-blk .au-line{background:linear-gradient(90deg,var(--cc,var(--amber)),color-mix(in srgb,var(--cc,var(--amber)) 35%,transparent) 60%,transparent)}
+.chapters li:nth-child(1),.chapters li:nth-child(4){--cc:#5AA2D6}
+.chapters li:nth-child(2){--cc:#8DBF55}
+.chapters li:nth-child(3),.chapters li:nth-child(5){--cc:#6FA8C0}
+.chapters li:nth-child(6){--cc:#E09A35}
+html.fx-logo .chapters i{color:color-mix(in srgb,var(--cc) 70%,var(--mute))}
+html.fx-logo .chapters a.on i{color:var(--cc)}
+html.fx-logo .chap-now i{color:var(--fx-now,var(--amber));transition:color .9s ease}
+/* Vergleichsseite farbstudie.html: Umschalter unten links (wie .vsw-ruhe) */
+.fx-wahl{position:fixed;z-index:45;left:max(.75rem,env(safe-area-inset-left,0px));bottom:max(.75rem,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:.25rem;padding:.1875rem;border-radius:1.5rem;border:1px solid var(--line);background:rgba(10,22,27,.92);box-shadow:0 .5rem 1.5rem rgba(0,0,0,.4)}
+.fx-wahl b{padding:0 .5rem 0 .625rem;font:600 .625rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.fx-wahl button{appearance:none;min-height:2.25rem;padding:0 .75rem;border:0;border-radius:1.25rem;background:transparent;color:var(--dim);font:600 .6875rem/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.fx-wahl button[aria-pressed="true"]{background:var(--amber);color:#14110A}
+.fx-wahl button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.fx-wahl.zu b,.fx-wahl.zu button:not([aria-pressed="true"]){display:none}
+.fx-info{position:fixed;z-index:45;left:max(.75rem,env(safe-area-inset-left,0px));bottom:calc(max(.75rem,env(safe-area-inset-bottom,0px)) + 3.125rem);max-width:min(26rem,calc(100vw - 1.5rem));margin:0;padding:.5rem .75rem;border-radius:.5rem;border:1px solid var(--line);background:rgba(10,22,27,.94);font:500 .8125rem/1.4 var(--sans);color:var(--txt);opacity:0;transform:translateY(.25rem);transition:opacity .4s,transform .4s;pointer-events:none}
+.fx-info.an{opacity:1;transform:none}

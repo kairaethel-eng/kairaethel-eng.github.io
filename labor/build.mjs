@@ -40,8 +40,26 @@ const PAGES = {
   // Figur plus (16.11.2026, Auftrag Kai): Entwurf zu Kap. 01 – Figur mit Körperkonturen, Gehirn (Station 01) und Nervensystem, alles Partikel;
   // eigene Kopie des Bausteins in src/figur-plus (kapitel.js, gl.js, figur.js), CSS des Bausteins nur gelesen. Puls unberührt.
   'figur-plus': { out: 'figur-plus.html' },
+  // Feinschliff (17.11.2026, Go Kai): Studie zu Kap. 01 – Figur aus „Figur plus“ mit geordneten, gestochenen Punkten, Kantenlicht,
+  // Antwort unter Maus/Finger, ruhigerer Schrift; Umschalter bisher / neu (bisher = src/figur-plus, nur gelesen). Puls unberührt.
+  'feinschliff': { out: 'feinschliff.html' },
   // Tür (16.11.2026, Go Kai): Entwurf zu Kap. 05 – Knöpfe erscheinen erst mit der offenen Partikel-Tür, Varianten A | C (Canvas 2D, kein WebGL)
   'tuer': { out: 'tuer.html' },
+  // Tür · Raum (22.11.2026, Go Kai „a c“): Kapitel 05 als Raum – Tür antippen, der Rahmen wird zum Bildschirmrand, drinnen umsehen
+  // (vier Blickrichtungen mit Termin, Zeiten, Telefon & mehr, Anfahrt). Bühne src/tuer-raum/stage.js + raum.js; Puls unberührt.
+  'tuer-raum': { out: 'tuer-raum.html' },
+  // Stoßwelle in Punkten (20.11.2026 nachts, Kai im Arbeitsblatt 4): Entwurf – Punkt-Grafik mit echtem Fersenbein, Vergleich mit der Linien-Bühne in Puls
+  'stosswelle-punkte': { out: 'stosswelle-punkte.html' },
+  // Logo-Vergleich (21.11.2026, Kai: altes Logo lassen, zusätzlich eine Mischung zeigen): A flach · B Mischung · C nach dem Original
+  'logo': { out: 'logo.html' },
+  // Haus mit Staub (21.11.2026, Kai im Arbeitsblatt: Linien behalten, beim Raumwechsel zieht Staub hinüber): Entwurf auf der Grundlage von haus-licht
+  'haus-staub': { out: 'haus-staub.html' },
+  // Text ruhig (21.11.2026, Go Kai „A“; seit 22.11. „Go Übernahme“ Standard in Puls und live): Vergleichsseite mit Umschalter bisher / ruhig.
+  // Gleiche Quellen wie Puls (src/test-4); hier kommt nur die Klasse studie-ruhe dazu (Umschalter, ruhe.js).
+  'textruhe': { out: 'textruhe.html', dir: 'test-4', studie: 'ruhe' },
+  // Farbstudie (22.11.2026, Go Kai: „Kräftig übernehmen, alle anderen speichern“): Puls mit Umschalter Heute · Leise · Mittel · Kräftig
+  // (Klasse studie-farbe, Baustein src/test-4/farbe.js). In Puls und live gilt „Kräftig“, die anderen Stufen über ?farbe=…
+  'farbe': { out: 'farbstudie.html', dir: 'test-4', studie: 'farbe' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
   'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true, noTermin: true }, // Übergangsseite hat kein Termin-Blatt
@@ -179,7 +197,8 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   const js = res.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
   let css = readFileSync(join(dir, 'style.css'), 'utf8');
   // Baustein-CSS einbinden (14.11.2026, Linienhaus): /*@include pfad*/ relativ zum Quellordner der Seite
-  css = css.replace(/\/\*@include ([^*]+?)\*\//g, (m, f) => readFileSync(join(dir, f.trim()), 'utf8'));
+  // (21.11.2026: auch verschachtelt – ein eingebundener Baustein darf selbst einbinden, Pfade gelten relativ zu seiner eigenen Datei)
+  { const inc = (text, base) => text.replace(/\/\*@include ([^*]+?)\*\//g, (m, f) => { const file = join(base, f.trim()); return inc(readFileSync(file, 'utf8'), dirname(file)); }); css = inc(css, dir); }
   if (cfg.live) css = css.replace(/\/\*[\s\S]*?\*\//g, ''); // Live: Arbeitskommentare („Testseite 4 …“) raus
   if (cfg.live) css = css.replace(/url\(assets\//g, 'url('); // Standbilder (ohne WebGL) liegen neben der Live-Seite
   if (P) css += P.css;
@@ -189,6 +208,8 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   tpl = tpl.replace(/<!--@include ([^>]+?)-->/g, (m, f) => readFileSync(join(dir, f.trim()), 'utf8'));
   { const acts = tpl.match(/<!--KF-ACTS-->([\s\S]*?)<!--\/KF-ACTS-->/); if (acts) tpl = tpl.replace(acts[0], '').replace('<!--KF-ACTS-SLOT-->', () => acts[1]); }
   if (P) tpl = applyPatches(tpl, P.page, 'page.html');
+  if (cfg.studie === 'ruhe') tpl = applyPatches(tpl, [["classList.add('js','ruhe')", "classList.add('js','ruhe','studie-ruhe')"], ['<title>HOP Puls Scan</title>', '<title>HOP Text ruhig</title>']], 'textruhe');
+  if (cfg.studie === 'farbe') tpl = applyPatches(tpl, [["classList.add('js','ruhe')", "classList.add('js','ruhe','studie-farbe')"], ['<title>HOP Puls Scan</title>', '<title>HOP Farbstudie</title>']], 'farbstudie');
   if (cfg.root) ROOT_LINKS.forEach(([re, to]) => { tpl = tpl.replace(re, to); });
   // Datenschutz § 4 Online-Terminbuchung (<!--TERMIN-->…): ohne Termin-Blatt heraus, folgende §§ eins zurück
   if (cfg.noTermin) tpl = tpl.replace(/[ \t]*<!--TERMIN-->[\s\S]*?<!--\/TERMIN-->\r?\n?/g, '').replace(/<i>§ ([5-9])<\/i>/g, (m, n) => `<i>§ ${n - 1}</i>`);
@@ -208,7 +229,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   if (cfg.live === 'index.html') {
     // Bilder für Link-Vorschau und Home-Bildschirm (Quelle labor/assets/, erzeugt aus der Seite selbst)
     // + Standbilder für Browser ohne WebGL (A2): eigene Dateien, nicht eingebettet
-    for (const img of ['og.jpg', 'apple-touch-icon.png', 'still-hero.webp', 'still-achse.webp', 'still-dach.webp', 'still-manu.webp', 'hop-physiotherapie.vcf', 'wirbelsaeule-echt.bin', 'vorfall-1.webp', 'vorfall-2.webp', 'vorfall-3.webp', 'vorfall-4.webp', 'vorfall-5.webp']) {
+    for (const img of ['og.jpg', 'apple-touch-icon.png', 'still-hero.webp', 'still-achse.webp', 'still-dach.webp', 'still-manu.webp', 'hop-physiotherapie.vcf', 'wirbelsaeule-echt.bin', 'motive-anatomie.bin', 'manu-figur.bin', 'vorfall-1.webp', 'vorfall-2.webp', 'vorfall-3.webp', 'vorfall-4.webp', 'vorfall-5.webp']) {
       const src = join(root, 'assets', img);
       if (existsSync(src)) copyFileSync(src, join(root, liveDir, img)); else console.warn(`⚠ fehlt: assets/${img}`);
     }

@@ -448,3 +448,6 @@ export function figurePoints(n, { nBrain = Math.round(n * 0.2), nNerve = Math.ro
   for (let k = 0; k < rnd.length; k++) rnd[k] = rand();
   return { pos, st, heat, ctr, rnd, nfo, count: T, nBody: n };
 }
+
+// Für die Studie „Feinschliff“ (17.11.2026, src/feinschliff): dieselbe Geometrie, dort nur anders mit Punkten besetzt (hier ändert sich nichts)
+export { CREASES, HEMI_R, CEREB, brain as brainParts, inPoly };

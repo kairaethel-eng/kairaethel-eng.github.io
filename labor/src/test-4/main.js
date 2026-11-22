@@ -5,16 +5,23 @@
 // erst am Ende des Kapitels deckungsgleich mit dessen Figur (Übergabe, kf.fitE/handK) und löst sich in die Bewegungslinien auf.
 import * as THREE from 'three';
 import Lenis from 'lenis';
-import { bodyPoints, spinePointsGen, logoPoints, spineStippleGen, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
+import { spinePointsGen, spineStippleGen, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
+import { figureForm, roofForm, logoForm } from './ordnung.js';
+import { pointer, PTR_GLSL } from '../shared/zeiger.js';
 import { initAGen as initManuGen, MODES as MANU_MODES } from '../manu/ideaA.js';
-import { initServicesGen } from './services.js';
+import { initServicesGen, motifStageGen } from './services.js';
+import { initStaub } from '../haus-staub/staub.js';
+import { MOTIVE as SW_MOTIVE, MARKEN as SW_MARKEN } from '../stosswelle-punkte/motiv.js';
+import { decode as decodeAnat } from '../wirbel-echt/anatomie.js';
 import { runSliced } from '../shared/slice.js';
 import { initHouse } from '../haus-licht/house.js';
 import { ECHT } from '../wirbel-echt/echt.js';
 import { initStosswelle } from '../stosswelle/welle.js';
 import { initVorfall, SEG as VF_SEG } from '../vorfall/film.js';
-import { initKopfFuss } from '../kopf-fuss/kapitel.js';
-import { stationHeat } from '../kopf-fuss/figur.js';
+import { initKopfFuss } from '../feinschliff/kapitel.js';
+import { initDoorStage, DOOR_PLAN } from '../tuer/buehne.js';
+import { initRuhe } from './ruhe.js';
+import { initFarbe } from './farbe.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -47,6 +54,26 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+// ---------- Auslöser statt Scrollweg (20.11.2026, Auftrag Kai: „nicht scroll abhängig machen sondern ruhig und schön beim runter
+// scrollen wischen automatisch animieren“) ----------
+// Die bisherigen Scrollwerte (0…1) bleiben als Messung, sind aber nur noch der Auslöser: über `an` startet der Ablauf, unter `aus`
+// läuft er zurück. Der Ablauf selbst läuft über die Zeit – gleich ruhig, egal wie schnell gescrollt oder gewischt wird.
+// Beim ersten Aufruf (Laden mitten in der Seite) steht der Wert sofort am Ziel; bei „Bewegung anhalten/reduzieren“ ohne Ablauf.
+const FORM_SEK = 3.6;  // ein Formwechsel der Punktwolke (Figur → Bänder → Wirbelsäule → Dachlinie)
+const LOGO_SEK = 3.2;  // HOP-Kreise entstehen / lösen sich
+const SCAN_SEK = 2.9;  // Abtastlinie baut die Wirbelsäule auf
+function riegel(sek, an = 0.3, aus = 0.12) {
+  let want = -1, v = 0;
+  const f = (scrub, dt) => {
+    if (want < 0) { want = scrub > an ? 1 : 0; v = want; }
+    else if (scrub > an) want = 1; else if (scrub < aus) want = 0;
+    v = reduced || paused ? want : want > v ? Math.min(1, v + dt / sek) : Math.max(0, v - dt / sek);
+    return v;
+  };
+  f.want = () => Math.max(0, want); f.set = (x) => { want = x; v = x; }; f.v = () => v;
+  return f;
+}
+const weich = (t) => t * t * (3 - 2 * t);
 // Fenstergröße beim Start ohne erzwungenes Layout (A1): innerWidth/innerHeight ließen den Browser die ganze Seite
 // mitten im Start-Skript setzen. Media-Queries kennen die Größe ohne Layout; danach hält „resize“ die Werte aktuell.
 const mqSize = (dim) => { let lo = 0, hi = 16384; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (matchMedia(`(min-${dim}: ${m}px)`).matches) lo = m; else hi = m; } return lo; };
@@ -97,7 +124,7 @@ if (!reduced) {
 const scrollToY = (y) => (lenis ? lenis.scrollTo(y, { duration: 1.8 }) : scrollTo({ top: y }));
 $$('a[href^="#"]:not(.skip):not([data-termin]):not(.ego-contact)').forEach((a) => a.addEventListener('click', (e) => { // .skip: Browser-Sprung, damit der Fokus mitgeht (Durchsicht 7.11.)
   const id = a.getAttribute('href'), t = $(id); if (!t) return;
-  e.preventDefault(); scrollToY(t.getBoundingClientRect().top + scrollY);
+  e.preventDefault(); scrollToY((auftakt[t.id] || t).getBoundingClientRect().top + scrollY); // Kapitel-Link landet am Auftakt
   // 13.11. (T4): Fokus geht mit zum Ziel (Tastatur, Vorleseprogramme) und die Adresse merkt sich das Kapitel (Link teilen, neu laden)
   if (!t.hasAttribute('tabindex')) t.setAttribute('tabindex', '-1');
   t.focus({ preventScroll: true });
@@ -143,28 +170,23 @@ if (renderer) {
 
 // ---------- Partikel ----------
 const N = isDesktop() ? 64000 : 26000;
-// Form 3 (seit 14.11.2026, Go Kai „2a“): Bernstein-Dachlinie statt Partikel-Haus. Giebel x −1…1, First bei y = 1 (Höhe per
-// uRoofH passend zum SVG-Dach), dichter Kern auf der Linie, ein Teil als feiner Hof; kind = Abstand zur Linie (0 … 1)
-function roofLinePoints(n) {
-  const pos = new Float32Array(n * 3), kind = new Float32Array(n);
-  for (let i = 0; i < n; i++) {
-    const s = Math.random() * 2 - 1, halo = Math.random() < 0.18, g = () => (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
-    const d = (halo ? 0.06 : 0.008) * g();
-    pos[i * 3] = s; pos[i * 3 + 1] = 1 - Math.abs(s) + d; pos[i * 3 + 2] = (halo ? 0.05 : 0.01) * g();
-    kind[i] = halo ? 1 : 0;
-  }
-  return { pos, kind };
-}
-const body = bodyPoints(N), house = roofLinePoints(N), logo = logoPoints(N);
-// Spannung der Form 0 wie im Kapitel „Von Kopf bis Fuß“ (Stationen statt HOTSPOTS): gleiche Farben bei der Übergabe (gelöst = Blau/Grün)
-for (let i = 0; i < N; i++) body.heat[i] = stationHeat(body.pos[i * 3] / BODY_SCALE + BODY_W / 2, BODY_H / 2 - body.pos[i * 3 + 1] / BODY_SCALE).h;
+// Geordnete Formen (17.11.2026, Go Kai „Ideen auf die ganze Website“, Baustein ordnung.js): jede Form hat je Punkt eine
+// Sichtbarkeit – sichtbar sind nur die Punkte des Rasters, die übrigen liegen verborgen auf der Form und verblassen beim Wechsel.
+// Form 0 (Figur) wird erst nach dem Start von Kapitel 01 gefüllt: dieselben Punkte wie dort (kf.cloud(), siehe Dateiende).
+// Form 3 = Bernstein-Dachlinie (Giebel x −1…1, First bei y = 1, Höhe per uRoofH passend zum SVG-Dach), Form 4 = HOP-Kreise.
+const DESK0 = isDesktop();
+const body = { pos: new Float32Array(N * 3), heat: new Float32Array(N), f0: new Float32Array(N * 3) }, house = roofForm(N, DESK0), logo = logoForm(N, DESK0);
 const geo = new THREE.BufferGeometry();
 geo.setAttribute('position', new THREE.BufferAttribute(body.pos, 3));
 geo.setAttribute('aHeat', new THREE.BufferAttribute(body.heat, 1));
+geo.setAttribute('aF0', new THREE.BufferAttribute(body.f0, 3));
+{ const w = new Float32Array(N * 2), idx = new Float32Array(N); for (let i = 0; i < N; i++) { w[i * 2] = house.w[i]; w[i * 2 + 1] = logo.w[i]; idx[i] = i; }
+  geo.setAttribute('aW', new THREE.BufferAttribute(w, 2)); geo.setAttribute('aIdx', new THREE.BufferAttribute(idx, 1)); }
 // Startzeit (A1, Go 4.11.2026): der Hero braucht nur die Körper-Wolke. Das Morph-Ziel Wirbelsäule wird nach dem
 // ersten Bild in Zeitscheiben gerechnet (bis dahin hält die Wolke die Körperform), die Detailbühnen je Kapitel.
 geo.setAttribute('pos2', new THREE.BufferAttribute(body.pos.slice(), 3));
-ECHT.initMorph(N, (p) => { geo.attributes.pos2.array.set(p); geo.attributes.pos2.needsUpdate = true; });
+let morphSet = false;
+ECHT.initMorph(N, (p) => { morphSet = true; geo.attributes.pos2.array.set(p); geo.attributes.pos2.needsUpdate = true; });
 if (renderer) runSliced(spinePointsGen(N)).then((sp) => ECHT.morphReady('bisher', sp.pos));
 // Kapitel erst bauen, wenn es in Reichweite kommt (anderthalb Bildschirme vorher)
 const whenNear = (el, fn) => {
@@ -199,75 +221,95 @@ const uniforms = {
   uBreath: { value: 0 }, uCalm: { value: 0 }, // Atem-Phase, „Entspannt“ (0..1)
   uBodyRot: { value: 0 }, // Wiegen der Form 0 (seit 16.11. vom Kapitel „Von Kopf bis Fuß“ übernommen, damit die Übergabe deckungsgleich ist)
   uWave: { value: 2 }, // Lichtwelle beim Entspannen (15.11., Go Kai 4A): Lage in Körperhöhe 1.2 (über dem Kopf) → -0.2 (unter den Füßen), 2 = aus
-  uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 },
+  uHouse: { value: 0 }, uIntro: { value: reduced ? 1 : 0 }, uSpread: { value: 1 }, uFadeMid: { value: 0.5 }, uVeil: { value: 0 }, uDust: { value: 0 }, uKeep: { value: 0 },
   cPetrol: { value: C('#4E7F93') }, cBone: { value: C('#D9DCD3') }, cAmber: { value: C('#E59A2F') },
+  cLg0: { value: C('#6FA02F') }, cLg1: { value: C('#305869') }, cLg2: { value: C('#3F86B5') }, // Logo A (Kopfleiste)
   cBlue: { value: C('#5AA2D6') }, cGreen: { value: C('#8BC34A') }, cLogoP: { value: C('#2C6478') }, cGrey: { value: C('#8C979B') },
+  // Feinschliff (17.11.): Farben der Figur wie in Kapitel 01, Zeilen leicht von oben (uTilt), Punktgröße aus Welt-Durchmessern
+  // (uProj = Bildpunkte je Welt-Einheit × Abstand), Perlenbänder (uRib: Stränge je Bahn, Perlen je Strang), Zeiger (uPtr)
+  cDeep: { value: C('#44788E') }, cCalm: { value: C('#86BEE6') }, cBone0: { value: C('#E4E3D8') },
+  cLane: { value: C('#4E7F93').multiplyScalar(1.4) }, // Band 2 der Perlenbänder (bis 22.11. fest cPetrol·1,4; Farbstufe setzt es, farbe.js)
+  uTilt: { value: 0.16 }, uProj: { value: 1000 }, uPr: { value: 1 }, uRib: { value: new THREE.Vector2(DESK0 ? 9 : 6, DESK0 ? 300 : 257) },
+  uDr4: { value: logo.dr }, uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 },
+  uRibA: { value: DESK0 ? 0.62 : 1.25 }, // PC seit 20.11. leiser (Kai: „am PC sehr unübersichtlich und die Punkte zu deutlich“) // Handy (18.11.): die Bänder laufen jetzt hinter dem Text von Kapitel 02 → gedämpft (vorher 1,75: nur im Vorübergehen zu sehen)
 };
+// Raumlicht + Logo-Farben (Go Kai 22.11.2026: „Kräftig“; Stufen heute/leise/mittel über ?farbe=, Vergleich farbstudie.html).
+// Läuft vor initKopfFuss, damit die Figur von Kapitel 01 ihre Farbe (html[data-deep]) schon beim Aufbau kennt.
+initFarbe({ uniforms });
 
 const vert = /* glsl */`
   attribute float aHeat; attribute vec3 pos2; attribute vec3 pos3; attribute float kind3; attribute vec3 pos4; attribute float kind4; attribute vec4 aRand;
-  uniform float uSpread, uFadeMid;
+  attribute vec3 aF0; attribute vec2 aW; attribute float aIdx;
+  uniform float uSpread, uFadeMid, uVeil, uDust, uKeep;
   uniform float uBreath, uCalm, uWave, uBodyRot;
   uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uRoofH, uRoofA, uLogo;
+  uniform float uTilt, uProj, uPr, uDr4, uAsp, uRibA; uniform vec2 uRib; uniform vec4 uPtr;
   uniform sampler2D uRelax; uniform vec2 uBodyWH; uniform vec4 uXf[5];
-  uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey;
-  varying vec3 vCol; varying float vA;
-
+  uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey, cDeep, cCalm, cBone0, cLg0, cLg1, cLg2, cLane;
+  varying vec3 vCol; varying float vA; varying float vSize;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
-  vec3 jitter(float amp, float sp){
-    return vec3(sin(uTime*sp*1.3+aRand.x*40.), sin(uTime*sp*1.7+aRand.y*40.), sin(uTime*sp*1.1+aRand.z*40.))*amp;
-  }
-
-  // jede Form liefert Position (xyz) und Farbe; w = Größenfaktor
-  void shape(int i, out vec3 p, out vec3 col, out float sz, out float al){
-    sz = 1.; al = 1.;
+  float hash1(float n){ return fract(sin(n*12.9898)*43758.5453); }
+` + PTR_GLSL + /* glsl */`
+  // jede Form liefert Position (xyz), Farbe, Sichtbarkeit (al) und den Durchmesser des Punkts in Welt-Einheiten (dw)
+  void shape(int i, out vec3 p, out vec3 col, out float dw, out float al){
+    dw = .024; al = 1.;
     if(i==0){
-      vec2 uv = position.xy / uBodyWH + .5;
-      float relax = texture2D(uRelax, vec2(uv.x, 1.-uv.y)).r;
-      float tension = aHeat * (1. - relax);
+      // Figur: dieselben Punkte wie Kapitel 01 (grobes Raster, Kontur, Körperlinien), Kantenlicht aus aF0.y, gelöst = ruhiges Blau
       float breath = sin(uBreath) * (1. + uCalm*1.3); // entspannt: ruhiger, tiefer Atem
-      p = position * vec3(1. + breath*.007, 1. + breath*.004, 1.) + jitter(.012*(1. - uCalm*.6) + tension*.06, 5.); // Spannung (8.11., Option C): Ausschlag ±4 statt ±7,5 px, Takt fest ≈ 1 Hz statt 3–4 Hz → wabert statt zu flimmern; fester Takt = kein Phasensprung beim Lösen
+      p = position * vec3(1. + breath*.007, 1. + breath*.004, 1.);
+      p.y -= p.z * uTilt;
       p = rotY(p, uBodyRot);
-      vec3 base = mix(cPetrol, cBone, .25 + aRand.y*.35);
-      float throb = .7 + .3*sin(uTime*3.4 + aRand.x*.8);
-      col = mix(base, cAmber, smoothstep(.08, .7, tension) * throb);
-      col = mix(col, mix(cBlue, cGreen, aRand.x), relax * aHeat * .85);
-      sz = 1. + tension*.9*throb;
+      col = mix(cDeep, cBone0, .2 + .8*aF0.y);
+      col = mix(col, cCalm, aHeat * .8);
+      al = mix(aF0.x, max(aF0.x, .62 * step(.01, aF0.x)), aHeat);
+      dw = aF0.z * uBodyWH.x / 200. * uXf[0].w;
       // Ausatmen: eine helle Welle läuft einmal vom Kopf bis zu den Füßen (uv.y 1 = Kopf)
-      float wv = exp(-pow((uv.y - uWave)*6.5, 2.));
-      col = mix(col, mix(cBone*1.2, cGreen, .3 + aRand.x*.3), wv); sz *= 1. + wv*1.4;
-      p += normalize(vec3(p.x, 0., p.z) + 1e-4) * wv * .05;
+      float wv = exp(-pow((position.y / uBodyWH.y + .5 - uWave)*6.5, 2.));
+      col = mix(col, cBone0*1.15, wv*.8); dw *= 1. + wv*.5;
     } else if(i==1){
-      float lane = floor(aRand.x*11.);
-      float x = mod(aRand.z*18. + uTime*(.35+aRand.y*.3), 18.) - 9.;
-      float y = (lane-5.)*.55 + sin(x*.5 + lane*1.7 + uTime*.7)*.45 + (aRand.w-.5)*.1;
-      float z = (aRand.y-.5)*2. + cos(x*.4 + lane)*.5;
+      // Bewegung: elf Bänder aus Perlensträngen. Jeder Strang hat Perlen in gleichem Abstand, alle fließen gleich schnell;
+      // die Stränge eines Bands liegen in der Tiefe nebeneinander und schwingen leicht versetzt → das Band dreht sich wie ein Tuch
+      float lane = mod(aIdx, 11.), rest = floor(aIdx / 11.);
+      float strand = mod(rest, uRib.x), bead = floor(rest / uRib.x);
+      float sj = strand / max(1., uRib.x - 1.) - .5;
+      float x = mod((bead + .5*mod(strand, 2.)) / uRib.y * 18. + uTime*(.3 + hash1(lane)*.22), 18.) - 9.;
+      float y = (lane-5.)*.55 + sin(x*.5 + lane*1.7 + uTime*.6 + sj*1.25)*.45 + sj*.17;
+      float z = sj*1.7 + cos(x*.4 + lane)*.5;
       p = vec3(x, y, z);
       float m = mod(lane, 4.);
-      col = m<1. ? cBlue : m<2. ? cPetrol*1.4 : m<3. ? cGreen*.85 : cAmber;
-      col = mix(col, cBone, .25);
-      sz = .9;
+      col = m<1. ? cBlue : m<2. ? cLane : m<3. ? cBone : cAmber;
+      col = mix(col, cBone, .2 + .5*abs(sj)*2.*abs(sj)*2.); // Rand des Bands heller
+      al = step(bead, uRib.y - .5) * (.15 + .42*abs(sj)*2.) * uRibA;
+      dw = .022 * uXf[1].w;
     } else if(i==2){
       p = rotY(pos2, uSpineRot);
       float band = exp(-pow((pos2.y - (3.6 - mod(uTime*1.6, 9.)))*2.2, 2.));
       col = mix(cBone, cBlue, band*.8);
+      al = step(aRand.x, .55); dw = .021 * uXf[2].w / .84;
     } else if(i==3){
       // Dachlinie: liegt genau auf dem SVG-Dach (uXf[3] aus roofPlace), vergeht, während das Dach gezeichnet wird (uRoofA)
       p = vec3(pos3.x, pos3.y * uRoofH, pos3.z);
       col = mix(cAmber, cBone, kind3 * .45);
-      sz = kind3 > .5 ? .7 : .95; al = uRoofA;
+      dw = kind3 > .5 ? .019 : .03; al = uRoofA * aW.x;
     } else {
-      float br = 1. + sin(uTime*1.2 + pos4.x*.8)*.04;
-      p = pos4 * vec3(br, br, 1.) + jitter(.01, 2.);
+      // HOP-Kreise: Ringe aus Perlen, leicht gewölbt, atmen und wiegen ruhig
+      float br = 1. + sin(uTime*1.2 + pos4.x*.8)*.03;
+      p = pos4 * vec3(br, br, 1.);
       p = rotY(p, sin(uTime*.3)*.25);
-      col = kind4 < .5 ? cGreen : kind4 < 1.5 ? cLogoP*1.15 : kind4 < 2.5 ? cBlue : cGrey;
+      // 21.11. abends (Kai: „perfekt an das Hauptlogo der Startseite anpassen“): flache Farben des Logos A (#6FA02F · #305869 · #3F86B5),
+      // weiße Buchstaben, feiner heller Rand – aufgehellt, weil die Punkte mit Lücken stehen (sonst wirkt die Fläche dunkler als das Logo)
+      col = kind4 < .5 ? cLg0 * 1.75 : kind4 < 1.5 ? cLg1 * 2.1 : kind4 < 2.5 ? cLg2 * 1.75 : kind4 < 3.5 ? vec3(1.) : vec3(1.15);
+      al = aW.y; dw = uDr4 * (kind4 > 3.5 ? .6 : kind4 > 2.5 ? .38 : .62) * uXf[4].w;
     }
     p = p * uXf[i].w + uXf[i].xyz;
     if(i==2){
       // Abtastlinie: oberhalb ist die Wirbelsäule schon „fest“, darunter noch Partikel
       float g = exp(-pow((p.y - uCut)*7., 2.));
-      al = smoothstep(uCut + .1, uCut - .1, p.y);
-      col = mix(col, cAmber, g); sz *= 1. + g*1.6; al = max(al, g);
+      al *= smoothstep(uCut + .1, uCut - .1, p.y);
+      // 21.11. (Abläufe laufen langsamer → die grobe Wolke unter der Abtastlinie steht länger neben der Überschrift): als feiner Staub –
+      // kleiner und höchstens halb deckend; nur die Bernstein-Linie selbst bleibt kräftig
+      al *= .5; dw *= .6;
+      col = mix(col, cAmber, g); dw *= 1. + g*2.2; al = max(al, g);
     }
   }
 
@@ -280,42 +322,66 @@ const vert = /* glsl */`
     vec3 pA, pB, cA, cB; float sA, sB, aA, aB;
     shape(i0, pA, cA, sA, aA); shape(i1, pB, cB, sB, aB);
     vec3 p = mix(pA, pB, t);
-    // Haus „gestochen“: ruhiger, gleich große Punkte
-    float wH = (i0 == 3 ? 1. - t : 0.) + (i1 == 3 ? t : 0.);
-    p += vec3(sin(uTime*.5 + aRand.y*6.283), cos(uTime*.42 + aRand.z*6.283), 0.) * .012 * mix(uXf[i0].w, uXf[i1].w, t) * (1. - wH * .9);
     // Zerstäuben zwischen zwei Formen
     vec3 n = normalize(vec3(aRand.x-.5, aRand.y-.5, aRand.z-.5)+1e-4);
     // Streuung im Verhältnis zur Formgröße (auf dem Handy kleiner, damit Text frei bleibt)
     float ws = mix(uXf[i0].w, uXf[i1].w, t);
-    p += n * sin(t*3.14159) * (1.2 + aRand.w*1.6) * ws * uSpread;
+    // als feiner Staub (uDust, 18.11.) streuen die Punkte nur halb so weit
+    p += n * sin(t*3.14159) * (1.2 + aRand.w*1.6) * ws * uSpread * (1. - .5 * uVeil * step(.01, uDust));
     // Intro: aus der Tiefe einfliegen
     p += n * (1.-uIntro) * (6. + aRand.x*8.) * ws * uSpread;
-    float s = mix(sA, sB, t);
+    float dw = mix(sA, sB, t);
     vec3 col = mix(cA, cB, t);
-    float a = mix(.5 + aRand.x*.5, .9, wH) * (1. - uFadeMid*sin(t*3.14159)) * mix(aA, aB, t);
+    // unterwegs sind alle Punkte zu sehen (auch die im Ziel verborgenen): sie sammeln sich und verblassen beim Ankommen
+    float a = .85 * (1. - uFadeMid*sin(t*3.14159)) * mix(aA, aB, t);
+    // Handy, Wirbelsäule <-> Dach (Go Kai 18.11. „1a“): die Punkte wandern unsichtbar und erscheinen erst an der Dachlinie
+    a *= mix(1., smoothstep(.86, 1., t), uVeil);
+    // Staub (Go Kai 18.11. „2a“, nach der Studie fest): statt unsichtbar zu wandern, löst sich knapp die Hälfte der Punkte als feiner
+    // Staub und sammelt sich zur nächsten Form – klein (feste Größe, unabhängig von der Nahansicht), höchstens 60 % deckend
+    float dustK = uVeil * step(.01, uDust); // uDust = Anteil der Punkte, die als Staub sichtbar werden (Handy 1 → 45 %, PC weniger: dort gibt es mehr Punkte)
+    a = max(a, dustK * step(aRand.z, .45 * uDust) * .6 * smoothstep(0., .22, t) * (1. - smoothstep(.8, 1., t)));
+    dw = mix(dw, .03, dustK);
+    col = mix(col, mix(cPetrol * 1.5, cBone, aRand.x), dustK * (1. - smoothstep(.7, 1., t)));
+    // 20.11. (Auftrag Kai: „die Zerstreuung der Pixel-Übergänge auf der ganzen Seite“): bei JEDEM Formwechsel sind die Punkte unterwegs
+    // feiner Staub – kleine feste Größe, höchstens 60 % deckend – und werden erst beim Ankommen wieder zur Form
+    float fine = sin(t * 3.14159) * (1. - dustK);
+    fine = smoothstep(0., .55, fine);
+    dw = mix(dw, .034, fine);
+    a = mix(a, min(a, .6), fine);
     // Hausordnung (seit 14.11.2026 nachts direkt nach Kapitel 02): die HOP-Kreise (Form 4) legen sich über die laufende Form
     // und lösen sich danach in die Wirbelsäule auf – uLogo 0..1, unabhängig von der Kapitelfolge in uMorph
     if(uLogo > .001){
       vec3 pL, cL; float sL, aL;
       shape(4, pL, cL, sL, aL);
-      float tl = smoothstep(st, st+.6, uLogo);
-      pL += vec3(sin(uTime*.5 + aRand.y*6.283), cos(uTime*.42 + aRand.z*6.283), 0.) * .012 * uXf[4].w;
+      float tl0 = smoothstep(st, st+.6, uLogo);
+      // Handy/Tablet (uKeep, 18.11., Go Kai „3a“): Punkte, die nicht zu den Kreisen gehören, bleiben als Streifen im Hintergrund
+      // (etwas blasser) – am hohen Tablet stehen Kapitel 02 und die Hausordnung zugleich im Bild, die Streifen hätten sonst keine Zeit
+      float stay = uKeep * (1. - step(.01, aL));
+      float tl = tl0 * (1. - stay);
       p = mix(p, pL, tl) + n * sin(tl*3.14159) * (1.2 + aRand.w*1.6) * mix(ws, uXf[4].w, tl) * uSpread;
-      s = mix(s, sL, tl); col = mix(col, cL, tl);
-      a = mix(a, (.5 + aRand.x*.5) * aL, tl) * (1. - uFadeMid*sin(tl*3.14159));
+      dw = mix(dw, sL, tl); col = mix(col, cL, tl);
+      a = mix(a, .85 * aL, tl) * (1. - uFadeMid*sin(tl*3.14159)) * (1. - .4 * stay * tl0);
     }
     vec4 mv = modelViewMatrix * vec4(p, 1.);
     gl_Position = projectionMatrix * mv;
-    gl_PointSize = uSize * uPix * s * mix(.5 + aRand.y*.9, .82, wH) * 24. / -mv.z;
+    // Zeiger: Punkte unter Maus/Finger etwas größer und warmweiß (verborgene bleiben verborgen)
+    float pk = ptrK() * smoothstep(0., .12, a);
+    col = mix(col, vec3(1., .95, .86), pk * .82);
+    a += (1. - a) * pk * .72;
+    // Größe aus dem Welt-Durchmesser; unter der Mindestgröße bleibt der Punkt 1,6 px groß und wird dafür blasser
+    float want = dw * uProj / -mv.z * (1. + pk * .55), size = max(1.6 * uPr, want), thin = want / size;
+    gl_PointSize = size; vSize = size;
     vCol = col;
-    vA = a * uIntro;
+    vA = a * thin * thin * uIntro;
+    if (vA < .004) gl_Position = vec4(2., 2., 2., 1.); // verborgen: gar nicht erst zeichnen
   }`;
 const frag = /* glsl */`
   uniform float uAlpha;
-  varying vec3 vCol; varying float vA;
+  varying vec3 vCol; varying float vA; varying float vSize;
   void main(){
-    float d = length(gl_PointCoord - .5);
-    float a = smoothstep(.5, .05, d);
+    // gestochen: Scheibe mit einem Bildpunkt weichem Rand
+    float d = length(gl_PointCoord - .5), aa = min(.25, 1.3 / vSize);
+    float a = 1. - smoothstep(.5 - aa, .5, d);
     gl_FragColor = vec4(vCol, a * vA * uAlpha);
     #include <colorspace_fragment>
   }`;
@@ -334,7 +400,7 @@ function layout() {
     X[1].set(0, -0.2, 0, Math.max(1, a * 0.75));
     X[2].set(hw * 0.47, -0.3, 0, 0.84);
     X[3].set(hw * 0.5, 0.1, 0, 0.74);
-    X[4].set(hw * 0.46, 0, 0, 0.72);
+    X[4].set(hw * 0.5, 0, 0, 0.66);   // 21.11.: etwas kleiner und weiter rechts – der H-Kreis berührte „Der Mensch“
   } else {
     X[0].set(0, 2.35, 0, 0.40);        // Platzhalter, bodyFit() legt die Figur auf das Schlussbild von Kapitel 01
     X[1].set(0, 0, 0, 1.25);           // 1A: Bewegungslinien über den ganzen Bildschirm
@@ -343,6 +409,8 @@ function layout() {
     X[4].set(0, 2.15, 0, 0.32);        // 3: tiefer und kleiner, frei von der Leiste
   }
   uniforms.uPix.value = renderer ? renderer.getPixelRatio() * (GLH / 900) * (d ? 1 : 1.25) : 1;
+  // Bildpunkte (Gerät) je Welt-Einheit, mal Abstand: Punktgröße = Durchmesser · uProj / Abstand
+  { const pr = renderer ? renderer.getPixelRatio() : 1; uniforms.uPr.value = pr; uniforms.uAsp.value = a; uniforms.uProj.value = GLH * pr / (2 * Math.tan(THREE.MathUtils.degToRad(17.5))); }
   bodyFit();
 }
 // Form 0 deckungsgleich mit der Figur im Schlussbild von Kapitel 01 (kf.fitE: Bild = Anker + (Punkt − Blickpunkt)·Maßstab in px;
@@ -400,16 +468,18 @@ const N_GRAIN = isDesktop() ? 165000 : 46000, N_SLICE = isDesktop() ? 330000 : 8
 const sU = {
   uTime: uniforms.uTime, uRot: uniforms.uSpineRot, uCut: uniforms.uCut, uXf: { value: uniforms.uXf.value[2] },
   uZone: { value: -10 }, uZoneAmt: { value: 0 }, uOn: { value: 0 }, uStip: { value: 1 }, uPix: uniforms.uPix,
+  uFade: { value: 1 }, uClip: { value: -2 }, // Handy (18.11.): Ausblenden als Ganzes + weiche Unterkante am Kapitelende
   uPeri: { value: 0 }, uPeriStart: { value: 0 }, uScan: { value: 100 }, uScanAmt: { value: 0 }, // Scanner (Handy, 6.11.)
   uDiff: { value: 0 }, uFine: { value: 0 }, uSharp: { value: isDesktop() ? 0 : 1 }, uEcht: { value: 0 }, // Wirbelsäule echt (A): Handy schärfer; uEcht: Schattierung der echten Säule (Punkt 4) // Handy 7.11.: Wirbelsäule differenziert, Nerv fein (PC vorgemerkt)
   uFocT: { value: new THREE.Vector4(0, 0, 0, 0) }, uFocS: { value: new THREE.Vector4(0, 1, 0, 0) }, uFocD: { value: 0.08 }, // Fokus: Segment wie im Film ausrichten (Mitte + Kippwinkel, Achse + halber Zusatzabstand, halbe Bandscheibe)
+  uPtr: uniforms.uPtr, uAsp: uniforms.uAsp, // Zeiger (17.11.): Punkte unter Maus/Finger etwas größer und warmweiß
   uFoc: { value: 0 }, uFocZone: { value: -10 }, uFocY: { value: new THREE.Vector3(-100, 100, 0) }, // Fokus: Auflösen außerhalb L4–L5 (Höhenband unten/oben, Mitte L4)
   uDiscMode: { value: DISC_MODE }, cDiscA: { value: C('#E0583C') }, // Bandscheiben (7.11. spät): 0 aktiv rot-orange · 1 alle · 2 alt blau
   cBone: { value: C('#F3EADA') }, cDisc: { value: C('#86AFC9') }, cDiscD: { value: C('#4FA8D6') }, cAmber: uniforms.cAmber, cBlue: uniforms.cBlue,
   cSignal: { value: C('#DDF1FF') }, cCore: { value: C('#0E1C22') },
 };
 const GLSL_COMMON = /* glsl */`
-  uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart, uScan, uScanAmt, uDiff, uFine, uDiscMode, uSharp, uEcht; uniform vec4 uXf;
+  uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart, uScan, uScanAmt, uDiff, uFine, uDiscMode, uSharp, uEcht, uFade, uClip; uniform vec4 uXf;
   uniform vec3 cBone, cDisc, cDiscD, cDiscA, cAmber, cBlue, cSignal, cCore;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
   const vec3 LDIR = vec3(.48, .72, .5);
@@ -435,18 +505,19 @@ const GLSL_COMMON = /* glsl */`
 const coreMat = new THREE.ShaderMaterial({
   uniforms: sU,
   vertexShader: GLSL_COMMON + /* glsl */`
-    varying float vY; varying float vL; varying float vLY;
+    varying float vY; varying float vL; varying float vLY; varying float vK;
     void main(){
       vec3 p = rotY(focFit(position) - normal * .012, uRot) * uXf.w + uXf.xyz;
       vY = p.y; vLY = position.y; vL = max(dot(normalize(rotY(normal, uRot)), normalize(LDIR)), 0.);
       gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.);
+      vK = smoothstep(uClip, uClip + .16, gl_Position.y / gl_Position.w) * uFade; // Handy: Kern blendet mit der Wirbelsäule aus („1a“)
     }`,
   fragmentShader: GLSL_COMMON + /* glsl */`
-    varying float vY; varying float vL; varying float vLY;
+    varying float vY; varying float vL; varying float vLY; varying float vK;
     void main(){
-      if (vY < uCut) discard;
+      if (vY < uCut || vK < .03) discard;
       if (uFoc > 0. && fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) < focOut(vLY) * focK(vLY, .5) * 1.02) discard; // Fokus: Kern löst sich gerastert mit auf
-      gl_FragColor = vec4(cCore + cBone * vL * .05, 1.);
+      gl_FragColor = vec4(mix(vec3(.003, .008, .011), cCore + cBone * vL * .05, vK), 1.);
       #include <colorspace_fragment>
     }`,
 });
@@ -455,8 +526,9 @@ const coreMat = new THREE.ShaderMaterial({
 const boneMat = new THREE.ShaderMaterial({
   uniforms: sU,
   vertexShader: GLSL_COMMON + /* glsl */`
-    attribute float aZone, aKind, aEdge; uniform float uMaxSize;
+    attribute float aZone, aKind, aEdge; uniform float uMaxSize; uniform vec4 uPtr; uniform float uAsp;
     varying vec3 vCol; varying float vVis;
+    ` + PTR_GLSL + /* glsl */`
     void main(){
       vec3 lp = focFit(position); float fo = 0.;
       if (uFoc > 0.) {
@@ -510,10 +582,16 @@ const boneMat = new THREE.ShaderMaterial({
       float sc = exp(-pow((p.y - uScan) * 16., 2.)) * uScanAmt; // Scanner: Band unter der Scan-Linie leuchtet
       col = mix(col, cAmber * 1.5 + vec3(.15), sc * .85);
       col = mix(col, cAmber * 1.15, fo * .75);
-      vCol = col; vVis = step(uCut, p.y) * uOn * step(fo, .97);
+      vVis = step(uCut, p.y) * uOn * step(fo, .97);
       vec4 mv = viewMatrix * vec4(p, 1.);
       gl_Position = projectionMatrix * mv;
-      gl_PointSize = clamp(uStip / -mv.z * sz * (uSharp > .5 ? .86 : 1.) * (1. - fo * .7), 1., uMaxSize) * (1. + g * .8 + sc * .7);
+      float pk = ptrK();
+      vCol = mix(col, max(col, cBone * 1.25), pk * .75);
+      // Handy (18.11., „1a“): am Kapitelende blendet die Wirbelsäule als Ganzes aus (uFade) und endet weich an der Unterkante
+      // des Kapitels (uClip, Bildschirmhöhe −1…1) – sie zerfällt nicht mehr in Punkte und liegt nie unter dem Text von „04 Dach“
+      float keep = smoothstep(uClip, uClip + .16, gl_Position.y / gl_Position.w) * uFade;
+      vCol = mix(vec3(.003, .008, .011), vCol, keep); vVis *= step(.03, keep);
+      gl_PointSize = clamp(uStip / -mv.z * sz * (uSharp > .5 ? .86 : 1.) * (1. - fo * .7), 1., uMaxSize) * (1. + g * .8 + sc * .7 + pk * .35);
     }`,
   fragmentShader: /* glsl */`
     varying vec3 vCol; varying float vVis;
@@ -576,7 +654,7 @@ function addNerves() {
   const nerveMat = new THREE.ShaderMaterial({
     uniforms: sU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: GLSL_COMMON + /* glsl */`
-      uniform sampler2D uCurves, uPeriTex; uniform float uRows, uGhostV;
+      uniform sampler2D uCurves, uPeriTex; uniform float uRows, uGhostV, uFade, uClip;
       attribute float aRow, aPhase, aSpeed, aKind, aZone, aStart; attribute vec3 aOff;
       varying vec3 vCol; varying float vA;
       vec3 curveAt(sampler2D tex, float row, float rows, float t){
@@ -629,6 +707,7 @@ function addNerves() {
         // N4 (Auftrag Z, nur PC): im Durchschein-Durchgang (uGhostV) die aktive Wurzel und die Versorgungsbahn kräftiger –
         // sonst beginnt die Bahn hinter dem echten, größeren Kreuzbein „in der Luft“ (L4–L5, S1)
         vA *= 1. + uGhostV * boost * 1.3;
+        vA *= smoothstep(uClip, uClip + .16, gl_Position.y / gl_Position.w) * uFade;
         gl_PointSize *= 1. + uGhostV * boost * .7;
       }`,
     fragmentShader: /* glsl */`
@@ -874,12 +953,12 @@ function setActive(i) {
 }
 // ---------- Nerven-Infos im Raum (PC): erscheinen Schritt für Schritt entlang der Bahn ----------
 const NINFO = {
-  c12: { exit: 'Austritt C1–C2', nerv: 'Nn. suboccipitales · N. occipitalis major', gef: 'Tiefe Nackenmuskulatur', ziel: 'Hinterkopf', typ: 'Typisch: Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen', tgt: [84, 30] },
-  c56: { exit: 'Austritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [36, 240] },
-  th712: { exit: 'Austritt Th7–Th12', nerv: 'Untere Interkostalnerven · Bauchwand', gef: 'Gefühl: Rippenbogen, Bauchwand', ziel: 'bis zur Nabelhöhe (Th10)', typ: 'Typisch: gürtelförmiger Schmerz am Rippenbogen, Steifigkeit am Übergang zur LWS', tgt: [86, 195] }, // Flanke auf Nabelhöhe
-  th16: { exit: 'Austritt Th1–Th6', nerv: 'Interkostalnerven, obere Rippen', gef: 'Brustkorbwand · Zwischenrippen', ziel: 'Brustkorb', typ: 'Typisch: atemabhängiges Stechen, Schmerz zwischen den Schulterblättern', tgt: [80, 118] },
-  l45: { exit: 'Austritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [76, 404] },
-  s1: { exit: 'Austritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [72, 412], pre: 'Iliosakralgelenk (ISG): verbindet Becken und Wirbelsäule.' },
+  c12: { exit: 'Nervenaustritt C1–C2', nerv: 'Nn. suboccipitales · N. occipitalis major', gef: 'Tiefe Nackenmuskulatur', ziel: 'Hinterkopf', typ: 'Typisch: Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen', tgt: [84, 30] },
+  c56: { exit: 'Nervenaustritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [18, 234] },
+  th712: { exit: 'Nervenaustritt Th7–Th12', nerv: 'Untere Interkostalnerven · Bauchwand', gef: 'Gefühl: Rippenbogen, Bauchwand', ziel: 'bis zur Nabelhöhe (Th10)', typ: 'Typisch: gürtelförmiger Schmerz am Rippenbogen, Steifigkeit am Übergang zur LWS', tgt: [86, 195] }, // Flanke auf Nabelhöhe
+  th16: { exit: 'Nervenaustritt Th1–Th6', nerv: 'Interkostalnerven, obere Rippen', gef: 'Brustkorbwand · Zwischenrippen', ziel: 'Brustkorb', typ: 'Typisch: atemabhängiges Stechen, Schmerz zwischen den Schulterblättern', tgt: [80, 118] },
+  l45: { exit: 'Nervenaustritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [89, 410] },
+  s1: { exit: 'Nervenaustritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [72, 412], pre: 'Iliosakralgelenk (ISG): verbindet Becken und Wirbelsäule.' },
 };
 const NC_KEYS = ['exit', 'nerv', 'gef', 'ziel', 'typ'];
 const ncalls = NC_KEYS.map((k) => { const el = document.createElement('div'); el.className = 'ncall ncall-' + k; el.setAttribute('aria-hidden', 'true'); document.body.appendChild(el); return el; });
@@ -899,6 +978,8 @@ function mobTexts(zoneKey) {
 }
 // Scanner (Kai 6.11. spät): Karte oben als Überschrift – Abschnitt + Titel, „Typisch“, Therapien; die vier Zeilen links daneben
 const chipsEl = document.createElement('div'); chipsEl.className = 'scan-chips'; chipsEl.setAttribute('aria-hidden', 'true'); document.body.appendChild(chipsEl);
+// Leiste antippen = auf-/zuklappen (18.11., „2a“); der Film-Knopf darin hat seinen eigenen Klick
+chipsEl.addEventListener('click', (e) => { if (e.target.closest('.vf-open,.sc-film') || !chipsEl.classList.contains('is-on')) return; chipsEl.classList.toggle('is-open'); });
 // nur bei Abschnitts- oder Breitenwechsel: Texte setzen und einmal messen
 function mobMeasure(zoneKey) {
   const pad = VW < 360 ? 12 : 16, sc = scanOn();
@@ -919,43 +1000,59 @@ function mobMeasure(zoneKey) {
   ncalls.forEach((el, i) => { ML.hs[i] = el.offsetHeight; ML.ws[i] = el.offsetWidth; });
   ML.chH = 0;
   if (sc) {
-    const head = document.createElement('p'), no = document.createElement('span'), h = document.createElement('span'), list = document.createElement('div');
+    // 18.11. (Go Kai „2a“): die Karte ist eine schmale Leiste unten – Abschnitt + Titel, Antippen zeigt „Typisch“, Nerv, Gefühl,
+    // Therapien. Sichtbar bleiben nur zwei Schilder (Austritt, Ziel); die Wirbelsäule steht darüber frei.
+    ML.ws[1] = ML.ws[2] = 0; ML.hs[1] = ML.hs[2] = 0;
+    const info = NINFO[zoneKey];
+    const bar = document.createElement('button'), head = document.createElement('span'), no = document.createElement('span'), h = document.createElement('span'), more = document.createElement('div'), list = document.createElement('div');
+    bar.type = 'button'; bar.className = 'sc-bar'; bar.tabIndex = -1;
     head.className = 'sc-t'; no.className = 'sc-no'; no.textContent = card ? ($('.seg-no', card) || card).textContent.trim() : '';
     h.className = 'sc-h'; h.textContent = card && $('h3', card) ? $('h3', card).textContent.trim() : ''; head.append(no, h);
-    list.className = 'sc-c'; list.replaceChildren(...(ML.compact ? [] : chipTxt).map((t) => { const s = document.createElement('span'); s.textContent = t; return s; }));
-    const typ = document.createElement('p'); typ.className = 'sc-typ'; typ.textContent = typCard;
-    // Film-Knopf (Auftrag Z): sichtbare Kopie nur für Finger/Maus – der echte Knopf steht in der (für Vorleseprogramme lesbaren) Karte
+    // 21.11.2026 (Go Kai 3): erste Zeile von „Typisch“ als Vorschau – zeigt, dass hinter der Leiste mehr steht
+    const tease = document.createElement('span'); tease.className = 'sc-tease'; tease.textContent = info.typ.split('\n')[0]; head.append(tease);
+    bar.append(head);
+    // Film-Knopf (Auftrag Z): sichtbare Kopien nur für Finger/Maus – der echte Knopf steht in der (für Vorleseprogramme lesbaren) Karte.
+    // In der Leiste klein („Film“), aufgeklappt mit vollem Text.
     let vfBtn = null;
     if (zoneKey === 'l45' && VF.open) {
+      const mini = document.createElement('span'); mini.className = 'sc-film'; mini.setAttribute('role', 'button');
+      mini.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>Film';
+      mini.addEventListener('click', (e) => { e.stopPropagation(); VF.open(e); });
+      bar.append(mini); bar.classList.add('has-film');
       vfBtn = document.createElement('button'); vfBtn.type = 'button'; vfBtn.className = 'vf-open'; vfBtn.tabIndex = -1;
       vfBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bandscheibenvorfall ansehen</span><small>Film · 37 s</small>';
       vfBtn.addEventListener('click', VF.open);
     }
-    chipsEl.replaceChildren(head, typ, list, ...(vfBtn ? [vfBtn] : []));
-    chipsEl.classList.toggle('sc-small', ML.compact > 1); // Stufe 2: kleinere Schrift
-    // ~60 % Breite (Kai 7.11.: Wirbelsäule rechts daneben besser sichtbar), nie in den Ziehstreifen
-    chipsEl.style.width = Math.min(Math.max(Math.round(VW * 0.6), 200), VW - pad - RAIL_W - 8, 480) + 'px'; ML.chH = chipsEl.offsetHeight;
+    // 21.11.2026 (Kai: „Button um mehr Text lebendig, auffälliger“, Go 3): Bernstein-Pille „Mehr“ statt des kleinen Rings
+    const chev = document.createElement('span'); chev.className = 'sc-x'; chev.innerHTML = '<b>Mehr</b><b>Weniger</b>'; bar.append(chev);
+    more.className = 'sc-more';
+    const typ = document.createElement('p'); typ.className = 'sc-typ'; typ.textContent = (info.pre ? info.pre + '\n' : '') + info.typ;
+    const rows = document.createElement('div'); rows.className = 'sc-rows';
+    [info.nerv, info.gef].forEach((t) => { const r = document.createElement('p'); r.textContent = t; rows.append(r); });
+    list.className = 'sc-c'; list.replaceChildren(...chipTxt.map((t) => { const sp = document.createElement('span'); sp.textContent = t; return sp; }));
+    more.append(typ, rows, list, ...(vfBtn ? [vfBtn] : []));
+    chipsEl.replaceChildren(bar, more);
+    chipsEl.classList.remove('is-open', 'sc-small');
+    chipsEl.style.width = Math.min(VW - pad - RAIL_W - 8, 480) + 'px'; ML.chH = chipsEl.offsetHeight;
   }
 }
 // Scanner (Kai 6.11. spät): Karte oben unter der Kopfleiste, darunter links die vier Zeilen; die Kamera legt die Wurzel
 // des Abschnitts auf „Austritt“, die Wirbelsäule darunter bleibt frei. Reicht der Platz nicht: Stufe 1 Therapien als
 // Textzeile, Stufe 2 kleinere Schrift in der Karte.
 function mobPlaceScan() {
-  const hs = ML.hs, sum = hs[0] + hs[1] + hs[2] + hs[3];
-  ML.chipsY = SCAN.cardTop; ML.typY = -999;
-  const top = ML.chipsY + ML.chH + 16, room = SCAN.bot - top;
-  if ((ML.compact || 0) < 2 && ML.key && !ML.remeasure && sum + 3 * 6 > room) { ML.compact = (ML.compact || 0) + 1; ML.remeasure = true; } // passt nicht → kompakter neu messen
-  const g = clamp((room - sum) / 3, 4, 10);
-  ML.y0 = top; // Lage ohne Verschiebung (danach richtet sich die Nahansicht)
-  // Kai 7.11. (1A): „Austritt“ auf Höhe des Austritts am Wirbel (bei voller Nahansicht); die Zeilen spreizen sich, bis
-  // „Ziel“ unter dem Wurzelende steht – der Nerv läuft dann neben den Zeilen nach unten; nie unter den Hinweis
-  let y = top, gg = g;
+  // 18.11. („2a“): freie Fläche = Kopfleiste bis Oberkante der Leiste. Der Abschnitt steht bei gut einem Drittel der Höhe,
+  // „Austritt“ auf Höhe des Austritts am Wirbel, „Ziel“ unter dem Wurzelende – beide nie unter die Leiste.
+  const hs = ML.hs, g = 10;
+  ML.typY = -999; ML.chipsY = SCAN.bot + 6; // Unterkante der Leiste (sie wächst beim Aufklappen nach oben)
+  const top = SCAN.cardTop + 6, bot = ML.chipsY - ML.chH - 10;
+  ML.y0 = top + (bot - top) * 0.36 - hs[0] / 2; // Lage ohne Verschiebung (danach richtet sich die Nahansicht)
+  let y0 = ML.y0, y3 = y0 + hs[0] + 56;
   if (ML.exitT != null && ML.tipKey === ML.key) {
-    y = clamp(ML.exitT - hs[0] / 2, top, Math.max(top, SCAN.bot - sum - 3 * g));
-    const want = ML.tipT + 24 - hs[3] / 2 - (y + hs[0] + hs[1] + hs[2]);
-    gg = clamp(want / 3, g, Math.max(g, (SCAN.bot - y - sum) / 3));
+    y0 = clamp(ML.exitT - hs[0] / 2, top, Math.max(top, bot - hs[0] - g - hs[3]));
+    y3 = ML.tipT + 24 - hs[3] / 2;
   }
-  for (let i = 0; i < 4; i++) { ML.ys[i] = y; y += hs[i] + gg; }
+  ML.ys[0] = y0; ML.ys[1] = ML.ys[2] = y0;
+  ML.ys[3] = clamp(y3, y0 + hs[0] + g, Math.max(y0 + hs[0] + g, bot - hs[3]));
 }
 addEventListener('resize', () => {
   ML.key = null;
@@ -983,15 +1080,18 @@ function updateCalloutsMob(zoneKey, on, prog, opt = null) {
   const show = !!(on && zoneKey && periCurve && ML.key === zoneKey);
   const th = opt ? opt.th : MTH, dur = opt && opt.slow && !show ? '.9s' : '';
   ncalls.forEach((el, i) => {
-    const vis = show && prog > th[i] && !(sc && i === 4); // Scanner: „Typisch“ steht in der Karte
+    const vis = show && prog > th[i] && !(sc && (i === 4 || i === 1 || i === 2)); // Scanner: „Typisch“, Nerv und Gefühl stehen in der Leiste
     if (vis) mlVisT = now;
     el.style.opacity = vis ? 1 : 0; el.style.transitionDuration = dur;
     if (i < 4) nl[i].style.opacity = nring[i].style.opacity = vis && (!opt || opt.lines) ? 1 : 0;
   });
-  { const on = !!(sc && show && prog > (opt ? opt.chip : MTH[4] + 0.06)); chipsEl.style.opacity = on ? 1 : 0; chipsEl.classList.toggle('is-on', on); } chipsEl.style.transitionDuration = dur; // is-on: Film-Knopf nur sichtbar tippbar
+  { const on = !!(sc && show && prog > (opt ? opt.chip : MTH[4] + 0.06)); chipsEl.style.opacity = on ? 1 : 0;
+    // 21.11.2026 (Go Kai 3): „Mehr“ pulsiert einmal, sobald die Karte eines Abschnitts erscheint
+    if (on && !chipsEl.classList.contains('is-on') && !paused && !reduced) { chipsEl.classList.remove('sc-pulse'); void chipsEl.offsetWidth; chipsEl.classList.add('sc-pulse'); }
+    chipsEl.classList.toggle('is-on', on); } chipsEl.style.transitionDuration = dur; // is-on: Film-Knopf nur sichtbar tippbar
   if (!show) return;
   ncalls.forEach((el, i) => { el.style.transform = `translate(${ML.x}px, ${(i < 4 ? ML.ys[i] : ML.typY).toFixed(1)}px)`; });
-  if (sc) chipsEl.style.transform = `translate(${ML.x}px, ${ML.chipsY.toFixed(1)}px)`;
+  if (sc) { chipsEl.style.transform = `translate(${ML.x}px, ${ML.chipsY.toFixed(1)}px) translateY(-100%)`; chipsEl.style.maxHeight = Math.max(120, ML.chipsY - SCAN.cardTop - 4).toFixed(0) + 'px'; } // unten verankert
   (sc ? ML.anch : [0, 0.33, 0.66, 1]).forEach((t, i) => {
     const [ax, ay] = toPx(periCurve.getPointAt(t)), L = nl[i];
     // Linie endet am Rand des Andockrings, der Ring sitzt genau auf dem Nerv
@@ -1002,10 +1102,13 @@ function updateCalloutsMob(zoneKey, on, prog, opt = null) {
 }
 
 // Körper-Silhouette (zarte Partikel), an die Kamera gehängt, rechts im Bild; das Versorgungsgebiet glüht
-const silIdx = []; for (let i = 0; i < N; i += isDesktop() ? 6 : 9) silIdx.push(i);
-const silPos = new Float32Array(silIdx.length * 3);
-silIdx.forEach((j, k) => silPos.set([body.pos[j * 3], body.pos[j * 3 + 1], body.pos[j * 3 + 2] * 0.4], k * 3));
-const silGeo = new THREE.BufferGeometry(); silGeo.setAttribute('position', new THREE.BufferAttribute(silPos, 3));
+// (seit 17.11.: die sichtbaren Punkte der Figur aus Kapitel 01 – grobes Raster, Kontur, Körperlinien; gefüllt am Dateiende, silFill)
+const silGeo = new THREE.BufferGeometry(); silGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3));
+function silFill() {
+  const a = [];
+  for (let i = 0; i < N; i++) if (body.f0[i * 3] > 0) a.push(body.pos[i * 3], body.pos[i * 3 + 1], body.pos[i * 3 + 2] * 0.4);
+  silGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(a), 3));
+}
 const silU = { uOn: { value: 0 }, uTgt: { value: new V3() }, uTime: uniforms.uTime, uPix: uniforms.uPix, cBone: uniforms.cBone, cBlue: uniforms.cBlue, cPetrol: uniforms.cPetrol };
 const sil = new THREE.Points(silGeo, new THREE.ShaderMaterial({
   uniforms: silU, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
@@ -1015,8 +1118,8 @@ const sil = new THREE.Points(silGeo, new THREE.ShaderMaterial({
       float glow = exp(-d * d * 1.6) * (.75 + .25 * sin(uTime * 3. - d * 4.));
       vCol = mix(cPetrol * 1.3, cBlue * 1.6, glow) + vec3(.9) * glow * .35;
       vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv;
-      gl_PointSize = uPix * (1.2 + glow * 1.6) * 2.2; vA = uOn * (.16 + glow * .85); }`,
-  fragmentShader: /* glsl */`varying vec3 vCol; varying float vA; void main(){ float d = length(gl_PointCoord - .5); gl_FragColor = vec4(vCol, smoothstep(.5, .1, d) * vA);
+      gl_PointSize = uPix * (1. + glow * .9) * 2.1; vA = uOn * (.34 + glow * .66); }`,
+  fragmentShader: /* glsl */`varying vec3 vCol; varying float vA; void main(){ float d = length(gl_PointCoord - .5); gl_FragColor = vec4(vCol, (1. - smoothstep(.3, .5, d)) * vA);
     #include <colorspace_fragment>
   }`,
 }));
@@ -1153,7 +1256,25 @@ segBtns.forEach((b) => b.addEventListener('click', () => {
 // sobald die Kamera steht, und lebt nur im unteren Bildteil → beim Weiterscrollen bleibt der Abschnitt über
 // der Kartenoberkante → Karte blendet oben aus. Nach der letzten Karte: ganze Wirbelsäule groß in der Mitte,
 // stehen lassen, dann löst sie sich nach oben auf und das Haus entsteht in der Bildmitte.
-const axisNote = $('#achse .note'), dachSec = $('#dach');
+const axisNote = $('#achse .note'), dachSec = $('#dach'), dTitleEl = $('#d-title');
+// ---------- Kapitel-Auftakt (18.11.2026, Studie A/B → Kai: „A“) ----------
+// Vor jedem der Kapitel 02–05 steht ein eigener ruhiger Abschnitt: große kursive Ziffer, Name, Untertitel wie in der Kopfleiste, eine
+// Linie zieht sich quer. Dahinter läuft der Formwechsel der Punkte (der Staub sammelt sich zur neuen Form) – der Übergang zeigt
+// den Kapitelwechsel. Der kleine Kicker im Kapitel entfällt dafür (CSS html.auftakt). Ohne JavaScript gibt es keinen Auftakt,
+// die Kicker bleiben. Kapitelanfang für Formwechsel, Kopfleiste und Kapitel-Links ist die Oberkante des Auftakts (auTop).
+const AU_INFO = { bewegung: ['02', 'Bewegung', 'Über HOP'], achse: ['03', 'Achse', 'Wirbelsäule'], dach: ['04', 'Dach', 'Praxis &amp; Leistungen'], tuer: ['05', 'Tür', 'Kontakt &amp; Termin'] };
+const auftakt = {};
+{
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.3 });
+  Object.entries(AU_INFO).forEach(([id, [no, name, sub]]) => {
+    const sec = document.getElementById(id); if (!sec) return;
+    const el = document.createElement('div'); el.className = 'auftakt-blk'; el.dataset.for = id;
+    el.innerHTML = `<div class="wrap"><p class="au-row"><span class="au-no">${no}</span><span class="au-txt"><span class="au-name">${name}</span><span class="au-sub">${sub}</span></span></p><i class="au-line" aria-hidden="true"></i></div>`;
+    sec.parentNode.insertBefore(el, sec); auftakt[id] = el; io.observe(el);
+  });
+  document.documentElement.classList.add('auftakt');
+}
+const auTop = (sec) => (auftakt[sec.id] || sec).getBoundingClientRect().top; // Kapitelanfang im Fenster (mit Auftakt)
 const MOB_X2 = { x: 0, y: 1.65, s: 0.28 }; // = layout() Handy (4A)
 let camArrive = 0, gateK = 1, dotsStuck = 0;
 const dotsBox = $('.seg-dots');
@@ -1293,11 +1414,13 @@ scanRail.addEventListener('wheel', (e) => {
 }, { passive: false });
 const levName = (id) => (id === 'S' ? 'Kreuzbein' : id === 'Co' ? 'Steißbein' : id);
 let levY = [], stopY = [];
-let RAIL_W = 88, RK = 1, railVW = -1; // Breite des Ziehstreifens rechts (px): links Haltestellen, rechts Rinne mit Griff
+let RAIL_W = 88, RTX = 26, RK = 1, railVW = -1; // Breite des Ziehstreifens rechts (px): links Haltestellen, rechts Rinne mit Griff
 // wächst mit der Grundschrift (ab 1600 px, Griff/Haltestellen sind in rem) – Handy: 16 px → unverändert 88 px
 function railMeasure() {
   if (railVW === VW) return; railVW = VW;
-  RK = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16; RAIL_W = Math.round(88 * RK);
+  RK = (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16) / 16;
+  // Handy (18.11., „2a“): schmale Schiene ohne Fläche – 64 statt 88 px, Griff näher am Rand (RTX = Abstand der Rinne vom Rand)
+  const pcR = isDesktop(); RAIL_W = Math.round((pcR ? 88 : 64) * RK); RTX = (pcR ? 26 : 22) * RK;
 }
 const nearestStop = (y) => { let b = 0; stopY.forEach((s, i) => { if (Math.abs(s - y) < Math.abs(stopY[b] - y)) b = i; }); return b; };
 // Antippen = zur nächsten Haltestelle; Ziehen erst ab 6 px Bewegung (sonst zoomt ein Tippen kurz heraus) und relativ:
@@ -1341,13 +1464,13 @@ const PC_ZOOM = 0.92; // PC: Nahansicht relativ zur früheren Kamerafahrt
 // Einblenden im Scanner (Kai 6.11., Variante b): Karte sofort beim Einrasten, die vier Zeilen nacheinander während des
 // Heranfahrens; beim Ziehen bleiben die Texte kurz stehen und blenden ruhig aus.
 const TX = { zone: null, t0: 0, last: 0 };
-const TX_OPT = { th: [0.3, 0.55, 0.8, 1.05, 0.05], chip: 0.05, lines: true, slow: true };
+const TX_OPT = { th: [0.3, 0.55, 0.8, 0.65, 0.05], chip: 0.05, lines: true, slow: true }; // 18.11.: nur Austritt (0) und Ziel (3) sichtbar
 function scanTexts(zKey, settle) {
   const now = performance.now();
   if (settle && zKey) { if (TX.zone !== zKey) { TX.zone = zKey; TX.t0 = now; } TX.last = now; }
-  const held = !settle && TX.zone && now - TX.last < 650;
+  const held = !settle && TX.zone && now - TX.last < 650 && SCAN.wasEng; // Bühne gelöst (Kapitel wird verlassen): nichts halten
   if (!settle && !held) TX.zone = null;
-  updateCalloutsMob(TX.zone, !!TX.zone && (settle || held), (now - TX.t0) / 1000, { ...TX_OPT, lines: settle });
+  updateCalloutsMob(TX.zone, !!TX.zone && (settle || held), (now - TX.t0) / 1000, { ...TX_OPT, lines: settle, slow: SCAN.wasEng });
 }
 const lvLocal = (lv, out) => out.set(lv.center.x * SC, (lv.center.y - CY) * SC, lv.center.z * SC).applyAxisAngle(_Y, spineRot);
 // PC-Scanner (Kai 7.11., 1A 2A 3A): gleiche Mechanik, aber Text links bleibt (Überschrift, segnav, Karte, Hinweis),
@@ -1378,7 +1501,9 @@ function updateScan(dt, r, inSec) {
   } else if (near) {
     // Bühne aus der echten Lage von Kopfleiste, Bühne und Hinweis: löst sich die Bühne beim Weiterscrollen, gehen
     // Wirbelsäule, Karte, Zeilen und Griff mit ihr nach oben (Kai 6.11.: in Chrome lief der Hinweis in die Zeilen)
-    const nb = axisNote ? axisNote.getBoundingClientRect() : null, sr = axSticky ? axSticky.getBoundingClientRect() : null, lift = sr ? Math.min(0, sr.top) : 0;
+    // 18.11.: auch beim Hereinkommen (sr.top > 0) geht die Wirbelsäule mit ihrer Bühne – sie steigt mit „03 Achse“ von unten auf,
+    // statt schon groß über dem Text der Hausordnung zu stehen (vorher nur beim Lösen: Math.min(0, sr.top))
+    const nb = axisNote ? axisNote.getBoundingClientRect() : null, sr = axSticky ? axSticky.getBoundingClientRect() : null, lift = sr ? sr.top : 0;
     const hb = topBar ? topBar.getBoundingClientRect().bottom : 70;
     SCAN.cardTop = hb + 10 + lift; SCAN.top = hb + 16 + lift; SCAN.bot = (nb && nb.height ? nb.top - NOTE.shift : MINH - 60) - 12;
     if (nb && nb.height && sr) {
@@ -1391,7 +1516,10 @@ function updateScan(dt, r, inSec) {
     const tf = SCAN.top / GLH, bf = SCAN.bot / GLH;
     OV.w = ((bf - tf) * 8.197 * 0.95) / 8.7; OV.y = (0.5 - (tf + bf) / 2) * 8.197;
     // ganze Wirbelsäule zwischen Kopfleiste und Hinweis, rechter Rand am Ziehstreifen
-    const tx = det && SCAN.right ? OV.x + (VW - RAIL_W - 6 - SCAN.right) * (8.197 / GLH) : (0.22 * VW) * (8.197 / GLH);
+    // 18.11.: solange die Bühne noch nicht steht (kein Ziehstreifen im Bild), rückt die Wirbelsäule weiter nach rechts –
+    // sonst liegt sie beim Hereinkommen auf dem Ende der Überschrift und der Anleitung (Textspalte 64 %)
+    const edge = SCAN.wasEng ? RAIL_W + 6 : 30;
+    const tx = det && SCAN.right ? OV.x + (VW - edge - SCAN.right) * (8.197 / GLH) : (0.22 * VW) * (8.197 / GLH);
     OV.x = OV.init ? OV.x + (tx - OV.x) * (reduced ? 1 : 1 - Math.exp(-dt * 6)) : tx; OV.init = true;
   }
   // ruhige Schrägansicht (Wurzeln zeigen nach links), atmet leicht hin und her
@@ -1404,8 +1532,24 @@ function updateScan(dt, r, inSec) {
   if (!pc) { sil.visible = false; silU.uOn.value = 0; }
   periLabel.style.opacity = 0;
 
-  const solid = (inSec ? smooth(VH * 1.0, VH * 0.25, r.top) * (1 - smooth(VH * 0.95, VH * 0.45, r.bottom)) : 0) * spineK;
+  // Handy (18.11.): die Wirbelsäule löst sich etwas später auf – sie geht erst mit der Bühne nach oben, sonst bleibt vor „04 Dach“ ein leeres Bild
+  // Handy (18.11., Go Kai „1a“): beim Verlassen zerfällt sie nicht mehr in Punkte. Die Abtastlinie bleibt unten (solidIn), die
+  // Wirbelsäule endet weich an der Unterkante des Kapitels und blendet als Ganzes aus (outK → uFade), sobald „04 Dach“ ins Bild kommt.
+  // 20.11. (Auftrag Kai: Abläufe über die Zeit): die Abtastlinie startet, sobald das Kapitel hereinkommt, und läuft dann von selbst.
+  // Kommt man von unten zurück (Kapitel steht schon über dem Bild), ist die Wirbelsäule wie bisher sofort wieder da.
+  // 21.11. abends: „sofort da“ nur, wenn man wirklich von unten zurückkommt (Seite wird nach oben gescrollt). Vorher galt das auch beim
+  // schnellen Wisch nach unten: der langsame Formwechsel (3,6 s) gab die Bühne erst frei, als Kapitel 03 schon oben stand → Sprung.
+  if (scanGate.prevTop !== undefined && Math.abs(r.top - scanGate.prevTop) > 1) scanGate.up = r.top > scanGate.prevTop;
+  scanGate.prevTop = r.top;
+  if (!inSec) scanGate.set(0); else if (!scanGate.inSec && r.top < VH * 0.25 && scanGate.up) scanGate.set(1);
+  scanGate.inSec = inSec;
+  const solidIn = inSec ? weich(scanGate(smooth(VH * 1.0, VH * 0.25, r.top), dt)) * spineK : 0;
+  // PC ebenso (18.11. mittags): der genauere Prüfstand zeigte dort dieselbe helle Wolke beim Verlassen und beim Zurückkommen
+  const outK = smooth(VH * 0.34, VH * 0.06, r.bottom);
+  const solid = solidIn * (1 - outK);
+  sU.uFade.value = 1 - outK; sU.uClip.value = 1 - 2 * (r.bottom - 4) / VH; // ganz weg 4 px über dem Kapitelende, voll da rund 55 px darüber
   const eng = inSec && solid > 0.97 && r.top < VH * 0.12 && r.bottom > VH * 0.9; // Bühne steht
+  SCAN.wasEng = eng;
   // Bildschirmlage der Wirbel und der fünf Abschnitte (Übersicht)
   if (det && near) {
     const rects = spineRects(OV); // (nutzt dieselbe Projektion wie die PC-Schilder)
@@ -1461,17 +1605,21 @@ function updateScan(dt, r, inSec) {
       _zc.set(0, 0, 0); st.ids.forEach((id) => _zc.add(lvLocal(det.levels.find((l) => l.id === id), _zw))); _zc.divideScalar(st.ids.length);
       zw = OV.w * ZOOM[ZM.idx];
       if (ML.key === st.zone && ML.hs[0]) mobPlaceScan();
-      const py = ML.key === st.zone && ML.hs[0] ? ML.y0 + ML.hs[0] / 2 : SCAN.top + (SCAN.bot - SCAN.top) * 0.4;
+      const py = ML.key === st.zone && ML.hs[0] ? ML.y0 + ML.hs[0] / 2 : SCAN.top + (SCAN.bot - SCAN.top) * 0.36;
       // Abschnitt mittig zwischen Zeilen-Spalte und Ziehstreifen
-      screenToWorld(Math.max(VW * 0.55, (ML.x + ML.colW + VW - RAIL_W) / 2 + 6), py, _zc.z * zw, _zw);
-      zx = _zw.x - _zc.x * zw; zy = _zw.y - _zc.y * zw;
+      const place = () => { screenToWorld(Math.max(VW * 0.5, (ML.x + Math.max(ML.ws[0], ML.ws[3]) + 12 + VW - RAIL_W) / 2), py, _zc.z * zw, _zw); zx = _zw.x - _zc.x * zw; zy = _zw.y - _zc.y * zw; };
+      place();
       // Kai 7.11.: Wirbelkörper des Abschnitts rechts neben den Zeilen (sonst liegt der Nerv auf dem Knochen),
       // höchstens bis vor den Ziehstreifen
+      // 21.11.2026 (Kai: „Überlappung Text“, Go 3a): freie Fläche = zwischen Schildern und Skala. Ist der Abschnitt breiter,
+      // wird die Nahansicht kleiner (nie kleiner als die Übersicht) – vorher durfte er bis unter die Beschriftung der Skala reichen
       if (ML.key === st.zone && ML.hs[0]) {
-        const ppw = GLH / 8.197, rowR = ML.x + Math.max(ML.ws[0], ML.ws[1], ML.ws[2], ML.ws[3]) + 12;
-        let left = 1e9, right = -1e9;
-        st.ids.forEach((id) => { const lv = det.levels.find((l) => l.id === id), cx = toPx(lvLocal(lv, _zc2).multiplyScalar(zw).add(_sv2.set(zx, zy, 0)))[0], h = lv.R * SC * zw * 1.15 * ppw; left = Math.min(left, cx - h); right = Math.max(right, cx + h); });
-        const need = clamp(rowR - left, 0, Math.max(0, VW - RAIL_W * 0.6 - right));
+        const ppw = GLH / 8.197, rowR = ML.x + Math.max(ML.ws[0], ML.ws[1], ML.ws[2], ML.ws[3]) + 12, railL = VW - RAIL_W - 4;
+        const span = () => { let left = 1e9, right = -1e9; st.ids.forEach((id) => { const lv = det.levels.find((l) => l.id === id), cx = toPx(lvLocal(lv, _zc2).multiplyScalar(zw).add(_sv2.set(zx, zy, 0)))[0], h = lv.R * SC * zw * 1.15 * ppw; left = Math.min(left, cx - h); right = Math.max(right, cx + h); }); return [left, right]; };
+        let [left, right] = span();
+        const k = (railL - rowR) / Math.max(1, right - left);
+        if (k < 1) { zw = Math.max(OV.w, zw * k); place(); [left, right] = span(); }
+        const need = clamp(rowR - left, 0, Math.max(0, railL - right));
         zx += need / ppw;
       }
       // Wurzelende (links außen) bei voller Nahansicht → Bildschirmhöhe für die Zeilen (mobPlaceScan)
@@ -1489,9 +1637,15 @@ function updateScan(dt, r, inSec) {
     if (fx) fxPose(X);
   }
   const zoomE = ZM.k * ZM.k * (3 - 2 * ZM.k);
+  // 21.11.2026 (Kai: „Überlappung Text“, Go 3a): Handy-Nahansicht – die Wirbelsäule endet weich über der Karte unten statt
+  // unter ihr weiterzulaufen (gleiche weiche Kante wie am Kapitelende, uClip)
+  if (!pc && near && ML.chH && zoomE > 0.001) {
+    const cardTop = ML.chipsY - (chipsEl.classList.contains('is-open') ? chipsEl.offsetHeight : ML.chH) - 6, base = r.bottom - 4;
+    if (cardTop < base) sU.uClip.value = 1 - 2 * (base + (cardTop - base) * zoomE) / VH;
+  }
   // Aufbau beim Hereinkommen (Scan von oben), Auflösen nach oben beim Weiterscrollen
   const topY = X.y + 4.35 * X.w, botY = X.y - 4.35 * X.w;
-  uniforms.uCut.value = solid <= 0 ? 100 : THREE.MathUtils.lerp(topY + 0.05, botY - 0.05, solid);
+  uniforms.uCut.value = solid <= 0 ? 100 : THREE.MathUtils.lerp(topY + 0.05, botY - 0.05, solidIn);
   spineGroup.visible = solid > 0; sU.uOn.value = solid > 0 ? 1 : 0;
   if (bones) bones.pts.material.uniforms.uStip.value = (renderer ? renderer.getPixelRatio() : 1) * GLH * 0.5 / tanH * X.w * (bones.name === 'grain' ? bones.spacing * 0.78 : 0.022);
   if (DENSE.obj && bones) DENSE.obj.material.uniforms.uStip.value = bones.pts.material.uniforms.uStip.value * 0.8; // Wirbelsäule echt (B)
@@ -1521,7 +1675,10 @@ function updateScan(dt, r, inSec) {
 
   // Überschrift weicht, sobald gescannt wird; Hinweis geht beim Weiterscrollen mit (nicht über dem Haus stehen lassen)
   // PC: Textspalte bleibt stehen (2A)
-  if (axisHead && !pc) axisHead.style.opacity = ready && SCAN.demo === 2 ? 0 : '';
+  // 18.11. (Befund 3): hat der Scanner einmal gestanden, bleibt die Überschrift auch weg, während sich die Bühne am Kapitelende
+  // löst – sonst steht sie halb unter der Kopfleiste und nennt einen Knopf, der nicht mehr im Bild ist
+  const lifted = !pc && axSticky && axSticky.getBoundingClientRect().top < -2;
+  if (axisHead && !pc) axisHead.style.opacity = SCAN.demo === 2 && (ready || lifted) ? 0 : '';
   if (axisNote && !pc) axisNote.style.opacity = (1 - smooth(VH * 0.98, VH * 0.62, r.bottom)).toFixed(3);
   if (pc && axisHead && axisHead.style.opacity) axisHead.style.opacity = ''; // Fenster vom Handy- auf PC-Format gezogen
   if (pc && axisNote && (axisNote.style.opacity || NOTE.shift)) { axisNote.style.opacity = ''; axisNote.style.transform = ''; NOTE.shift = 0; }
@@ -1530,7 +1687,7 @@ function updateScan(dt, r, inSec) {
   if (!ready || y < 0) return;
   // Aufzug rechts: Rinne, Haltestellen und Griff bleiben fest (Übersicht), auch in der Nahansicht – der Griff zeigt,
   // wo man steht; die Scan-Linie über der Wirbelsäule gehört zur Übersicht und tritt in der Nahansicht zurück
-  const yMin = levY[0] - 6, yMax = levY[levY.length - 1] + 6, tx = VW - 26 * RK, rTop = yMin - 28 * RK;
+  const yMin = levY[0] - 6, yMax = levY[levY.length - 1] + 6, tx = VW - RTX, rTop = yMin - 28 * RK;
   sTrack.style.transform = `translate(${tx - 3}px, ${yMin.toFixed(1)}px)`; sTrack.style.height = (yMax - yMin).toFixed(1) + 'px';
   sTicks.forEach((el, i) => { el.style.transform = `translate(${tx - 10}px, ${stopY[i].toFixed(1)}px)`; el.classList.toggle('is-on', i === seg); });
   stopBtns.forEach((b, i) => { b.style.top = (stopY[i] - rTop).toFixed(1) + 'px'; b.classList.toggle('is-on', i === seg); });
@@ -1549,15 +1706,20 @@ function updateScan(dt, r, inSec) {
   scanRail.style.left = (VW - RAIL_W).toFixed(0) + 'px'; scanRail.style.top = rTop.toFixed(0) + 'px'; scanRail.style.height = (yMax - yMin + 56 * RK).toFixed(0) + 'px';
 }
 
+const scanGate = riegel(SCAN_SEK, 0.25, 0.08); // früh auslösen: startet die Abtastlinie später, steht so lange die grobe helle Übergangswolke neben der Überschrift (20.11. im Film gesehen)
 function updateAxis(dt) {
   const ph = PH(), desk = isDesktop();
   const r = axis.getBoundingClientRect();
   const p = clamp(-r.top / Math.max(1, r.height - VH));
-  const inSec = r.top < VH && r.bottom > 0 && morphNow > 1.6 && morphNow < 2.4;
+  // Handy-Scanner (18.11., „1a“): die Wirbelsäule hängt am Kapitel, nicht mehr am Formwechsel der Punktwolke – sie bleibt, bis ihr
+  // Kapitel aus dem Bild ist (weiche Unterkante), und ist beim Zurückscrollen sofort wieder da (vorher: erst nach dem Formwechsel)
+  // 21.11.: Schwelle 1,3 statt 1,6 – bei 3,6 s je Formwechsel blieb die Bühne sonst gut zwei Sekunden leer, bevor die Abtastlinie begann
+  const inSec = r.top < VH && r.bottom > 0 && morphNow > 1.3 && (morphNow < 2.4 || (desk ? pcScan() : scanOn()));
   // noch nicht fertig gerechnet: grobe Partikel bleiben, danach fahren Scan und Kamera sanft nach
   spineK = bones ? ramp(spineK, dt) : 0;
   if (desk ? pcScan() : scanOn()) { updateScan(dt, r, inSec); return; } // Handy: Scanner (6.11.), PC: Hybrid-Scanner (7.11.)
   scanUI.classList.remove('on'); scanRail.classList.remove('on'); chipsEl.style.opacity = 0; chipsEl.classList.remove('is-on'); sU.uScanAmt.value = 0;
+  sU.uFade.value = 1; sU.uClip.value = -2; // ohne Scanner (alter Ablauf): kein Ausblenden an der Kapitelkante
   if (SCAN.cleared) { SCAN.cleared = false; if (axisHead) axisHead.style.opacity = ''; if (axisNote) axisNote.style.transform = ''; NOTE.shift = 0; }
   if (desk) { axisWant = null; spineGroup.visible = false; sil.visible = false; return; } // PC ohne WebGL: Karte per segnav, keine Fahrt
   const X = uniforms.uXf.value[2];
@@ -1736,18 +1898,23 @@ document.addEventListener('click', (e) => { if (!e.target.closest('#chapters')) 
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && topNav.classList.contains('menu-open')) { setMenu(false); chapNow.focus(); } });
 addEventListener('resize', () => { if (VW > 1000) setMenu(false); });
 let chapShown = -1;
-let morphNow = 0;
+let morphNow = 0, morphInit = false, tickDt = 0;
 let chapTop = null, logoGeo = null;
 const chapDirty = () => { chapTop = null; logoGeo = null; };
 addEventListener('resize', chapDirty); addEventListener('load', chapDirty);
 if (window.ResizeObserver) new ResizeObserver(chapDirty).observe(document.body);
+const morphGate = [];
 function targetMorph() {
   const vh = VH;
+  if (!morphGate.length) chapters.forEach(() => morphGate.push(riegel(1)));
   let m = 0;
-  if (!chapTop) chapTop = chapters.map((c) => c.getBoundingClientRect().top + scrollY);
+  // mit Auftakt: der Formwechsel läuft hinter dem Auftakt. Ausnahme Kapitel 03: dort entsteht die Wirbelsäule mit ihrer Bühne
+  // (Abtastlinie von oben) – finge der Formwechsel schon am Auftakt an, stünde am PC lange eine helle Säule aus groben Punkten
+  // hinter „03“, bevor der Knochen sie ablöst. Hinter „03“ lösen sich stattdessen die HOP-Kreise auf (logoGeo.axis).
+  if (!chapTop) chapTop = chapters.map((c) => (c === axis ? c.getBoundingClientRect().top : auTop(c)) + scrollY);
   const sy = scrollY;
   // Hausordnung (seit 14.11. nachts nach Kapitel 02): Ende des Textes von Kapitel 02 + Kicker der Hausordnung (absolut, gemerkt)
-  logoGeo = logoGeo || { list: statement.parentNode.lastElementChild.getBoundingClientRect().bottom + sy, kick: rules.querySelector('.kicker').getBoundingClientRect().top + sy, rules: rules.getBoundingClientRect().top + sy, axis: axis.getBoundingClientRect().top + sy };
+  logoGeo = logoGeo || { list: statement.parentNode.lastElementChild.getBoundingClientRect().bottom + sy, kick: rules.querySelector('.kicker').getBoundingClientRect().top + sy, kickB: rules.querySelector('.kicker').getBoundingClientRect().bottom + sy, laws: $('#laws').getBoundingClientRect().top + sy, rules: rules.getBoundingClientRect().top + sy, axis: auTop(axis) + sy };
   for (let i = 0; i < chapters.length; i++) {
     const r = { top: chapTop[i] - sy };
     const s = +chapters[i].dataset.stage;
@@ -1763,7 +1930,8 @@ function targetMorph() {
     // Handy: Bewegungslinien → Wirbelsäule früher fertig, damit der Scan schon mit der Überschrift entsteht;
     // seit 14.11. nachts etwas später begonnen, damit die Wirbelsäule nicht über dem letzten Paragraphen der Hausordnung entsteht
     if (!isDesktop() && prev === 1 && s === 2) t = smooth(vh * 1.1, vh * 0.25, r.top); // 16.11.: 0,85 statt 0,48 (Beginn liegt unter den HOP-Kreisen)
-    if (t > 0) m = prev + (s - prev) * t;
+    morphGate[i](t, 0);
+    if (morphGate[i].want()) m = s; // Auslöser: das Kapitel ist da → Ziel ist seine Form; der Weg dorthin läuft über die Zeit (tick)
   }
   return m;
 }
@@ -1771,18 +1939,24 @@ function targetMorph() {
 // während die Hausordnung hereinkommt, und lösen sich in die Wirbelsäule auf, sobald Kapitel 03 folgt (Shader: uLogo).
 // Handy wie seit 8.11.: schon am Ende des vorigen Textes fertig, mittig im freien Raum über „§ Die Hausordnung“.
 let logoNow = 0;
-function targetLogo() {
+const logoIn = riegel(LOGO_SEK), logoOut = riegel(LOGO_SEK, 0.62, 0.4); // Auflösen erst, wenn Kapitel 03 wirklich hereinkommt (bei hohen Fenstern liegt es sonst schon im Messbereich, während man die Hausordnung liest)
+function targetLogo(dt = 0) {
   const vh = VH, sy = scrollY, d = isDesktop();
   // 16.11. (Kai: „überall diese Geschwindigkeit“): Kreise kommen/gehen über ~0,9 Bildschirmhöhen (vorher 0,45–0,7)
-  const kIn = d ? smooth(vh * 1.0, vh * 0.1, logoGeo.rules - sy) : smooth(vh * 1.5, vh * 0.55, logoGeo.list - sy);
+  // 18.11. (Kai: „am Tablet und Handy kommen die Partikelstreifen nicht“, Go 3a): am Handy entstanden die Kreise schon, während
+  // der Text von Kapitel 02 noch im Bild stand (gemessen am Textende) – den Streifen blieb nur ein Augenblick. Jetzt wie am PC am
+  // Kicker „Die Hausordnung“ gemessen: die Kreise bilden sich, während er von unten bis zur Bildmitte steigt. Die übrigen Punkte
+  // laufen als Streifen weiter (Shader uKeep) – am Tablet stehen Kapitel 02 und die Hausordnung fast gleichzeitig im Bild.
+  const kIn = d ? smooth(vh * 1.0, vh * 0.1, logoGeo.rules - sy) : smooth(vh * 0.95, vh * 0.5, logoGeo.kick - sy);
   const kOut = d ? smooth(vh * 1.0, vh * 0.1, logoGeo.axis - sy) : smooth(vh * 1.2, vh * 0.35, logoGeo.axis - sy);
-  return kIn * (1 - kOut);
+  // 20.11.: Auslöser statt Scrollweg – die Kreise sammeln sich und lösen sich über die Zeit
+  return weich(logoIn(kIn, dt)) * (1 - weich(logoOut(kOut, dt)));
 }
 // Handy: Logo steht mittig im freien Raum zwischen dem Text von Kapitel 02 (bzw. Leiste) und „§ Die Hausordnung“ und steigt mit dem Text auf
 function logoPlace() {
-  const vh = VH, sy = scrollY, lb = logoGeo.list - sy, kt = logoGeo.kick - sy;
-  let c = Math.min((Math.max(lb, 78) + kt) / 2, vh * 0.6);
-  c = Math.min(Math.max(c, lb + 75), kt - 90);
+  // 18.11. nachmittags (Kai: „Überschriften nach oben, Animationen darunter“): die Kreise stehen jetzt UNTER „§ Die Hausordnung“,
+  // mittig im freien Raum zwischen dem Kicker und den Paragraphen (vorher darüber, zwischen Kapitel 02 und dem Kicker)
+  const sy = scrollY, c = (logoGeo.kickB - sy + logoGeo.laws - sy) / 2;
   const hh = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)), wpp = 2 * hh / GLH;
   uniforms.uXf.value[4].set(0, (GLH / 2 - c) * wpp, 0, 0.32);
 }
@@ -1797,8 +1971,12 @@ const lh = initHouse({
   root: $('#lhRoot'), isPaused: () => paused, headLine: false,
   canDraw: () => !renderer || reduced || morphNow > 2.86, // erst zeichnen, wenn die Partikel an der Dachlinie angekommen sind
   onDialog: (open) => { if (open) lenis?.stop(); else lenis?.start(); },
-  goto: (h) => { const t = $(h); if (t) scrollToY(t.getBoundingClientRect().top + scrollY); },
+  goto: (h) => { const t = $(h); if (t) scrollToY((auftakt[t.id] || t).getBoundingClientRect().top + scrollY); },
 });
+// 21.11.2026 abends (Kai im Arbeitsblatt zum Entwurf haus-staub.html: „so in die Website übernehmen“): beim Raumwechsel zieht das Licht
+// als feiner Staub in den neuen Raum (eigene kleine Zeichenfläche im Haus, läuft nur während des Wechsels; house.js bleibt unberührt)
+const hausStaub = initStaub({ house: $('#house'), rooms: $('#rooms'), isPaused: () => paused });
+window.__staub = hausStaub;
 const tourWant = null; // die Kamera der Partikel-Szene fährt in Kapitel 04 nicht mehr
 // Form 3 auf das SVG-Dach legen: Bildschirm-Pixel → Welt (Ebene z = 0, Übersichtskamera wie logoPlace)
 function roofPlace() {
@@ -1839,11 +2017,68 @@ const dTitle = $('#d-title'), roofLetters = splitLetters(dTitle);
 dTitle.insertAdjacentHTML('beforebegin', '<svg class="roofline" viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true"><path d="M2 38 L150 3 L298 38" pathLength="1"/></svg>');
 const roofline = $('.roofline path');
 // Auftrag Z (vorbereitet, NICHT Standard – Kai entscheidet): ?dach=eins blendet die kleine Linie aus, sobald das Hausdach gezeichnet wird (eine Dachlinie statt zwei)
-const ONE_ROOF = /[?&]dach=eins\b/.test(location.search);
+const ONE_ROOF = !/[?&]dach=zwei\b/.test(location.search); // seit 20.11. fest (Kai im Arbeitsblatt: „nur eine“); ?dach=zwei zeigt zum Vergleich beide
 // 05 Tür („Die Tür steht offen.“, 14.11. nachts): Buchstaben blenden ruhig ein, „offen.“ schwingt wie ein Türblatt auf und bewegt sich später ab und zu leicht
 const tTitle = $('#t-title');
 splitLetters(tTitle);
 new IntersectionObserver((es, ob) => es.forEach((e) => { if (e.isIntersecting) { tTitle.classList.add('open'); ob.disconnect(); } }), { threshold: 0.4 }).observe(tTitle);
+
+// ---------- Tür-Bühne „Hineingehen“ (19.11.2026, Go Kai „3a“; löst Tür C vom 18.11. ab) ----------
+// Kai: „dass man wie in die Tür rein geht und dort dann erst die Buttons für Termin oder Details stehen“. Kapitel 05 beginnt mit
+// einer klebenden Bühne (#doorTrack, 230 % Bildhöhe): Überschrift oben, darunter groß die Tür. Der Scrollweg p (0 … 1) öffnet sie
+// und führt hindurch (Baustein src/tuer/buehne.js, gezeichnet auf dem Grafikchip); drinnen blenden die zwei Knöpfe ein.
+// Klasse an <html>: door-walk = Bühne mit Weg. Ohne sie (ohne JavaScript, Software-Grafik, „Bewegung anhalten/reduzieren“,
+// kein Grafikchip) stehen Überschrift und Knöpfe einfach da. Die Zeichenfläche ist nur in der Nähe der Bühne eingeschaltet
+// (Go „1b“: sie lag am 18.11. dauernd bildschirmgroß über der Seite). Prüfhilfe: window.__door.
+const doorStage = (() => {
+  const doorGate = riegel(3.6); // Staub sammelt sich zur Tür: Auslöser beim Hereinkommen, Ablauf über die Zeit
+  const cv = $('#cStage'), glowEl = $('#cGlow'), track = $('#doorTrack'), inEl = $('#doorIn');
+  if (!cv || !track || !inEl) return null;
+  const sticky = $('.door-sticky', track), cue = $('.door-cue', track), H = document.documentElement;
+  const still = () => paused || reduced || H.classList.contains('no-gl');
+  let st = null, failed = false, last = performance.now(), on = false, walk = null, lastClip = '', lastG = -1, lastCue = -1;
+  const setWalk = (v) => { if (v === walk) return; walk = v; H.classList.toggle('door-walk', v); if (!v) { inEl.style.opacity = ''; inEl.style.transform = ''; inEl.classList.add('is-on'); lastG = -1; } chapDirty(); };
+  const off = () => { if (!on) return; on = false; cv.classList.remove('on'); glowEl.classList.remove('on'); if (st) st.clear(); };
+  // Tastatur: Fokus auf einem noch verborgenen Knopf → ans Ende der Bühne (Tür offen, Knöpfe da)
+  const hit = $('#doorHit'), DOOR_SEK = 3.8;
+  let opened = false, doorP = 0;
+  const open = () => { if (opened) return; opened = true; if (hit) hit.hidden = true; };
+  if (hit) hit.addEventListener('click', open);
+  inEl.addEventListener('focusin', () => { if (walk && !opened) { open(); doorP = 1; } });
+  setWalk(!still());
+  frameFns.push((now) => {
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    setWalk(!still() && !failed);
+    if (!walk) { off(); return; }
+    const r = track.getBoundingClientRect(), vh = innerHeight;
+    // (Höhe prüfen: ist der Inhalt ausgeblendet – Messbilder des Prüfstands –, hat die Bühne keine Höhe)
+    if (!opened && r.height > vh * 0.5 && r.bottom < vh * 0.3) { opened = true; doorP = 1; hit && (hit.hidden = true); }
+    if (r.top > vh * 1.5 || r.bottom < -vh * 0.3) { off(); return; } // weit weg: Zeichenfläche aus, nichts messen
+    if (!st) { st = initDoorStage({ cv, glow: glowEl, isStill: still }); if (!st) { failed = true; return; } }
+    if (st.dead) { failed = true; return; }
+    if (!on) { on = true; cv.classList.add('on'); glowEl.classList.add('on'); }
+    // die Bühne endet an den Kanten ihres Abschnitts – nie über dem Text davor oder danach
+    const clip = `inset(${Math.max(0, Math.round(r.top))}px 0 ${Math.max(0, Math.round(vh - r.bottom))}px 0)`;
+    if (clip !== lastClip) { lastClip = clip; cv.style.clipPath = clip; glowEl.style.clipPath = clip; }
+    const sr = sticky.getBoundingClientRect(), hb = tTitle.getBoundingClientRect().bottom, desk = isDesktop();
+    st.frame(dt, {
+      w: cv.clientWidth, h: vh, desk, cx: cv.clientWidth / 2,
+      areaTop: hb + (desk ? 8 : 18), areaBot: sr.bottom - (desk ? 44 : 30), fadeY: hb - 8,
+      fWant: weich(doorGate(smooth(vh * 0.95, vh * 0.12, r.top), dt)), // Tür entsteht, sobald die Bühne hereinkommt – über die Zeit (20.11.), nicht am Scrollweg
+      // 20.11. (Kai im Arbeitsblatt: „Gerne auf die Tür drücken, bzw. klicken“): die Tür geht auf Antippen/Klick auf und man geht über die
+      // Zeit hindurch (vorher am Scrollweg). Wer ohne Antippen weiterscrollt, findet sie beim Zurückkommen offen (Knöpfe erreichbar).
+      pWant: weich(doorP = opened ? Math.min(1, doorP + dt / DOOR_SEK) : 0),
+    });
+    const g = smooth(DOOR_PLAN.gate, DOOR_PLAN.gate + 0.12, st.p);
+    if (Math.abs(g - lastG) > 0.004 || (g === 0) !== (lastG === 0) || (g === 1) !== (lastG === 1)) {
+      lastG = g; inEl.style.opacity = g.toFixed(3); inEl.style.transform = `translateY(${((1 - g) * 14).toFixed(1)}px)`; inEl.classList.toggle('is-on', g > 0.5);
+    }
+    const c = st.f > 0.9 ? 1 - smooth(0.02, 0.1, st.p) : 0;
+    if (cue && Math.abs(c - lastCue) > 0.01) { lastCue = c; cue.style.opacity = c.toFixed(2); }
+  });
+  return { get st() { return st; }, get walk() { return walk; }, get on() { return on; }, open, get opened() { return opened; }, reset() { opened = false; doorP = 0; if (hit) hit.hidden = false; } }; // reset: Prüfhilfe (Tür wieder zu)
+})();
+window.__door = doorStage;
 // Leistungen: ein Impuls läuft durch den Namen (Maus darüber bzw. beim Durchscrollen auf dem Handy)
 const ixRows = $$('.index li').map((li) => {
   const name = $('.ix-name', li); splitLetters(name);
@@ -1887,17 +2122,33 @@ const glWait = (cv) => cv && cv.classList.add('gl-wait');
 const glReady = (cv) => cv && cv.classList.remove('gl-wait');
 if (manuSec) {
   glWait($('#glManu'));
-  whenNear(manuSec, () => runSliced(initManuGen($('#glManu'), manuUi)).then((m) => { manu = m; if (!m) document.documentElement.classList.add('no-gl-manu'); glReady($('#glManu')); }));
+  // 21.11.2026 (Kai: „preisgekrönte, bessere Figur auf der Manuthera“): echte Körperoberfläche aus assets/manu-figur.bin; lädt sie nicht,
+  // bleibt die gerechnete Figur
+  const loadFigur = () => fetch(HOP_ASSETS + 'manu-figur.bin').then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+    .then((buf) => { const A = {}; for (const q of decodeAnat(new Uint8Array(buf)).parts) A[q.id] = q; return A; }).catch((e) => { console.warn('Figur der Manuthera nicht geladen – gerechnete Figur:', e && e.message); return null; });
+  whenNear(manuSec, () => loadFigur().then((figur) => runSliced(initManuGen($('#glManu'), { ...manuUi, figur }))).then((m) => { manu = m; if (!m) document.documentElement.classList.add('no-gl-manu'); glReady($('#glManu')); }));
 }
 // ---------- Stoßwellen-Therapie (Kapitel 04, nach der Manuthera): Linien-Bühne ohne WebGL, Baustein ../stosswelle ----------
 const swSec = $('#stosswelle');
 const sw = initStosswelle({ root: swSec, isPaused: () => paused, reduced });
+// 21.11.2026 (Kai im Arbeitsblatt zum Entwurf stosswelle-punkte.html: „so in Puls übernehmen“): Punkt-Grafik mit echtem Fersenbein auf
+// derselben Motiv-Bühne wie die Leistungen. Sie entsteht erst in der Nähe; ohne Grafikchip oder ohne die Knochen-Datei bleibt die
+// Linien-Zeichnung. Stärke, Knöpfe und Texte führt weiter der Linien-Baustein (welle.js) – hier wird nur seine Stufe übernommen.
+let swP = null;
+const SW_LAB = { sehne: [-1, -5, 1, -12], ansatz: [-0.5, 34, 1], ferse: [-0.5, 18, 1], hand: [-0.5, 30, 1] }; // Versatz der Beschriftung: [x (× Breite, wenn 3. Wert 1), y, …, zusätzlich px]
+const swLabs = $('#swLabs'), swLabEls = swLabs ? [...swLabs.children] : [];
+if (swSec && $('#glSw') && renderer) whenNear(swSec, () => loadAnat().then((anat) => { if (!anat) return null; $('#glSw').hidden = false; return runSliced(motifStageGen($('#glSw'), { anat, isPaused: () => paused, sp: isDesktop() ? 0.027 : 0.033, sway: reduced ? 0 : 0.1, cam: { y: 0.55, d: 5.2, look: 0.02 } }, SW_MOTIVE)); })
+  .then((m) => { if (!m) { $('#glSw').hidden = true; return; } swP = m; swSec.classList.add('sw-punkte'); }));
 // ---------- Leistungen: Partikel-Bühne mit Motiv je Leistung (Haus tritt hier zurück) ----------
 const servList = $('.roof-list'), servName = $('#servName');
 // Aufbau erst, wenn „Alle Leistungen“ in Reichweite kommt (A1)
 let serv = null;
 glWait($('#glServ'));
-whenNear(roofHead, () => runSliced(initServicesGen($('#glServ'), { isPaused: () => paused, onShow: (i, name) => { if (servName) servName.textContent = name; } })).then((m) => { serv = m; if (!m) document.documentElement.classList.add('no-gl-serv'); glReady($('#glServ')); }));
+// echte Knochen für die anatomischen Motive (20.11.): eigene Datei neben der Seite; lädt sie nicht (file://, Funkloch), bleiben die gerechneten Motive
+let anatMemo = null;
+const loadAnat = () => anatMemo || (anatMemo = fetch(HOP_ASSETS + 'motive-anatomie.bin').then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+  .then((buf) => { const A = {}; for (const q of decodeAnat(new Uint8Array(buf)).parts) A[q.id] = q; return A; }).catch((e) => { console.warn('Anatomie der Motive nicht geladen – gerechnete Motive:', e && e.message); return null; }));
+whenNear(roofHead, () => loadAnat().then((anat) => runSliced(initServicesGen($('#glServ'), { anat, isPaused: () => paused, onShow: (i, name) => { if (servName) servName.textContent = name; } }))).then((m) => { serv = m; if (!m) document.documentElement.classList.add('no-gl-serv'); glReady($('#glServ')); }));
 let servLock = -1e9, servAutoT = 0;
 const servItems = $$('#index li');
 servItems.forEach((li, i) => {
@@ -1968,6 +2219,7 @@ function qualityWatch(gap) {
   if (renderer.getPixelRatio() > pr) { renderer.setPixelRatio(pr); glDirty = true; layout(); }
   document.documentElement.dataset.q = QW.lvl;
 }
+const PTRV = [0, 0, 0.1, 0];
 function tick() {
   const nowT = performance.now(), gap = nowT - lastTick;
   lastTick = nowT;
@@ -1985,9 +2237,18 @@ function tick() {
   uniforms.uCalm.value = kf.calm(); uniforms.uBreath.value = kf.breath(); uniforms.uBodyRot.value = kf.sway();
   const tm = targetMorph();
   if (!isDesktop()) logoPlace();
-  morphNow += (tm - morphNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
+  // Formwechsel über die Zeit (FORM_SEK je Form; liegen mehrere Formen dazwischen – Sprung über Kapitel – entsprechend schneller)
+  tickDt = dt;
+  if (!morphInit || reduced || paused) { morphNow = tm; morphInit = true; }
+  else { const d = tm - morphNow, st = dt / FORM_SEK * Math.max(1, Math.abs(d)); morphNow = Math.abs(d) <= st ? tm : morphNow + Math.sign(d) * st; }
   uniforms.uMorph.value = morphNow;
-  logoNow += (targetLogo() - logoNow) * (reduced ? 1 : 1 - Math.exp(-dt * 2.4));
+  uniforms.uVeil.value = morphNow > 2.02 && morphNow < 3 && (isDesktop() ? pcScan() : scanOn()) ? 1 : 0; // Scanner (Handy und PC): Weg Wirbelsäule <-> Dach unsichtbar („1a“)
+  uniforms.uKeep.value = isDesktop() ? 0 : 1; // Handy/Tablet: Streifen laufen hinter den HOP-Kreisen weiter
+  // 20.11.: der Staub läuft jetzt über die Zeit – wer schnell weiterwischt, hat die Überschrift von Kapitel 04 schon im Lesebereich,
+  // während er noch unterwegs ist. Dann wird er dünner und verschwindet (nur die Menge hängt am Scrollen, nicht der Ablauf).
+  const dustFree = 1 - smooth(VH * 0.82, VH * 0.5, dTitleEl.getBoundingClientRect().top);
+  uniforms.uDust.value = (isDesktop() ? 0.45 : 1) * (morphNow > 2.02 && morphNow < 2.98 ? Math.max(0.011, dustFree) : 1); // feiner Staub statt unsichtbarer Wanderung (Kai 18.11.: „verstreute Übergänge wieder“; PC: kleinerer Anteil, dort sind es mehr Punkte)
+  logoNow = targetLogo(dt);
   uniforms.uLogo.value = logoNow < 0.002 ? 0 : logoNow;
   manuK = manuVisible();
   swK = swVisible();
@@ -2020,6 +2281,9 @@ function tick() {
     if (uniforms.uAlpha.value > 1 - out) uniforms.uAlpha.value = 1 - out;
   }
   uniforms.uSize.value = isDesktop() ? 1 : 1.1;
+  // Zeiger (Maus/Finger) für alle Bühnen: einmal je Bild nachführen, Hauptbühne in ihrer Zeichenfläche (fest am Fenster)
+  pointer.update(dt);
+  pointer.ndc({ left: 0, top: 0, width: VW, height: GLH }, PTRV, isDesktop() ? 58 : 50); uniforms.uPtr.value.fromArray(PTRV);
   uniforms.uSpread.value = reduced ? 0 : isDesktop() ? 0.32 : 0.28;
   livingHeadlines();
   uniforms.uFadeMid.value = isDesktop() ? 0.62 : 0.7;
@@ -2065,18 +2329,71 @@ function tick() {
   if (renderer && !document.hidden && (anyVis || glDirty)) { renderer.render(scene, camera); glDirty = anyVis; }
   if (manu && manu.st.visible && !document.hidden) { manu.update(0, dt); manu.st.renderer.render(manu.st.scene, manu.st.camera); }
   if (sw && !document.hidden) sw.update();
+  // Stoßwelle in Punkten (21.11.): zeichnet nur, wenn sie im Bild steht; die Stärke kommt vom Linien-Baustein (Knöpfe, Wechsel von selbst)
+  if (swP && swP.st.visible && !document.hidden) {
+    const lv = +swSec.dataset.level || 0; if (lv !== swP.current) swP.show(lv);
+    swP.update(0, dt); swP.st.renderer.render(swP.st.scene, swP.st.camera);
+    swLabs.classList.toggle('on', swP.ready());
+    for (const el of swLabEls) { const q = SW_MARKEN[el.dataset.m]; if (!q) continue; const xy = swP.project(q), w = el.offsetWidth, o = SW_LAB[el.dataset.m] || [12, -5]; el.style.transform = `translate(${Math.max(0, Math.min(swP.st.w - w, xy[0] + o[0] * (o[2] ? w : 1) + (o[3] || 0))).toFixed(1)}px, ${(xy[1] + o[1] * Math.max(1, swP.st.h / 330)).toFixed(1)}px)`; }
+  }
   if (!document.hidden) updateServices(dt);
   updateHints(dt);
 }
 // ---------- Kapitel 01 „Von Kopf bis Fuß“ (Auftrag K, Go Kai 16.11.2026) ----------
 // eigene Bühne (Baustein), läuft vor tick im selben Bildtakt; Sprünge (Striche rechts, Pille „Weiter“) gleiten über Lenis
-kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced,
+kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced, handover: true,
   scrollTo: (y, sm) => (lenis ? lenis.scrollTo(y, sm ? { duration: 1.6 } : { immediate: true }) : window.scrollTo({ top: y, behavior: sm ? 'smooth' : 'auto' })) });
 window.__kf = kf; // Prüfhilfe: __kf.state(), __kf.go(u)
+// Form 0 der Hauptwolke = dieselben Punkte wie die Figur in Kapitel 01 (Übergabe deckungsgleich, gleicher Punktabstand)
+{ const cl = kf.cloud();
+  if (cl && renderer) {
+    figureForm(N, cl, BODY_SCALE, body.pos, body.f0, body.heat);
+    uniforms.uTilt.value = cl.tilt;
+    ['position', 'aF0', 'aHeat'].forEach((k) => { geo.attributes[k].needsUpdate = true; });
+    silFill();
+    if (!morphSet) { geo.attributes.pos2.array.set(body.pos); geo.attributes.pos2.needsUpdate = true; } // bis die Wirbelsäule gerechnet ist
+  } }
 frameFns.push((now) => kf.update(now));
 frameFns.push(tick);
+
+// ---------- Messanzeige (19.11.2026, Go Kai „1a“): nur mit ?takt=1 in der Adresse ----------
+// Anlass: Kai meldet, dass die Partikel „stottern/haken“; im Container (ohne Grafikchip) ist das nicht messbar. Die Anzeige
+// unten links zeigt auf SEINEM Gerät: Bilder je Sekunde, längste Pause, wer den Takt gibt (normal = requestAnimationFrame,
+// Reserve = Zeitgeber, weil das Gerät den normalen Takt anhält), Auflösung, Qualitätsstufe. Zwei Schalter zum Gegenprüfen:
+// „Leiste klar“ nimmt den Weichzeichner der Kopfleiste weg, „Auflösung 1×“ senkt die Auflösung der Hauptbühne.
+if (new URLSearchParams(location.search).get('takt') === '1') {
+  const box = document.createElement('div'); box.className = 'takt';
+  box.innerHTML = '<pre></pre><div><button type="button" data-t="blur">Leiste klar</button><button type="button" data-t="res">Auflösung 1×</button></div>';
+  document.body.appendChild(box);
+  const out = box.firstChild, gaps = [], H = document.documentElement;
+  let lastF = 0, wd = 0, n = 0, lastShow = 0;
+  box.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.t === 'blur') b.classList.toggle('on', H.classList.toggle('takt-klar'));
+    if (b.dataset.t === 'res' && renderer) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); renderer.setPixelRatio(on ? 1 : Math.min(devicePixelRatio || 1, isDesktop() ? 1.6 : 1.4)); glDirty = true; layout(); }
+  });
+  frameFns.push((now) => {
+    if (lastF) { gaps.push(now - lastF); if (gaps.length > 180) gaps.shift(); }
+    lastF = now; n++; if (viaWatchdog) wd++;
+    if (now - lastShow < 500 || gaps.length < 5) return;
+    lastShow = now;
+    const last60 = gaps.slice(-60), avg = last60.reduce((a, b) => a + b, 0) / last60.length, worst = Math.max(...gaps);
+    out.textContent = `Bilder/s  ${(1000 / avg).toFixed(0)}\nlängste Pause  ${worst.toFixed(0)} ms\nTakt  ${wd / n > 0.5 ? 'Reserve' : wd ? 'normal + Reserve' : 'normal'} (${Math.round(wd / n * 100)} % Reserve)\nAuflösung  ${renderer ? renderer.getPixelRatio().toFixed(2) : '–'} von ${(devicePixelRatio || 1).toFixed(2)}\nQualität  ${H.dataset.q || 0} · Punkte ${N}\nFenster  ${VW}×${VH}`;
+    wd = 0; n = 0;
+  });
+}
 requestAnimationFrame(function loop(now) { requestAnimationFrame(loop); runFrame(now); });
 
+
+// ---------- Text ruhig (Feinschliff 17.11.2026): eine Einblend-Art für alle Texte ohne eigenes Spiel ----------
+// Kennzeile, Einleitung, Zitat und die Überschriften von Manuthera/Stoßwelle kommen Zeile für Zeile von unten (CSS .fein);
+// die lebenden Überschriften (Achse, Dach, Tür), das Manifest und Kapitel 01 behalten ihr eigenes Spiel.
+if (reduced === false && 'IntersectionObserver' in window) {
+  const els = $$('main .kicker, main .lead, main .sign, main h2.manu-h, main h2.sw-h').filter((e) => e.closest('.kf') === null);
+  const seen = new Map();
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('fein-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: 0.15 });
+  els.forEach((e) => { const n = seen.get(e.parentNode) || 0; seen.set(e.parentNode, n + 1); e.style.setProperty('--fi', n); e.classList.add('fein'); io.observe(e); });
+}
 
 // ---------- Klickbares kenntlich machen (Go 1.11.2026, Variante A) ----------
 // Stufe 1: Termin-Knöpfe schlagen ab und zu wie ein Herz (nur in Ruhe, immer nur einer, Abstand wächst).
@@ -2387,4 +2704,5 @@ window.__vf = VF; // Prüfhilfe (Konsole): __vf.film.state(), __vf.film.seek(t),
 
 // Hinweis „hochkant halten“ (Handy quer, 13.11. G4): schließen gilt bis zum Neuladen, gespeichert wird nichts
 $('#turnClose')?.addEventListener('click', () => $('#turnNote')?.classList.add('gone'));
+initRuhe(); // „Text ruhig“ (Studie textruhe.html, 21.11.2026) – ohne html.ruhe wirkungslos
 window.__hop = 1; // Start ist durchgelaufen (sonst zeigt die Seite alle Inhalte ohne Skript-Layout, siehe page.html/style.css „html:not(.js)“)

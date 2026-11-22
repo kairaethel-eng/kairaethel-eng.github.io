@@ -1,7 +1,151 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 16.11.2026 (Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 22.11.2026 (Text ruhig: in Puls + live übernommen, wartet auf Kais Sichtprüfung · Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Kapitel 05 als Raum – „Tür · Raum“ (Kai 22.11.2026 nachts: „drauf klicken und dann erscheinen nur diese 2 Buttons“ ist zu wenig)
+- **Go Kai „a c“:** A „Der Empfang“ (Rahmen wird Bildschirmrand, vier Blickrichtungen mit den Kontakt-Infos) + C „Kopf drehen“ (Maus am PC, Finger beim Wischen). Erst Entwurfsseite `tuer-raum.html`; Puls unberührt bis Kais Urteil.
+- **Merkregeln:** „Termin buchen“ nie hinter dem Umsehen verstecken (immer sichtbar). Feste Blickrichtungen, Drehung über die Zeit (2 s), kein freies 360°. Keine Neigungssensoren (iOS fragt um Erlaubnis). Kästen (Tresen, Bank, Ablage) als Punkt-Zeichnung: helle Kanten + feine Füllung – ebene Flächen mit Kantenlicht wirkten am Handy wie Schraffur. Höchstens ein pulsierender Punkt (Anrufbeantworter, nur im Blick „hinten“).
+
+## Mehr Farbe – Raumlicht (Kai 22.11.2026 abends: „zu einfarbig, eintönig“ → „Super geile Idee … kräftig am besten. Bitte übernehmen. Aber alle anderen speichern“)
+- **Entschieden (Go Kai):** Stufe **„Kräftig“** gilt in Puls und `live/`: jedes Kapitel ein Raum mit eigenem Licht aus der HOP-Palette, kühl → warm (01 Abendblau · 02 Grün · § Logo-Farben · 03 Röntgenblau · 04 Petrol + warmes Fensterlicht · 05 Bernstein), deutlicher Grundton je Kapitel, Logo-Farben als Raumfarben (Kapitel-Ziffern, Linien, Menü, Figur blau, Band 2 grün).
+- **Gespeichert für später:** Heute · Leise · Mittel – über `?farbe=heute|leise|mittel` an jeder Puls-Adresse und auf der Vergleichsseite `farbstudie.html` (Umschalter unten links). Skizze vom Nachmittag privat: https://claude.ai/artifact/8DdcvzRwKFPjh98XaTAFge.
+- **Kai lässt „Kräftig“ ein paar Tage wirken** – danach Urteil (bleibt / Mittel / Feinschliff einzelner Räume).
+- **Geändert damit:** Merkregel „Grün nur im Logo“ (17.11.) gilt nicht mehr für Raumfarben: Logo-Farben dürfen als Licht, Kapitel-Ziffern/Menü und in Band 2 der Perlenbänder stehen. **Bernstein bleibt die Farbe für Handlung** (Knöpfe, Termin, Leuchtpunkte, Kursivwort) – nie Logo-Farben auf Knöpfen.
+- **Merkregel:** Neue Bereiche bekommen ihr Licht in `src/test-4/farbe.js` (PAL, Lage in % des Fensters, PC und Handy getrennt); kleine graue Texte nicht mitten in eine Lichtinsel legen.
+
+## Text ruhig – Leuchtpunkte statt offenem Erklärtext (Kai 21.11.2026: „an ein paar Stellen zu viel Text im Vordergrund, Inhalte sollen nicht verloren gehen“ → „Go A“)
+- **Entschieden (A):** ein einziges Aufklapp-Muster für die Seite – je Block bleibt ein Kernsatz stehen, darunter ein Bernstein-Leuchtpunkt mit Stichwort; Antippen klappt den Rest am Ort auf. Verworfen: B (Punkte an der Grafik, nur für Manuthera/Stoßwelle denkbar – ggf. später), C (Blatt „Kurz erklärt“ – Text weg von seiner Stelle, verdeckt die Grafik).
+- **Entschieden (Kai 22.11.2026: „Go Übernahme“):** „ruhig“ ist Standard in Puls und `live/` (Klasse `ruhe` im Kopf-Skript von `page.html`). `textruhe.html` bleibt als Vergleichsseite mit Umschalter bisher / ruhig.
+- **Merkregel:** Immer sichtbar bleiben Überschriften, Termin-Knöpfe, Gesundheits-Hinweise (`.note`, `.sw-note`), der Datenschutz-Hinweis am Kalender, die Bitte „keine Gesundheitsangaben per E-Mail“, „Nur Anrufbeantworter“ und der Satz „Ob sie in Ihrem Fall sinnvoll ist, zeigt der Befund.“ neben den Einsatzorten (HWG). Ohne JavaScript und im Druck steht alles offen.
+- **Entschieden (Kai 22.11.2026: „Hinschauer, der auffällt, ohne sich aufzudrängen“ → Go 1 + 2 + 3):** Aufklappbares ist eine **Leuchtpille** (Kugel mit „+“/„×“, Bernstein-Rand), darüber läuft die erste Zeile des verborgenen Texts aus; beim ersten Hereinkommen sammelt sich feiner Staub zur Kugel. Verworfen: Lichtstreif (4) und Tipp-Hand (5) – zu viel gleichzeitig; Inhaltsangabe im Stichwort (6) nicht nötig, die Vorschauzeile zeigt den Inhalt.
+- **Merkregel:** Klickbares darf nie aussehen wie eine Kennzeile/Beschriftung (21./22.11.: Leuchtpunkt-Zeile wurde übersehen, weil sie der Kennzeile „● Highlight der Praxis“ glich).
+- **Merkregel:** Es pulsiert höchstens ein Leuchtpunkt im Bild (der oberste noch nie geöffnete); nach dem Öffnen leuchtet er still, bei „Bewegung anhalten/reduzieren“ pulsiert nichts.
+
+Stand: 21.11.2026 (Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+
+## Arbeitsblatt 4, vierte Runde (Kai 21.11.2026 spät)
+- **Entschieden:** Im Linienhaus zieht beim Raumwechsel Staub hinüber (in Puls). Kein zusätzlicher Licht-Staub im Raum.
+- **Entschieden:** Die HOP-Kreise aus Punkten sind ein Abbild von Logo A der Kopfleiste (Farben, Buchstaben, Rand) – nicht mehr vom Original-Logo der alten Website. Damit ist der Eintrag „HOP-Kreise folgen weiter dem Original“ (21.11. nachmittags) aufgehoben.
+- **Merkregel:** Ändert sich Logo A, werden die Punkt-Kreise mitgeändert (`ordnung.js` `logoForm` – Maße aus dem SVG, Teiler 66; Farben `cLg0–2` in `main.js`).
+
+## Arbeitsblatt 4, dritte Runde (Kai 21.11.2026 abends)
+- **Entschieden:** In der Kopfleiste bleibt Logo A (flach). Die Stoßwelle als Punkt-Grafik in Puls passt.
+- **Entschieden (Richtung Haus):** Die Linien bleiben; Partikel kommen nur als Staub beim Raumwechsel dazu (Licht-Staub im Raum und Perlen an der Kontur nicht gewählt). Erst als Entwurf `haus-staub.html`, Übernahme in Puls nach Kais Urteil.
+- **Merkregel:** Zusätze zum Linienhaus hören von außen auf das Haus (Klasse `on` am Raum) – `house.js` bleibt unberührt, damit Entwurf und Puls denselben Baustein behalten.
+## Manuthera: nur die Wirbelsäule bewegt sich (Auftrag Kai 21.11.2026 abends, umgesetzt, wartet auf Sichtprüfung)
+- **Entschieden (Auftrag):** Der Körper dehnt sich nicht; er liegt als feste Blöcke auf den Liegeteilen. Biegen, Strecken, Drehen zeigt allein die echte Wirbelsäule (BodyParts3D), deutlich sichtbar wie im Röntgenbild; die Haut tritt während der Bewegung zurück.
+- **Entschieden:** Gelenk zum Beckenteil zwischen L4 und L5 (Becken liegt auf dem Beckenteil); ruhiger Hub (55 %).
+- **Entschieden (Kai „Go A“, 21.11. spät):** Oberkörper und Becken mit Beinen bleiben fest; nur die Haut über der Lende (L1 bis vor die Hüfte) geht weich mit der Wirbelsäule mit – kein Knick an der Taille, Beine schwenken aus der Hüfte. Körper ganz still (B) und Rückweg (C) verworfen.
+- **Merkregel:** Haut und Wirbel bekommen dieselbe Übergangszone – sonst schiebt sich die Wirbelsäule gegen die Haut.
+- **Entschieden (Kai „Go A“, 22.11.):** „Spitze an der Hüfte“ an der Ursache behoben – im Werkzeug `tools/manu-figur.mjs` folgt die Haut unterhalb des Ellbogens nicht mehr anteilig dem Arm; Figur neu erzeugt. Wegschneiden (B) und Glätten (C) verworfen.
+- **Merkregel:** Beim Umlegen einer stehenden Figur: Gewichte nur dort glätten, wo Gelenke sind (Schulter, Ellbogen) – wo Körperteile sich in der Ausgangslage nur berühren (Hand am Oberschenkel), sonst wandert Haut mit. Berührungs-Brücken auftrennen und die Ränder schließen.
+- **Merkregel:** Haut aus BodyParts3D: Außenfläche per Strahltest („sieht ins Freie“) bestimmen, danach Öffnungen schließen – kein Normalen-Knochen-Test.
+- **Merkregel:** Punkt-Filter für eine Form („Unterseite weglassen“) bei neuer Form neu prüfen – flach von der Seite und von beiden Seiten ansehen.
+
+## Echte Figur auf der Manuthera (Auftrag Kai 21.11.2026 nachmittags, umgesetzt, wartet auf Sichtprüfung)
+- **Entschieden (Auftrag):** Die liegende Figur ist die echte Körperoberfläche aus BodyParts3D (Haut FJ2810, Außenfläche), in Bauchlage gebracht – nicht mehr aus Grundformen gerechnet.
+- **Entschieden:** Füße hängen über das Fußende; Arme gebeugt auf tieferen, längeren Armstützen; Brustteil schmaler.
+- **Merkregel:** Haut aus BodyParts3D ist eine Schicht (außen + innen) – immer nur die Außenfläche verwenden.
+- **Merkregel:** Ändert sich die Liege für die echte Figur, behält der Rückfall (Datei lädt nicht) die alten Maße, damit die gerechnete Figur passt.
+
+## Arbeitsblatt 4, zweite Runde (Kai 21.11.2026)
+- **Entschieden:** Die Stoßwelle ist in Puls eine Punkt-Grafik mit echtem Fersenbein (Kai zum Entwurf: „so in Puls übernehmen“). Die Linien-Zeichnung bleibt als Rückfall.
+- **Entschieden:** In der Kopfleiste bleibt das flache Logo vom 20.11. („dein altes Logo lassen“). Die Fassung nach dem Original ist damit für die Kopfleiste zurückgenommen; Auswahl A/B/C über `logo.html`.
+- **Bleibt (noch):** Die HOP-Kreise aus Punkten folgen weiter dem Original (Verläufe, Schwünge), nur heller und mit besserem P – bis Kai nach der Logo-Wahl anders entscheidet.
+- **Offen:** Linienhaus mit lebenden Partikeln (Vorschläge im Arbeitsblatt) · Logo-Wahl.
+
+## Kais Screenshots 21.11.2026 – „Go alle Empfehlungen“ (umgesetzt, wartet auf Sichtprüfung)
+- **Entschieden:** Auftakt vor Kapitel 02 am Handy/Tablet 40svh (nach der klebenden Bühne von 01); Figur im Schlussbild kleiner und tiefer.
+- **Entschieden:** Leitsatz als eigener Zitatblock mit großem Bernstein-Anführungszeichen, Linie zeichnet sich über die Zeit ein.
+- **Entschieden:** Wirbelsäule am Handy: Nahansicht nur zwischen Schildern und Skala, endet weich über der Karte; Skala auf dunklem Grund; „Mehr“ als Bernstein-Pille mit Vorschau-Zeile, pulsiert einmal.
+- **Entschieden:** Dach am Handy/Tablet: Raumtext direkt unter dem Haus, Knöpfe danach; Einleitung ein Satz.
+- **Merkregel:** Klebende Bühnen mit 100svh lassen am iPhone bei eingefahrener Leiste unten einen Streifen frei – Abstände danach knapp halten.
+
+## Arbeitsblatt 4 abgearbeitet (Kai 20.11.2026 gegen Mitternacht, Antworten im Arbeitsblatt)
+- **Entschieden:** Das Logo folgt dem Original (Verläufe, Schwünge um H und P) – in der Kopfleiste und in den HOP-Kreisen aus Punkten. Kein großes Logo am Start.
+- **Entschieden:** CMD-Motiv zeigt Kiefer und Kiefergelenk von der Seite, nicht den ganzen Schädel.
+- **Entschieden:** Übergänge noch langsamer (Formwechsel 3,6 s). Schilder an der Wirbelsäule einheitlich als schlichter Text mit Linie. Gezeichnete Hände bleiben.
+- **Entschieden (Vorgehen):** Stoßwelle und Linienhaus als Punkt-Grafik nur über Entwurfsseiten – zuerst die Stoßwelle (`stosswelle-punkte.html`), nach Kais Urteil das Haus. Maßstab von Kai: „sehr scharf und kenntlich, nicht verspielt weich, professionell kreativ“.
+- **Merkregel:** Für „ans Original anpassen“ das Original ansehen (Logo-Bild der öffentlichen Praxis-Website), nicht aus der Beschreibung raten.
+- **Offen (Arbeitsblatt 4, neue Punkte):** Urteil zum Stoßwellen-Entwurf · Tempo · Logo.
+
+## Arbeitsblatt 3 abgearbeitet (Kai 20.11.2026 nachts, Antworten im Arbeitsblatt)
+- **Entschieden:** Anatomie in den Motiven = echte Knochen (BodyParts3D 4.0, CC BY 4.0, Namensnennung im Fuß und Impressum § 9); gerechnete Formen nur noch als Rückfall und für Geräte/Hände.
+- **Entschieden:** Tür öffnet auf Antippen/Klick und läuft dann über die Zeit – „Hineingehen am Scrollweg“ (19.11.) ist damit abgelöst. Am Scrollweg bleiben nur die Fahrt an der Figur und die Haltestellen der Wirbelsäule.
+- **Entschieden:** Übergänge langsamer (Formwechsel 2,8 s) · nur eine Dachlinie · Streifen bleiben, am PC leiser · Logo groß am Start · lebende Überschriften behalten ihr Spiel · Entwurfsseiten bleiben als Archiv · PC-Start bleibt.
+- **Merkregel:** Kleines Motiv und große Bühne derselben Sache kommen aus EINER Quelle (Manuthera: `src/manu/formen.js`).
+- **Merkregel:** Eine Auslöse-Schwelle auf einem langen Messbereich prüfen bei hohen Fenstern (20.11.: die HOP-Kreise lösten sich bei 844 px Höhe schon auf, während die Hausordnung im Bild stand → Schwelle 0,62).
+- **Offen (Arbeitsblatt 4):** Stoßwelle/Linienhaus als Punkt-Grafik (erst Entwurf, dann Urteil) · Schildformen Kapitel 03 · was an den HOP-Kreisen noch stört.
+
+## Stil von Figur/Wirbelsäule auf alle Punkt-Grafiken, Übergänge über die Zeit (Auftrag Kai 20.11.2026) – umgesetzt, wartet auf Sichtprüfung
+- **Entschieden (Auftrag):** Leistungs-Motive und Manuthera folgen demselben Stil wie Figur und Wirbelsäule: geordnete Zeilen, Kantenlicht, gestochene gleich große Punkte, verdeckte Rückseite, Antwort unter Maus/Finger.
+- **Entschieden (Auftrag):** Übergänge sind überall feiner Staub und laufen über die Zeit, ausgelöst beim Hereinscrollen – nicht mehr am Scrollweg. Damit ist „der Übergang hängt allein am Scrollen“ (Stand bis 19.11.) für Formwechsel, HOP-Kreise, Abtastlinie und Tür-Sammeln aufgehoben.
+- **Bleibt am Scrollweg (bewusst):** Fahrt an der Figur in Kapitel 01, Hineingehen durch die Tür (Kai 19.11.), Haltestellen der Wirbelsäule.
+- **Merkregel:** Ein Ablauf über die Zeit darf nicht über Text liegen, den man schon liest – die MENGE des Staubs darf deshalb am Scrollen hängen (dünner, sobald die Überschrift im Lesebereich steht), der ABLAUF nicht.
+- **Merkregel:** Neue Punkt-Grafiken werden mit `src/shared/raster.js` gebaut (kein Zufall bei der Lage der Punkte); Zufall nur als fester Startwert für Streu-Richtungen.
+- **Merkregel:** Nebenbühnen starten ihren Auftritt erst, wenn sie zu gut einem Drittel im Bild stehen.
+- **Offen (Kai, Arbeitsblatt 3):** Tempo der Abläufe · Auftritt jedes Mal oder nur beim ersten Mal · Stoßwelle/Linienhaus als Punkt-Grafik?
+
+## Messanzeige, Tür-Bühne „Hineingehen“, Logo mit H · O · P (Go Kai 19.11.2026: „Go 1ab 2ab 3a“) – umgesetzt, wartet auf Sichtprüfung
+- **Entschieden (3a):** Kapitel 05 hat eine eigene klebende Tür-Bühne mit Scrollweg; die Knöpfe „Termin buchen“ und „Kontakt & Anfahrt“ stehen erst drinnen. Damit ist die Entscheidung vom 16.11. („keine eigene Scroll-Strecke vor dem Termin-Knopf“) aufgehoben – Kai wünscht das Hineingehen ausdrücklich; „Termin“ in der Kopfleiste bleibt immer erreichbar. Tür C (zeitgesteuert, hinter dem Text) ist abgelöst.
+- **Entschieden (2a/2b):** Logo in der Kopfleiste groß und mit lesbaren Buchstaben; die HOP-Kreise aus Punkten tragen H · O · P.
+- **Entschieden (1a/1b):** Erst messen (Messanzeige `?takt=1` auf Kais Gerät), dann gezielt beheben; die Tür-Bühne zeichnet auf dem Grafikchip und ist nur in ihrer Nähe eingeschaltet.
+- **Merkregel:** Jede zusätzliche Zeichenfläche wird nur in der Nähe ihrer Stelle eingeschaltet und zeichnet auf dem Grafikchip; nichts liegt dauernd bildschirmgroß über der Seite.
+- **Merkregel:** Leistung lässt sich im Container nur auf der Skript-Seite messen (`takt.cjs`-Vorgehen in `TECHNIK.md`); für die Grafik braucht es Kais Gerät.
+- **Offen:** Ursache des Stotterns (Messwerte von Kai) · Logo groß am Start (2c) · „Details“ = Kontaktangaben?
+
+## Kapitel-Auftakt, Staub, Überschrift oben (Kai 18.11.2026 abends: „A Pc nebeneinander“) – umgesetzt, wartet auf Sichtprüfung
+- **Entschieden:** Jedes der Kapitel 02–05 beginnt mit einem Auftakt (Variante A: eigener Abschnitt, große Ziffer, Name, Linie). B (Trennband) ist verworfen.
+- **Entschieden:** Übergänge zeigen feinen Staub (2a) statt unsichtbarer Wanderung; der Formwechsel läuft hinter dem Auftakt.
+- **Entschieden (Kai: „Überschriften alle nach oben, Animationen sowie Texte erst darunter“):** Reihenfolge je Kapitel am Handy und Tablet: Überschrift → Animation → Text. Am PC bleiben Überschrift und Grafik nebeneinander.
+- **Merkregel:** Neue Bausteine am Handy immer in dieser Reihenfolge bauen; Grafik nie über der Überschrift ihres Kapitels.
+- **Offen:** PC-Start (Überschrift auf mittlerer Höhe neben der Figur) – Frage an Kai blieb unbeantwortet, unverändert.
+
+## Tür C in Puls, Streifen am Handy/Tablet, Studie Kapitel-Auftakt (Go Kai 18.11.2026 nachmittags: „Go alle Empfehlungen“)
+- **Entschieden:** Tür C („Ein Schritt hindurch“, beruhigt) ist in Puls eingebaut – Knöpfe erst mit offener Tür, langsam nacheinander; ohne Bewegung sofort.
+- **Entschieden:** Die Partikelstreifen von Kapitel 02 laufen auf allen Geräten hinter dem Text; die HOP-Kreise entstehen erst, wenn die Hausordnung herankommt.
+- **Entschieden (Richtung):** Die verstreuten Übergänge kommen zurück – als feiner Staub (2a), nicht als Wolke aus großen Punkten. Der Übergang soll zugleich den Kapitelwechsel zeigen (4a „Kapitel-Auftakt“).
+- **Erledigt (Kai abends: „A“):** Auftakt A, Ausbau auf alle Kapitel – siehe Abschnitt darüber.
+- **Merkregel:** „Verstreut“ ja, „explodiert“ nein – Staub hat feste kleine Punktgröße (nicht an die Nahansicht gekoppelt), ist höchstens zu 60 % deckend und wandert nie über Text, der gerade gelesen wird.
+
+## Handy: Übergang 03 ↔ 04, freie Wirbelsäule, Text der Stationen (Go Kai 18.11.2026 per Arbeitsblatt: „1a · 2a · 3“) – umgesetzt, wartet auf Sichtprüfung
+- **Entschieden (1a):** Am Handy zerfällt die Wirbelsäule beim Verlassen von Kapitel 03 nicht mehr. Sie gehört zu ihrem Kapitel (weiche Unterkante, scrollt mit hinaus, blendet als Ganzes aus); die Punktwolke wandert unsichtbar zum Dach. Gilt seit 18.11. mittags auch am PC: dort zeigte der genauere Prüfstand dieselbe Wolke (meine erste Aussage „am PC ruhig“ war falsch).
+- **Entschieden (2a):** Am Handy ist die Karte eine Leiste unten, die auf Antippen aufklappt; sichtbar bleiben zwei Schilder (Austritt, Ziel); der Aufzug ist eine schmale Schiene ohne Fläche. Nerv und Gefühl stehen in der aufgeklappten Leiste – kein Inhalt entfällt.
+- **Entschieden (3):** Stationstexte in Kapitel 01 erscheinen erst kurz vor der Ankunft.
+- **Merkregel:** Am Handy darf eine Grafik nie unter dem Text des nächsten Kapitels liegen – sie endet an der Kante ihres Kapitels.
+- **Bleibt (Kai 7.11.):** Bandscheiben im aktiven Abschnitt rot-orange – der Prüfer hielt das für eine vierte Farbe; es ist gewollt.
+- **Offen, Kai entscheidet:** Befunde 6, 7, 9, 11, 12 des zweiten Prüfers (siehe `UEBERGABE.md`).
+
+## Prüfstand + schlanke Arbeitsanweisung + zweites Augenpaar (Go Kai 18.11.2026: „Go a c d“) – umgesetzt
+- **Entschieden:** Vor jeder Meldung „umgesetzt“ und vor jedem Veröffentlichen läuft `tools/pruefstand.cjs` (iPhone-Fenster 390×692 und PC). Regeln: Hauptgrafik ≤ 35 % verdeckt · Text ≤ 15 % auf unruhigem Grund · Wisch-Übergänge: ≤ 28 % hell, Sprung ≤ 4 Punkte. Filmstreifen werden immer angesehen.
+- **Entschieden:** `labor/CLAUDE.md` bleibt kurz (Regeln, Stand, Wegweiser); Technik nach `TECHNIK.md`, Verlauf in `UEBERGABE.md`.
+- **Entschieden:** Nach größeren Umbauten beurteilt ein Unteragent ohne Vorwissen die Bilder (zweites Augenpaar); Befunde gehen als Liste an Kai, nichts wird ungefragt umgesetzt.
+- **Merkregel:** Prüffenster ist Kais echtes Fenster (390×692), nicht 390×844. Bewegung wird als Film geprüft, nicht als Standbild. Jede Haltestelle, nicht nur die erste.
+- **Nicht gewählt (Baustein B):** echter Grafikchip über Kais PC – offen; dafür braucht die Cloud-Sitzung Zugriff auf den PC (derzeit „nicht verfügbar“).
+- **Erledigt (Go 18.11. vormittags, siehe Abschnitt darüber) – war offen:** (1) Übergang 03 ↔ 04 – Empfehlung: Wirbelsäule als Ganzes ausblenden, Punkte unsichtbar zum Haus führen, statt sichtbar zu zerstieben; (2) Wirbelsäule am iPhone frei stellen – Empfehlung: Karte als schmale Leiste unten (antippen = mehr), Aufzug schmaler, höchstens zwei Schilder; (3) Text an Station 01 erst einblenden, wenn die Fahrt angekommen ist.
+
+## Abstände, Überschriften, Figur kürzer (Auftrag Kai 18.11.2026) – umgesetzt, Kai schickt Screenshots nach
+- **Kai:** „Gefällt mir gut“ (Feinschliff seitenweit). Auftrag: Abstände zu neuen Kapiteln und Überschriften genau ansehen und selbst verbessern; bei der Figur weniger scrollen/wischen.
+- **Merkregel Abstände:** zwei Maße – vor jedem nummerierten Kapitel `--gap-chap`, vor Blöcken innerhalb von Kapitel 04 `--gap-sub`; gemessen vom letzten Inhalt bis zur Kennzeile. Neue Blöcke bekommen eines der beiden Maße, keine eigenen Zahlen.
+- **Merkregel Überschriften:** Kapitel-Überschriften höchstens zwei Zeilen am PC, kursive Wortgruppe bleibt zusammen; die Tür ist nicht mehr größer als die anderen Kapitel.
+- **Figur:** Scrollweg −33 % (6,15 statt 9,2 Bildschirmhöhen). Noch kürzer nur nach Kais Urteil am iPhone.
+- **Handy Kap. 03:** die Wirbelsäule kommt und geht mit ihrem Kapitel (kein Bild mehr, in dem sie über fremdem Text steht oder fehlt).
+
+## Feinschliff seitenweit (Go Kai 17.11.2026 abends: „Wende mal deine Ideen auf die ganze Website an … Feinschliff können wir danach machen“) – umgesetzt, wartet auf Sichtprüfung
+- **Kai zur Studie:** „Sieht bis jetzt super aus.“ → der Stil gilt jetzt in ganz Puls und `live/`: Figur plus mit Gehirn und Nerven ist Kapitel 01 (damit ist auch „Figur plus → Puls“ entschieden), Bewegungsbänder aus Perlen, HOP-Kreise aus Perlenringen, Dachlinie als Perlen, Motive gleichmäßig und gestochen, Antwort unter Maus/Finger auf Figur, Hauptwolke, Wirbelsäule und Motiven, Überschriften Stärke 560, eine Einblend-Art.
+- **Merkregeln für alles Neue:** Punkte geordnet (gleicher Abstand, gleiche Größe, scharfer Rand), kein Zittern, kein Zufall im ruhenden Bild; Farben der Punkte: Petrol/Knochenweiß, Bernstein, ein Blau (Grün nur im Logo und in Häkchen/Ringen der Bedienung); Bewegung ruhig, eine zur Zeit.
+- Unverändert gelassen (bereits gestochen oder kein Partikel-Thema): Wirbelsäule, Manuthera-Liege, Film, Linienhaus, Stoßwelle. Lebende Überschriften und Manifest behalten ihr Spiel – Entscheidung offen.
+- Vergleichsseite `puls-vor-feinschliff.html` bleibt stehen, bis Kai entschieden hat; danach löschen (nur mit Go).
+- „Feinschliff danach“ (Kai): Liste der offenen Punkte in `UEBERGABE.md` ▶ Feinschliff seitenweit.
+
+## Feinschliff: Partikel „professioneller“ (Go Kai 17.11.2026: „Go für alle deine besten Empfehlungen“) – Studie `feinschliff.html`, **Übernahme offen**
+- **Kai:** Puls sei „schon der Hammer“, ihm gefällt aber die professionelle Gestaltung/Animation eines Beispielvideos (Partikel-Gehirn „Nously“); gefragt, wie das in Partikel, Grafiken und Text-Einblendungen einfließen kann.
+- **Leitgedanken aus dem Video (gelten als Richtschnur, bis Kai anders entscheidet):** Ordnung statt Zufall (gleicher Abstand, gleiche Größe, scharfer Rand, kein Zittern) · Licht von der Kante · wenige Farben · eine Bewegung zur Zeit · Antwort nur dort, wo Maus/Finger ist · Text ruhig, eine Einblend-Art.
+- Umgesetzt nur als Entwurfsseite mit Umschalter bisher / neu (A geordnete Punkte, B Kantenlicht, D Antwort unter Maus/Finger, E Farbklang ohne Grün in den Punkten, F ruhigere Schrift, G Tiefe). C (Punkte als HOP-Ringe) nur als Adress-Schalter `?zeichen=ring`.
+- Puls, `src/kopf-fuss` und `figur-plus.html` unverändert. Übernahme in Puls, auf andere Formen und der Text-Stil seitenweit: je eigenes Go.
+- Passt zu Kais Urteil vom 11.11. („bei längerem Benutzen zu verpixelt und verspielt“) und zum Leitbild „ruhige Qualität“.
 
 ## Figur plus: Körperkonturen, Gehirn, Nervensystem (Auftrag Kai 16.11.2026) – Entwurfsseite `figur-plus.html`, **Einbau in Puls offen**
 - **Kai:** deutlich menschliche Konturen; an Station 01 (Kopf) ein Gehirn; die Linien nach unten als Nervensystem aus dem Gehirn; **alles im bekannten Partikel-Stil** (also keine gestochene SVG-Lichtlinie mehr für die Bahnen).

@@ -18,9 +18,9 @@ const MODES = {
   xl: { viewport: { width: 2560, height: 1440 } },
 };
 const STEPS = {
-  d:  ['top|0','#start|1.4','#start|4.6','#start|7.8','#bewegung|0','#hausordnung|0.5','#achse|0.3','#achse|0.55','#dach|0','#allTitle|0','#manuthera|0','#stosswelle|0','#tuer|0'], // Seitenreihenfolge seit 14.11. nachts
+  d:  ['top|0','#start|0.76','#start|2.7','#start|4.5','#bewegung|0','#hausordnung|0.5','#achse|0.3','#achse|0.55','#dach|0','#allTitle|0','#manuthera|0','#stosswelle|0','#tuer|0'], // Seitenreihenfolge seit 14.11. nachts
   dr: ['top|0','#achse|0.3','#dach|0'],
-  m:  ['top|0','#start|1.4','#start|4.6','#start|7.8','#bewegung|0','#hausordnung|0.5','#achse|0.3','#achse|1.5','#achse|3','#dach|0','#allTitle|0','#manuthera|0','#stosswelle|0','#tuer|0'],
+  m:  ['top|0','#start|0.76','#start|2.7','#start|4.5','#bewegung|0','#hausordnung|0.5','#achse|0.3','#achse|1.5','#achse|3','#dach|0','#allTitle|0','#manuthera|0','#stosswelle|0','#tuer|0'],
   s:  ['top|0','#dach|0','#allTitle|0','#tuer|0'],
   t:  ['top|0','#achse|1.2','#dach|0','#allTitle|0','#manuthera|0','#tuer|0'],
   xl: ['top|0','#achse|0.3','#dach|0','#tuer|0'],
