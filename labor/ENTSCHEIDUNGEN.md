@@ -3,18 +3,36 @@
 Stand: 22.11.2026 (Text ruhig: in Puls + live übernommen, wartet auf Kais Sichtprüfung · Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
-## Außenauftritt – Eingangsschild und Werbung zur Straße (Kai 22.11.2026) – **offen, nur Vorschläge**
-- **Vorschlag Claude:** Eingang B „Punkt-Kreise“ (gelaserter Leuchtkasten, Logo A aus Punkten) + Satz „Die Tür steht offen.“ auf dem Türglas; Straße „Figur aus Licht“ (Figur aus Kapitel 01 als Lochblech mit Licht). Projektor nicht als Werbung. Seite: https://claude.ai/artifact/73G6RX49t7Xu4cnEqsr5rc
-- **Merkregeln, falls umgesetzt:** Licht nur warm (≤ 2700 K, Bernstein ~2200 K), nach vorn statt auf die Fassade, Zeitschaltuhr; keine Bewegung, kein Blinken; die drei Kreise immer waagerecht (senkrecht + beleuchtet = Ampel); auf Schildern keine Heilversprechen, kein „Zentrum“.
+## Außenauftritt – Eingangsschild und Werbung zur Straße (Kai 22.11.2026)
+- **Entschieden (Kai):**
+  - Eingang **A** (Hausschild 40 × 60 cm, HOP-Tinte, Logo-Kreise, Lichtkranz).
+  - Straße **Drei Lichter** (Logo-Kreise als Scheiben an der Fassade).
+  - Das Haus gehört Kai.
+  - Nicht gewählt: B, C, Figur aus Licht, Nasenschild, Projektor, Fenster-Folie. Sie bleiben auf der Seite als Archiv.
+- **Vorschlag Claude, offen:** Nachbesserung für Raumlicht.
+  - Lichtkranz je Scheibe in ihrer Logo-Farbe; Buchstaben abends weiß; Scheiben Ø 45 cm (unter 1 m²).
+  - Eingang in Bernstein 2200 K.
+  - Jahres-Zeitschaltuhr Okt.–März bis 20 Uhr.
+  - Seite: https://claude.ai/artifact/73G6RX49t7Xu4cnEqsr5rc
+- **Merkregeln, falls umgesetzt:**
+  - Weg kühl → warm wie die Website: Logo-Farben an der Fassade, Bernstein an der Tür.
+  - Kein Blinken, keine Bewegung.
+  - Kreise immer waagerecht (senkrecht + beleuchtet = Ampel).
+  - Auf Schildern keine Heilversprechen, kein „Zentrum“.
 
-## Mehr Farbe (Kai 22.11.2026 abends: „zu einfarbig, eintönig“, vielleicht Logo-Farben) – **offen, nur Skizze**
-- **Vorschlag:** Farbdramaturgie „Raumlicht“ – jedes Kapitel ein Raum mit eigenem Licht, kühl → warm (Einzelheiten `UEBERGABE.md` oben). Skizze privat: https://claude.ai/artifact/8DdcvzRwKFPjh98XaTAFge (Heute · Leise · Mittel ★ · Kräftig). Empfehlung Claude: Mittel.
-- **Berührt:** Merkregel „Farben der Punkte … Grün nur im Logo“ (17.11.) – gilt weiter, bis Kai entscheidet.
+## Mehr Farbe – Raumlicht (Kai 22.11.2026 abends: „zu einfarbig, eintönig“ → „Super geile Idee … kräftig am besten. Bitte übernehmen. Aber alle anderen speichern“)
+- **Entschieden (Go Kai):** Stufe **„Kräftig“** gilt in Puls und `live/`: jedes Kapitel ein Raum mit eigenem Licht aus der HOP-Palette, kühl → warm (01 Abendblau · 02 Grün · § Logo-Farben · 03 Röntgenblau · 04 Petrol + warmes Fensterlicht · 05 Bernstein), deutlicher Grundton je Kapitel, Logo-Farben als Raumfarben (Kapitel-Ziffern, Linien, Menü, Figur blau, Band 2 grün).
+- **Gespeichert für später:** Heute · Leise · Mittel – über `?farbe=heute|leise|mittel` an jeder Puls-Adresse und auf der Vergleichsseite `farbstudie.html` (Umschalter unten links). Skizze vom Nachmittag privat: https://claude.ai/artifact/8DdcvzRwKFPjh98XaTAFge.
+- **Kai lässt „Kräftig“ ein paar Tage wirken** – danach Urteil (bleibt / Mittel / Feinschliff einzelner Räume).
+- **Geändert damit:** Merkregel „Grün nur im Logo“ (17.11.) gilt nicht mehr für Raumfarben: Logo-Farben dürfen als Licht, Kapitel-Ziffern/Menü und in Band 2 der Perlenbänder stehen. **Bernstein bleibt die Farbe für Handlung** (Knöpfe, Termin, Leuchtpunkte, Kursivwort) – nie Logo-Farben auf Knöpfen.
+- **Merkregel:** Neue Bereiche bekommen ihr Licht in `src/test-4/farbe.js` (PAL, Lage in % des Fensters, PC und Handy getrennt); kleine graue Texte nicht mitten in eine Lichtinsel legen.
 
 ## Text ruhig – Leuchtpunkte statt offenem Erklärtext (Kai 21.11.2026: „an ein paar Stellen zu viel Text im Vordergrund, Inhalte sollen nicht verloren gehen“ → „Go A“)
 - **Entschieden (A):** ein einziges Aufklapp-Muster für die Seite – je Block bleibt ein Kernsatz stehen, darunter ein Bernstein-Leuchtpunkt mit Stichwort; Antippen klappt den Rest am Ort auf. Verworfen: B (Punkte an der Grafik, nur für Manuthera/Stoßwelle denkbar – ggf. später), C (Blatt „Kurz erklärt“ – Text weg von seiner Stelle, verdeckt die Grafik).
 - **Entschieden (Kai 22.11.2026: „Go Übernahme“):** „ruhig“ ist Standard in Puls und `live/` (Klasse `ruhe` im Kopf-Skript von `page.html`). `textruhe.html` bleibt als Vergleichsseite mit Umschalter bisher / ruhig.
 - **Merkregel:** Immer sichtbar bleiben Überschriften, Termin-Knöpfe, Gesundheits-Hinweise (`.note`, `.sw-note`), der Datenschutz-Hinweis am Kalender, die Bitte „keine Gesundheitsangaben per E-Mail“, „Nur Anrufbeantworter“ und der Satz „Ob sie in Ihrem Fall sinnvoll ist, zeigt der Befund.“ neben den Einsatzorten (HWG). Ohne JavaScript und im Druck steht alles offen.
+- **Entschieden (Kai 22.11.2026: „Hinschauer, der auffällt, ohne sich aufzudrängen“ → Go 1 + 2 + 3):** Aufklappbares ist eine **Leuchtpille** (Kugel mit „+“/„×“, Bernstein-Rand), darüber läuft die erste Zeile des verborgenen Texts aus; beim ersten Hereinkommen sammelt sich feiner Staub zur Kugel. Verworfen: Lichtstreif (4) und Tipp-Hand (5) – zu viel gleichzeitig; Inhaltsangabe im Stichwort (6) nicht nötig, die Vorschauzeile zeigt den Inhalt.
+- **Merkregel:** Klickbares darf nie aussehen wie eine Kennzeile/Beschriftung (21./22.11.: Leuchtpunkt-Zeile wurde übersehen, weil sie der Kennzeile „● Highlight der Praxis“ glich).
 - **Merkregel:** Es pulsiert höchstens ein Leuchtpunkt im Bild (der oberste noch nie geöffnete); nach dem Öffnen leuchtet er still, bei „Bewegung anhalten/reduzieren“ pulsiert nichts.
 
 Stand: 21.11.2026 (Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.

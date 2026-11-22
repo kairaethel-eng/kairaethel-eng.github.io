@@ -953,20 +953,44 @@ html.ruhe .facts-box{display:block}
 @media screen{html.ruhe .lp-zone:not(.is-open) .lp-x{display:none}}
 html.ruhe .lp-zone.is-open .lp-x{animation:lpIn .55s var(--ease) both}
 @keyframes lpIn{from{opacity:0}}
-html.ruhe .lp-btn{appearance:none;display:inline-flex;align-items:center;gap:.625rem;min-height:2.75rem;margin:.375rem 0 0;padding:0 .25rem 0 0;border:0;background:none;color:var(--amber);font:600 .75rem/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
-html.ruhe .lp-btn:hover span{color:var(--txt)}
-html.ruhe .lp-btn span{transition:color .3s}
-.lp-dot{position:relative;width:.5rem;height:.5rem;border-radius:50%;background:var(--amber);flex:none;box-shadow:0 0 .5rem rgba(224,154,53,.55)}
-.lp-btn.is-pulse .lp-dot{animation:dot 2.4s ease-out infinite}
-.lp-btn svg{width:.9375rem;height:.9375rem;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .45s var(--ease)}
-.lp-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
-html.paused .lp-btn .lp-dot{animation:none}
-@media (prefers-reduced-motion:reduce){.lp-btn .lp-dot,html.ruhe .lp-zone.is-open .lp-x{animation:none}}
+/* 22.11.2026 (Kai: „sieht man nicht gleich, dass man klicken kann – Hinschauer, der auffällt, ohne sich aufzudrängen“, Go):
+   Leuchtpille statt Textzeile. Oben läuft die erste Zeile des verborgenen Texts aus (.lp-tease, von ruhe.js gefüllt), darunter
+   die Pille mit Bernstein-Kugel und „+“ (wird beim Öffnen zum „×“). Beim ersten Hereinkommen sammelt sich feiner Staub zur Kugel
+   (ruhe.js, einmalig); danach atmet ein Lichtring um die Kugel – nur am obersten noch nie geöffneten Knopf im Bild. */
+html.ruhe .lp-btn{appearance:none;display:flex;flex-direction:column;align-items:flex-start;gap:.5rem;width:100%;min-width:0;max-width:100%;margin:.75rem 0 0;padding:0;border:0;background:none;color:var(--amber);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.lp-tease{display:block;width:100%;max-width:40ch;contain:inline-size;overflow:hidden;white-space:nowrap;font:400 .9375rem/1.45 var(--sans);color:var(--dim);-webkit-mask-image:linear-gradient(90deg,#000 30%,transparent 95%);mask-image:linear-gradient(90deg,#000 30%,transparent 95%)}
+.lp-tease:empty,html.ruhe .lp-btn[aria-expanded="true"] .lp-tease{display:none}
+.lp-pill{position:relative;display:inline-flex;align-items:center;gap:.75rem;min-height:2.75rem;padding:.3125rem 1.125rem .3125rem .3125rem;border-radius:1.375rem;border:1px solid rgba(224,154,53,.5);background:rgba(224,154,53,.07);font:600 .75rem/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase;transition:background .3s,border-color .3s,box-shadow .3s}
+.lp-btn:hover .lp-pill,.lp-btn:focus-visible .lp-pill{background:rgba(224,154,53,.16);border-color:var(--amber);box-shadow:0 0 1.5rem rgba(224,154,53,.18)}
+.lp-btn:focus-visible{outline:none}
+.lp-btn:focus-visible .lp-pill{outline:2px solid var(--amber);outline-offset:3px}
+.lp-orb{position:relative;flex:none;width:2.125rem;height:2.125rem;border-radius:50%;background:var(--amber);box-shadow:0 0 .875rem rgba(224,154,53,.45);transition:background .3s,box-shadow .3s}
+.lp-orb i{position:absolute;inset:0;transition:transform .45s var(--ease)}
+.lp-orb i::before,.lp-orb i::after{content:"";position:absolute;left:50%;top:50%;width:.75rem;height:2px;margin:-1px 0 0 -.375rem;border-radius:1px;background:#14110A;transition:background .3s}
+.lp-orb i::after{transform:rotate(90deg)}
+.lp-orb::after{content:"";position:absolute;inset:-1px;border-radius:50%;border:2px solid var(--amber);opacity:0;pointer-events:none}
+html.ruhe .lp-btn[aria-expanded="true"] .lp-pill{background:transparent;border-color:rgba(224,154,53,.3)}
+html.ruhe .lp-btn[aria-expanded="true"] .lp-orb{background:transparent;box-shadow:inset 0 0 0 1.5px var(--amber)}
+html.ruhe .lp-btn[aria-expanded="true"] .lp-orb i{transform:rotate(45deg)}
+html.ruhe .lp-btn[aria-expanded="true"] .lp-orb i::before,html.ruhe .lp-btn[aria-expanded="true"] .lp-orb i::after{background:var(--amber)}
+.lp-btn.is-pulse .lp-orb{animation:lpGlow 2.8s ease-in-out infinite}
+.lp-btn.is-pulse .lp-orb::after{animation:lpRing 2.8s cubic-bezier(.2,.6,.3,1) infinite}
+@keyframes lpGlow{0%,100%{box-shadow:0 0 .875rem rgba(224,154,53,.45)}35%{box-shadow:0 0 1.75rem rgba(224,154,53,.85)}}
+@keyframes lpRing{0%{transform:scale(1);opacity:.7}70%,100%{transform:scale(1.9);opacity:0}}
+/* Auftritt: bis der Staub angekommen ist, ist die Kugel verborgen (lp-pre); dann leuchtet sie kurz auf (lp-pop) */
+.lp-btn.lp-pre .lp-orb{opacity:0;transform:scale(.4)}
+.lp-btn.lp-pop .lp-orb{animation:lpPop .7s var(--ease) both}
+.lp-btn.lp-pop.is-pulse .lp-orb{animation:lpPop .7s var(--ease) both,lpGlow 2.8s ease-in-out .7s infinite}
+@keyframes lpPop{0%{opacity:0;transform:scale(.4)}60%{opacity:1;transform:scale(1.14)}100%{opacity:1;transform:scale(1)}}
+.lp-dust{position:absolute;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:#F0B864;pointer-events:none;opacity:0}
+html.paused .lp-btn .lp-orb,html.paused .lp-btn .lp-orb::after{animation:none}
+html.paused .lp-btn.lp-pre .lp-orb{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.lp-btn .lp-orb,.lp-btn .lp-orb::after,html.ruhe .lp-zone.is-open .lp-x{animation:none!important}.lp-btn.lp-pre .lp-orb{opacity:1;transform:none}}
 html.ruhe .sw-where > .sw-sub{display:none} /* der Knopf trägt die Überschrift */
-html.ruhe .sw-where > .lp-btn{margin:-.75rem 0 .25rem}
+html.ruhe .sw-where > .lp-btn{margin:-.5rem 0 .25rem}
 html.ruhe .sw-where.is-open > .lp-btn{margin-bottom:.75rem}
-html.ruhe .sw-steps + .lp-btn{margin-top:.75rem}
-html.ruhe .facts-box > .lp-btn{margin-top:.75rem}
+html.ruhe .sw-steps + .lp-btn{margin-top:1rem}
+html.ruhe .facts-box > .lp-btn{margin-top:1rem}
 @media (max-width:920px){
   .manu-text > .lp-btn{order:5}
   .sw-text > .lp-btn{order:5;justify-self:start}
@@ -979,3 +1003,32 @@ html.ruhe .facts-box > .lp-btn{margin-top:.75rem}
 .vsw-ruhe b{padding:0 .5rem 0 .625rem;font:600 .625rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
 .vsw-ruhe button{appearance:none;min-height:2.25rem;padding:0 .875rem;border:0;border-radius:1.25rem;background:transparent;color:var(--dim);font:600 .6875rem/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
 .vsw-ruhe button[aria-pressed="true"]{background:var(--amber);color:#14110A}
+/* Raumlicht + Logo-Farben (Go Kai 22.11.2026: „Kräftig“; Baustein farbe.js, Vergleich farbstudie.html).
+   Die Lichtschicht liegt über der Seite (auch über der Kopfleiste), unter Hinweisen und Dialogen; „screen“ hellt nur auf. */
+#farblicht{position:fixed;inset:0;z-index:21;pointer-events:none;mix-blend-mode:screen;transition:opacity .9s ease}
+html.fx-aus #farblicht,html.licht #farblicht{display:none}
+@media (prefers-contrast:more){#farblicht{display:none}}
+@media print{#farblicht,.fx-wahl,.fx-info{display:none!important}}
+/* Logo-Farben als Raumfarben: Kapitel-Ziffern, Linien, Menü. Bernstein bleibt die Farbe für Handlung (Knöpfe, Leuchtpunkte, Kursivwort). */
+.auftakt-blk[data-for="bewegung"]{--cc:#8DBF55}
+.auftakt-blk[data-for="achse"]{--cc:#5AA2D6}
+.auftakt-blk[data-for="dach"]{--cc:#6FA8C0}
+.auftakt-blk[data-for="tuer"]{--cc:#E09A35}
+html.fx-logo .auftakt-blk .au-no{color:var(--cc,var(--amber))}
+html.fx-logo .auftakt-blk .au-line{background:linear-gradient(90deg,var(--cc,var(--amber)),color-mix(in srgb,var(--cc,var(--amber)) 35%,transparent) 60%,transparent)}
+.chapters li:nth-child(1),.chapters li:nth-child(4){--cc:#5AA2D6}
+.chapters li:nth-child(2){--cc:#8DBF55}
+.chapters li:nth-child(3),.chapters li:nth-child(5){--cc:#6FA8C0}
+.chapters li:nth-child(6){--cc:#E09A35}
+html.fx-logo .chapters i{color:color-mix(in srgb,var(--cc) 70%,var(--mute))}
+html.fx-logo .chapters a.on i{color:var(--cc)}
+html.fx-logo .chap-now i{color:var(--fx-now,var(--amber));transition:color .9s ease}
+/* Vergleichsseite farbstudie.html: Umschalter unten links (wie .vsw-ruhe) */
+.fx-wahl{position:fixed;z-index:45;left:max(.75rem,env(safe-area-inset-left,0px));bottom:max(.75rem,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:.25rem;padding:.1875rem;border-radius:1.5rem;border:1px solid var(--line);background:rgba(10,22,27,.92);box-shadow:0 .5rem 1.5rem rgba(0,0,0,.4)}
+.fx-wahl b{padding:0 .5rem 0 .625rem;font:600 .625rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.fx-wahl button{appearance:none;min-height:2.25rem;padding:0 .75rem;border:0;border-radius:1.25rem;background:transparent;color:var(--dim);font:600 .6875rem/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.fx-wahl button[aria-pressed="true"]{background:var(--amber);color:#14110A}
+.fx-wahl button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.fx-wahl.zu b,.fx-wahl.zu button:not([aria-pressed="true"]){display:none}
+.fx-info{position:fixed;z-index:45;left:max(.75rem,env(safe-area-inset-left,0px));bottom:calc(max(.75rem,env(safe-area-inset-bottom,0px)) + 3.125rem);max-width:min(26rem,calc(100vw - 1.5rem));margin:0;padding:.5rem .75rem;border-radius:.5rem;border:1px solid var(--line);background:rgba(10,22,27,.94);font:500 .8125rem/1.4 var(--sans);color:var(--txt);opacity:0;transform:translateY(.25rem);transition:opacity .4s,transform .4s;pointer-events:none}
+.fx-info.an{opacity:1;transform:none}
