@@ -151,7 +151,8 @@ export function glContext(canvas) {
   return gl;
 }
 
-export function createStage(gl, pts, relaxCanvas) {
+// deep: Grundfarbe des Körpers (seit 22.11.2026 je nach Farbstufe, siehe ../test-4/farbe.js; Standard wie bisher)
+export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
   const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
   const prog = gl.createProgram();
   gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
@@ -169,7 +170,7 @@ export function createStage(gl, pts, relaxCanvas) {
   const U = {};
   const n = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
   for (let i = 0; i < n; i++) { const u = gl.getActiveUniform(prog, i); U[u.name] = gl.getUniformLocation(prog, u.name); }
-  gl.uniform3fv(U.cDeep, hex('#44788E')); gl.uniform3fv(U.cBone, hex('#E4E3D8')); gl.uniform3fv(U.cAmber, hex('#E89C30'));
+  gl.uniform3fv(U.cDeep, hex(deep || '#44788E')); gl.uniform3fv(U.cBone, hex('#E4E3D8')); gl.uniform3fv(U.cAmber, hex('#E89C30'));
   gl.uniform3fv(U.cCalm, hex('#86BEE6')); gl.uniform3fv(U.cLine, hex('#F0AE50')); gl.uniform3fv(U.cWarm, hex('#FFE6BA'));
   const tex = gl.createTexture();
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -182,6 +183,7 @@ export function createStage(gl, pts, relaxCanvas) {
   gl.clearColor(10 / 255, 22 / 255, 27 / 255, 1);
   return {
     upload,
+    setDeep(h) { gl.useProgram(prog); gl.uniform3fv(U.cDeep, hex(h || '#44788E')); },
     draw(u) {
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
       gl.clear(gl.COLOR_BUFFER_BIT);
