@@ -7,14 +7,13 @@
 <!--BODY-->
 <a class="skip" href="#tuer">Zu Kapitel 05</a>
 <div class="grain" aria-hidden="true"></div>
-<div class="c-glow" id="cGlow" aria-hidden="true"></div>
-<canvas class="c-stage" id="cStage" aria-hidden="true"></canvas>
 
 <nav class="top" aria-label="Entwurf">
   <a class="brand" href="./" aria-label="HOP Labor, alle Testseiten">
     <svg viewBox="0 0 424 140" aria-hidden="true"><g stroke="rgba(255,255,255,.34)" stroke-width="3"><circle cx="70" cy="70" r="66" fill="#6FA02F"/><circle cx="212" cy="70" r="66" fill="#305869"/><circle cx="354" cy="70" r="66" fill="#3F86B5"/></g><g fill="none" stroke="#fff" stroke-width="15.5"><path d="M48.5 39V101M91.5 39V101M48.5 70H91.5"/><ellipse cx="212" cy="70" rx="25.5" ry="23.25"/><path d="M335.5 39V101M335.5 46.75H359a15.75 15.75 0 0 1 0 31.5H335.5"/></g></svg>
   </a>
   <p class="top-name">Entwurf · Tür · Raum</p>
+  <a class="top-v" href="tuer-raum-v1.html">Stand 1</a>
   <button type="button" class="motion-btn" id="motionBtn" aria-pressed="false" aria-label="Bewegung anhalten" title="Bewegung anhalten"><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bewegung</span></button>
 </nav>
 
@@ -27,6 +26,7 @@
       <ul class="v-list">
         <li><b>←→</b><span><strong>Umsehen.</strong> Zur Seite wischen, die Pfeile oder die Punkte unten: vorne Empfang, rechts die Uhr, hinten die Ablage mit Telefon, links das Fenster zur Straße.</span></li>
         <li><b>↻</b><span><strong>Kopf drehen.</strong> Am PC folgt der Raum leicht der Maus. Am Handy folgt er beim Wischen Ihrem Finger.</span></li>
+        <li><b>✦</b><span><strong>Antippen.</strong> Das Terminbuch bucht, das Telefon ruft an, das Fenster öffnet die Karte. Die Schrift steht dort, wo Sie hinschauen.</span></li>
       </ul>
       <p class="small">„Termin buchen“ steht drinnen immer da. Mit „Bewegung anhalten“ (oben rechts) stehen alle Angaben einfach untereinander, wie heute.</p>
     </div>
@@ -39,6 +39,8 @@
     </div>
     <div class="door-track" id="doorTrack">
       <div class="door-sticky">
+        <div class="c-glow" id="cGlow" aria-hidden="true"></div>
+        <canvas class="c-stage" id="cStage" aria-hidden="true"></canvas>
         <div class="wrap door-top">
           <h2 id="t-title">Die Tür steht<br><em>offen.</em></h2>
         </div>
@@ -46,7 +48,9 @@
         <p class="door-cue" aria-hidden="true"><span class="only-touch">Tippen Sie auf die Tür</span><span class="only-fine">Klicken Sie auf die Tür</span></p>
 
         <div class="raum" id="raum">
-          <div class="raum-mot" aria-hidden="true"></div>
+          <a class="hit" data-k="0" href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true" title="Termin buchen"></a>
+          <a class="hit" data-k="2" href="tel:+4971819931470" tabindex="-1" aria-hidden="true" title="Anrufen"></a>
+          <a class="hit" data-k="3" href="https://www.google.com/maps/search/?api=1&amp;query=Schlichtener%20Stra%C3%9Fe%2087%2C%2073614%20Schorndorf" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true" title="In Google Maps öffnen"></a>
 
           <article class="rp" id="rp0" role="tabpanel" aria-labelledby="rt0">
             <header class="rp-head"><p class="rp-dir"><i>vorne</i> Empfang</p><h3>Ihr <em>Termin.</em></h3></header>
@@ -56,6 +60,7 @@
                 <a class="rp-mail" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage&amp;body=Guten%20Tag%20Herr%20Raethel%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20einen%20Termin%20anfragen.%0D%0A%0D%0AName%3A%0D%0AR%C3%BCckrufnummer%3A%0D%0AWunschzeiten%3A%0D%0A%C3%84rztliche%20Verordnung%20vorhanden%20%28ja%2Fnein%29%3A%0D%0A%0D%0AMeine%20Beschwerde%20schildere%20ich%20Ihnen%20bitte%20erst%20im%20Gespr%C3%A4ch%2C%20nicht%20per%20E-Mail.%0D%0A%0D%0AVielen%20Dank">Per E-Mail anfragen</a>
                 <button type="button" class="rp-copy" id="copyMail" hidden>Adresse kopieren</button>
               </p>
+              <p class="rp-tap" aria-hidden="true"><span class="only-touch">Tippen Sie auf das Terminbuch, um online zu buchen.</span><span class="only-fine">Klicken Sie auf das Terminbuch, um online zu buchen.</span></p>
               <p class="rp-note"><a id="mailAddr" href="mailto:kontakt@hopphysio.de">kontakt@hopphysio.de</a> · Gesundheitsangaben bitte erst im Gespräch.<span class="copy-state" id="copyState" role="status"></span></p>
             </div>
           </article>
@@ -75,6 +80,7 @@
               <p class="rp-big"><a href="tel:+4971819931470">07181 9931470</a></p>
               <p>Nur Anrufbeantworter, ich rufe Sie zurück. <a href="assets/hop-physiotherapie.vcf" download>Im Telefon speichern</a></p>
               <p class="rp-note">Kassen, privat und Selbstzahler. Verordnung bitte zum ersten Termin mitbringen.</p>
+              <p class="rp-tap" aria-hidden="true"><span class="only-touch">Tippen Sie auf das Telefon, um anzurufen.</span><span class="only-fine">Klicken Sie auf das Telefon, um anzurufen.</span></p>
             </div>
           </article>
 
@@ -83,6 +89,7 @@
             <div class="rp-body">
               <p class="rp-big"><a href="https://www.google.com/maps/search/?api=1&amp;query=Schlichtener%20Stra%C3%9Fe%2087%2C%2073614%20Schorndorf" target="_blank" rel="noopener">Schlichtener Straße 87, 73614 Schorndorf</a></p>
               <p>Parken direkt vor dem Haus. Bus: „Schlichtener Straße“ oder „Grauhalde“.</p>
+              <p class="rp-tap" aria-hidden="true"><span class="only-touch">Tippen Sie aufs Fenster für die Karte.</span><span class="only-fine">Klicken Sie aufs Fenster für die Karte.</span></p>
             </div>
           </article>
 

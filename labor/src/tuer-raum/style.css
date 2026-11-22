@@ -118,9 +118,9 @@ html:not(.js) .auftakt-blk .au-no,html:not(.js) .auftakt-blk .au-txt,html:not(.j
 .door{padding-top:0}
 .door h2{font-size:clamp(2.875rem,5.1vw,4.4rem);font-weight:560;letter-spacing:-.035em}
 .door-top{padding-top:clamp(3rem,8vh,5rem);text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
-.door-hit,.door-cue,.raum-mot,.raum-nav,.raum-hint{display:none}
-.c-stage{position:fixed;z-index:0;left:0;top:0;width:100%;height:100vh;height:100lvh;pointer-events:none;display:none}
-.c-glow{position:fixed;z-index:0;left:0;top:0;width:100%;height:100vh;height:100lvh;opacity:0;pointer-events:none;display:none;background:radial-gradient(70% 46% at 50% 66%,rgba(224,154,53,.15),rgba(224,154,53,.05) 55%,rgba(224,154,53,0) 78%)}
+.door-hit,.door-cue,.raum-nav,.raum-hint{display:none}
+.c-stage{position:absolute;z-index:0;left:0;top:0;width:100%;height:100%;pointer-events:none;display:none}
+.c-glow{position:absolute;z-index:0;left:0;top:0;width:100%;height:100%;opacity:0;pointer-events:none;display:none;background:radial-gradient(70% 46% at 50% 66%,rgba(224,154,53,.15),rgba(224,154,53,.05) 55%,rgba(224,154,53,0) 78%)}
 .c-stage.on,.c-glow.on{display:block}
 
 /* Ohne Bühne (ohne JavaScript, ohne Grafikchip, Bewegung angehalten): die vier Blöcke als Kontaktteil untereinander */
@@ -158,32 +158,31 @@ html.door-walk .alles{display:block;padding-top:4.5rem;text-shadow:0 1px 2px rgb
 .facts dd{margin:0;font-size:.9375rem;color:var(--dim);overflow-wrap:anywhere}
 .facts dd a{color:var(--txt);text-decoration:underline;text-decoration-color:rgba(224,154,53,.55);text-underline-offset:.2em;text-decoration-thickness:1px}
 
-/* ---------- Mit Bühne: Tür, dann Raum ---------- */
+/* ---------- Mit Bühne: Tür, dann Raum ----------
+   Die Zeichenfläche liegt IN der Bühne (scrollt mit ihr als ein Stück). Drinnen stehen die vier Textblöcke als Wandschrift im Raum:
+   main.js setzt Breite und matrix3d je Block; die Bedienung (Punkte, Termin) bleibt unten fest in der Bühne. */
 html.door-walk .door-track{position:relative;height:100svh}
 html.door-walk .door-sticky{position:sticky;top:0;height:100svh;overflow:hidden}
 html.raum-on .door-sticky{touch-action:pan-y} /* senkrecht scrollt die Seite, waagerecht dreht der Raum */
-html.door-walk .door-top{padding-top:calc(env(safe-area-inset-top,0px) + 6.25rem);transition:none}
+html.door-walk .c-stage,html.door-walk .c-glow{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+html.door-walk .door-top{position:relative;z-index:1;padding-top:calc(env(safe-area-inset-top,0px) + 6.25rem);transition:none}
 html.door-walk .door-hit{display:block;position:absolute;left:50%;top:24%;bottom:12%;width:min(86%,30rem);transform:translateX(-50%);background:none;border:0;padding:0;cursor:pointer;border-radius:4px;z-index:3;-webkit-tap-highlight-color:transparent}
 .door-hit[hidden]{display:none!important}
 html.door-walk .door-hit:focus-visible{outline:2px solid var(--amber);outline-offset:4px}
-html.door-walk .door-cue{display:flex;align-items:center;justify-content:center;position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 1.25rem);margin:0;opacity:0;font:400 .9375rem/1.2 var(--sans);color:var(--dim);text-shadow:0 1px 2px rgba(10,22,27,.8),0 0 1rem rgba(10,22,27,.9)}
+html.door-walk .door-cue{display:flex;align-items:center;justify-content:center;position:absolute;z-index:1;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 1.25rem);margin:0;opacity:0;font:400 .9375rem/1.2 var(--sans);color:var(--dim);text-shadow:0 1px 2px rgba(10,22,27,.8),0 0 1rem rgba(10,22,27,.9)}
 
-/* Raum: Kopf oben, Motiv in der Mitte (dort zeichnet die Bühne), Text darunter, Bedienung unten. Alle vier Köpfe und Texte liegen
-   in derselben Zelle übereinander – die Zelle ist so hoch wie der längste, das Motiv bleibt beim Umsehen gleich groß und an seinem Ort. */
-html.door-walk .raum{position:absolute;z-index:2;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 4.75rem);bottom:calc(env(safe-area-inset-bottom,0px) + 1rem);margin:0;padding:0 1.5rem;gap:0;
-  grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(6rem,1fr) auto auto;grid-template-areas:"head" "mot" "body" "bar";
-  opacity:0;visibility:hidden;transition:opacity .9s var(--ease),visibility 0s .9s}
+.hit,.rp-tap{display:none}
+html.door-walk .raum{position:absolute;z-index:2;inset:0;display:block;max-width:none;margin:0;padding:0;opacity:0;visibility:hidden;transition:opacity .9s var(--ease),visibility 0s .9s}
 html.door-walk.raum-on .raum{opacity:1;visibility:visible;transition:opacity 1.2s var(--ease) .2s,visibility 0s}
-html.door-walk .rp{display:contents}
-html.door-walk .rp-head{grid-area:head;padding-bottom:.25rem}
-html.door-walk .rp-body{grid-area:body;align-self:end;padding-top:.5rem;font-size:.9375rem;line-height:1.45;gap:.375rem}
-html.door-walk .rp-note{font-size:.8125rem}
+html.door-walk .rp{position:absolute;left:0;top:0;margin:0;padding:0;border:0;transform-origin:0 0;opacity:0;visibility:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+html.door-walk .rp-head::after{content:"";display:block;width:3.5rem;height:1px;margin:.875rem 0 1rem;background:linear-gradient(90deg,var(--amber),rgba(224,154,53,0))}
+html.door-walk .rp h3{font-size:2.125rem;line-height:1;margin:0}
+html.door-walk .rp-body{font-size:.9375rem;line-height:1.45;gap:.375rem;max-width:none}
 html.door-walk .rp-big{font-size:1.0625rem}
-html.door-walk .rp h3{font-size:clamp(1.625rem,6.4vw,2.5rem);margin:0}
-html.door-walk .raum-mot{display:block;grid-area:mot;min-height:0}
-html.door-walk .raum-bar{grid-area:bar;display:flex;flex-direction:column;align-items:stretch;gap:.375rem;padding-top:.75rem}
-html.door-walk .rp-head,html.door-walk .rp-body{transition:opacity .55s var(--ease),transform .7s var(--ease),visibility 0s 0s}
-html.door-walk .rp.is-off .rp-head,html.door-walk .rp.is-off .rp-body{opacity:0;visibility:hidden;transform:translateY(.375rem);transition:opacity .45s var(--ease),transform .45s var(--ease),visibility 0s .45s}
+html.door-walk .rp-note{font-size:.8125rem}
+html.door-walk .rp-tap{display:block;font-size:.8125rem;color:var(--amber)}
+html.door-walk .hit{display:block;position:absolute;z-index:3;left:0;top:0;width:100px;height:100px;transform-origin:0 0;visibility:hidden;border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+html.door-walk .raum-bar{position:absolute;z-index:4;left:1.5rem;right:1.5rem;bottom:calc(env(safe-area-inset-bottom,0px) + 1rem);display:flex;flex-direction:column;align-items:stretch;gap:.375rem;margin:0}
 html.door-walk .raum-termin{margin-top:.25rem;width:100%}
 html.door-walk .raum-nav{display:flex;align-items:center;justify-content:center;gap:.25rem}
 html.door-walk .raum-hint{display:block;text-align:center;font:400 .8125rem/1.2 var(--sans);color:var(--mute);transition:opacity .8s}
@@ -198,24 +197,26 @@ html.raum-turned .raum-hint{opacity:0}
 .raum-tabs [role="tab"][aria-selected="true"] i{background:var(--amber);border-color:var(--amber);box-shadow:0 0 .75rem rgba(224,154,53,.55);transform:scale(1.15)}
 .raum-tabs [role="tab"]:focus-visible{outline:none}
 .raum-tabs [role="tab"]:focus-visible i{outline:2px solid var(--amber);outline-offset:4px}
+.top-v{margin-left:auto;display:inline-flex;align-items:center;min-height:2.75rem;padding:0 .875rem;border-radius:1.375rem;border:1px solid var(--line);color:var(--dim);font:600 .6875rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;text-decoration:none}
+.top-v:hover{color:var(--txt);border-color:rgba(237,232,220,.3)}
+.top-v+.motion-btn{margin-left:.5rem}
 
 @media (min-width:921px){
-  /* PC: Motiv links, rechts Kopf · Text · Bedienung in einer Spalte, die Überschrift oben in ihrer Spalte */
-  html.door-walk .raum{top:calc(env(safe-area-inset-top,0px) + 6rem);bottom:2.75rem;padding:0 6vw;column-gap:clamp(2.5rem,5vw,5rem);
-    grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);grid-template-rows:1fr auto auto auto 1fr;grid-template-areas:"mot ." "mot head" "mot body" "mot bar" "mot ."}
-  html.door-walk .rp-body{align-self:start;padding-top:1rem}
-  html.door-walk .rp-head{align-self:end}
-  html.door-walk .raum-bar{padding-top:2rem;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:1rem 1.25rem}
-  html.door-walk .raum-nav{justify-content:flex-start}
-  html.door-walk .raum-hint{order:3;flex-basis:100%;text-align:left;padding-left:.25rem}
+  /* PC: Wandschrift rechts neben den Dingen; Bedienung unten mittig in einer Zeile */
+  html.door-walk .rp h3{font-size:3rem}
+  html.door-walk .rp-body{font-size:1.0625rem}
+  html.door-walk .rp-big{font-size:1.25rem}
+  html.door-walk .rp-note,html.door-walk .rp-tap{font-size:.875rem}
+  html.door-walk .raum-bar{left:50%;right:auto;bottom:2.25rem;transform:translateX(-50%);flex-direction:row;align-items:center;gap:1.5rem}
   html.door-walk .raum-termin{width:auto;margin-top:0}
-  html.door-walk .rp h3{font-size:clamp(2rem,2.8vw,3rem)}
+  html.door-walk .raum-hint{position:absolute;left:0;right:0;top:100%;margin-top:.375rem;white-space:nowrap}
 }
 @media (max-width:920px){
   .top{gap:.625rem;padding-top:.625rem;padding-bottom:.625rem}
   .brand svg{width:4.875rem}
   .top-name{font-size:.6875rem;letter-spacing:.1em}
   .motion-btn{padding:0 .75rem;min-width:2.75rem;justify-content:center}
+  .top-v{padding:0 .75rem}
   .motion-btn span{display:none}
   .vor{padding-top:6.5rem}
   .facts{grid-template-columns:1fr 1fr}
@@ -223,10 +224,12 @@ html.raum-turned .raum-hint{opacity:0}
 @media (max-width:600px){ body{font-size:1rem} .facts{grid-template-columns:1fr} }
 @media (max-height:600px) and (max-width:920px){
   html.door-walk .rp-dir{margin-bottom:.375rem}
-  html.door-walk .raum-hint{display:none}
+  html.door-walk .raum-hint,html.door-walk .rp-tap{display:none}
+  html.door-walk .rp h3{font-size:1.75rem}
+  html.door-walk .rp-head::after{margin:.5rem 0 .625rem}
   html.door-walk .rp-body p:not(.rp-big):not(.rp-acts):not(.dd-open){font-size:.875rem}
 }
-@media (max-width:380px){ .top-name{display:none} }
+@media (max-width:480px){ .top-name{display:none} }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   #t-title .lt{opacity:1}

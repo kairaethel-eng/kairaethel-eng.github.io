@@ -148,6 +148,7 @@ export function initStage({ cv, glow, isStill, soft }) {
     get dead() { return batch.dead; },
     get points() { return batch.count; },
     get roomPoints() { return room.count; },
+    project: (k, x, y, z, cam) => room.project(k, x, y, z, cam), // lokale Lage der Richtung k → Bild (Schrift, Tastflächen)
     // o wie ../tuer/buehne.js, dazu border [l, t, r, b] und room { rect, cx, cy, F, sp, rad, yaw, pitch, rIn, pulse, hh, mm } (oder null)
     frame(dt, o) {
       const still = isStill();
