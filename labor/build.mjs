@@ -45,6 +45,9 @@ const PAGES = {
   'feinschliff': { out: 'feinschliff.html' },
   // Tür (16.11.2026, Go Kai): Entwurf zu Kap. 05 – Knöpfe erscheinen erst mit der offenen Partikel-Tür, Varianten A | C (Canvas 2D, kein WebGL)
   'tuer': { out: 'tuer.html' },
+  // Tür · Raum (22.11.2026, Go Kai „a c“): Kapitel 05 als Raum – Tür antippen, der Rahmen wird zum Bildschirmrand, drinnen umsehen
+  // (vier Blickrichtungen mit Termin, Zeiten, Telefon & mehr, Anfahrt). Bühne src/tuer-raum/stage.js + raum.js; Puls unberührt.
+  'tuer-raum': { out: 'tuer-raum.html' },
   // Stoßwelle in Punkten (20.11.2026 nachts, Kai im Arbeitsblatt 4): Entwurf – Punkt-Grafik mit echtem Fersenbein, Vergleich mit der Linien-Bühne in Puls
   'stosswelle-punkte': { out: 'stosswelle-punkte.html' },
   // Logo-Vergleich (21.11.2026, Kai: altes Logo lassen, zusätzlich eine Mischung zeigen): A flach · B Mischung · C nach dem Original

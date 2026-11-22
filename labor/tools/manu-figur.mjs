@@ -389,6 +389,19 @@ const outA = Array.from(out);
   }
   console.log(`Brücken Hand ↔ Oberschenkel: ${bruecke} Dreiecke entfernt, ${filled} Ränder geschlossen`);
 }
+// Lose Stücke entfernen (22.11.2026, Kai: „an den Händen Partikel-Rückstände“): Oberschenkel-Haut, deren nächster Knochen in der
+// Ausgangslage die Hand ist, hing nur über die Brücken am Oberschenkel – ohne sie wandert sie lose mit der Hand. Je Teil bleibt nur,
+// was mit dem Hauptstück zusammenhängt (Teile unter 2 % der Dreiecke entfallen).
+for (const [id, I] of Object.entries(tri)) {
+  const nvA = outA.length / 3, par = Int32Array.from({ length: nvA }, (_, i) => i);
+  const fnd = (x) => { while (par[x] !== x) { par[x] = par[par[x]]; x = par[x]; } return x; };
+  for (let t = 0; t < I.length; t += 3) { par[fnd(I[t])] = fnd(I[t + 1]); par[fnd(I[t + 1])] = fnd(I[t + 2]); }
+  const cnt = new Map(); for (let t = 0; t < I.length; t += 3) { const r = fnd(I[t]); cnt.set(r, (cnt.get(r) || 0) + 1); }
+  const keepR = new Set([...cnt].filter(([, n]) => n >= 0.02 * I.length / 3).map(([r]) => r));
+  const K = []; let weg = 0; for (let t = 0; t < I.length; t += 3) { if (keepR.has(fnd(I[t]))) K.push(I[t], I[t + 1], I[t + 2]); else weg++; }
+  if (weg) console.log(`  ${id}: ${weg} Dreiecke in losen Stücken entfernt`);
+  tri[id] = K;
+}
 for (const [id, I] of Object.entries(tri)) { const m = reorder({ pos: outA, idx: I }); put('figur/' + id, 'skin', m.pos, m.idx); }
 put('figur/wirbel', 'points', wirbel, []);
 for (const [id, pos, idx] of wNetz) put(id, 'bone', pos, idx);

@@ -2,11 +2,14 @@
 // Eine Quelle für die große Bühne (ideaA.js) und das kleine Leistungs-Motiv (test-4/services.js) – Kai im Arbeitsblatt: die Liege
 // „noch detaillierter“, das kleine Motiv „deutlich nachbessern“. Schematisch, keine Herstellerzeichnung, keine technischen Maße.
 // Jedes Teil: { r (Form), kind 0 Polster · 1 Gestell · 2 Figur · 3 Kante/Naht (Perlenlinie), seg 'UP' Kopf-/Brustteil · 'F' fest ·
-//               'LO' Beckenteil · 'BB' Figur (zwischen den Teilen weich verteilt) · 'ARM' Arm (Schulter am Brustteil, Hand auf der Stütze) }
+//               'LO' Beckenteil · 'KO' Kopfteil · 'BB' Figur (zwischen den Teilen weich verteilt) · 'ARM' Arm (Schulter am Brustteil, Hand auf der Stütze) }
 import * as RA from '../shared/raster.js';
 import { rows as netzRows } from '../shared/netz.js';
 
 export const PIV_U = -0.855, PIV_L = 0.0; // Gelenke zwischen den Liegeteilen (x)
+// Kopfteil (22.11.2026, Kai: „Kopf- und Mittelteil sollen sich auch bewegen“): eigenes Gelenk in der Fuge zwischen Kopf- und Brustpolster;
+// das Kopfteil hängt am Brustteil (folgt ihm) und bewegt sich zusätzlich selbst (HWS)
+export const PIV_K = -1.655;
 // echte Figur (21.11.2026, Kai: „nur die innere Wirbelsäule bewegen“): Becken liegt auf dem Beckenteil → Gelenk zwischen L4 und L5
 export const PIV_L_ECHT = -0.43;
 
@@ -27,7 +30,7 @@ export function manuFormen(SPL, { figur = true, echt = null } = {}) {
   // ---------- Liege ----------
   // 21.11.2026 (echte Figur, tools/manu-figur.mjs): Kopfteil länger (der Scheitel liegt auf), Brustteil schmaler – die Arme hängen
   // an den Schultern vorbei auf die Armstützen, wie bei der echten Liege
-  polster(alt ? [-1.965, -0.08, 0] : [-2.03, -0.08, 0], [alt ? 0.57 : 0.7, 0.16, 0.62], 'UP', [-1.99, 0, 0.13, 0.085]); // Kopfteil mit Gesichtsöffnung
+  polster(alt ? [-1.965, -0.08, 0] : [-2.03, -0.08, 0], [alt ? 0.57 : 0.7, 0.16, 0.62], 'KO', [-1.99, 0, 0.13, 0.085]); // Kopfteil mit Gesichtsöffnung (22.11.: eigenes Teil, Gelenk PIV_K)
   polster([-1.255, -0.08, 0], [0.75, 0.16, alt ? 1.3 : 0.95], 'UP');
   const PL = alt ? PIV_L : PIV_L_ECHT; // Mittelteil endet, Beckenteil beginnt je 0,03 vor/nach dem Gelenk
   polster([(-0.83 + PL - 0.03) / 2, -0.08, 0], [PL - 0.03 + 0.83, 0.16, 1.3], 'F');
@@ -37,7 +40,8 @@ export function manuFormen(SPL, { figur = true, echt = null } = {}) {
   if (alt) for (const z of [-0.9, 0.9]) { polster([-1.5, -0.3, z], [0.5, 0.11, 0.3], 'F'); add(RA.cap([-1.5, -0.36, z * 0.93], [-1.5, -0.5, z * 0.7], 0.03, SPF), 1, 'F'); }
   else for (const z of [-0.86, 0.86]) { polster([-1.68, -0.555, z], [0.95, 0.11, 0.3], 'F'); add(RA.cap([-1.68, -0.6, z * 0.9], [-1.68, -0.27, z * 0.5], 0.03, SPF), 1, 'F'); }
   // Rahmen unter den Polstern
-  add(RA.box([-1.6, -0.22, 0], [1.25, 0.06, 0.9], SPF), 1, 'UP');
+  add(RA.box([(-2.225 + PIV_K) / 2, -0.22, 0], [PIV_K + 2.225, 0.06, 0.9], SPF), 1, 'KO'); // Rahmen Kopfteil
+  add(RA.box([(PIV_K + 0.02 - 0.975) / 2, -0.22, 0], [-0.975 - PIV_K - 0.02, 0.06, 0.9], SPF), 1, 'UP'); // Rahmen Brustteil
   add(RA.box([(-0.78 + PL - 0.08) / 2, -0.22, 0], [PL - 0.08 + 0.78, 0.06, 0.9], SPF), 1, 'F');
   add(RA.box([(PL + 0.1 + 2.1) / 2, -0.22, 0], [2.0 - PL, 0.06, 0.9], SPF), 1, 'LO');
   if (alt) for (const z of [-0.9, 0.9]) add(RA.box([-1.5, -0.33, z * 0.78], [0.06, 0.05, 0.42], SPF), 1, 'F');

@@ -9,6 +9,10 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **Merkregel:** Jede neue fremde Quelle (Skript, Bild, Schrift, Rahmen, Abruf) braucht eine Zeile in den Sicherheitsregeln in `build.mjs` – sonst blockiert der Browser sie. Vorher fragen: braucht es die fremde Quelle wirklich?
 - **Merkregel:** Links auf eigene Dateien im Kopf relativ schreiben (gleiche Herkunft auch unter `www.`).
 
+## Kapitel 05 als Raum – „Tür · Raum“ (Kai 22.11.2026 nachts: „drauf klicken und dann erscheinen nur diese 2 Buttons“ ist zu wenig)
+- **Go Kai „a c“:** A „Der Empfang“ (Rahmen wird Bildschirmrand, vier Blickrichtungen mit den Kontakt-Infos) + C „Kopf drehen“ (Maus am PC, Finger beim Wischen). Erst Entwurfsseite `tuer-raum.html`; Puls unberührt bis Kais Urteil.
+- **Merkregeln:** „Termin buchen“ nie hinter dem Umsehen verstecken (immer sichtbar). Feste Blickrichtungen, Drehung über die Zeit (2 s), kein freies 360°. Keine Neigungssensoren (iOS fragt um Erlaubnis). Kästen (Tresen, Bank, Ablage) als Punkt-Zeichnung: helle Kanten + feine Füllung – ebene Flächen mit Kantenlicht wirkten am Handy wie Schraffur. Höchstens ein pulsierender Punkt (Anrufbeantworter, nur im Blick „hinten“).
+
 ## Mehr Farbe – Raumlicht (Kai 22.11.2026 abends: „zu einfarbig, eintönig“ → „Super geile Idee … kräftig am besten. Bitte übernehmen. Aber alle anderen speichern“)
 - **Entschieden (Go Kai):** Stufe **„Kräftig“** gilt in Puls und `live/`: jedes Kapitel ein Raum mit eigenem Licht aus der HOP-Palette, kühl → warm (01 Abendblau · 02 Grün · § Logo-Farben · 03 Röntgenblau · 04 Petrol + warmes Fensterlicht · 05 Bernstein), deutlicher Grundton je Kapitel, Logo-Farben als Raumfarben (Kapitel-Ziffern, Linien, Menü, Figur blau, Band 2 grün).
 - **Gespeichert für später:** Heute · Leise · Mittel – über `?farbe=heute|leise|mittel` an jeder Puls-Adresse und auf der Vergleichsseite `farbstudie.html` (Umschalter unten links). Skizze vom Nachmittag privat: https://claude.ai/artifact/8DdcvzRwKFPjh98XaTAFge.
@@ -42,6 +46,9 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **Entschieden (Kai „Go A“, 21.11. spät):** Oberkörper und Becken mit Beinen bleiben fest; nur die Haut über der Lende (L1 bis vor die Hüfte) geht weich mit der Wirbelsäule mit – kein Knick an der Taille, Beine schwenken aus der Hüfte. Körper ganz still (B) und Rückweg (C) verworfen.
 - **Merkregel:** Haut und Wirbel bekommen dieselbe Übergangszone – sonst schiebt sich die Wirbelsäule gegen die Haut.
 - **Entschieden (Kai „Go A“, 22.11.):** „Spitze an der Hüfte“ an der Ursache behoben – im Werkzeug `tools/manu-figur.mjs` folgt die Haut unterhalb des Ellbogens nicht mehr anteilig dem Arm; Figur neu erzeugt. Wegschneiden (B) und Glätten (C) verworfen.
+- **Entschieden (Kai „Go Empfehlung“, 22.11.):** (1A) Kamera geht beim Drehen so weit zurück, dass alles im Bild bleibt; (2A) lose Hautstücke an den Händen entfernt; (3A) Wirbel leuchten Bernstein, so stark sie gerade bewegt werden – kein Rot (stünde für Schmerz/Entzündung und liegt außerhalb der Farben).
+- **Entschieden (Auftrag Kai 22.11.: „Kopf- und Mittelteil sollen sich auch bewegen“):** nach den Angaben zur Manuthera 242 bewegen sich Kopfteil (HWS), Brustteil (BWS) und Beckenteil (LWS) je Behandlung nacheinander; das kurze Mittelteil bleibt wie bei der echten Liege der feste Bezug. Bewegungs-Anzeigen unter den Füßen entfallen bei der echten Figur (die Wirbelsäule zeigt selbst, wo sich etwas bewegt).
+- **Merkregel:** Eine Bewegung zur Zeit auch innerhalb einer Behandlung – Teile setzen nacheinander ein, kehren gemeinsam ruhig zurück.
 - **Merkregel:** Beim Umlegen einer stehenden Figur: Gewichte nur dort glätten, wo Gelenke sind (Schulter, Ellbogen) – wo Körperteile sich in der Ausgangslage nur berühren (Hand am Oberschenkel), sonst wandert Haut mit. Berührungs-Brücken auftrennen und die Ränder schließen.
 - **Merkregel:** Haut aus BodyParts3D: Außenfläche per Strahltest („sieht ins Freie“) bestimmen, danach Öffnungen schließen – kein Normalen-Knochen-Test.
 - **Merkregel:** Punkt-Filter für eine Form („Unterseite weglassen“) bei neuer Form neu prüfen – flach von der Seite und von beiden Seiten ansehen.

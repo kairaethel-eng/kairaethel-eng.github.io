@@ -1,0 +1,245 @@
+html{font-size:clamp(100%,calc(50% + .5vw),137.5%)} /* wie Puls: achtet die Browser-Schriftgröße, wächst ab 1600 px */
+/* Entwurf „Tür · Raum“ (22.11.2026, Go Kai „a c“): Kapitel 05 von Puls als Raum. Grundlage: Entwurf ../tuer (Token, Kopfleiste, Vorspann).
+   html.door-walk = Bühne mit Tür und Raum · html.raum-on = drinnen (Blickrichtungen) · ohne beides stehen die Angaben untereinander.
+   Puls selbst ist unberührt. */
+:root{
+  --ink:#0A161B; --ink2:#10222A; --ink3:#173039;
+  --txt:#EDE8DC; --dim:#B0BFC3; --mute:#7F959C; --line:rgba(237,232,220,.12);
+  --amber:#E09A35; --amber-deep:#C5811C;
+  --sans:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --disp:"Archivo Expanded","Archivo","Helvetica Neue",Arial,sans-serif;
+  --serif:"Libre Caslon Text",Georgia,"Times New Roman",serif;
+  --gut:max(1rem,env(safe-area-inset-left,0px));
+  --gut-r:max(1rem,env(safe-area-inset-right,0px));
+  --ease:cubic-bezier(.2,.7,.1,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ink);color:var(--txt);font:400 1.0625rem/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
+a{color:inherit}
+p,li,dd{text-wrap:pretty}
+h1,h2,h3{margin:0;font-family:var(--disp);font-weight:560;letter-spacing:-.035em;line-height:.98;text-wrap:balance}
+p{margin:0}
+em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--amber);letter-spacing:-.01em}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:3px}
+.wrap{width:100%;max-width:90rem;margin:0 auto;padding-left:max(var(--gut),5vw);padding-right:max(var(--gut-r),5vw)}
+.kicker{display:flex;align-items:baseline;gap:.75rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:1.625rem}
+.kicker i{font:italic 400 1.25rem/1 var(--serif);letter-spacing:0;text-transform:none;color:var(--amber)}
+.lead{font-size:clamp(1.0625rem,1.35vw,1.25rem);color:var(--dim);max-width:44ch}
+.small{font-size:.875rem;color:var(--mute);max-width:52ch}
+/* Kopfleiste */
+.top{position:fixed;z-index:20;top:env(safe-area-inset-top,0px);left:0;right:0;display:flex;align-items:center;gap:1.375rem;padding:.875rem max(var(--gut-r),3vw) .875rem max(var(--gut),3vw);background:rgba(10,22,27,.72);backdrop-filter:blur(.75rem) saturate(1.2);-webkit-backdrop-filter:blur(.75rem) saturate(1.2);box-shadow:0 1px 0 var(--line)}
+.brand{display:flex;align-items:center;min-height:2.75rem;flex:none}
+.brand svg{width:5.5rem;height:auto;display:block}
+.top-name{font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.only-touch{display:none}
+@media (hover:none){.only-fine{display:none}.only-touch{display:inline}}
+.motion-btn{appearance:none;margin-left:auto;display:inline-flex;align-items:center;gap:.4375rem;height:2.75rem;padding:0 .875rem;border-radius:1.375rem;border:1px solid var(--line);background:rgba(16,34,42,.55);color:var(--dim);font:600 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:color .3s,border-color .3s}
+.motion-btn:hover{color:var(--txt);border-color:rgba(237,232,220,.3)}
+.motion-btn svg{width:.875rem;height:.875rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.motion-btn .i-play{display:none}
+.motion-btn[aria-pressed="true"]{color:var(--amber);border-color:rgba(224,154,53,.5)}
+.motion-btn[aria-pressed="true"] .i-play{display:block;fill:currentColor}
+.motion-btn[aria-pressed="true"] .i-pause{display:none}
+.paused-note{position:fixed;z-index:40;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 1.25rem);transform:translateX(-50%);display:flex;align-items:center;gap:.875rem;padding:.625rem .75rem .625rem 1.125rem;border-radius:1.5rem;background:rgba(16,34,42,.95);border:1px solid rgba(224,154,53,.55);color:var(--txt);font:500 .875rem/1.2 var(--sans);box-shadow:0 .75rem 2.5rem rgba(0,0,0,.4);transition:opacity .5s,transform .5s;white-space:nowrap}
+.paused-note button{min-height:2.75rem;padding:0 1rem;border-radius:1.375rem;border:0;background:var(--amber);color:#14110A;font:700 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.paused-note.gone{opacity:0;transform:translate(-50%,1rem);pointer-events:none}
+
+main{position:relative;z-index:2}
+
+/* Vorspann: erklärt den Entwurf und steht für das Ende von Kapitel 04 (davor kommt in Puls die Stoßwelle) */
+.vor{display:flex;flex-direction:column;min-height:112svh;padding-top:8.5rem}
+.vor h1{font-size:clamp(2.5rem,6.4vw,6.5rem);margin-bottom:1.5rem}
+.vor .lead{max-width:50ch;margin-bottom:2rem}
+.v-list{list-style:none;margin:0 0 1.5rem;padding:0;max-width:44rem;border-top:1px solid var(--line)}
+.v-list li{display:flex;gap:1.125rem;align-items:baseline;padding:1rem 0;border-bottom:1px solid var(--line);color:var(--dim)}
+.v-list b{flex:none;width:1.5rem;font:italic 400 1.625rem/1 var(--serif);color:var(--amber)}
+.v-list strong{color:var(--txt);font-weight:600}
+.v-end{display:flex;flex-direction:column;align-items:center;gap:.75rem;margin-top:auto;padding-top:3rem;padding-bottom:2.5rem;font:600 .6875rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+.v-end svg{width:1.25rem;height:1.25rem;fill:none;stroke:var(--amber);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;animation:nudge 2.4s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:none}50%{transform:translateY(.375rem)}}
+
+/* ---------- Kapitel 05 wie in Puls ---------- */
+.actions{display:flex;flex-wrap:wrap;gap:.75rem}
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:3.25rem;padding:0 1.75rem;border-radius:3px;background:var(--amber);color:#14110A;text-decoration:none;font:700 .8125rem/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;border:1.5px solid var(--amber);transition:transform .3s var(--ease),background .3s,box-shadow .3s;box-shadow:0 0 0 rgba(224,154,53,0);text-shadow:none}
+.btn:hover{transform:translateY(-2px);box-shadow:0 .75rem 2.5rem -10px rgba(224,154,53,.6)}
+.btn-ghost{background:transparent;color:var(--txt);border-color:rgba(237,232,220,.3)}
+.btn-ghost:hover{border-color:var(--txt);box-shadow:none}
+.btn:active{transform:scale(.97)}
+.chapter{position:relative;min-height:100svh;outline:none}
+.door{padding-top:9.375rem;overflow-x:clip} /* Staub der Tür darf über den Rahmen hinaus, aber nie die Seite verbreitern */
+.door h2{font-size:clamp(2.875rem,7.6vw,8rem);margin-bottom:1.625rem}
+.lw{display:inline-block;white-space:nowrap}
+.lt{display:inline-block}
+#t-title .lt{opacity:0}
+#t-title.open .lt{animation:rise .7s var(--ease) both calc(var(--i) * 35ms)}
+#t-title em{display:inline-block;transform-origin:0 55%}
+#t-title.open em{animation:doorOpen 1.5s cubic-bezier(.2,.9,.25,1) both .45s,doorAjar 9s ease-in-out 4s infinite}
+html.paused #t-title .lt{opacity:1;animation:none}
+html.paused #t-title em{animation:none}
+@keyframes rise{0%{opacity:0;transform:translateY(.25em)}100%{opacity:1;transform:none}}
+@keyframes doorOpen{0%{transform:perspective(40rem) rotateY(-84deg)}100%{transform:perspective(40rem) rotateY(0)}}
+@keyframes doorAjar{0%,14%,100%{transform:perspective(40rem) rotateY(0)}7%{transform:perspective(40rem) rotateY(-16deg)}}
+.facts{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:0 1.875rem;border-top:1px solid var(--line)}
+.facts div{padding:1.125rem 0;border-bottom:1px solid var(--line);min-width:0}
+.facts dt{font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:.5rem}
+.facts dd{margin:0;font-size:1rem;overflow-wrap:anywhere}
+.facts dd a{color:var(--txt);text-decoration:underline;text-decoration-color:rgba(224,154,53,.55);text-underline-offset:.2em;text-decoration-thickness:1px;transition:color .3s}
+.facts dd a:hover{color:var(--amber)}
+.facts dd a.vc{display:inline-block;margin-top:.625rem;min-height:1.5rem}
+.dd-note{display:block;margin-top:.375rem;font-size:.875rem;color:var(--mute)}
+/* Entwurf: „Adresse kopieren“ steht bei der Adresse statt in der Knopfreihe (sonst wäre die Tür vollgestellt) */
+.vc-btn{appearance:none;display:block;margin-top:.5rem;min-height:1.75rem;padding:0;border:0;background:none;color:var(--txt);font:inherit;text-decoration:underline;text-decoration-color:rgba(224,154,53,.55);text-underline-offset:.2em;text-decoration-thickness:1px;cursor:pointer;transition:color .3s}
+.btn-small{min-height:2.75rem;padding:0 1.125rem;font-size:.75rem}
+.copy-state{display:block;min-height:1.25rem;font-size:.875rem;color:var(--amber)}
+.foot{display:flex;flex-wrap:wrap;gap:.625rem 1.875rem;justify-content:space-between;margin-top:6.875rem;padding-top:1.875rem;padding-bottom:5.5rem;border-top:1px solid var(--line);font-size:.8125rem;color:var(--mute)}
+.foot a{color:var(--dim)}
+.foot .lab{color:var(--amber);font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:.75rem}
+.foot .credit{flex-basis:100%;font-size:.75rem;line-height:1.5;color:var(--mute)}
+
+/* Auftakt wie in Puls */
+.auftakt-blk{position:relative;z-index:1;display:flex;align-items:flex-end;min-height:56svh;padding-top:4rem;overflow-x:clip}
+.auftakt-blk .wrap{width:100%}
+.auftakt-blk .au-row{display:flex;align-items:flex-end;gap:clamp(1rem,2.6vw,2.5rem);margin:0}
+.auftakt-blk .au-no{font:italic 400 clamp(7.5rem,17vw,15rem)/.78 var(--serif);color:var(--amber);letter-spacing:-.02em}
+.auftakt-blk .au-txt{display:flex;flex-direction:column;gap:.625rem;padding-bottom:.4em;min-width:0}
+.auftakt-blk .au-name{font:560 clamp(2rem,3.6vw,3.25rem)/1 var(--disp);letter-spacing:-.035em;color:var(--txt)}
+.auftakt-blk .au-sub{font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.auftakt-blk .au-line{display:block;height:1px;margin-top:clamp(1.25rem,2.4vw,2rem);background:linear-gradient(90deg,var(--amber),rgba(224,154,53,.35) 60%,rgba(224,154,53,0));transform-origin:left center}
+.auftakt-blk .au-no,.auftakt-blk .au-txt{opacity:0;transform:translateY(1rem);transition:opacity 1.2s var(--ease),transform 1.4s var(--ease)}
+.auftakt-blk .au-txt{transition-delay:.25s}
+.auftakt-blk .au-line{transform:scaleX(0);transition:transform 1.8s var(--ease) .15s}
+.auftakt-blk.in .au-no,.auftakt-blk.in .au-txt{opacity:1;transform:none}
+.auftakt-blk.in .au-line{transform:none}
+html:not(.js) .auftakt-blk .au-no,html:not(.js) .auftakt-blk .au-txt,html:not(.js) .auftakt-blk .au-line,html.paused .auftakt-blk *{opacity:1;transform:none;transition:none}
+
+/* ---------- Kapitel 05 ---------- */
+.door{padding-top:0}
+.door h2{font-size:clamp(2.875rem,5.1vw,4.4rem);font-weight:560;letter-spacing:-.035em}
+.door-top{padding-top:clamp(3rem,8vh,5rem);text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
+.door-hit,.door-cue,.raum-mot,.raum-nav,.raum-hint{display:none}
+.c-stage{position:fixed;z-index:0;left:0;top:0;width:100%;height:100vh;height:100lvh;pointer-events:none;display:none}
+.c-glow{position:fixed;z-index:0;left:0;top:0;width:100%;height:100vh;height:100lvh;opacity:0;pointer-events:none;display:none;background:radial-gradient(70% 46% at 50% 66%,rgba(224,154,53,.15),rgba(224,154,53,.05) 55%,rgba(224,154,53,0) 78%)}
+.c-stage.on,.c-glow.on{display:block}
+
+/* Ohne Bühne (ohne JavaScript, ohne Grafikchip, Bewegung angehalten): die vier Blöcke als Kontaktteil untereinander */
+.raum{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:2.25rem 3rem;width:100%;max-width:90rem;margin:2.5rem auto 0;padding:0 max(var(--gut-r),5vw) 0 max(var(--gut),5vw);text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
+.rp{min-width:0;border-top:1px solid var(--line);padding-top:1.25rem}
+.raum-bar{grid-column:1/-1}
+.rp-dir{display:flex;align-items:baseline;gap:.625rem;margin-bottom:.625rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.rp-dir i{font:italic 400 1.125rem/1 var(--serif);letter-spacing:0;text-transform:none;color:var(--amber)}
+.rp h3{font:560 clamp(1.75rem,2.6vw,2.5rem)/1.05 var(--disp);letter-spacing:-.03em;margin:0 0 .875rem}
+.rp-body{display:flex;flex-direction:column;gap:.625rem;color:var(--dim);font-size:1rem;line-height:1.5;max-width:34rem}
+.rp-big{font:500 1.1875rem/1.35 var(--sans);color:var(--txt)}
+.rp-body a{color:var(--txt);text-decoration:underline;text-decoration-color:rgba(224,154,53,.55);text-underline-offset:.2em;text-decoration-thickness:1px;overflow-wrap:anywhere}
+.rp-body a:hover{color:var(--amber)}
+.rp-body a.btn{text-decoration:none}
+.rp-link{display:inline-block;margin-top:.25rem}
+.rp-acts{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1.25rem}
+.rp-mail{display:inline-flex;align-items:center;min-height:2.75rem;font-size:.9375rem}
+.rp-copy{appearance:none;min-height:2.75rem;padding:0;border:0;background:none;color:var(--txt);font:inherit;font-size:.9375rem;text-decoration:underline;text-decoration-color:rgba(224,154,53,.55);text-underline-offset:.2em;text-decoration-thickness:1px;cursor:pointer}
+.rp-copy:hover{color:var(--amber)}
+.rp-note{font-size:.875rem;color:var(--mute)}
+.dd-open{font-weight:600;color:var(--amber);display:flex;align-items:center;gap:.5rem}
+.dd-open::before{content:"";flex:none;width:.5rem;height:.5rem;border-radius:50%;border:1.5px solid currentColor}
+.dd-open.is-now{color:#9FCB6B}
+.dd-open.is-now::before{background:currentColor}
+.dd-open[hidden]{display:none}
+.raum-termin{margin-top:.5rem}
+
+/* Alles auf einen Blick (nur mit Bühne – ohne sie stehen die Blöcke oben schon vollständig da) */
+.alles{display:none}
+html.door-walk .alles{display:block;padding-top:4.5rem;text-shadow:0 1px 2px rgba(10,22,27,.7)}
+.alles-h{font:560 clamp(1.5rem,2.2vw,2rem)/1.05 var(--disp);letter-spacing:-.03em;margin:0 0 1.25rem}
+.facts{margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 1.875rem;border-top:1px solid var(--line)}
+.facts div{padding:1rem 0;border-bottom:1px solid var(--line);min-width:0}
+.facts dt{font:600 .6875rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:.4375rem}
+.facts dd{margin:0;font-size:.9375rem;color:var(--dim);overflow-wrap:anywhere}
+.facts dd a{color:var(--txt);text-decoration:underline;text-decoration-color:rgba(224,154,53,.55);text-underline-offset:.2em;text-decoration-thickness:1px}
+
+/* ---------- Mit Bühne: Tür, dann Raum ---------- */
+html.door-walk .door-track{position:relative;height:100svh}
+html.door-walk .door-sticky{position:sticky;top:0;height:100svh;overflow:hidden}
+html.raum-on .door-sticky{touch-action:pan-y} /* senkrecht scrollt die Seite, waagerecht dreht der Raum */
+html.door-walk .door-top{padding-top:calc(env(safe-area-inset-top,0px) + 6.25rem);transition:none}
+html.door-walk .door-hit{display:block;position:absolute;left:50%;top:24%;bottom:12%;width:min(86%,30rem);transform:translateX(-50%);background:none;border:0;padding:0;cursor:pointer;border-radius:4px;z-index:3;-webkit-tap-highlight-color:transparent}
+.door-hit[hidden]{display:none!important}
+html.door-walk .door-hit:focus-visible{outline:2px solid var(--amber);outline-offset:4px}
+html.door-walk .door-cue{display:flex;align-items:center;justify-content:center;position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 1.25rem);margin:0;opacity:0;font:400 .9375rem/1.2 var(--sans);color:var(--dim);text-shadow:0 1px 2px rgba(10,22,27,.8),0 0 1rem rgba(10,22,27,.9)}
+
+/* Raum: Kopf oben, Motiv in der Mitte (dort zeichnet die Bühne), Text darunter, Bedienung unten. Alle vier Köpfe und Texte liegen
+   in derselben Zelle übereinander – die Zelle ist so hoch wie der längste, das Motiv bleibt beim Umsehen gleich groß und an seinem Ort. */
+html.door-walk .raum{position:absolute;z-index:2;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 4.75rem);bottom:calc(env(safe-area-inset-bottom,0px) + 1rem);margin:0;padding:0 1.5rem;gap:0;
+  grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(6rem,1fr) auto auto;grid-template-areas:"head" "mot" "body" "bar";
+  opacity:0;visibility:hidden;transition:opacity .9s var(--ease),visibility 0s .9s}
+html.door-walk.raum-on .raum{opacity:1;visibility:visible;transition:opacity 1.2s var(--ease) .2s,visibility 0s}
+html.door-walk .rp{display:contents}
+html.door-walk .rp-head{grid-area:head;padding-bottom:.25rem}
+html.door-walk .rp-body{grid-area:body;align-self:end;padding-top:.5rem;font-size:.9375rem;line-height:1.45;gap:.375rem}
+html.door-walk .rp-note{font-size:.8125rem}
+html.door-walk .rp-big{font-size:1.0625rem}
+html.door-walk .rp h3{font-size:clamp(1.625rem,6.4vw,2.5rem);margin:0}
+html.door-walk .raum-mot{display:block;grid-area:mot;min-height:0}
+html.door-walk .raum-bar{grid-area:bar;display:flex;flex-direction:column;align-items:stretch;gap:.375rem;padding-top:.75rem}
+html.door-walk .rp-head,html.door-walk .rp-body{transition:opacity .55s var(--ease),transform .7s var(--ease),visibility 0s 0s}
+html.door-walk .rp.is-off .rp-head,html.door-walk .rp.is-off .rp-body{opacity:0;visibility:hidden;transform:translateY(.375rem);transition:opacity .45s var(--ease),transform .45s var(--ease),visibility 0s .45s}
+html.door-walk .raum-termin{margin-top:.25rem;width:100%}
+html.door-walk .raum-nav{display:flex;align-items:center;justify-content:center;gap:.25rem}
+html.door-walk .raum-hint{display:block;text-align:center;font:400 .8125rem/1.2 var(--sans);color:var(--mute);transition:opacity .8s}
+html.raum-turned .raum-hint{opacity:0}
+.rn{appearance:none;display:inline-flex;align-items:center;justify-content:center;width:2.75rem;height:2.75rem;border-radius:50%;border:1px solid var(--line);background:rgba(16,34,42,.55);color:var(--txt);cursor:pointer;transition:border-color .3s,color .3s}
+.rn:hover{border-color:rgba(224,154,53,.6);color:var(--amber)}
+.rn svg{width:1.125rem;height:1.125rem;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.raum-tabs{display:flex;gap:0;margin:0 .5rem}
+.raum-tabs [role="tab"]{appearance:none;display:inline-flex;align-items:center;justify-content:center;width:2.75rem;height:2.75rem;padding:0;border:0;background:none;cursor:pointer}
+.raum-tabs [role="tab"] i{display:block;width:.625rem;height:.625rem;border-radius:50%;border:1.5px solid rgba(237,232,220,.45);transition:background .4s,border-color .4s,box-shadow .4s,transform .4s var(--ease)}
+.raum-tabs [role="tab"]:hover i{border-color:var(--amber)}
+.raum-tabs [role="tab"][aria-selected="true"] i{background:var(--amber);border-color:var(--amber);box-shadow:0 0 .75rem rgba(224,154,53,.55);transform:scale(1.15)}
+.raum-tabs [role="tab"]:focus-visible{outline:none}
+.raum-tabs [role="tab"]:focus-visible i{outline:2px solid var(--amber);outline-offset:4px}
+
+@media (min-width:921px){
+  /* PC: Motiv links, rechts Kopf · Text · Bedienung in einer Spalte, die Überschrift oben in ihrer Spalte */
+  html.door-walk .raum{top:calc(env(safe-area-inset-top,0px) + 6rem);bottom:2.75rem;padding:0 6vw;column-gap:clamp(2.5rem,5vw,5rem);
+    grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);grid-template-rows:1fr auto auto auto 1fr;grid-template-areas:"mot ." "mot head" "mot body" "mot bar" "mot ."}
+  html.door-walk .rp-body{align-self:start;padding-top:1rem}
+  html.door-walk .rp-head{align-self:end}
+  html.door-walk .raum-bar{padding-top:2rem;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:1rem 1.25rem}
+  html.door-walk .raum-nav{justify-content:flex-start}
+  html.door-walk .raum-hint{order:3;flex-basis:100%;text-align:left;padding-left:.25rem}
+  html.door-walk .raum-termin{width:auto;margin-top:0}
+  html.door-walk .rp h3{font-size:clamp(2rem,2.8vw,3rem)}
+}
+@media (max-width:920px){
+  .top{gap:.625rem;padding-top:.625rem;padding-bottom:.625rem}
+  .brand svg{width:4.875rem}
+  .top-name{font-size:.6875rem;letter-spacing:.1em}
+  .motion-btn{padding:0 .75rem;min-width:2.75rem;justify-content:center}
+  .motion-btn span{display:none}
+  .vor{padding-top:6.5rem}
+  .facts{grid-template-columns:1fr 1fr}
+}
+@media (max-width:600px){ body{font-size:1rem} .facts{grid-template-columns:1fr} }
+@media (max-height:600px) and (max-width:920px){
+  html.door-walk .rp-dir{margin-bottom:.375rem}
+  html.door-walk .raum-hint{display:none}
+  html.door-walk .rp-body p:not(.rp-big):not(.rp-acts):not(.dd-open){font-size:.875rem}
+}
+@media (max-width:380px){ .top-name{display:none} }
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  #t-title .lt{opacity:1}
+}
+html.paused .v-end svg{animation:none}
+html:not(.js) .motion-btn{display:none}
+html:not(.js) #t-title .lt{opacity:1}
+.takt{position:fixed;z-index:50;left:.5rem;bottom:.5rem;padding:.25rem .5rem;border-radius:3px;background:rgba(0,0,0,.7);color:#9FCB6B;font:600 .75rem/1.2 ui-monospace,monospace;pointer-events:none}
+@media print{
+  .top,.grain,.skip,.c-stage,.c-glow,.btn,.raum-nav,.raum-hint,.door-hit,.door-cue,.takt{display:none!important}
+  .door-track,.door-sticky{height:auto!important;position:static!important}
+  .raum{position:static!important;opacity:1!important;visibility:visible!important;display:block!important}
+  .rp{display:block!important}
+  .rp .rp-head,.rp .rp-body{opacity:1!important;visibility:visible!important}
+  body{background:#fff;color:#111}
+}
