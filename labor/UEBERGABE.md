@@ -7,6 +7,14 @@
 **[O] Kai:** am iPhone die Hüfte von beiden Seiten ansehen, in Ruhe und in den Bewegungen.
 **Rückweg:** Stand davor = Commit `58fce70` (main mit „Text ruhig“); nur `assets/manu-figur.bin` und `live/manu-figur.bin` von dort zurückholen.
 
+## ▶ Stand 22.11.2026 später – Kai: „super, aber man sieht nicht gleich, dass es noch etwas zum Klicken gibt … Hinschauer, der auffällt, ohne sich aufzudrängen“ → Vorschläge 1–6, **Go „bester Vorschlag“ (1 + 2 + 3)** – umgesetzt in Puls + `live/`, **wartet auf Kais Sichtprüfung am iPhone**
+- **Ursache [B]:** der Knopf sah aus wie die nicht klickbare Kennzeile darüber (gleicher Bernstein-Punkt, gleiche kleine Großschrift), ohne Knopfform; der Text wirkte abgeschlossen.
+- **1 Leuchtpille:** abgerundete Pille mit Bernstein-Rand, links eine Kugel mit „+“ (beim Öffnen „×“, Pille wird leiser). **2 Text läuft aus:** über der Pille die erste Zeile des verborgenen Texts, nach rechts ins Dunkel ausblendend (aus dem Inhalt gebildet). **3 Auftritt aus Staub:** beim ersten Hereinkommen sammeln sich 14 feine Bernstein-Punkte (3 px, höchstens 60 % deckend, gleichmäßig verteilt) in 1,2 s zur Kugel, die kurz aufleuchtet; danach atmet ein Lichtring um die Kugel – nur am obersten noch nie geöffneten Knopf im Bild. Bei „Bewegung anhalten/reduzieren“ kein Staub, kein Puls.
+- **Dabei gefunden und behoben [B]:** die nicht umbrechende Vorschauzeile machte die Knöpfe am Handy bis 1 079 px breit, die Seite wurde waagerecht scrollbar (`contain:inline-size`, Knopf = Spaltenbreite).
+- Nicht angefasst: die „Mehr“-Pille an der Wirbelsäule (gefüllte Bernstein-Pille mit Vorschauzeile – dieselbe Sprache, eigene Form).
+<!--PRUEF-23-->
+- **Rückweg:** Stand davor = Commit `58fce70` (Leuchtpunkt als Textzeile).
+
 ## ▶ Stand 22.11.2026 – Kai: **„Go Übernahme“** (Text ruhig) → umgesetzt in Puls + `live/`, **wartet auf Kais Sichtprüfung am iPhone**
 - „ruhig“ ist jetzt Standard: Leuchtpunkt-Knöpfe an Manuthera, Stoßwelle (Text, Schritte, Einsatzorte) und Kontakt; kürzere Bedien-Hinweise in Kapitel 03/04. `textruhe.html` bleibt als Vergleich mit Umschalter.
 - **Offen an Kai [O]:** weitere Stellen (Leitsatz Kapitel 02, Raumkarten)? · „Mehr“-Pille der Wirbelsäule (pulsiert eigenständig) auf den Leuchtpunkt umstellen? · Knopf-Wörter passend?
