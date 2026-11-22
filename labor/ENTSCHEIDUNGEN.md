@@ -6,6 +6,11 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 ## Tür · Raum, Runde 2 – „Text lebt im Raum“ (Go Kai „Empfehlung“, 23.11.2026)
 - **Entschieden:** A „Alles im Raum“ statt B (Schilder mit Faden) oder C (nur Weitwinkel). Texte stehen als Wandschrift im Raum (echter Text, perspektivisch), Dinge sind antippbar (Buch = Termin, Telefon = anrufen, Fenster = Karte); „Termin buchen“ bleibt unten als Netz.
 - **Merkregeln:** Schrift nur auf senkrechten Flächen, die man frontal ansieht (Blick waagerecht, Ausschnitt per Bildmitte statt Neigen) – sonst wird sie verzerrt. Schrift ist frontal genau so groß wie gesetzt (Breite W0 in Bildpunkten → scharf). Nichts aus Punkten hinter der Schrift (Tür hinten außerhalb des Handy-Bilds, keine Deckenfuge). Zeichenflächen in der Bühne, nicht fest über dem Fenster (sonst schwimmen sie beim Scrollen am iPhone).
+## Arbeitsblatt 4, fünfte Runde (Kai 22.11.2026)
+- **Erledigt (Kai):** Stottern der Partikel tritt nicht mehr auf.
+- **Entschieden (Claude, von Kai übertragen):** Sicherheitsregeln (CSP) per `<meta>` im Live-Build; eine HTML-Datei je Seite bleibt; `/labor/` bis zum Livegang öffentlich (noindex), danach `robots.txt` sperrt `/labor/`; keine `geo`/`sameAs`-Angaben ohne gepflegtes Profil.
+- **Merkregel:** Jede neue fremde Quelle (Skript, Bild, Schrift, Rahmen, Abruf) braucht eine Zeile in den Sicherheitsregeln in `build.mjs` – sonst blockiert der Browser sie. Vorher fragen: braucht es die fremde Quelle wirklich?
+- **Merkregel:** Links auf eigene Dateien im Kopf relativ schreiben (gleiche Herkunft auch unter `www.`).
 
 ## Kapitel 05 als Raum – „Tür · Raum“ (Kai 22.11.2026 nachts: „drauf klicken und dann erscheinen nur diese 2 Buttons“ ist zu wenig)
 - **Go Kai „a c“:** A „Der Empfang“ (Rahmen wird Bildschirmrand, vier Blickrichtungen mit den Kontakt-Infos) + C „Kopf drehen“ (Maus am PC, Finger beim Wischen). Erst Entwurfsseite `tuer-raum.html`; Puls unberührt bis Kais Urteil.
@@ -44,6 +49,10 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **Entschieden (Kai „Go A“, 21.11. spät):** Oberkörper und Becken mit Beinen bleiben fest; nur die Haut über der Lende (L1 bis vor die Hüfte) geht weich mit der Wirbelsäule mit – kein Knick an der Taille, Beine schwenken aus der Hüfte. Körper ganz still (B) und Rückweg (C) verworfen.
 - **Merkregel:** Haut und Wirbel bekommen dieselbe Übergangszone – sonst schiebt sich die Wirbelsäule gegen die Haut.
 - **Entschieden (Kai „Go A“, 22.11.):** „Spitze an der Hüfte“ an der Ursache behoben – im Werkzeug `tools/manu-figur.mjs` folgt die Haut unterhalb des Ellbogens nicht mehr anteilig dem Arm; Figur neu erzeugt. Wegschneiden (B) und Glätten (C) verworfen.
+- **Entschieden (Kai „Go Empfehlung“, 22.11.):** (1A) Kamera geht beim Drehen so weit zurück, dass alles im Bild bleibt; (2A) lose Hautstücke an den Händen entfernt; (3A) Wirbel leuchten Bernstein, so stark sie gerade bewegt werden – kein Rot (stünde für Schmerz/Entzündung und liegt außerhalb der Farben).
+- **Entschieden (Auftrag Kai 22.11.: „Kopf- und Mittelteil sollen sich auch bewegen“):** nach den Angaben zur Manuthera 242 bewegen sich Kopfteil (HWS), Brustteil (BWS) und Beckenteil (LWS) je Behandlung nacheinander; das kurze Mittelteil bleibt wie bei der echten Liege der feste Bezug. Bewegungs-Anzeigen unter den Füßen entfallen bei der echten Figur (die Wirbelsäule zeigt selbst, wo sich etwas bewegt).
+- **Entschieden (Kai „Go Empfehlung“, 23.11.):** eigener Knopf **Extension** (Kopf hebt sich, dann Becken mit Beinen); bewegte Wirbel im Verlauf Bernstein → Rot-Orange nach Stärke, die stärkste Stelle glüht ruhig. Kai wollte es „eher rötlich“ – Rot-Orange nur an der Wirbelsäule der Manuthera, nicht als neue Seitenfarbe.
+- **Merkregel:** Eine Bewegung zur Zeit auch innerhalb einer Behandlung – Teile setzen nacheinander ein, kehren gemeinsam ruhig zurück.
 - **Merkregel:** Beim Umlegen einer stehenden Figur: Gewichte nur dort glätten, wo Gelenke sind (Schulter, Ellbogen) – wo Körperteile sich in der Ausgangslage nur berühren (Hand am Oberschenkel), sonst wandert Haut mit. Berührungs-Brücken auftrennen und die Ränder schließen.
 - **Merkregel:** Haut aus BodyParts3D: Außenfläche per Strahltest („sieht ins Freie“) bestimmen, danach Öffnungen schließen – kein Normalen-Knochen-Test.
 - **Merkregel:** Punkt-Filter für eine Form („Unterseite weglassen“) bei neuer Form neu prüfen – flach von der Seite und von beiden Seiten ansehen.

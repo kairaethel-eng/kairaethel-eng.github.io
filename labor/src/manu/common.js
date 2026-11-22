@@ -64,7 +64,7 @@ export function dragYaw(el, state, k = 0.006) {
   el.addEventListener('pointerdown', (e) => { x0 = e.clientX; id = e.pointerId; state.dragging = true; state.lastUser = performance.now(); });
   addEventListener('pointermove', (e) => {
     if (x0 === null || e.pointerId !== id) return;
-    state.yawTarget += (e.clientX - x0) * k; x0 = e.clientX; state.lastUser = performance.now();
+    state.yawTarget += (e.clientX - x0) * k; if (e.clientX !== x0) state.gedreht = true; x0 = e.clientX; state.lastUser = performance.now();
   });
   const up = () => { x0 = null; state.dragging = false; };
   addEventListener('pointerup', up); addEventListener('pointercancel', up);
