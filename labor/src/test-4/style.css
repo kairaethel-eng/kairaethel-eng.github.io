@@ -1003,3 +1003,32 @@ html.ruhe .facts-box > .lp-btn{margin-top:1rem}
 .vsw-ruhe b{padding:0 .5rem 0 .625rem;font:600 .625rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
 .vsw-ruhe button{appearance:none;min-height:2.25rem;padding:0 .875rem;border:0;border-radius:1.25rem;background:transparent;color:var(--dim);font:600 .6875rem/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
 .vsw-ruhe button[aria-pressed="true"]{background:var(--amber);color:#14110A}
+/* Raumlicht + Logo-Farben (Go Kai 22.11.2026: „Kräftig“; Baustein farbe.js, Vergleich farbstudie.html).
+   Die Lichtschicht liegt über der Seite (auch über der Kopfleiste), unter Hinweisen und Dialogen; „screen“ hellt nur auf. */
+#farblicht{position:fixed;inset:0;z-index:21;pointer-events:none;mix-blend-mode:screen;transition:opacity .9s ease}
+html.fx-aus #farblicht,html.licht #farblicht{display:none}
+@media (prefers-contrast:more){#farblicht{display:none}}
+@media print{#farblicht,.fx-wahl,.fx-info{display:none!important}}
+/* Logo-Farben als Raumfarben: Kapitel-Ziffern, Linien, Menü. Bernstein bleibt die Farbe für Handlung (Knöpfe, Leuchtpunkte, Kursivwort). */
+.auftakt-blk[data-for="bewegung"]{--cc:#8DBF55}
+.auftakt-blk[data-for="achse"]{--cc:#5AA2D6}
+.auftakt-blk[data-for="dach"]{--cc:#6FA8C0}
+.auftakt-blk[data-for="tuer"]{--cc:#E09A35}
+html.fx-logo .auftakt-blk .au-no{color:var(--cc,var(--amber))}
+html.fx-logo .auftakt-blk .au-line{background:linear-gradient(90deg,var(--cc,var(--amber)),color-mix(in srgb,var(--cc,var(--amber)) 35%,transparent) 60%,transparent)}
+.chapters li:nth-child(1),.chapters li:nth-child(4){--cc:#5AA2D6}
+.chapters li:nth-child(2){--cc:#8DBF55}
+.chapters li:nth-child(3),.chapters li:nth-child(5){--cc:#6FA8C0}
+.chapters li:nth-child(6){--cc:#E09A35}
+html.fx-logo .chapters i{color:color-mix(in srgb,var(--cc) 70%,var(--mute))}
+html.fx-logo .chapters a.on i{color:var(--cc)}
+html.fx-logo .chap-now i{color:var(--fx-now,var(--amber));transition:color .9s ease}
+/* Vergleichsseite farbstudie.html: Umschalter unten links (wie .vsw-ruhe) */
+.fx-wahl{position:fixed;z-index:45;left:max(.75rem,env(safe-area-inset-left,0px));bottom:max(.75rem,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:.25rem;padding:.1875rem;border-radius:1.5rem;border:1px solid var(--line);background:rgba(10,22,27,.92);box-shadow:0 .5rem 1.5rem rgba(0,0,0,.4)}
+.fx-wahl b{padding:0 .5rem 0 .625rem;font:600 .625rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.fx-wahl button{appearance:none;min-height:2.25rem;padding:0 .75rem;border:0;border-radius:1.25rem;background:transparent;color:var(--dim);font:600 .6875rem/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.fx-wahl button[aria-pressed="true"]{background:var(--amber);color:#14110A}
+.fx-wahl button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.fx-wahl.zu b,.fx-wahl.zu button:not([aria-pressed="true"]){display:none}
+.fx-info{position:fixed;z-index:45;left:max(.75rem,env(safe-area-inset-left,0px));bottom:calc(max(.75rem,env(safe-area-inset-bottom,0px)) + 3.125rem);max-width:min(26rem,calc(100vw - 1.5rem));margin:0;padding:.5rem .75rem;border-radius:.5rem;border:1px solid var(--line);background:rgba(10,22,27,.94);font:500 .8125rem/1.4 var(--sans);color:var(--txt);opacity:0;transform:translateY(.25rem);transition:opacity .4s,transform .4s;pointer-events:none}
+.fx-info.an{opacity:1;transform:none}

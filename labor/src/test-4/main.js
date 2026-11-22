@@ -21,6 +21,7 @@ import { initVorfall, SEG as VF_SEG } from '../vorfall/film.js';
 import { initKopfFuss } from '../feinschliff/kapitel.js';
 import { initDoorStage, DOOR_PLAN } from '../tuer/buehne.js';
 import { initRuhe } from './ruhe.js';
+import { initFarbe } from './farbe.js';
 
 // „Bewegung reduzieren“: sanfter Ruhemodus – die Seite lebt langsam weiter (Atmen, Treiben, Signale),
 // aber ohne Kamerafahrten, Streu-Effekte, Nachgleiten beim Scrollen und springende Buchstaben.
@@ -227,10 +228,14 @@ const uniforms = {
   // Feinschliff (17.11.): Farben der Figur wie in Kapitel 01, Zeilen leicht von oben (uTilt), Punktgröße aus Welt-Durchmessern
   // (uProj = Bildpunkte je Welt-Einheit × Abstand), Perlenbänder (uRib: Stränge je Bahn, Perlen je Strang), Zeiger (uPtr)
   cDeep: { value: C('#44788E') }, cCalm: { value: C('#86BEE6') }, cBone0: { value: C('#E4E3D8') },
+  cLane: { value: C('#4E7F93').multiplyScalar(1.4) }, // Band 2 der Perlenbänder (bis 22.11. fest cPetrol·1,4; Farbstufe setzt es, farbe.js)
   uTilt: { value: 0.16 }, uProj: { value: 1000 }, uPr: { value: 1 }, uRib: { value: new THREE.Vector2(DESK0 ? 9 : 6, DESK0 ? 300 : 257) },
   uDr4: { value: logo.dr }, uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 },
   uRibA: { value: DESK0 ? 0.62 : 1.25 }, // PC seit 20.11. leiser (Kai: „am PC sehr unübersichtlich und die Punkte zu deutlich“) // Handy (18.11.): die Bänder laufen jetzt hinter dem Text von Kapitel 02 → gedämpft (vorher 1,75: nur im Vorübergehen zu sehen)
 };
+// Raumlicht + Logo-Farben (Go Kai 22.11.2026: „Kräftig“; Stufen heute/leise/mittel über ?farbe=, Vergleich farbstudie.html).
+// Läuft vor initKopfFuss, damit die Figur von Kapitel 01 ihre Farbe (html[data-deep]) schon beim Aufbau kennt.
+initFarbe({ uniforms });
 
 const vert = /* glsl */`
   attribute float aHeat; attribute vec3 pos2; attribute vec3 pos3; attribute float kind3; attribute vec3 pos4; attribute float kind4; attribute vec4 aRand;
@@ -240,7 +245,7 @@ const vert = /* glsl */`
   uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uRoofH, uRoofA, uLogo;
   uniform float uTilt, uProj, uPr, uDr4, uAsp, uRibA; uniform vec2 uRib; uniform vec4 uPtr;
   uniform sampler2D uRelax; uniform vec2 uBodyWH; uniform vec4 uXf[5];
-  uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey, cDeep, cCalm, cBone0, cLg0, cLg1, cLg2;
+  uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey, cDeep, cCalm, cBone0, cLg0, cLg1, cLg2, cLane;
   varying vec3 vCol; varying float vA; varying float vSize;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
   float hash1(float n){ return fract(sin(n*12.9898)*43758.5453); }
@@ -272,7 +277,7 @@ const vert = /* glsl */`
       float z = sj*1.7 + cos(x*.4 + lane)*.5;
       p = vec3(x, y, z);
       float m = mod(lane, 4.);
-      col = m<1. ? cBlue : m<2. ? cPetrol*1.4 : m<3. ? cBone : cAmber;
+      col = m<1. ? cBlue : m<2. ? cLane : m<3. ? cBone : cAmber;
       col = mix(col, cBone, .2 + .5*abs(sj)*2.*abs(sj)*2.); // Rand des Bands heller
       al = step(bead, uRib.y - .5) * (.15 + .42*abs(sj)*2.) * uRibA;
       dw = .022 * uXf[1].w;
