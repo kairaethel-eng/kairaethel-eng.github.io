@@ -27,12 +27,14 @@ stehen wörtlich in `labor/TECHNIK.md` – dort gezielt nachschlagen, nicht alle
 - Seit 22.11.2026: Manuthera-Figur ohne „Spitze an der Hüfte“ (Arm-Gewichte unter dem Ellbogen bereinigt, Figur neu erzeugt) – wartet auf Kais Sichtprüfung.
 - Seit 22.11.2026 abends: **Manuthera mit beweglichem Kopf- und Brustteil** (Abläufe je Abschnitt Kopf → Brust → Becken, Mittelteil fest wie bei der echten Liege), Wirbel leuchten Bernstein nach Bewegung, Kamera passt sich beim Drehen an – wartet auf Kais Sichtprüfung.
 - Seit 22.11.2026: **„Text ruhig“** – Erklärtext an Manuthera, Stoßwelle und Kontakt hinter Bernstein-Leuchtpunkt-Knöpfen, klappt am Ort auf (Klasse `ruhe`, `src/test-4/ruhe.js`); Vergleich `textruhe.html` – wartet auf Kais Sichtprüfung. Neues Aufklappbares immer mit diesem Muster (`.lp-btn`/`.lp-zone`/`.lp-x`), höchstens ein pulsierender Punkt im Bild.
+- Seit 22.11.2026 spät: **Raumlicht „Kräftig“** (Go Kai) – jedes Kapitel ein Raum mit eigenem Licht, Logo-Farben als Raumfarben; Kai lässt es ein paar Tage wirken. Offen: Nerven-Shader Kap. 03 kompiliert auf echter Grafik nicht (`uFade`/`uClip` doppelt, `main.js` `addNerves`) – Fix wartet auf Go. Prüfstand für diese Runde noch nicht gelaufen (lokal kein Playwright).
 - Startadresse (`/index.html`, `/impressum.html`, `/datenschutz.html`) ist eine Übergangsseite und wird **nie ohne ausdrückliches Go** geändert. Livegang ruht.
 - Entwurfsseiten und Archiv (Figur plus, Tür, Haus-Licht, Fusion, Zuhause, Manuthera, Vorfall …): Liste und Technik in `TECHNIK.md`.
 
 ## Gestaltungsregeln (prüfbar – gelten für alles Neue)
 - **Punkte:** geordnet (gleicher Abstand, gleiche Größe, scharfer Rand), kein Zittern, kein Zufall im ruhenden Bild.
-- **Farben der Punkte:** Petrol → Knochenweiß, Bernstein (Spannung, Nerven, Akzent), ein Blau; Grün nur im Logo und in Häkchen/Ringen der Bedienung.
+- **Farben der Punkte:** Petrol → Knochenweiß, Bernstein (Spannung, Nerven, Akzent), ein Blau; Grün im Logo, in Häkchen/Ringen der Bedienung und seit 22.11. als Raumfarbe (Band 2 der Perlenbänder).
+- **Raumlicht (seit 22.11.2026, Stufe „Kräftig“):** jedes Kapitel hat sein Licht aus der HOP-Palette (`src/test-4/farbe.js`, kühl → warm); Logo-Farben nur als Raumfarben (Licht, Kapitel-Ziffern, Menü), **Bernstein bleibt die Farbe für Handlung** (Knöpfe, Termin, Leuchtpunkte). Andere Stufen: `?farbe=heute|leise|mittel`, Vergleich `farbstudie.html`.
 - **Anatomie:** echte Knochen aus `assets/motive-anatomie.bin` (BodyParts3D 4.0, CC BY 4.0, Namensnennung) über `src/shared/netz.js`; nichts Anatomisches frei erfinden, wenn es das Teil in den Daten gibt.
 - **Punkt-Grafiken:** immer mit `src/shared/raster.js` bauen (Zeilen über die Oberfläche, Normale je Punkt → Kantenlicht, Kern verdeckt die Rückseite); kein Zufall bei der Lage.
 - **Abläufe:** Übergänge und Auftritte laufen über die Zeit (Auslöser beim Hereinscrollen, `riegel()` in `main.js`), nicht am Scrollweg. Am Scrollweg bleiben nur: Fahrt an der Figur, Haltestellen der Wirbelsäule (die Tür öffnet auf Antippen). Nur die Menge des Staubs darf am Scrollen hängen (dünner, sobald Text im Lesebereich steht).

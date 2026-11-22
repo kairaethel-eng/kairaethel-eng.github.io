@@ -54,6 +54,9 @@ const PAGES = {
   // Text ruhig (21.11.2026, Go Kai „A“; seit 22.11. „Go Übernahme“ Standard in Puls und live): Vergleichsseite mit Umschalter bisher / ruhig.
   // Gleiche Quellen wie Puls (src/test-4); hier kommt nur die Klasse studie-ruhe dazu (Umschalter, ruhe.js).
   'textruhe': { out: 'textruhe.html', dir: 'test-4', studie: 'ruhe' },
+  // Farbstudie (22.11.2026, Go Kai: „Kräftig übernehmen, alle anderen speichern“): Puls mit Umschalter Heute · Leise · Mittel · Kräftig
+  // (Klasse studie-farbe, Baustein src/test-4/farbe.js). In Puls und live gilt „Kräftig“, die anderen Stufen über ?farbe=…
+  'farbe': { out: 'farbstudie.html', dir: 'test-4', studie: 'farbe' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
   'start-ds': { out: '../datenschutz.html', dir: 'recht', page: 'datenschutz.html', root: true, noTermin: true }, // Übergangsseite hat kein Termin-Blatt
@@ -203,6 +206,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   { const acts = tpl.match(/<!--KF-ACTS-->([\s\S]*?)<!--\/KF-ACTS-->/); if (acts) tpl = tpl.replace(acts[0], '').replace('<!--KF-ACTS-SLOT-->', () => acts[1]); }
   if (P) tpl = applyPatches(tpl, P.page, 'page.html');
   if (cfg.studie === 'ruhe') tpl = applyPatches(tpl, [["classList.add('js','ruhe')", "classList.add('js','ruhe','studie-ruhe')"], ['<title>HOP Puls Scan</title>', '<title>HOP Text ruhig</title>']], 'textruhe');
+  if (cfg.studie === 'farbe') tpl = applyPatches(tpl, [["classList.add('js','ruhe')", "classList.add('js','ruhe','studie-farbe')"], ['<title>HOP Puls Scan</title>', '<title>HOP Farbstudie</title>']], 'farbstudie');
   if (cfg.root) ROOT_LINKS.forEach(([re, to]) => { tpl = tpl.replace(re, to); });
   // Datenschutz § 4 Online-Terminbuchung (<!--TERMIN-->…): ohne Termin-Blatt heraus, folgende §§ eins zurück
   if (cfg.noTermin) tpl = tpl.replace(/[ \t]*<!--TERMIN-->[\s\S]*?<!--\/TERMIN-->\r?\n?/g, '').replace(/<i>§ ([5-9])<\/i>/g, (m, n) => `<i>§ ${n - 1}</i>`);

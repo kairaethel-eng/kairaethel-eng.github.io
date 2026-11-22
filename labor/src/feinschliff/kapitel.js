@@ -197,7 +197,9 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, ol
   const SP = Q.has('abstand') ? clamp(+Q.get('abstand') || 1.6, 0.9, 4) : clamp((big ? 2.7 : 2.4) / Math.max(0.5, sA0), 1.15, 2.6);
   if (gl) try {
     pts = finePoints({ sp: SP, dust: big ? 26 : 14 });
-    st = createStage(gl, pts, relaxCv);
+    // Farbstufe (Puls, 22.11.2026): Körperfarbe aus html[data-deep], Wechsel auf der Vergleichsseite per Ereignis „hop-farbe“
+    st = createStage(gl, pts, relaxCv, document.documentElement.dataset.deep);
+    document.addEventListener('hop-farbe', () => { if (st) st.setDeep(document.documentElement.dataset.deep); });
   } catch (e) { console.error(e); gl = null; st = null; }
   if (!st) pts = finePoints({ sp: 3, dust: 0 }); // ohne WebGL nur zum Messen
   if (!gl) root.classList.add('kf-nogl');
