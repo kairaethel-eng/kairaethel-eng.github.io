@@ -12,7 +12,7 @@
 - **1 Leuchtpille:** abgerundete Pille mit Bernstein-Rand, links eine Kugel mit „+“ (beim Öffnen „×“, Pille wird leiser). **2 Text läuft aus:** über der Pille die erste Zeile des verborgenen Texts, nach rechts ins Dunkel ausblendend (aus dem Inhalt gebildet). **3 Auftritt aus Staub:** beim ersten Hereinkommen sammeln sich 14 feine Bernstein-Punkte (3 px, höchstens 60 % deckend, gleichmäßig verteilt) in 1,2 s zur Kugel, die kurz aufleuchtet; danach atmet ein Lichtring um die Kugel – nur am obersten noch nie geöffneten Knopf im Bild. Bei „Bewegung anhalten/reduzieren“ kein Staub, kein Puls.
 - **Dabei gefunden und behoben [B]:** die nicht umbrechende Vorschauzeile machte die Knöpfe am Handy bis 1 079 px breit, die Seite wurde waagerecht scrollbar (`contain:inline-size`, Knopf = Spaltenbreite).
 - Nicht angefasst: die „Mehr“-Pille an der Wirbelsäule (gefüllte Bernstein-Pille mit Vorschauzeile – dieselbe Sprache, eigene Form).
-<!--PRUEF-23-->
+- **Geprüft [B] (`live/`):** Prüfstand iPhone 390×692 und PC 1440×900 voll: alles ok (Film Leistungen → Manuthera am Handy angesehen). `sizes.cjs`: alles ok. axe: Handy 0, PC 1 (vorbestehender Kontrast-Befund am Seitenanfang, wie zuvor). Pillen zu/offen und während des Staub-Auftritts am Handy und PC angesehen; Seitenbreite am Handy 390 px. **[O] nur Kai:** Wirkung und Tempo des Auftritts am iPhone (ohne Grafikchip nur Standbilder).
 - **Rückweg:** Stand davor = Commit `58fce70` (Leuchtpunkt als Textzeile).
 
 ## ▶ Stand 22.11.2026 – Kai: **„Go Übernahme“** (Text ruhig) → umgesetzt in Puls + `live/`, **wartet auf Kais Sichtprüfung am iPhone**
