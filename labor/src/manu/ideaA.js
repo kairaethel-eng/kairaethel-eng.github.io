@@ -374,7 +374,8 @@ export function* initAGen(canvas, ui) {
     IU.uModeW.value.set(segAmt2(0), Math.max(segAmt2(1), segAmt2(2)), segAmt2(3), segAmt2(4)).multiplyScalar(echt ? 0 : 1);
     ui && ui.onAmount && ui.onAmount(amt);
 
-    const idle = !reduced && !cam.dragging && performance.now() - cam.lastUser > 3000;
+    // Von Hand gedreht → Blick bleibt stehen (Kai 22.11.); sonst sanftes Pendeln um die Startansicht
+    const idle = !reduced && !cam.dragging && !cam.gedreht && performance.now() - cam.lastUser > 3000;
     if (idle) cam.yawTarget = damp(cam.yawTarget, Math.sin(time * 0.11) * 0.25, 0.6, dt);
     cam.yaw = damp(cam.yaw, cam.yawTarget, 5, dtCam);
     const yaw = 0.8 + cam.yaw, el = 0.44;
