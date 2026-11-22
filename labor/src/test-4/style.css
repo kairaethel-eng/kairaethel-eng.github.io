@@ -373,6 +373,10 @@ html.door-walk .door-cue{display:flex;align-items:center;justify-content:center;
 @media (min-width:921px){.manu-h em{white-space:nowrap}}
 .manu .lead{margin-top:1.5rem}
 .manu-modes{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-top:2rem;max-width:32.5rem}
+/* 23.11.2026: fünf Behandlungen (Extension neu) – oben Traktion · Flexion · Extension, unten Seitneigung · Rotation */
+#manuModes{grid-template-columns:repeat(6,1fr)}
+#manuModes button{grid-column:span 2}
+#manuModes button:nth-child(n+4){grid-column:span 3}
 .manu-modes button{position:relative;overflow:hidden;min-height:2.875rem;padding:0 .5rem;background:transparent;border:1px solid rgba(237,232,220,.22);border-radius:3px;color:var(--dim);font:600 .75rem/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:color .3s,border-color .3s}
 .manu-modes button:hover{color:var(--txt);border-color:var(--txt)}
 .manu-modes button i{position:absolute;left:0;bottom:0;height:2px;width:0;background:var(--amber)}
@@ -407,6 +411,7 @@ html:not(.js) button.ix-link{display:none}
 }
 @media (max-width:600px){
   .manu-modes{grid-template-columns:repeat(2,1fr)}
+  #manuModes{grid-template-columns:repeat(6,1fr)}
 }
 
 @media (max-width:920px){
