@@ -20,6 +20,8 @@ import { runSync } from '../shared/slice.js';
 export const MODES = [
   { id: 'traktion', name: 'Traktion', txt: 'Sanfter Zug in Längsrichtung: Kopf-, Brust- und Beckenteil gleiten nacheinander auseinander – Hals-, Brust- und Lendenwirbelsäule bekommen Raum.' },
   { id: 'flexion', name: 'Flexion', txt: 'Kopf-, Brust- und Beckenteil neigen sich nacheinander nach unten. Die Wirbelsäule beugt sich, genau dosiert und Abschnitt für Abschnitt.' },
+  // 23.11.2026 (Kai: „mir fehlt die Extension, Kopf und Beine“ → „Go A“): Kopfteil hebt sich (HWS), danach das Beckenteil mit den Beinen (LWS)
+  { id: 'extension', name: 'Extension', txt: 'Erst hebt sich das Kopfteil, dann das Beckenteil mit den Beinen. Hals- und Lendenwirbelsäule strecken sich, ruhig und genau dosiert.' },
   { id: 'seit', name: 'Seitneigung', txt: 'Kopf-, Brust- und Beckenteil schwenken nacheinander zur Seite. Seitneigung in entspannter Lage, ohne dass Sie selbst Kraft aufwenden.' },
   { id: 'rot', name: 'Rotation', txt: 'Brust- und Beckenteil drehen sich gegeneinander um die Längsachse. So lässt sich die Wirbelsäule gezielt in die Drehung führen.' },
 ];
@@ -87,7 +89,7 @@ export function* initAGen(canvas, ui) {
     uHi: { value: new THREE.Vector4() }, uTime: { value: 0 }, uPix: { value: 1 }, uSpineHi: { value: new THREE.Vector2() },
     cCore: { value: C('#0E1C22') }, cBone: { value: C('#EDE5D3') }, cDeep: { value: C('#44788E') }, cFrame: { value: C('#2F5B6D') }, cFrameHi: { value: C('#7FAFC2') }, cBody: { value: C('#3F7FAE') }, cBodyHi: { value: C('#C4E1F5') },
     uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 }, uSpB: { value: 0.78 }, uMove: { value: 0 }, uWsz: { value: 0.8 },
-    cBlue: { value: COL.blue }, cAmber: { value: COL.amber },
+    cBlue: { value: COL.blue }, cAmber: { value: COL.amber }, cGlut: { value: C('#F0603A') },
   };
   const coreMesh = new THREE.Mesh(core, coreMaterial(U, NSEG));
   // Punkte wie die Figur in Kapitel 01: Fläche ruhig, Rand hell (Kantenlicht), gestochene Scheiben; etwas Licht von oben hält die Form
@@ -199,7 +201,7 @@ export function* initAGen(canvas, ui) {
     const real = new THREE.Points(spw.geo, new THREE.ShaderMaterial({
       uniforms: U,
       vertexShader: DEFORM(NSEG) + /* glsl */`
-        uniform float uStip, uMaxSize, uCut, uMove, uWsz; uniform vec3 cBone, cAmber, cDeep;
+        uniform float uStip, uMaxSize, uCut, uMove, uWsz, uTime; uniform vec3 cBone, cAmber, cDeep, cGlut;
         varying vec3 vCol; varying float vSize;
         void main(){
           vec3 p = deformP(position, pos2), n = deformN(normal);
@@ -214,12 +216,15 @@ export function* initAGen(canvas, ui) {
           float bend = clamp(length(qa - qb) * 28., 0., 1.) * (.45 + .55 * sin(3.14159 * clamp(aW, 0., 1.)));
           float ride = clamp(length(p - position) * 9., 0., 1.) * .45;
           float g = smoothstep(.04, .9, max(bend, ride));
-          col *= mix(1., .72, uMove * (1. - g));
-          col = mix(col, cAmber * (.95 + .35 * lam), g);
-          col = mix(col, vec3(1., .86, .58), g * g * .22); // die stärkste Stelle etwas heller
+          // 23.11.2026 (Kai: „eher rötlich, damit es noch besser auffällt“ → „Go A“): Verlauf nach Stärke – leicht bewegt Bernstein, die am
+          // stärksten bewegte Stelle glüht Rot-Orange und atmet ruhig (≈ 2 s), solange sich die Liege bewegt
+          col *= mix(1., .62, uMove * (1. - g));
+          vec3 hot = mix(cAmber, cGlut, smoothstep(.35, .95, g));
+          float breathe = .5 + .5 * sin(uTime * 3.1);
+          col = mix(col, hot * (1. + .35 * lam) * (1. + .18 * breathe * g * uMove), g);
           vec4 mv = viewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;
           vCol = col * mix(.95, 1.1, uMove);
-          vSize = clamp(uStip * uWsz / -mv.z, 1., uMaxSize) * step(-.12, fa) * step(p.x, uCut);
+          vSize = clamp(uStip * uWsz * (1. + .14 * g) / -mv.z, 1., uMaxSize) * step(-.12, fa) * step(p.x, uCut);
           gl_PointSize = vSize;
         }`,
       fragmentShader: /* glsl */`
@@ -278,11 +283,12 @@ export function* initAGen(canvas, ui) {
   // halten gemeinsam, kehren gemeinsam ruhig zurück. Gerechnete Figur (Rückfall): wie bisher Brust- und Beckenteil zugleich.
   const DUR = echt ? { step: 1.45, hold: 1.3, out: 1.7, rest: 0.8 } : { step: 1.7, hold: 1.5, out: 1.5, rest: 0.7 };
   // beteiligte Teile je Behandlung: 3 Kopf · 1 Brust · 2 Becken
-  const SEQ = echt ? [[3, 1, 2], [3, 1, 2], [3, 1, 2], [1, 2]] : [[1, 2], [1, 2], [1, 2], [1, 2]];
+  const NM = MODES.length; // 0 Traktion · 1 Flexion · 2 Extension · 3 Seitneigung · 4 Rotation
+  const SEQ = echt ? [[3, 1, 2], [3, 1, 2], [3, 2], [3, 1, 2], [1, 2]] : [[1, 2], [1, 2], [1, 2], [1, 2], [1, 2]];
   const inDur = (m) => (echt ? SEQ[m].length : 1) * DUR.step;
   const cycleOf = (m) => inDur(m) + DUR.hold + DUR.out + DUR.rest;
   let mode = 0, phase = 0, auto = true, scanT = reduced ? 1 : 0;
-  const cur = Array.from({ length: 4 }, () => new Float32Array(4)); // [Behandlung][Segment] 0 … 1
+  const cur = Array.from({ length: NM }, () => new Float32Array(4)); // [Behandlung][Segment] 0 … 1
   const select = (i, user) => { mode = i; phase = 0; if (user) { auto = false; cam.lastUser = performance.now(); } ui && ui.onMode && ui.onMode(i); };
   select(0);
 
@@ -335,37 +341,37 @@ export function* initAGen(canvas, ui) {
     // Scan beim ersten Sichtbarwerden: Liege entsteht vom Kopf- zum Fußende
     if (!reduced && scanT < 1) { scanT = Math.min(1, scanT + dt / 3.0); U.uCut.value = -2.9 + ease(scanT) * 6.6; if (scanT >= 1) U.uCut.value = 99; }
     phase += dt * SPEED;
-    if (phase > (scanT < 1 ? 1e9 : cycleOf(mode))) { phase -= cycleOf(mode); if (auto) select((mode + 1) % 4); }
+    if (phase > (scanT < 1 ? 1e9 : cycleOf(mode))) { phase -= cycleOf(mode); if (auto) select((mode + 1) % NM); }
     if (scanT < 1) phase = 0;
     if (!auto && performance.now() - cam.lastUser > 9000) auto = true;
     const p = phase, tin = inDur(mode), tOut = tin + DUR.hold;
     const back = p < tOut ? 1 : p < tOut + DUR.out ? 1 - ease((p - tOut) / DUR.out) : 0; // gemeinsame Rückkehr
     const amt = p < tin ? p / tin : back; // Fortschritt für den Knopf
-    for (let m = 0; m < 4; m++) for (const sgI of [1, 2, 3]) {
+    for (let m = 0; m < NM; m++) for (const sgI of [1, 2, 3]) {
       const k = SEQ[m].indexOf(sgI);
       let a = 0;
       if (m === mode && k >= 0) { const t0 = echt ? k * DUR.step : 0, len = echt ? DUR.step : tin; a = p < tOut ? ease(Math.min(1, Math.max(0, (p - t0) / len))) : back; }
       cur[m][sgI] = damp(cur[m][sgI], a, 8, dt);
     }
     // Ausschläge (echte Figur, nach den Angaben zur Manuthera 242 ruhig verkleinert): Kopfteil hängt am Brustteil
-    const [tr, fl, se, ro] = cur;
+    const [tr, fl, ex, se, ro] = cur;
     if (echt) {
       pivotMat(M[1], PIV_U, -0.08 * ro[1], -0.1 * se[1], 0.11 * fl[1], -0.06 * tr[1]);
-      pivotMat(M[2], PL, 0.2 * ro[2], 0.17 * se[2], -0.23 * fl[2], 0.19 * tr[2]);
-      pivotMat(M[3], PIV_K, 0, -0.17 * se[3], 0.24 * fl[3], -0.11 * tr[3]); M[3].premultiply(M[1]);
+      pivotMat(M[2], PL, 0.2 * ro[2], 0.17 * se[2], -0.23 * fl[2] + 0.2 * ex[2], 0.19 * tr[2]);
+      pivotMat(M[3], PIV_K, 0, -0.17 * se[3], 0.24 * fl[3] - 0.24 * ex[3], -0.11 * tr[3]); M[3].premultiply(M[1]);
     } else {
-      pivotMat(M[1], PIV_U, 0, -0.13 * se[1], 0.12 * fl[1], -0.07 * tr[1]);
-      pivotMat(M[2], PL, 0.36 * ro[2], 0.31 * se[2], -0.42 * fl[2], 0.34 * tr[2]);
+      pivotMat(M[1], PIV_U, 0, -0.13 * se[1], 0.12 * fl[1] - 0.1 * ex[1], -0.07 * tr[1]);
+      pivotMat(M[2], PL, 0.36 * ro[2], 0.31 * se[2], -0.42 * fl[2] + 0.3 * ex[2], 0.34 * tr[2]);
       M[3].copy(M[1]);
     }
-    const segAmt = (sgI) => Math.max(tr[sgI], fl[sgI], se[sgI], ro[sgI]);
+    const segAmt = (sgI) => Math.max(tr[sgI], fl[sgI], ex[sgI], se[sgI], ro[sgI]);
     const segAmt2 = (m) => cur[m][2];
     const mv = Math.max(segAmt(1), segAmt(2), segAmt(3));
     U.uHi.value.set(0, segAmt(1) * 0.7, segAmt(2), segAmt(3) * 0.7);
     U.uMove.value = mv;
     U.uSpineHi.value.set(mode === 0 ? -0.25 : 0.05, mv * 0.9); // nur Perlenkette (gerechnete Figur)
     // Bewegungs-Anzeigen unter den Füßen gehören zum Beckenteil; bei der echten Figur zeigt die Wirbelsäule selbst, wo sich etwas bewegt
-    IU.uModeW.value.set(segAmt2(0), segAmt2(1), segAmt2(2), segAmt2(3)).multiplyScalar(echt ? 0 : 1);
+    IU.uModeW.value.set(segAmt2(0), Math.max(segAmt2(1), segAmt2(2)), segAmt2(3), segAmt2(4)).multiplyScalar(echt ? 0 : 1);
     ui && ui.onAmount && ui.onAmount(amt);
 
     const idle = !reduced && !cam.dragging && performance.now() - cam.lastUser > 3000;
