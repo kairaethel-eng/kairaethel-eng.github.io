@@ -25,6 +25,7 @@ stehen wörtlich in `labor/TECHNIK.md` – dort gezielt nachschlagen, nicht alle
 - Seit 21.11.2026: Kais Screenshot-Punkte umgesetzt (Abstand nach 01, Leitsatz als Zitatblock, Wirbelsäule am Handy ohne Überlappung + „Mehr“-Pille, Dach: Raumtext gleich unter dem Haus) – wartet auf Kais Sichtprüfung (`UEBERGABE.md` oben).
 - Seit 21.11.2026 nachmittags: **echte Figur auf der Manuthera** (Körperoberfläche BodyParts3D, `assets/manu-figur.bin`, Werkzeug `tools/manu-figur.mjs`) – wartet auf Kais Sichtprüfung.
 - Seit 22.11.2026: Manuthera-Figur ohne „Spitze an der Hüfte“ (Arm-Gewichte unter dem Ellbogen bereinigt, Figur neu erzeugt) – wartet auf Kais Sichtprüfung.
+- Seit 22.11.2026: **„Text ruhig“** – Erklärtext an Manuthera, Stoßwelle und Kontakt hinter Bernstein-Leuchtpunkt-Knöpfen, klappt am Ort auf (Klasse `ruhe`, `src/test-4/ruhe.js`); Vergleich `textruhe.html` – wartet auf Kais Sichtprüfung. Neues Aufklappbares immer mit diesem Muster (`.lp-btn`/`.lp-zone`/`.lp-x`), höchstens ein pulsierender Punkt im Bild.
 - Startadresse (`/index.html`, `/impressum.html`, `/datenschutz.html`) ist eine Übergangsseite und wird **nie ohne ausdrückliches Go** geändert. Livegang ruht.
 - Entwurfsseiten und Archiv (Figur plus, Tür, Haus-Licht, Fusion, Zuhause, Manuthera, Vorfall …): Liste und Technik in `TECHNIK.md`.
 

@@ -51,8 +51,8 @@ const PAGES = {
   'logo': { out: 'logo.html' },
   // Haus mit Staub (21.11.2026, Kai im Arbeitsblatt: Linien behalten, beim Raumwechsel zieht Staub hinüber): Entwurf auf der Grundlage von haus-licht
   'haus-staub': { out: 'haus-staub.html' },
-  // Text ruhig (21.11.2026, Go Kai „A“): Studie – Puls mit Leuchtpunkt-Knöpfen statt offenem Erklärtext, Umschalter bisher / ruhig.
-  // Gleiche Quellen wie Puls (src/test-4); nur die Klassen ruhe + studie-ruhe am <html> sind hier gesetzt. Puls und live unverändert.
+  // Text ruhig (21.11.2026, Go Kai „A“; seit 22.11. „Go Übernahme“ Standard in Puls und live): Vergleichsseite mit Umschalter bisher / ruhig.
+  // Gleiche Quellen wie Puls (src/test-4); hier kommt nur die Klasse studie-ruhe dazu (Umschalter, ruhe.js).
   'textruhe': { out: 'textruhe.html', dir: 'test-4', studie: 'ruhe' },
   // Startadresse (Repo-Wurzel, seit 1.11.2026 statt V10): Übergangsseite + Rechtsseiten ohne Labor-Hinweis, Links auf die Wurzel
   'start': { out: '../index.html' },
@@ -202,7 +202,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   tpl = tpl.replace(/<!--@include ([^>]+?)-->/g, (m, f) => readFileSync(join(dir, f.trim()), 'utf8'));
   { const acts = tpl.match(/<!--KF-ACTS-->([\s\S]*?)<!--\/KF-ACTS-->/); if (acts) tpl = tpl.replace(acts[0], '').replace('<!--KF-ACTS-SLOT-->', () => acts[1]); }
   if (P) tpl = applyPatches(tpl, P.page, 'page.html');
-  if (cfg.studie === 'ruhe') tpl = applyPatches(tpl, [["classList.add('js')", "classList.add('js','ruhe','studie-ruhe')"], ["classList.remove('js','door-walk')", "classList.remove('js','door-walk','ruhe')"], ['<title>HOP Puls Scan</title>', '<title>HOP Text ruhig</title>']], 'textruhe');
+  if (cfg.studie === 'ruhe') tpl = applyPatches(tpl, [["classList.add('js','ruhe')", "classList.add('js','ruhe','studie-ruhe')"], ['<title>HOP Puls Scan</title>', '<title>HOP Text ruhig</title>']], 'textruhe');
   if (cfg.root) ROOT_LINKS.forEach(([re, to]) => { tpl = tpl.replace(re, to); });
   // Datenschutz § 4 Online-Terminbuchung (<!--TERMIN-->…): ohne Termin-Blatt heraus, folgende §§ eins zurück
   if (cfg.noTermin) tpl = tpl.replace(/[ \t]*<!--TERMIN-->[\s\S]*?<!--\/TERMIN-->\r?\n?/g, '').replace(/<i>§ ([5-9])<\/i>/g, (m, n) => `<i>§ ${n - 1}</i>`);
