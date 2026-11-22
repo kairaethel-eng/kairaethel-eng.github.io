@@ -3,7 +3,7 @@
 ## ▶ Stand 23.11.2026 – Kai: „am PC deutlich besser; mir fehlt die Extension Kopf und Beine; bewegte Bereiche der Wirbelsäule eher rötlich“ → A/B/C, **„Go Empfehlung“**, umgesetzt in Puls + `live/` (+ `textruhe.html`, `farbstudie.html`), **wartet auf Kais Sichtprüfung**
 - **Extension (A):** fünfter Knopf; erst hebt sich das Kopfteil (HWS), dann das Beckenteil mit den Beinen (LWS), dann gemeinsam zurück. Knöpfe stehen jetzt 3 + 2 (Traktion · Flexion · Extension / Seitneigung · Rotation), auch am PC.
 - **Farbe (A):** bewegte Wirbel im Verlauf nach Stärke – leicht bewegt Bernstein, die stärkste Stelle Rot-Orange, sie glüht ruhig (≈ 2 s), etwas größere Punkte; der Rest der Säule tritt stärker zurück.
-- **Geprüft [B]:** siehe unten (Prüfstand, sizes, Kontaktbogen); Bilderfolgen Extension PC (Seitenansicht) und iPhone; Knöpfe iPhone 390, iPhone SE 375, PC 1440 ohne Überlauf und ohne Querscrollen.
+- **Geprüft [B]:** Prüfstand iPhone + PC: nur die 22 bekannten Raumlicht-Befunde (wie vorher), keiner an der Manuthera; `sizes.cjs`: alles ok; Kontaktbogen mit allen fünf Behandlungen ok; Bilderfolgen Extension PC (Seitenansicht) und iPhone; Knöpfe iPhone 390, iPhone SE 375, PC 1440 ohne Überlauf und ohne Querscrollen.
 - **[O] Kai:** Wirkt das Rot-Orange richtig (nicht zu alarmierend)? Extension-Ausschlag passend?
 - **Rückweg:** Commit `8d689f2` (Stand vor dieser Runde).
 
