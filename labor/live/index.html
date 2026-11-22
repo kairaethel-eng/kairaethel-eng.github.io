@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="hop-build" content="35c154a02b">
+<meta name="hop-build" content="3b76e9f4ba">
 <title>Physiotherapie in Schorndorf · HOP – Home of Physiotherapy, Kai Raethel</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="Physiotherapie mit Kompetenz und Herz in Schorndorf: Manuelle Therapie, Krankengymnastik, CMD, Stoßwelle und die Manuthera-Liege. Kai Raethel, Schlichtener Straße 87, nahe der Klinik.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src https://termine.opticaviva.de; form-action 'none'; base-uri 'self'; object-src 'none'">
 <link rel="canonical" href="https://kairaethel-eng.github.io/labor/live/">
 <meta name="theme-color" content="#0B0F12">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230B0F12%22%2F%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2222%22%20r%3D%2211%22%20fill%3D%22%237FAF45%22%2F%3E%3Ccircle%20cx%3D%2244%22%20cy%3D%2222%22%20r%3D%2211%22%20fill%3D%22%233C7189%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2243%22%20r%3D%2211%22%20fill%3D%22%233F86B5%22%2F%3E%3C%2Fsvg%3E">
-<link rel="apple-touch-icon" href="https://kairaethel-eng.github.io/labor/live/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="de_DE">
 <meta property="og:site_name" content="HOP – Home of Physiotherapy">
@@ -7228,8 +7229,9 @@ void main(){
       p = rotY(p, sin(uTime*.3)*.25);
       // 21.11. abends (Kai: \u201Eperfekt an das Hauptlogo der Startseite anpassen\u201C): flache Farben des Logos A (#6FA02F \xB7 #305869 \xB7 #3F86B5),
       // wei\xDFe Buchstaben, feiner heller Rand \u2013 aufgehellt, weil die Punkte mit L\xFCcken stehen (sonst wirkt die Fl\xE4che dunkler als das Logo)
-      col = kind4 < .5 ? cLg0 * 1.75 : kind4 < 1.5 ? cLg1 * 2.1 : kind4 < 2.5 ? cLg2 * 1.75 : kind4 < 3.5 ? vec3(1.) : vec3(1.15);
-      al = aW.y; dw = uDr4 * (kind4 > 3.5 ? .6 : kind4 > 2.5 ? .38 : .62) * uXf[4].w;
+      // 22.11. (Kai: \u201Eheller\u201C): kr\xE4ftiger und etwas zum Hellen hin, Punkte etwas gr\xF6\xDFer (mehr Fl\xE4che gedeckt)
+      col = kind4 < .5 ? mix(cLg0 * 2.35, vec3(1.), .1) : kind4 < 1.5 ? mix(cLg1 * 2.9, vec3(1.), .12) : kind4 < 2.5 ? mix(cLg2 * 2.3, vec3(1.), .1) : kind4 < 3.5 ? vec3(1.1) : vec3(1.25);
+      al = aW.y; dw = uDr4 * (kind4 > 3.5 ? .64 : kind4 > 2.5 ? .4 : .7) * uXf[4].w;
     }
     p = p * uXf[i].w + uXf[i].xyz;
     if(i==2){

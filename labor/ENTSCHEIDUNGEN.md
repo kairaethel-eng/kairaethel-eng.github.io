@@ -3,6 +3,12 @@
 Stand: 22.11.2026 (Text ruhig: in Puls + live übernommen, wartet auf Kais Sichtprüfung · Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Arbeitsblatt 4, fünfte Runde (Kai 22.11.2026)
+- **Erledigt (Kai):** Stottern der Partikel tritt nicht mehr auf.
+- **Entschieden (Claude, von Kai übertragen):** Sicherheitsregeln (CSP) per `<meta>` im Live-Build; eine HTML-Datei je Seite bleibt; `/labor/` bis zum Livegang öffentlich (noindex), danach `robots.txt` sperrt `/labor/`; keine `geo`/`sameAs`-Angaben ohne gepflegtes Profil.
+- **Merkregel:** Jede neue fremde Quelle (Skript, Bild, Schrift, Rahmen, Abruf) braucht eine Zeile in den Sicherheitsregeln in `build.mjs` – sonst blockiert der Browser sie. Vorher fragen: braucht es die fremde Quelle wirklich?
+- **Merkregel:** Links auf eigene Dateien im Kopf relativ schreiben (gleiche Herkunft auch unter `www.`).
+
 ## Mehr Farbe – Raumlicht (Kai 22.11.2026 abends: „zu einfarbig, eintönig“ → „Super geile Idee … kräftig am besten. Bitte übernehmen. Aber alle anderen speichern“)
 - **Entschieden (Go Kai):** Stufe **„Kräftig“** gilt in Puls und `live/`: jedes Kapitel ein Raum mit eigenem Licht aus der HOP-Palette, kühl → warm (01 Abendblau · 02 Grün · § Logo-Farben · 03 Röntgenblau · 04 Petrol + warmes Fensterlicht · 05 Bernstein), deutlicher Grundton je Kapitel, Logo-Farben als Raumfarben (Kapitel-Ziffern, Linien, Menü, Figur blau, Band 2 grün).
 - **Gespeichert für später:** Heute · Leise · Mittel – über `?farbe=heute|leise|mittel` an jeder Puls-Adresse und auf der Vergleichsseite `farbstudie.html` (Umschalter unten links). Skizze vom Nachmittag privat: https://claude.ai/artifact/8DdcvzRwKFPjh98XaTAFge.

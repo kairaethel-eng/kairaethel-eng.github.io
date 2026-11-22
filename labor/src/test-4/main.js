@@ -298,8 +298,9 @@ const vert = /* glsl */`
       p = rotY(p, sin(uTime*.3)*.25);
       // 21.11. abends (Kai: „perfekt an das Hauptlogo der Startseite anpassen“): flache Farben des Logos A (#6FA02F · #305869 · #3F86B5),
       // weiße Buchstaben, feiner heller Rand – aufgehellt, weil die Punkte mit Lücken stehen (sonst wirkt die Fläche dunkler als das Logo)
-      col = kind4 < .5 ? cLg0 * 1.75 : kind4 < 1.5 ? cLg1 * 2.1 : kind4 < 2.5 ? cLg2 * 1.75 : kind4 < 3.5 ? vec3(1.) : vec3(1.15);
-      al = aW.y; dw = uDr4 * (kind4 > 3.5 ? .6 : kind4 > 2.5 ? .38 : .62) * uXf[4].w;
+      // 22.11. (Kai: „heller“): kräftiger und etwas zum Hellen hin, Punkte etwas größer (mehr Fläche gedeckt)
+      col = kind4 < .5 ? mix(cLg0 * 2.35, vec3(1.), .1) : kind4 < 1.5 ? mix(cLg1 * 2.9, vec3(1.), .12) : kind4 < 2.5 ? mix(cLg2 * 2.3, vec3(1.), .1) : kind4 < 3.5 ? vec3(1.1) : vec3(1.25);
+      al = aW.y; dw = uDr4 * (kind4 > 3.5 ? .64 : kind4 > 2.5 ? .4 : .7) * uXf[4].w;
     }
     p = p * uXf[i].w + uXf[i].xyz;
     if(i==2){
