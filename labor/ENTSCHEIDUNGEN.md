@@ -8,6 +8,10 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **Zurückgestellt (Runde 2, nur mit Go):** B3 echte Kamera je Station, B5 Raum (Punktboden, Spiegelung, Dunst, Staub in Ebenen), B6 Auftritt (dunkel, Scan baut auf, Kamera fährt zurück).
 - **Merkregeln:** Figur bleibt **neutral** – Intimbereich und Gesicht immer glätten (Werkzeug `tools/figur-echt.mjs`), nie Rohhaut zeigen. Nichts Anatomisches frei erfinden: was BodyParts3D hat, kommt aus den Daten; die Nerven fehlen dort (Rumpf/Arme/Beine) und werden **entlang echter Landmarken berechnet**, nicht frei gezeichnet. Schädel und Kopfhaut treten zurück, solange das Gehirn zu sehen ist (sonst weißer Fleck). Rückseiten fallen weg (die Figur dreht sich nur ±7°). Hauptgrafik bleibt der Körper: Knochen/Muskeln sind Schichten darunter, nie heller als die Linie.
 
+## Tür · Raum in Puls (Go Kai 23.11.2026)
+- **Entschieden:** Der Raum ersetzt in Puls und `live/` die Tür-Bühne „Hineingehen“ und den bisherigen Kontaktteil. Termin-Knopf und Terminbuch öffnen das Termin-Blatt; „Alles auf einen Blick“ (Angabenliste mit Leuchtpille) steht darunter.
+- **Merkregel:** Neue Tür-/Raum-Arbeit nur noch in `src/tuer-raum` (gemeinsam für Puls und Entwurf); `src/tuer` ist Archiv der Entwurfsseite `tuer.html`.
+
 ## Tür · Raum, Runde 2 – „Text lebt im Raum“ (Go Kai „Empfehlung“, 23.11.2026)
 - **Entschieden:** A „Alles im Raum“ statt B (Schilder mit Faden) oder C (nur Weitwinkel). Texte stehen als Wandschrift im Raum (echter Text, perspektivisch), Dinge sind antippbar (Buch = Termin, Telefon = anrufen, Fenster = Karte); „Termin buchen“ bleibt unten als Netz.
 - **Merkregeln:** Schrift nur auf senkrechten Flächen, die man frontal ansieht (Blick waagerecht, Ausschnitt per Bildmitte statt Neigen) – sonst wird sie verzerrt. Schrift ist frontal genau so groß wie gesetzt (Breite W0 in Bildpunkten → scharf). Nichts aus Punkten hinter der Schrift (Tür hinten außerhalb des Handy-Bilds, keine Deckenfuge). Zeichenflächen in der Bühne, nicht fest über dem Fenster (sonst schwimmen sie beim Scrollen am iPhone).
