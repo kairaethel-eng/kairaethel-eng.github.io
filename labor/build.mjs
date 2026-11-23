@@ -43,6 +43,9 @@ const PAGES = {
   // Feinschliff (17.11.2026, Go Kai): Studie zu Kap. 01 – Figur aus „Figur plus“ mit geordneten, gestochenen Punkten, Kantenlicht,
   // Antwort unter Maus/Finger, ruhigerer Schrift; Umschalter bisher / neu (bisher = src/figur-plus, nur gelesen). Puls unberührt.
   'feinschliff': { out: 'feinschliff.html' },
+  // Echte Figur (23.11.2026, Go Kai „Empfehlung“): Entwurf zu Kap. 01 – Figur aus BodyParts3D (Haut, Skelett, Gehirn, Muskeln, Nervenwege),
+  // Stufe 1 anatomisch echt, 1+2 mit Scan-Linie, Filmlicht, Röntgen-Lupe; Umschalter heute · 1 · 1+2 (heute = src/feinschliff, nur gelesen). Puls unberührt.
+  'figur-echt': { out: 'figur-echt.html' },
   // Tür (16.11.2026, Go Kai): Entwurf zu Kap. 05 – Knöpfe erscheinen erst mit der offenen Partikel-Tür, Varianten A | C (Canvas 2D, kein WebGL)
   'tuer': { out: 'tuer.html' },
   // Tür · Raum (22.11.2026, Go Kai „a c“): Kapitel 05 als Raum – Tür antippen, der Rahmen wird zum Bildschirmrand, drinnen umsehen
