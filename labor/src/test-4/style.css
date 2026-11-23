@@ -1113,3 +1113,17 @@ html.raum-turned .raum-hint{opacity:0}
   .raum{position:static!important;opacity:1!important;visibility:visible!important;display:block!important}
   .rp{display:block!important;position:static!important;transform:none!important;opacity:1!important;visibility:visible!important;width:auto!important}
 }
+
+/* Tipp-Hinweis an den antippbaren Dingen (Go Kai 23.11.2026, src/tuer-raum/hinweis.js): ein Bernstein-Punkt drückt zweimal, zwei Ringe laufen aus */
+.tap-hint{display:none}
+html.door-walk .tap-hint{display:block;position:absolute;z-index:3;left:0;top:0;width:0;height:0;pointer-events:none;visibility:hidden}
+.tap-hint i,.tap-hint b{position:absolute;border-radius:50%;opacity:0}
+.tap-hint i{left:-1.125rem;top:-1.125rem;width:2.25rem;height:2.25rem;border:1.5px solid var(--amber)}
+.tap-hint b{left:-.3125rem;top:-.3125rem;width:.625rem;height:.625rem;background:var(--amber);box-shadow:0 0 .875rem rgba(224,154,53,.85)}
+.tap-hint.is-tap b{animation:tapDot 2s var(--ease) both}
+.tap-hint.is-tap i:nth-child(1){animation:tapRing 1.3s cubic-bezier(.2,.6,.3,1) .12s both}
+.tap-hint.is-tap i:nth-child(2){animation:tapRing 1.3s cubic-bezier(.2,.6,.3,1) .7s both}
+@keyframes tapDot{0%{opacity:0;transform:scale(1.9)}10%{opacity:1;transform:scale(.75)}20%{transform:scale(1)}36%{transform:scale(.75)}46%{transform:scale(1)}78%{opacity:.9}100%{opacity:0;transform:scale(1)}}
+@keyframes tapRing{0%{opacity:.85;transform:scale(.3)}100%{opacity:0;transform:scale(1.7)}}
+@media (prefers-reduced-motion:reduce){.tap-hint{display:none!important}}
+html.paused .tap-hint{display:none!important}
