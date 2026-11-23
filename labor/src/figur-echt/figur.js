@@ -152,8 +152,13 @@ export function echtPoints({ sp = 1.6, dust = 26, data }) {
     const tmp = [];
     rows(p, spM, (x, y, z, nx, ny, nz) => { tmp.push([x, y, z, nx, ny, nz]); mid[x > 0 ? 1 : 0].push([x, y]); });
     const c = mid.map((l) => l.reduce((a, q) => [a[0] + q[0] / l.length, a[1] + q[1] / l.length], [0, 0]));
-    for (const [x, y, z, nx, ny, nz] of tmp) put(x, y, z, nx, ny, nz, 6, p.st, 0, 1, { st: p.st, h: 0.92, cx: c[x > 0 ? 1 : 0][0], cy: c[x > 0 ? 1 : 0][1] });
-    void S;
+    // Spannung nur innerhalb des Rings der Station (am Rand auslaufend) – was darüber hinausreicht (oberer Psoas), bleibt ruhig;
+    // sonst ließe sich die Stelle mit Maus/Finger nie ganz lösen (gemessen wird nur, was im Ring liegt)
+    const sx = S.c[0] - BODY_W / 2, sy = BODY_H / 2 - S.c[1];
+    for (const [x, y, z, nx, ny, nz] of tmp) {
+      const d = Math.hypot(x - sx, y - sy), h = 0.92 * clamp((S.r * 1.02 - d) / (S.r * 0.3));
+      put(x, y, z, nx, ny, nz, 6, p.st, 0, 1, { st: p.st, h, cx: c[x > 0 ? 1 : 0][0], cy: c[x > 0 ? 1 : 0][1] });
+    }
   }
   // A5 Nerven: Perlen entlang der echten Wege; dicke Bahnen als mehrere Stränge nebeneinander (in der Bildebene versetzt)
   const nerves = nerveList(data.head.nerves);

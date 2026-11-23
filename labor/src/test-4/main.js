@@ -3,6 +3,8 @@
 // 0 Körper → 1 Bewegung → 2 Wirbelsäule (Scan) → 3 Dachlinie (fließt ins Linienhaus, seit 14.11.2026) → 4 HOP-Kreise
 // Kapitel 01 seit 16.11.2026 (Auftrag K, Go Kai): „Von Kopf bis Fuß“ als eigene Bühne (Baustein ../kopf-fuss/kapitel.js); Form 0 erscheint
 // erst am Ende des Kapitels deckungsgleich mit dessen Figur (Übergabe, kf.fitE/handK) und löst sich in die Bewegungslinien auf.
+// Seit 23.11.2026 (Go Kai „1“ zum Entwurf figur-echt.html): Kapitel 01 = echte Figur, Stufe 1 „anatomisch echt“ (../figur-echt/kapitel.js,
+// Daten assets/figur-echt.bin, nach dem Start geladen); ?figur=heute zeigt zum Vergleich die Figur bis 23.11. (../feinschliff).
 import * as THREE from 'three';
 import Lenis from 'lenis';
 import { spinePointsGen, spineStippleGen, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
@@ -18,7 +20,8 @@ import { initHouse } from '../haus-licht/house.js';
 import { ECHT } from '../wirbel-echt/echt.js';
 import { initStosswelle } from '../stosswelle/welle.js';
 import { initVorfall, SEG as VF_SEG } from '../vorfall/film.js';
-import { initKopfFuss } from '../feinschliff/kapitel.js';
+import { initKopfFuss } from '../figur-echt/kapitel.js';
+import { loadEcht } from '../figur-echt/daten.js';
 import { initStage } from '../tuer-raum/stage.js';
 import { STATIONS, PITCH0, GEO } from '../tuer-raum/raum.js';
 import { initRuhe } from './ruhe.js';
@@ -956,8 +959,8 @@ function setActive(i) {
 // ---------- Nerven-Infos im Raum (PC): erscheinen Schritt für Schritt entlang der Bahn ----------
 const NINFO = {
   c12: { exit: 'Nervenaustritt C1–C2', nerv: 'Nn. suboccipitales · N. occipitalis major', gef: 'Tiefe Nackenmuskulatur', ziel: 'Hinterkopf', typ: 'Typisch: Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen', tgt: [84, 30] },
-  c56: { exit: 'Nervenaustritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [18, 234] },
-  th712: { exit: 'Nervenaustritt Th7–Th12', nerv: 'Untere Interkostalnerven · Bauchwand', gef: 'Gefühl: Rippenbogen, Bauchwand', ziel: 'bis zur Nabelhöhe (Th10)', typ: 'Typisch: gürtelförmiger Schmerz am Rippenbogen, Steifigkeit am Übergang zur LWS', tgt: [86, 195] }, // Flanke auf Nabelhöhe
+  c56: { exit: 'Nervenaustritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [24, 229] }, // Daumenspitze der echten Figur (23.11.)
+  th712: { exit: 'Nervenaustritt Th7–Th12', nerv: 'Untere Interkostalnerven · Bauchwand', gef: 'Gefühl: Rippenbogen, Bauchwand', ziel: 'bis zur Nabelhöhe (Th10)', typ: 'Typisch: gürtelförmiger Schmerz am Rippenbogen, Steifigkeit am Übergang zur LWS', tgt: [86, 174] }, // Bauchwand auf Nabelhöhe (echte Figur, 23.11.)
   th16: { exit: 'Nervenaustritt Th1–Th6', nerv: 'Interkostalnerven, obere Rippen', gef: 'Brustkorbwand · Zwischenrippen', ziel: 'Brustkorb', typ: 'Typisch: atemabhängiges Stechen, Schmerz zwischen den Schulterblättern', tgt: [80, 118] },
   l45: { exit: 'Nervenaustritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [89, 410] },
   s1: { exit: 'Nervenaustritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [72, 412], pre: 'Iliosakralgelenk (ISG): verbindet Becken und Wirbelsäule.' },
@@ -2479,18 +2482,21 @@ function tick() {
 }
 // ---------- Kapitel 01 „Von Kopf bis Fuß“ (Auftrag K, Go Kai 16.11.2026) ----------
 // eigene Bühne (Baustein), läuft vor tick im selben Bildtakt; Sprünge (Striche rechts, Pille „Weiter“) gleiten über Lenis
-kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced, handover: true,
+// Stufe 1 der echten Figur; die Daten lädt der Baustein nur mit WebGL (Funktion statt Promise); bis sie da sind, bleibt die Bühne leer
+const figurHeute = new URLSearchParams(location.search).get('figur') === 'heute';
+kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced, handover: true, stufe: 'echt', data: figurHeute ? null : () => loadEcht(),
   scrollTo: (y, sm) => (lenis ? lenis.scrollTo(y, sm ? { duration: 1.6 } : { immediate: true }) : window.scrollTo({ top: y, behavior: sm ? 'smooth' : 'auto' })) });
 window.__kf = kf; // Prüfhilfe: __kf.state(), __kf.go(u)
-// Form 0 der Hauptwolke = dieselben Punkte wie die Figur in Kapitel 01 (Übergabe deckungsgleich, gleicher Punktabstand)
-{ const cl = kf.cloud();
+// Form 0 der Hauptwolke = dieselben Punkte wie die Figur in Kapitel 01 (Übergabe deckungsgleich, gleicher Punktabstand) –
+// seit 23.11. erst, wenn die Bühne steht (Daten der echten Figur geladen oder Rückfall auf die Figur von heute)
+kf.onReady(() => { const cl = kf.cloud();
   if (cl && renderer) {
     figureForm(N, cl, BODY_SCALE, body.pos, body.f0, body.heat);
     uniforms.uTilt.value = cl.tilt;
     ['position', 'aF0', 'aHeat'].forEach((k) => { geo.attributes[k].needsUpdate = true; });
     silFill();
     if (!morphSet) { geo.attributes.pos2.array.set(body.pos); geo.attributes.pos2.needsUpdate = true; } // bis die Wirbelsäule gerechnet ist
-  } }
+  } });
 frameFns.push((now) => kf.update(now));
 frameFns.push(tick);
 

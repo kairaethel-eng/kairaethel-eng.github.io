@@ -73,7 +73,7 @@ const U_END = KEYS[KEYS.length - 1][0];
 // old = { points, stage } (nur die Studienseite: Figur plus für den Umschalter „bisher“; Puls gibt nichts mit → kein Umschalter),
 // handover = true (Puls): am Schluss ziehen sich Gehirn und Nerven zurück, die Figur steht wieder als ruhiges Raster da und
 // wird an Form 0 der Hauptbühne übergeben (cloud() liefert dafür dieselben Punkte).
-export function initKopfFuss({ root, isPaused = () => false, reduced = false, data = null, handover = false, scrollTo = (y, smoothly) => window.scrollTo({ top: y, behavior: smoothly ? 'smooth' : 'auto' }) }) {
+export function initKopfFuss({ root, isPaused = () => false, reduced = false, data = null, stufe = null, handover = false, scrollTo = (y, smoothly) => window.scrollTo({ top: y, behavior: smoothly ? 'smooth' : 'auto' }) }) {
   const $ = (s, r = root) => r.querySelector(s);
   const $$ = (s, r = root) => [...r.querySelectorAll(s)];
   const finePointer = matchMedia('(pointer: fine)').matches;
@@ -204,22 +204,30 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   const big = innerWidth > 920, figH0 = SOLE - CROWN;
   const sA0 = big ? Math.min((innerHeight * 0.93 - 84) / figH0, innerWidth * 0.34 / BODY_W) : Math.min((innerHeight * 0.6 - 88) / figH0, innerWidth * 0.86 / BODY_W);
   const SP = Q.has('abstand') ? clamp(+Q.get('abstand') || 1.6, 0.9, 4) : clamp((big ? 2.7 : 2.4) / Math.max(0.5, sA0), 1.15, 2.6);
-  let echt = false, t0 = performance.now();
-  if (gl) try {
-    if (data) {
-      pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data });
-      st = createStage(gl, pts, relaxCv, document.documentElement.dataset.deep || '#3F86B5');
-      echt = true;
-    } else { // Daten fehlen: die Figur von heute
-      pts = finePoints({ sp: SP, dust: big ? 26 : 14 });
-      st = fineStage(gl, pts, relaxCv, document.documentElement.dataset.deep);
-    }
-  } catch (e) { console.error(e); gl = null; st = null; echt = false; }
-  const buildMs = Math.round(performance.now() - t0);
-  if (!st) pts = finePoints({ sp: 3, dust: 0 }); // ohne WebGL nur zum Messen
+  // Aufbau der Bühne erst, wenn die Daten da sind (Puls lädt sie nach dem Start – bis dahin bleibt die Zeichenfläche leer im Seitengrund)
+  let echt = false, buildMs = 0;
+  if (gl) { gl.clearColor(10 / 255, 22 / 255, 27 / 255, 1); gl.clear(gl.COLOR_BUFFER_BIT); }
+  pts = finePoints({ sp: 3, dust: 0 }); // bis dahin (und ohne WebGL) nur zum Messen
+  function build(d) {
+    const t0 = performance.now();
+    if (gl) try {
+      if (d) { // echte Figur
+        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d });
+        st = createStage(gl, pts, relaxCv, document.documentElement.dataset.deep || '#3F86B5');
+        echt = true; GEO.echt = { LINES: pts.lines, SPLIT: pts.split };
+      } else { // Daten fehlen (oder ?figur=heute in Puls): die Figur von heute
+        pts = finePoints({ sp: SP, dust: big ? 26 : 14 });
+        st = fineStage(gl, pts, relaxCv, document.documentElement.dataset.deep);
+      }
+    } catch (e) { console.error(e); st = null; echt = false; if (d) return build(null); }
+    buildMs = Math.round(performance.now() - t0);
+    if (!st) pts = finePoints({ sp: 3, dust: 0 });
+  }
+  // Farbstufe (Puls, 22.11.2026): Körperfarbe aus html[data-deep], Wechsel auf der Vergleichsseite per Ereignis „hop-farbe“
+  document.addEventListener('hop-farbe', () => { if (st) st.setDeep(document.documentElement.dataset.deep); });
   if (!gl) root.classList.add('kf-nogl');
   // Leuchtpunkt: echte Figur folgt Rückenmark → Ischias (aus den Daten), „heute“ wie gehabt
-  const GEO = { heute: { LINES: LINES_H, SPLIT: SPLIT_H }, echt: echt ? { LINES: pts.lines, SPLIT: pts.split } : { LINES: LINES_H, SPLIT: SPLIT_H } };
+  const GEO = { heute: { LINES: LINES_H, SPLIT: SPLIT_H }, echt: { LINES: LINES_H, SPLIT: SPLIT_H } };
   // Stationen für den Shader (Mitte in Körper-Koordinaten, Radius)
   const STC = new Float32Array(STATIONS.flatMap((St) => [St.c[0] - BODY_W / 2, BODY_H / 2 - St.c[1], St.r]));
   // „heute“: Figur von Puls (../feinschliff), eigene Zeichenfläche darunter; erst beim ersten Umschalten gebaut (Startzeit, Speicher)
@@ -234,8 +242,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     return !!stOld;
   }
   // Stufe: heute | echt (1) | kino (1+2); mixK 1 = echte Figur sichtbar, 0 = heute; kinoK 0…1 weich
-  const want0 = Q.get('stil');
-  let mode = !echt ? 'heute' : want0 === 'heute' || want0 === 'echt' ? want0 : 'kino', mixK = 1, kinoK = mode === 'kino' ? 1 : 0;
+  const want0 = stufe || Q.get('stil');
+  let mode = want0 === 'heute' || want0 === 'echt' ? want0 : 'kino', mixK = 1, kinoK = mode === 'kino' ? 1 : 0;
   function setStyle(v) {
     if (!gl || !echt) return false;
     if (v === 'heute' && !ensureOld()) return false;
@@ -258,7 +266,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   const CORD0 = [[100, 38], [100, SPLIT_H]]; // Hauptbahn ab dem Hirnstamm (ohne WebGL als Linie)
 
   // Messpunkte je Station: die Partikel selbst (nur was im Körper liegt zählt), Gewicht = ihre Spannung; je Texel zusammengefasst
-  const SAMPLES = STATIONS.map((_, si) => {
+  let SAMPLES = [];
+  const buildSamples = () => { SAMPLES = STATIONS.map((_, si) => {
     const m = new Map();
     for (let i = 0; i < pts.st.length; i++) {
       if (pts.st[i] !== si || pts.heat[i] < 0.08) continue;
@@ -266,7 +275,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       const o = (y * RW + x) * 4; m.set(o, (m.get(o) || 0) + pts.heat[i]);
     }
     return [...m];
-  });
+  }); };
+  buildSamples();
 
   // ---------- Zustand ----------
   const S = {
@@ -379,9 +389,20 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const f = () => { if (id !== introRun) return; const t = clamp((performance.now() - t0) / ms); S.intro = from + (1 - from) * (1 - Math.pow(1 - t, 2.4)); dirty = true; if (t < 1) requestAnimationFrame(f); else S.intro = 1; };
     requestAnimationFrame(f);
   }
-  if (!still()) introTo(0, 3200);
-  if (mode === 'heute' && echt) { if (ensureOld()) mixK = 0; else mode = 'kino'; }
   root.classList.toggle('kf-fein', TEXT_FEIN);
+  let ready = false; const readyFns = [];
+  const finish = (d) => {
+    build(d); buildSamples();
+    if (!echt) mode = 'heute';
+    kinoK = mode === 'kino' ? 1 : 0;
+    if (mode === 'heute' && echt) { if (ensureOld()) mixK = 0; else { mode = 'kino'; kinoK = 1; } }
+    if (st && !still()) introTo(0, 3200); else S.intro = 1;
+    dirty = true; relaxDirty = true; H = 0; ready = true;
+    readyFns.splice(0).forEach((f) => f());
+  };
+  // data: Objekt (schon geladen), Promise, oder Funktion, die erst mit WebGL lädt (Puls); null = Figur von heute
+  { const d = typeof data === 'function' ? (gl ? data() : null) : data;
+    if (d && typeof d.then === 'function') d.then(finish, (e) => { console.error(e); finish(null); }); else finish(d); }
 
   // ---------- Bild für Bild (vom Gastgeber aufgerufen) ----------
   let lastT = performance.now(), lastTipKey = '', lastOn = '', hk = 0, stageTop = 0, lastLineO = '';
@@ -437,7 +458,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const toS = (bx, by) => [M[0] * bx + M[2], M[1] * by + M[3]];
     // Partikel
     // Umschalter: die echte Figur liegt oben und blendet über „heute“ (beide deckend → echtes Überblenden); Stufe 1 ↔ 1+2 im Shader
-    const mixWas = mixK, kinoWas = kinoK, mixTo = mode === 'heute' ? 0 : 1, kinoTo = mode === 'kino' ? 1 : 0;
+    const mixWas = mixK, kinoWas = kinoK, mixTo = mode === 'heute' && echt ? 0 : 1, kinoTo = mode === 'kino' ? 1 : 0;
     if (mixK !== mixTo) { mixK = sl ? mixTo : mixTo > mixK ? Math.min(1, mixK + dt / 1.1) : Math.max(0, mixK - dt / 1.1); dirty = true; }
     if (kinoK !== kinoTo) { kinoK = sl ? kinoTo : kinoTo > kinoK ? Math.min(1, kinoK + dt / 1.4) : Math.max(0, kinoK - dt / 1.4); dirty = true; }
     const mixE = easeIO(mixK);
@@ -553,6 +574,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   return {
     update,
     setStyle, style: () => mode, echt: () => echt,
+    onReady: (f) => (ready ? f() : readyFns.push(f)), // Bühne steht (Daten geladen oder Rückfall) – Puls füllt dann Form 0
     cloud: () => (st ? { pts, sp: SP, tilt: TILT } : null), // für Form 0 der Hauptbühne (Puls): dieselben Punkte, derselbe Abstand
     pointer: () => PT, // Zeiger (Bildpunkte der Bühne, Stärke k) – Puls führt damit seine eigenen Bühnen
     state: () => ({ stil: mode, mix: +mixK.toFixed(2), kino: +kinoK.toFixed(2), echt, buildMs, sp: +SP.toFixed(2), ptr: +PT.k.toFixed(2), u: +S.u.toFixed(3), us: +S.us.toFixed(3), tip: +S.tip.toFixed(1), cur: S.cur, idle: +S.idle.toFixed(1), act: S.act.map((x) => +x.toFixed(2)), auto: S.auto.map((x) => +x.toFixed(2)), sol: S.sol.map((x) => +x.toFixed(2)), rest: S.rest.map((x) => +x.toFixed(2)), done: S.done.slice(), gl: !!st, n: pts.count, still: still(), handK: +hk.toFixed(2), view: S.view && { s: +S.view.s.toFixed(2), ax: Math.round(S.view.ax), ay: Math.round(S.view.ay) } }),
