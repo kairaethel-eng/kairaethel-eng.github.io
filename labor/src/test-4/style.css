@@ -287,13 +287,6 @@ html.auftakt .manifest .wrap>.kicker,html.auftakt .axis-head .kicker,html.auftak
 @media (max-width:380px){.auftakt-blk .au-row{gap:.75rem}.auftakt-blk .au-no{font-size:5.75rem}.auftakt-blk .au-name{font-size:1.625rem}.auftakt-blk .au-sub{font-size:.625rem;letter-spacing:.1em}}
 @media (prefers-reduced-motion:reduce){.auftakt-blk .au-no,.auftakt-blk .au-txt,.auftakt-blk .au-line{transition:none;opacity:1;transform:none}}
 @media print{.auftakt-blk{min-height:0;padding-top:2rem}.auftakt-blk .au-no,.auftakt-blk .au-txt,.auftakt-blk .au-line{opacity:1;transform:none}}
-/* Tür-Bühne „Hineingehen“ (19.11., Go Kai „3a“, Baustein src/tuer/buehne.js): klebende Bühne, Überschrift oben, darunter die Tür
-   (Zeichenfläche fest hinter dem Text, nur in der Nähe eingeschaltet: Klasse on). html.door-walk = Bühne mit Scrollweg; ohne die
-   Klasse (ohne JavaScript, ohne Grafikchip, Bewegung angehalten) stehen Überschrift und Knöpfe einfach untereinander. */
-.c-stage,.c-glow{display:none;position:fixed;z-index:0;left:0;top:0;width:100%;height:100vh;height:100lvh;pointer-events:none}
-.c-stage.on,.c-glow.on{display:block}
-.c-glow{opacity:0;background:radial-gradient(70% 46% at 50% 66%,rgba(224,154,53,.15),rgba(224,154,53,.05) 55%,rgba(224,154,53,0) 78%)}
-.door-track{position:relative}
 /* Messanzeige (nur mit ?takt=1): Bilder je Sekunde usw. auf Kais Gerät, zwei Schalter zum Gegenprüfen */
 .takt{position:fixed;z-index:40;left:.5rem;bottom:calc(env(safe-area-inset-bottom,0px) + .5rem);padding:.5rem .625rem;border-radius:.375rem;border:1px solid rgba(224,154,53,.6);background:rgba(10,22,27,.94);color:var(--txt);font:500 .6875rem/1.45 ui-monospace,Menlo,Consolas,monospace}
 .takt pre{margin:0 0 .375rem;font:inherit;white-space:pre}
@@ -301,32 +294,7 @@ html.auftakt .manifest .wrap>.kicker,html.auftakt .axis-head .kicker,html.auftak
 .takt button{appearance:none;min-height:2rem;padding:0 .5rem;border-radius:.25rem;border:1px solid var(--line);background:none;color:var(--txt);font:inherit;cursor:pointer}
 .takt button.on{background:var(--amber);border-color:var(--amber);color:#0A161B}
 html.takt-klar .top.scrolled{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(10,22,27,.94)}
-.door-sticky{position:relative;padding-bottom:2.5rem}
-.door-top{padding-top:clamp(3rem,8vh,5rem);text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
-.door-top h2{margin-bottom:0}
-.door-in{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:2rem}
-.door-in .btn{min-width:min(100%,15rem);justify-content:center;text-align:center}
-.door-cue{display:none}
-html.door-walk .door-track{height:100svh}
-.door-hit{display:none}
-html.door-walk .door-hit{display:block;position:absolute;left:50%;top:24%;bottom:12%;width:min(86%,30rem);transform:translateX(-50%);background:none;border:0;padding:0;cursor:pointer;border-radius:4px;z-index:3;-webkit-tap-highlight-color:transparent}
-.door-hit[hidden]{display:none!important}
-html.door-walk .door-hit:focus-visible{outline:2px solid var(--amber);outline-offset:4px}
-html.door-walk .door-sticky{position:sticky;top:0;height:100svh;padding-bottom:0}
-html.door-walk .door-top{padding-top:calc(env(safe-area-inset-top,0px) + 6.25rem)}
-html.door-walk .door-in{position:absolute;left:0;right:0;bottom:clamp(2.5rem,13svh,7.5rem);margin:0 auto;justify-content:center;opacity:0;pointer-events:none}
-html.door-walk .door-in.is-on{pointer-events:auto}
-html.door-walk .door-cue{display:flex;align-items:center;justify-content:center;gap:.5rem;position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 1.25rem);margin:0;opacity:0;font:400 .9375rem/1.2 var(--sans);color:var(--dim);text-shadow:0 1px 2px rgba(10,22,27,.8),0 0 1rem rgba(10,22,27,.9)}
-.door-cue svg{width:1.125rem;height:1.125rem;fill:none;stroke:var(--amber);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .door-inner{padding-top:var(--gap-sub)}
-.door-h3{font:560 clamp(1.75rem,2.6vw,2.5rem)/1.05 var(--disp);letter-spacing:-.03em;margin:0 0 1.375rem}
-@media (max-width:920px){
-  html.door-walk .door-top{padding-top:calc(env(safe-area-inset-top,0px) + 5.75rem)}
-  html.door-walk .door-in{flex-direction:column;align-items:center;bottom:clamp(2.25rem,11svh,6rem)}
-  html.door-walk .door-in .btn{width:min(100%,20rem)}
-}
-@media print{.door-track{height:auto!important}.door-sticky{position:static!important;height:auto!important}.door-in{position:static!important;opacity:1!important;transform:none!important}}
-.door-inner{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.85fr);gap:3.75rem 5.625rem;align-items:end}
 .door h2{font-size:clamp(2.875rem,5.1vw,4.4rem);margin-bottom:1.625rem} /* 18.11.: „Die Tür steht“ passt in eine Zeile (vorher 7,6vw → drei Zeilen, doppelt so groß wie die anderen Kapitel) */
 .door .lead{margin-bottom:1.875rem}
 .door .small{margin-top:1.125rem}
@@ -1037,3 +1005,104 @@ html.fx-logo .chap-now i{color:var(--fx-now,var(--amber));transition:color .9s e
 .fx-wahl.zu b,.fx-wahl.zu button:not([aria-pressed="true"]){display:none}
 .fx-info{position:fixed;z-index:45;left:max(.75rem,env(safe-area-inset-left,0px));bottom:calc(max(.75rem,env(safe-area-inset-bottom,0px)) + 3.125rem);max-width:min(26rem,calc(100vw - 1.5rem));margin:0;padding:.5rem .75rem;border-radius:.5rem;border:1px solid var(--line);background:rgba(10,22,27,.94);font:500 .8125rem/1.4 var(--sans);color:var(--txt);opacity:0;transform:translateY(.25rem);transition:opacity .4s,transform .4s;pointer-events:none}
 .fx-info.an{opacity:1;transform:none}
+
+/* ---------- Kapitel 05 · Tür · Raum (Go Kai 23.11.2026; aus dem Entwurf src/tuer-raum, von Kai abgenommen) ---------- */
+.door-hit,.door-cue,.raum-nav,.raum-hint{display:none}
+.c-stage{position:absolute;z-index:0;left:0;top:0;width:100%;height:100%;pointer-events:none;display:none}
+.c-glow{position:absolute;z-index:0;left:0;top:0;width:100%;height:100%;opacity:0;pointer-events:none;display:none;background:radial-gradient(70% 46% at 50% 66%,rgba(224,154,53,.15),rgba(224,154,53,.05) 55%,rgba(224,154,53,0) 78%)}
+.c-stage.on,.c-glow.on{display:block}
+
+/* Ohne Bühne (ohne JavaScript, ohne Grafikchip, Bewegung angehalten): die vier Blöcke als Kontaktteil untereinander */
+.raum{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:2.25rem 3rem;width:100%;max-width:90rem;margin:2.5rem auto 0;padding:0 max(var(--gut-r),5vw) 0 max(var(--gut),5vw);text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
+.rp{min-width:0;border-top:1px solid var(--line);padding-top:1.25rem}
+.raum-bar{grid-column:1/-1}
+.rp-dir{display:flex;align-items:baseline;gap:.625rem;margin-bottom:.625rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.rp-dir i{font:italic 400 1.125rem/1 var(--serif);letter-spacing:0;text-transform:none;color:var(--amber)}
+.rp h3{font:560 clamp(1.75rem,2.6vw,2.5rem)/1.05 var(--disp);letter-spacing:-.03em;margin:0 0 .875rem}
+.rp-body{display:flex;flex-direction:column;gap:.625rem;color:var(--dim);font-size:1rem;line-height:1.5;max-width:34rem}
+.rp-big{font:500 1.1875rem/1.35 var(--sans);color:var(--txt)}
+.rp-body a{color:var(--txt);text-decoration:underline;text-decoration-color:rgba(224,154,53,.55);text-underline-offset:.2em;text-decoration-thickness:1px;overflow-wrap:anywhere}
+.rp-body a:hover{color:var(--amber)}
+.rp-body a.btn{text-decoration:none}
+.rp-link{display:inline-block;margin-top:.25rem}
+.rp-acts{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1.25rem}
+.rp-mail{display:inline-flex;align-items:center;min-height:2.75rem;font-size:.9375rem}
+.rp-copy{appearance:none;min-height:2.75rem;padding:0;border:0;background:none;color:var(--txt);font:inherit;font-size:.9375rem;text-decoration:underline;text-decoration-color:rgba(224,154,53,.55);text-underline-offset:.2em;text-decoration-thickness:1px;cursor:pointer}
+.rp-copy:hover{color:var(--amber)}
+.rp-note{font-size:.875rem;color:var(--mute)}
+.dd-open{font-weight:600;color:var(--amber);display:flex;align-items:center;gap:.5rem}
+.dd-open::before{content:"";flex:none;width:.5rem;height:.5rem;border-radius:50%;border:1.5px solid currentColor}
+.dd-open.is-now{color:#9FCB6B}
+.dd-open.is-now::before{background:currentColor}
+.dd-open[hidden]{display:none}
+.raum-termin{margin-top:.5rem}
+
+/* Alles auf einen Blick (nur mit Bühne – ohne sie stehen die Blöcke oben schon vollständig da) */
+.alles{display:none}
+.alles.door-inner{display:none;grid-template-columns:none}
+html.door-walk .alles.door-inner{display:block;padding-top:4.5rem}
+.alles-h{font:560 clamp(1.5rem,2.2vw,2rem)/1.05 var(--disp);letter-spacing:-.03em;margin:0 0 1.25rem}
+
+/* ---------- Mit Bühne: Tür, dann Raum ----------
+   Die Zeichenfläche liegt IN der Bühne (scrollt mit ihr als ein Stück). Drinnen stehen die vier Textblöcke als Wandschrift im Raum:
+   main.js setzt Breite und matrix3d je Block; die Bedienung (Punkte, Termin) bleibt unten fest in der Bühne. */
+html.door-walk .door-track{position:relative;height:100svh}
+html.door-walk .door-sticky{position:sticky;top:0;height:100svh;overflow:hidden}
+html.raum-on .door-sticky{touch-action:pan-y} /* senkrecht scrollt die Seite, waagerecht dreht der Raum */
+html.door-walk .c-stage,html.door-walk .c-glow{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+html.door-walk .door-top{position:relative;z-index:1;padding-top:calc(env(safe-area-inset-top,0px) + 6.25rem);transition:none}
+html.door-walk .door-hit{display:block;position:absolute;left:50%;top:24%;bottom:12%;width:min(86%,30rem);transform:translateX(-50%);background:none;border:0;padding:0;cursor:pointer;border-radius:4px;z-index:3;-webkit-tap-highlight-color:transparent}
+.door-hit[hidden]{display:none!important}
+html.door-walk .door-hit:focus-visible{outline:2px solid var(--amber);outline-offset:4px}
+html.door-walk .door-cue{display:flex;align-items:center;justify-content:center;position:absolute;z-index:1;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 1.25rem);margin:0;opacity:0;font:400 .9375rem/1.2 var(--sans);color:var(--dim);text-shadow:0 1px 2px rgba(10,22,27,.8),0 0 1rem rgba(10,22,27,.9)}
+
+.hit,.rp-tap{display:none}
+html.door-walk .raum{position:absolute;z-index:2;inset:0;display:block;max-width:none;margin:0;padding:0;opacity:0;visibility:hidden;transition:opacity .9s var(--ease),visibility 0s .9s}
+html.door-walk.raum-on .raum{opacity:1;visibility:visible;transition:opacity 1.2s var(--ease) .2s,visibility 0s}
+html.door-walk .rp{position:absolute;left:0;top:0;margin:0;padding:0;border:0;transform-origin:0 0;opacity:0;visibility:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+html.door-walk .rp-head::after{content:"";display:block;width:3.5rem;height:1px;margin:.875rem 0 1rem;background:linear-gradient(90deg,var(--amber),rgba(224,154,53,0))}
+html.door-walk .rp h3{font-size:2.125rem;line-height:1;margin:0}
+html.door-walk .rp-body{font-size:.9375rem;line-height:1.45;gap:.375rem;max-width:none}
+html.door-walk .rp-big{font-size:1.0625rem}
+html.door-walk .rp-note{font-size:.8125rem}
+html.door-walk .rp-tap{display:block;font-size:.8125rem;color:var(--amber)}
+html.door-walk .hit{display:block;position:absolute;z-index:3;left:0;top:0;width:100px;height:100px;transform-origin:0 0;visibility:hidden;border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+html.door-walk .raum-bar{position:absolute;z-index:4;left:1.5rem;right:1.5rem;bottom:calc(env(safe-area-inset-bottom,0px) + 1rem);display:flex;flex-direction:column;align-items:stretch;gap:.375rem;margin:0}
+html.door-walk .raum-termin{margin-top:.25rem;width:100%}
+html.door-walk .raum-nav{display:flex;align-items:center;justify-content:center;gap:.25rem}
+html.door-walk .raum-hint{display:block;text-align:center;font:400 .8125rem/1.2 var(--sans);color:var(--mute);transition:opacity .8s}
+html.raum-turned .raum-hint{opacity:0}
+.rn{appearance:none;display:inline-flex;align-items:center;justify-content:center;width:2.75rem;height:2.75rem;border-radius:50%;border:1px solid var(--line);background:rgba(16,34,42,.55);color:var(--txt);cursor:pointer;transition:border-color .3s,color .3s}
+.rn:hover{border-color:rgba(224,154,53,.6);color:var(--amber)}
+.rn svg{width:1.125rem;height:1.125rem;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.raum-tabs{display:flex;gap:0;margin:0 .5rem}
+.raum-tabs [role="tab"]{appearance:none;display:inline-flex;align-items:center;justify-content:center;width:2.75rem;height:2.75rem;padding:0;border:0;background:none;cursor:pointer}
+.raum-tabs [role="tab"] i{display:block;width:.625rem;height:.625rem;border-radius:50%;border:1.5px solid rgba(237,232,220,.45);transition:background .4s,border-color .4s,box-shadow .4s,transform .4s var(--ease)}
+.raum-tabs [role="tab"]:hover i{border-color:var(--amber)}
+.raum-tabs [role="tab"][aria-selected="true"] i{background:var(--amber);border-color:var(--amber);box-shadow:0 0 .75rem rgba(224,154,53,.55);transform:scale(1.15)}
+.raum-tabs [role="tab"]:focus-visible{outline:none}
+.raum-tabs [role="tab"]:focus-visible i{outline:2px solid var(--amber);outline-offset:4px}
+
+@media (min-width:921px){
+  /* PC: Wandschrift rechts neben den Dingen; Bedienung unten mittig in einer Zeile */
+  html.door-walk .rp h3{font-size:3rem}
+  html.door-walk .rp-body{font-size:1.0625rem}
+  html.door-walk .rp-big{font-size:1.25rem}
+  html.door-walk .rp-note,html.door-walk .rp-tap{font-size:.875rem}
+  html.door-walk .raum-bar{left:50%;right:auto;bottom:2.25rem;transform:translateX(-50%);flex-direction:row;align-items:center;gap:1.5rem}
+  html.door-walk .raum-termin{width:auto;margin-top:0}
+  html.door-walk .raum-hint{position:absolute;left:0;right:0;top:100%;margin-top:.375rem;white-space:nowrap}
+}
+@media (max-height:600px) and (max-width:920px){
+  html.door-walk .rp-dir{margin-bottom:.375rem}
+  html.door-walk .raum-hint,html.door-walk .rp-tap{display:none}
+  html.door-walk .rp h3{font-size:1.75rem}
+  html.door-walk .rp-head::after{margin:.5rem 0 .625rem}
+  html.door-walk .rp-body p:not(.rp-big):not(.rp-acts):not(.dd-open){font-size:.875rem}
+}
+@media print{
+  .c-stage,.c-glow,.raum-nav,.raum-hint,.door-hit,.door-cue,.hit{display:none!important}
+  .door-track,.door-sticky{height:auto!important;position:static!important}
+  .raum{position:static!important;opacity:1!important;visibility:visible!important;display:block!important}
+  .rp{display:block!important;position:static!important;transform:none!important;opacity:1!important;visibility:visible!important;width:auto!important}
+}

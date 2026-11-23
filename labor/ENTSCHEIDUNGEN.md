@@ -3,6 +3,10 @@
 Stand: 22.11.2026 (Text ruhig: in Puls + live übernommen, wartet auf Kais Sichtprüfung · Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Tür · Raum in Puls (Go Kai 23.11.2026)
+- **Entschieden:** Der Raum ersetzt in Puls und `live/` die Tür-Bühne „Hineingehen“ und den bisherigen Kontaktteil. Termin-Knopf und Terminbuch öffnen das Termin-Blatt; „Alles auf einen Blick“ (Angabenliste mit Leuchtpille) steht darunter.
+- **Merkregel:** Neue Tür-/Raum-Arbeit nur noch in `src/tuer-raum` (gemeinsam für Puls und Entwurf); `src/tuer` ist Archiv der Entwurfsseite `tuer.html`.
+
 ## Tür · Raum, Runde 2 – „Text lebt im Raum“ (Go Kai „Empfehlung“, 23.11.2026)
 - **Entschieden:** A „Alles im Raum“ statt B (Schilder mit Faden) oder C (nur Weitwinkel). Texte stehen als Wandschrift im Raum (echter Text, perspektivisch), Dinge sind antippbar (Buch = Termin, Telefon = anrufen, Fenster = Karte); „Termin buchen“ bleibt unten als Netz.
 - **Merkregeln:** Schrift nur auf senkrechten Flächen, die man frontal ansieht (Blick waagerecht, Ausschnitt per Bildmitte statt Neigen) – sonst wird sie verzerrt. Schrift ist frontal genau so groß wie gesetzt (Breite W0 in Bildpunkten → scharf). Nichts aus Punkten hinter der Schrift (Tür hinten außerhalb des Handy-Bilds, keine Deckenfuge). Zeichenflächen in der Bühne, nicht fest über dem Fenster (sonst schwimmen sie beim Scrollen am iPhone).
