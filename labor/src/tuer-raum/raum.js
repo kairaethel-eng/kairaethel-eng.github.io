@@ -44,8 +44,8 @@ function inLetter(d, x, y) {
   return x >= bx && Math.abs(Math.hypot(x - bx, y - by) - br) <= T;
 }
 
-export function makeRoom() {
-  let S = [], walls = null, floor = null, hands = null, handsKey = '', win = null, sp = 0.025;
+export function makeRoom(opt = {}) { // opt.logoY: Höhe der HOP-Kreise auf der Tresenfront (Beispiel „Hervorheben“: tiefer, Platz für die Pille)
+  let S = [], beams = [], walls = null, floor = null, hands = null, handsKey = '', win = null, sp = 0.025;
   // lokale Punkte → Welt (Richtung k)
   const place = (k, A) => {
     const th = (k * Math.PI) / 2, c = Math.cos(th), s = Math.sin(th), out = new Float32Array(A.length);
@@ -86,7 +86,7 @@ export function makeRoom() {
     { // HOP-Kreise (Logo A) auf der Front des Tresens
       const r = 0.125, step = r * 142 / 66, dr = sp * 0.8, cols = [5, 3, 4];
       for (let d = 0; d < 3; d++) {
-        const cx = (d - 1) * step, cy = -0.6, z = -0.006;
+        const cx = (d - 1) * step, cy = opt.logoY ?? -0.6, z = -0.006;
         for (let j = 0; (j + 0.5) * dr < r; j++) {
           const rr = (j + 0.5) * dr, n = Math.max(1, Math.round((2 * Math.PI * rr) / dr));
           for (let q = 0; q < n; q++) { const a = ((q + (j & 1 ? 0.5 : 0)) / n) * 2 * Math.PI, x = Math.cos(a) * rr, y = Math.sin(a) * rr; if (!inLetter(d, x / r, y / r)) pt(0, cx + x, cy + y, z, cols[d], 0.55); }
@@ -184,6 +184,22 @@ export function makeRoom() {
       if (w > 0.02 && Math.abs(x) < WALL - 0.15 && Math.abs(z) < WALL - 0.15) F.push(x, FLOOR, z, 0, 0, 0, w * 0.4, 2, 0);
     }
     floor = new Float32Array(F);
+    // Lichtkegel je Richtung (Beispiel „Hervorheben“, Baustein C): geordnete Ringe von der Decke bis aufs antippbare Ding, dazu ein Lichtfleck
+    // auf der Fläche darunter. Lage lokal: Mitte x/z, Höhe der Fläche y. Nur sichtbar, wenn draw() o.hv.beam > 0 bekommt.
+    const BEAM = [[0.06, -0.19, 0.16], null, [-0.2, -0.43, 0.14], [0, -0.45, WZ - 0.1]];
+    beams = BEAM.map((b, k) => {
+      if (!b) return null;
+      const Bp = [], [bx, by, bz] = b, top = CEIL - 0.05, n = Math.max(6, Math.round((top - by) / (sp * 2.2)));
+      for (let j = 0; j <= n; j++) {
+        const t = j / n, y = top - (top - by) * t, r = 0.06 + 0.44 * t, m = Math.max(5, Math.round((2 * Math.PI * r) / (sp * 2.4)));
+        for (let q = 0; q < m; q++) { const a = ((q + (j & 1 ? 0.5 : 0)) / m) * 2 * Math.PI; Bp.push(bx + Math.cos(a) * r, y, bz + Math.sin(a) * r * 0.55, 0, 0, 0, 0.16 + 0.5 * t * t, 2, 0); }
+      }
+      for (let j = 0; (j + 0.5) * sp * 1.1 < 0.46; j++) { // Lichtfleck
+        const r = (j + 0.5) * sp * 1.1, m = Math.max(1, Math.round((2 * Math.PI * r) / (sp * 1.1)));
+        for (let q = 0; q < m; q++) { const a = ((q + (j & 1 ? 0.5 : 0)) / m) * 2 * Math.PI; Bp.push(bx + Math.cos(a) * r, by + 0.004, bz + Math.sin(a) * r * 0.6, 0, 0, 0, 0.6 * (1 - r / 0.46), 2, 0); }
+      }
+      return place(k, new Float32Array(Bp));
+    });
     // Wände: Fuge zum Boden, senkrechte Ecken – beim Umsehen ziehen sie ruhig vorbei
     const Wp = [], wl = (a, b, s, w) => { const g = seg(a, b, s); for (let i = 0; i < g.pts.length; i += 7) Wp.push(g.pts[i], g.pts[i + 1], g.pts[i + 2], 0, 0, 0, w, 0, 0); };
     for (const [ax, az, bx, bz] of [[-1, 1, 1, 1], [1, 1, 1, -1], [1, -1, -1, -1], [-1, -1, -1, 1]]) {
@@ -216,8 +232,9 @@ export function makeRoom() {
       PX = o.cx + (xc * F) / zc; PY = o.cy - (yc * F) / zc; PZ = zc; return true;
     };
     let quad = null, curK = -1;
+    const hv = o.hv || null;
     const dust = rIn < 0.999;
-    const run = (A, kOff) => {
+    const run = (A, kOff, mul = 1) => {
       for (let i = 0, idx = 0; i < A.length; i += ST, idx++) {
         let x = A[i], y = A[i + 1], z = A[i + 2], a = A[i + 6], sz = rad;
         const kind = A[i + 8];
@@ -239,9 +256,15 @@ export function makeRoom() {
         let col = A[i + 7];
         if (kind === 2) { a = o.pulse ? 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(o.t * 2.4)) : 1; sz = rad * 1.9; }
         else if (kind === 3) { if (!o.open) { col = 0; a *= 0.2; } } // „Geöffnet“ leuchtet nur, wenn die Praxis offen ist
-        else if (kind === 4 && o.hot === curK) a = Math.min(1, a * 1.7 + 0.08); // antippbares Ding unter der Maus
+        else if (kind === 4) {
+          if (o.hot === curK) a = Math.min(1, a * 1.7 + 0.08); // antippbares Ding unter der Maus
+          if (hv && hv.k === curK) { // Beispiel „Hervorheben“: A Bernstein-Kanten · C einmal aufleuchten · Rückmeldung beim Antippen
+            if (hv.edge) { col = 1; a = Math.min(1, a * 1.25 + 0.06); }
+            a = Math.min(1, a * (1 + 0.9 * (hv.glow || 0) + 1.4 * (hv.flash || 0)) + 0.25 * (hv.flash || 0));
+          }
+        }
         const depth = Math.min(1.25, Math.max(0.55, R / PZ));
-        batch.put(PX, PY, sz * (kind === 1 ? Math.max(0.6, depth) : depth), a * dim, col + 10);
+        batch.put(PX, PY, sz * (kind === 1 ? Math.max(0.6, depth) : depth), a * dim * mul, col + 10);
       }
     };
     const yawN = ((o.yaw % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
@@ -252,6 +275,7 @@ export function makeRoom() {
       if (dd > 1.75) continue; // weit außerhalb des Blicks
       if (k === 3) { quad = []; for (let c = 0; c < 4; c++) { if (!proj(win[c * ST], win[c * ST + 1], win[c * ST + 2])) { quad = null; break; } quad.push(PX, PY); } }
       curK = k; run(S[k], k * 100000); curK = -1;
+      if (hv && hv.k === k && hv.beam > 0.01 && beams[k]) run(beams[k], 50000 + k, hv.beam); // Lichtkegel (C)
       if (k === 1 && hands) run(hands, 77777);
     }
   }

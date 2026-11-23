@@ -51,6 +51,8 @@ const PAGES = {
   // Tür · Raum (22.11.2026, Go Kai „a c“): Kapitel 05 als Raum – Tür antippen, der Rahmen wird zum Bildschirmrand, drinnen umsehen
   // (vier Blickrichtungen mit Termin, Zeiten, Telefon & mehr, Anfahrt). Bühne src/tuer-raum/stage.js + raum.js; Puls unberührt.
   'tuer-raum': { out: 'tuer-raum.html' },
+  // Beispiel „Hervorheben“ (23.11.2026, Kai: „an einem Beispiel zeigen“): Tür · Raum mit Umschalter Vorher · A Kanten · B Pille · C Licht · Alle, nur am Terminbuch
+  'tuer-hervor': { out: 'tuer-hervorheben.html', dir: 'tuer-raum', studie: 'hervor' },
   // Stoßwelle in Punkten (20.11.2026 nachts, Kai im Arbeitsblatt 4): Entwurf – Punkt-Grafik mit echtem Fersenbein, Vergleich mit der Linien-Bühne in Puls
   'stosswelle-punkte': { out: 'stosswelle-punkte.html' },
   // Logo-Vergleich (21.11.2026, Kai: altes Logo lassen, zusätzlich eine Mischung zeigen): A flach · B Mischung · C nach dem Original
@@ -217,6 +219,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   { const acts = tpl.match(/<!--KF-ACTS-->([\s\S]*?)<!--\/KF-ACTS-->/); if (acts) tpl = tpl.replace(acts[0], '').replace('<!--KF-ACTS-SLOT-->', () => acts[1]); }
   if (P) tpl = applyPatches(tpl, P.page, 'page.html');
   if (cfg.studie === 'ruhe') tpl = applyPatches(tpl, [["classList.add('js','ruhe')", "classList.add('js','ruhe','studie-ruhe')"], ['<title>HOP Puls Scan</title>', '<title>HOP Text ruhig</title>']], 'textruhe');
+  if (cfg.studie === 'hervor') tpl = applyPatches(tpl, [["classList.add('js')", "classList.add('js','studie-hervor')"], ['<title>HOP Tür · Raum</title>', '<title>HOP Hervorheben</title>']], 'hervor');
   if (cfg.studie === 'farbe') tpl = applyPatches(tpl, [["classList.add('js','ruhe')", "classList.add('js','ruhe','studie-farbe')"], ['<title>HOP Puls Scan</title>', '<title>HOP Farbstudie</title>']], 'farbstudie');
   if (cfg.root) ROOT_LINKS.forEach(([re, to]) => { tpl = tpl.replace(re, to); });
   // Datenschutz § 4 Online-Terminbuchung (<!--TERMIN-->…): ohne Termin-Blatt heraus, folgende §§ eins zurück

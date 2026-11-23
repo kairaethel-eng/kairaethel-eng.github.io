@@ -12,10 +12,10 @@ const DW = 1, DH = 2.05, D0 = 4.2, ZEND = 1.4, EYE = 1.08;
 const FR_N = 9;
 export const DOOR_PLAN = { open: [0.06, 0.5], walk: [0.26, 0.84], gate: 0.8, settle: [0.84, 1] };
 
-export function initStage({ cv, glow, isStill, soft }) {
+export function initStage({ cv, glow, isStill, soft, roomOpts }) {
   const batch = makeGLBatch(cv, { soft });
   if (!batch) return null;
-  const room = makeRoom();
+  const room = makeRoom(roomOpts);
   let VW = 0, VH = 0, dpr = 1, F = 1, px = 1, cx = 0, cy = 0, areaH = 0, roomSp = 0;
   let frame = null, ftg = null, leaf = null, floor = null, motes = null, sill = null, nBottom = 0;
   let f = 0, pS = 0, clock = 0, skip = false, lastKey = '', blank = true, walkNow = 0, borderNow = 0;
@@ -163,7 +163,7 @@ export function initStage({ cv, glow, isStill, soft }) {
       pS += (o.pWant - pS) * kf; if (Math.abs(o.pWant - pS) < 0.0015) pS = o.pWant;
       const rm = o.room;
       const key = `${f.toFixed(3)}|${pS.toFixed(4)}|${Math.round(o.areaTop)}|${Math.round(o.cx)}|${Math.round(o.fadeY)}|${o.border.map(Math.round).join(',')}` +
-        (rm ? `|${rm.yaw.toFixed(4)}|${rm.pitch.toFixed(4)}|${rm.rIn.toFixed(3)}|${rm.cx | 0}|${rm.cy | 0}|${rm.F | 0}|${rm.hh}:${rm.mm}|${rm.rect.map(Math.round).join(',')}` : '');
+        (rm ? `|${rm.yaw.toFixed(4)}|${rm.pitch.toFixed(4)}|${rm.rIn.toFixed(3)}|${rm.cx | 0}|${rm.cy | 0}|${rm.F | 0}|${rm.hh}:${rm.mm}|${rm.rect.map(Math.round).join(',')}|${rm.hvKey || ''}` : '');
       const doorAlive = !still && (f > 0.75 || pS > 0.06) && (!rm || rm.rIn < 1);
       const alive = doorAlive || (!still && rm && rm.pulse);
       if (key === lastKey) { if (!alive) return; skip = !skip; if (skip) return; }

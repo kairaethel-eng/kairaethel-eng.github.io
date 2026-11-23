@@ -117,7 +117,7 @@ function layout(w, h, desk) {
   const W0 = Math.round(desk ? Math.min(w * 0.32, 30 * rem) : Math.min(w - 3 * rem, 23 * rem));
   panels.forEach((p) => { p.style.width = W0 + 'px'; });
   const Hs = panels.map((p) => p.offsetHeight);
-  const navB = nav ? nav.getBoundingClientRect().bottom : 0, ins = desk ? 14 : 8;
+  const topEl0 = HV && hvBarEl ? hvBarEl : nav, navB = topEl0 ? topEl0.getBoundingClientRect().bottom : 0, ins = desk ? 14 : 8;
   const top = navB + (desk ? 28 : 16), botm = (bar ? bar.offsetTop : h - 120) - (desk ? 24 : 14), aH = Math.max(160, botm - top), mid = (top + botm) / 2;
   let F, cx, yEye;
   if (!desk) {
@@ -220,6 +220,57 @@ sticky.addEventListener('pointerleave', () => { pyT = 0; psT = 0; });
   sticky.addEventListener('click', (e) => { if (performance.now() < suppress && e.target.closest('a,button')) { e.preventDefault(); e.stopPropagation(); } }, true);
 }
 
+// ---------- Beispiel „Hervorheben“ (tuer-hervorheben.html, html.studie-hervor; Kai 23.11.: „an einem Beispiel zeigen“) ----------
+// Nur der Blick „vorne · Empfang“: A Bernstein-Kanten am Terminbuch · B Leuchtpunkt-Pille „Termin buchen“ am Tresen · C beim Ankommen fällt
+// einmal Licht aufs Buch. Dazu Rückmeldung beim Antippen (Buch leuchtet kurz auf). Umschalter: Vorher · A · B · C · Alle.
+const HV = H.classList.contains('studie-hervor');
+const hvS = { mode: 'alle', t: -1, flashAt: -9, used: false };
+let hvPill = null, hvBarEl = null;
+const hvFlags = () => ({ edge: hvS.mode === 'a' || hvS.mode === 'alle', pill: hvS.mode === 'b' || hvS.mode === 'alle', light: hvS.mode === 'c' || hvS.mode === 'alle' });
+function hvReplay() { hvS.t = -1; if (hvPill) hvPill.classList.remove('is-in'); }
+if (HV) {
+  const termin = 'https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx';
+  hvPill = document.createElement('a');
+  hvPill.className = 'hv-pill is-pulse'; hvPill.href = termin; hvPill.target = '_blank'; hvPill.rel = 'noopener';
+  hvPill.innerHTML = '<b class="hv-orb" aria-hidden="true"><i></i></b><span>Termin buchen</span>';
+  raumEl.appendChild(hvPill);
+  const flash = () => { hvS.flashAt = performance.now(); hvS.used = true; hvPill.classList.remove('is-pulse'); };
+  hvPill.addEventListener('click', flash);
+  const h0 = $('.hit[data-k="0"]'); if (h0) h0.addEventListener('click', flash);
+  const bar = document.createElement('div');
+  bar.className = 'hv-bar'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Beispiel: anklickbare Dinge hervorheben');
+  bar.innerHTML = '<span class="hv-t">Beispiel · Terminbuch</span>' + [['vorher', 'Vorher'], ['a', 'A Kanten'], ['b', 'B Pille'], ['c', 'C Licht'], ['alle', 'Alle']].map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === 'alle'}">${l}</button>`).join('') + '<button type="button" class="hv-again" data-again>↻ Ankommen</button>';
+  document.body.appendChild(bar); hvBarEl = bar;
+  const setMode = (m) => {
+    hvS.mode = m; bar.querySelectorAll('[data-v]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === m)));
+    const f = hvFlags(); H.classList.toggle('hv-pill-on', f.pill); lay = null; hvReplay();
+    if (!hvS.used) hvPill.classList.add('is-pulse');
+  };
+  bar.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.again !== undefined) { if (cur !== 0) go(0, 'tab'); hvReplay(); } else setMode(b.dataset.v); });
+  setMode(new URLSearchParams(location.search).get('v') || 'alle');
+  // gleich in den Raum: zur Bühne, Tür offen, vorne
+  addEventListener('load', () => { setTimeout(() => { scrollTo(0, track.getBoundingClientRect().top + scrollY); open(true); }, 300); });
+}
+function hvFrame(dt, cam) {
+  if (!HV || !roomOn) return null;
+  const f = hvFlags(), atFront = cur === 0 && yawT >= 1 && rIn >= 1 && angTo(cam.yaw, 0) < 0.06;
+  if (atFront) hvS.t = hvS.t < 0 ? 0 : hvS.t + dt; else if (angTo(cam.yaw, 0) > 0.8) hvReplay(); // beim Wiederkommen erneut ankommen
+  const t = Math.max(0, hvS.t);
+  const beam = !f.light || hvS.t < 0 ? 0 : t < 0.9 ? easeSine(t / 0.9) : 0.3 + 0.7 * Math.exp(-(t - 0.9) / 1.3);
+  const glow = !f.light || hvS.t < 0 ? 0 : Math.max(0, 1 - Math.abs(t - 0.9) / 1.1);
+  const flash = Math.max(0, 1 - (performance.now() - hvS.flashAt) / 700);
+  // Pille (B): sitzt mittig auf der Tresenfront unter dem Buch, erscheint nach dem Licht aus Staub (CSS)
+  if (hvPill) {
+    const show = f.pill && hvS.t >= (f.light ? 0.75 : 0.15);
+    hvPill.classList.toggle('is-in', show);
+    const p = st.project(0, 0.06, -0.38, -0.012, cam), op = 1 - smooth(0.06, 0.4, angTo(cam.yaw, 0));
+    if (p && op > 0.01) { hvPill.style.transform = `translate(${p[0].toFixed(1)}px,${p[1].toFixed(1)}px) translate(-50%,-50%)`; hvPill.style.opacity = op.toFixed(3); hvPill.style.visibility = 'visible'; }
+    else { hvPill.style.opacity = '0'; hvPill.style.visibility = 'hidden'; }
+  }
+  const hv = { k: 0, edge: f.edge, glow, beam, flash };
+  return { hv, hvKey: `${hvS.mode}|${beam.toFixed(3)}|${glow.toFixed(3)}|${flash.toFixed(3)}` };
+}
+
 // Messanzeige ?takt=1 (Bilder je Sekunde)
 const takt = Q.get('takt') === '1' ? Object.assign(document.body.appendChild(document.createElement('div')), { className: 'takt' }) : null;
 let tn = 0, tt = 0;
@@ -236,7 +287,7 @@ function frame(now) {
   const r = track.getBoundingClientRect(), vh = innerHeight;
   if (!opened && r.height > vh * 0.5 && r.bottom < vh * 0.3) open(true); // ohne Antippen vorbeigescrollt: beim Zurückkommen offen
   if (r.top > vh * 1.5 || r.bottom < -vh * 0.3) { off(); return; }
-  if (!st) { st = initStage({ cv, glow: glowEl, isStill: still, soft }); if (!st) { failed = true; return; } }
+  if (!st) { st = initStage({ cv, glow: glowEl, isStill: still, soft, roomOpts: HV ? { logoY: -0.72 } : undefined }); if (!st) { failed = true; return; } }
   if (st.dead) { failed = true; return; }
   if (!on) { on = true; cv.classList.add('on'); glowEl.classList.add('on'); }
   // alles in Bühnen-Koordinaten: die Zeichenfläche liegt in der Bühne und scrollt mit ihr
@@ -254,6 +305,7 @@ function frame(now) {
       rect: L.rect, cx: L.cx, cy: L.yEye + ps, F: L.F, sp: L.sp, rad: desk ? 1.2 : 1.0,
       yaw: yawBase() + drag + py, pitch: PITCH0, rIn: easeSine(rIn), pulse: angTo(yawBase(), 2) < 0.05 && yawT >= 1 && !still(), hh, mm, open: praxisOpen, hot,
     };
+    const hx = hvFrame(dt, room); if (hx) Object.assign(room, hx);
   }
   st.frame(dt, {
     w, h, desk, cx: w / 2,
