@@ -1,6 +1,6 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 22.11.2026 (Text ruhig: in Puls + live übernommen, wartet auf Kais Sichtprüfung · Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
+Stand: 23.11.2026 (Echte Figur Stufe 1 in Puls + live (Go Kai „1“), wartet auf Sichtprüfung · Entwurf `figur-echt.html` · Text ruhig: in Puls + live übernommen, wartet auf Kais Sichtprüfung · Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
 ## Außenauftritt – Eingangsschild und Werbung zur Straße (Kai 22.11.2026)
@@ -19,6 +19,36 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
   - Kein Blinken, keine Bewegung.
   - Kreise immer waagerecht (senkrecht + beleuchtet = Ampel).
   - Auf Schildern keine Heilversprechen, kein „Zentrum“.
+
+## Echte Figur in Puls (Go Kai „1“, 23.11.2026 abends)
+- **Entschieden:** Stufe 1 „anatomisch echt“ ist Kapitel 01 in Puls und `live/` (Haut, Skelett, Gehirn, Muskeln, Nervenwege; Licht wie bisher). Stufe 2 (Scan-Linie, Filmlicht, Lupe) bleibt nur auf der Entwurfsseite `figur-echt.html`.
+- **Merkregeln:** Spannung eines Muskels nur innerhalb des Rings seiner Station (gemessen und gelöst wird nur dort). Daten der Figur erst laden, wenn WebGL da ist; Form 0 der Hauptwolke erst füllen, wenn die Bühne steht (`kf.onReady`). Vergleich mit der alten Figur über `?figur=heute`.
+
+## Echte Figur – Startfigur anatomischer + Kino (Go Kai „Empfehlung“, 23.11.2026) – Entwurf `figur-echt.html`, wartet auf Sichtprüfung
+- **Entschieden (Go):** Vorschlag 1 „Anatomisch echt“ komplett (A1 echte Haut, A2 Gehirn mit Windungen, A3 Skelett je Station, A4 Spannung im echten Muskel, A5 Nervenwege an echten Landmarken) + aus Vorschlag 2 **B1 Scan-Linie legt frei, B2 Filmlicht, B4 Röntgen-Lupe**. Als Entwurfsseite mit Umschalter heute · 1 · 1+2; Puls unberührt bis Kais Urteil.
+- **Zurückgestellt (Runde 2, nur mit Go):** B3 echte Kamera je Station, B5 Raum (Punktboden, Spiegelung, Dunst, Staub in Ebenen), B6 Auftritt (dunkel, Scan baut auf, Kamera fährt zurück).
+- **Merkregeln:** Figur bleibt **neutral** – Intimbereich und Gesicht immer glätten (Werkzeug `tools/figur-echt.mjs`), nie Rohhaut zeigen. Nichts Anatomisches frei erfinden: was BodyParts3D hat, kommt aus den Daten; die Nerven fehlen dort (Rumpf/Arme/Beine) und werden **entlang echter Landmarken berechnet**, nicht frei gezeichnet. Schädel und Kopfhaut treten zurück, solange das Gehirn zu sehen ist (sonst weißer Fleck). Rückseiten fallen weg (die Figur dreht sich nur ±7°). Hauptgrafik bleibt der Körper: Knochen/Muskeln sind Schichten darunter, nie heller als die Linie.
+
+## Anklickbare Dinge im Raum (Go Kai 23.11.2026 „a, mit einer kleinen Tipp-Animation“)
+- **Entschieden:** A – antippbare Dinge in Bernstein; dazu ein kurzer Tipp-Hinweis beim Ankommen (zweimal, höchstens zweimal je Ankunft, nur solange unbenutzt) und Aufleuchten beim Antippen. Nicht gewählt: Pille (B), Lichtkegel (C) – Beispiel bleibt in `tuer-hervorheben.html`.
+- **Merkregel:** Neue antippbare Dinge im Raum: Punkte als Art 4 bauen (werden automatisch Bernstein), Lage des Hinweises in `hinweis.js` `TAP_AT`, Tastfläche in `HITQ`.
+
+## Tür · Raum in Puls (Go Kai 23.11.2026)
+- **Entschieden:** Der Raum ersetzt in Puls und `live/` die Tür-Bühne „Hineingehen“ und den bisherigen Kontaktteil. Termin-Knopf und Terminbuch öffnen das Termin-Blatt; „Alles auf einen Blick“ (Angabenliste mit Leuchtpille) steht darunter.
+- **Merkregel:** Neue Tür-/Raum-Arbeit nur noch in `src/tuer-raum` (gemeinsam für Puls und Entwurf); `src/tuer` ist Archiv der Entwurfsseite `tuer.html`.
+
+## Tür · Raum, Runde 2 – „Text lebt im Raum“ (Go Kai „Empfehlung“, 23.11.2026)
+- **Entschieden:** A „Alles im Raum“ statt B (Schilder mit Faden) oder C (nur Weitwinkel). Texte stehen als Wandschrift im Raum (echter Text, perspektivisch), Dinge sind antippbar (Buch = Termin, Telefon = anrufen, Fenster = Karte); „Termin buchen“ bleibt unten als Netz.
+- **Merkregeln:** Schrift nur auf senkrechten Flächen, die man frontal ansieht (Blick waagerecht, Ausschnitt per Bildmitte statt Neigen) – sonst wird sie verzerrt. Schrift ist frontal genau so groß wie gesetzt (Breite W0 in Bildpunkten → scharf). Nichts aus Punkten hinter der Schrift (Tür hinten außerhalb des Handy-Bilds, keine Deckenfuge). Zeichenflächen in der Bühne, nicht fest über dem Fenster (sonst schwimmen sie beim Scrollen am iPhone).
+## Arbeitsblatt 4, fünfte Runde (Kai 22.11.2026)
+- **Erledigt (Kai):** Stottern der Partikel tritt nicht mehr auf.
+- **Entschieden (Claude, von Kai übertragen):** Sicherheitsregeln (CSP) per `<meta>` im Live-Build; eine HTML-Datei je Seite bleibt; `/labor/` bis zum Livegang öffentlich (noindex), danach `robots.txt` sperrt `/labor/`; keine `geo`/`sameAs`-Angaben ohne gepflegtes Profil.
+- **Merkregel:** Jede neue fremde Quelle (Skript, Bild, Schrift, Rahmen, Abruf) braucht eine Zeile in den Sicherheitsregeln in `build.mjs` – sonst blockiert der Browser sie. Vorher fragen: braucht es die fremde Quelle wirklich?
+- **Merkregel:** Links auf eigene Dateien im Kopf relativ schreiben (gleiche Herkunft auch unter `www.`).
+
+## Kapitel 05 als Raum – „Tür · Raum“ (Kai 22.11.2026 nachts: „drauf klicken und dann erscheinen nur diese 2 Buttons“ ist zu wenig)
+- **Go Kai „a c“:** A „Der Empfang“ (Rahmen wird Bildschirmrand, vier Blickrichtungen mit den Kontakt-Infos) + C „Kopf drehen“ (Maus am PC, Finger beim Wischen). Erst Entwurfsseite `tuer-raum.html`; Puls unberührt bis Kais Urteil.
+- **Merkregeln:** „Termin buchen“ nie hinter dem Umsehen verstecken (immer sichtbar). Feste Blickrichtungen, Drehung über die Zeit (2 s), kein freies 360°. Keine Neigungssensoren (iOS fragt um Erlaubnis). Kästen (Tresen, Bank, Ablage) als Punkt-Zeichnung: helle Kanten + feine Füllung – ebene Flächen mit Kantenlicht wirkten am Handy wie Schraffur. Höchstens ein pulsierender Punkt (Anrufbeantworter, nur im Blick „hinten“).
 
 ## Mehr Farbe – Raumlicht (Kai 22.11.2026 abends: „zu einfarbig, eintönig“ → „Super geile Idee … kräftig am besten. Bitte übernehmen. Aber alle anderen speichern“)
 - **Entschieden (Go Kai):** Stufe **„Kräftig“** gilt in Puls und `live/`: jedes Kapitel ein Raum mit eigenem Licht aus der HOP-Palette, kühl → warm (01 Abendblau · 02 Grün · § Logo-Farben · 03 Röntgenblau · 04 Petrol + warmes Fensterlicht · 05 Bernstein), deutlicher Grundton je Kapitel, Logo-Farben als Raumfarben (Kapitel-Ziffern, Linien, Menü, Figur blau, Band 2 grün).
@@ -53,6 +83,10 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **Entschieden (Kai „Go A“, 21.11. spät):** Oberkörper und Becken mit Beinen bleiben fest; nur die Haut über der Lende (L1 bis vor die Hüfte) geht weich mit der Wirbelsäule mit – kein Knick an der Taille, Beine schwenken aus der Hüfte. Körper ganz still (B) und Rückweg (C) verworfen.
 - **Merkregel:** Haut und Wirbel bekommen dieselbe Übergangszone – sonst schiebt sich die Wirbelsäule gegen die Haut.
 - **Entschieden (Kai „Go A“, 22.11.):** „Spitze an der Hüfte“ an der Ursache behoben – im Werkzeug `tools/manu-figur.mjs` folgt die Haut unterhalb des Ellbogens nicht mehr anteilig dem Arm; Figur neu erzeugt. Wegschneiden (B) und Glätten (C) verworfen.
+- **Entschieden (Kai „Go Empfehlung“, 22.11.):** (1A) Kamera geht beim Drehen so weit zurück, dass alles im Bild bleibt; (2A) lose Hautstücke an den Händen entfernt; (3A) Wirbel leuchten Bernstein, so stark sie gerade bewegt werden – kein Rot (stünde für Schmerz/Entzündung und liegt außerhalb der Farben).
+- **Entschieden (Auftrag Kai 22.11.: „Kopf- und Mittelteil sollen sich auch bewegen“):** nach den Angaben zur Manuthera 242 bewegen sich Kopfteil (HWS), Brustteil (BWS) und Beckenteil (LWS) je Behandlung nacheinander; das kurze Mittelteil bleibt wie bei der echten Liege der feste Bezug. Bewegungs-Anzeigen unter den Füßen entfallen bei der echten Figur (die Wirbelsäule zeigt selbst, wo sich etwas bewegt).
+- **Entschieden (Kai „Go Empfehlung“, 23.11.):** eigener Knopf **Extension** (Kopf hebt sich, dann Becken mit Beinen); bewegte Wirbel im Verlauf Bernstein → Rot-Orange nach Stärke, die stärkste Stelle glüht ruhig. Kai wollte es „eher rötlich“ – Rot-Orange nur an der Wirbelsäule der Manuthera, nicht als neue Seitenfarbe.
+- **Merkregel:** Eine Bewegung zur Zeit auch innerhalb einer Behandlung – Teile setzen nacheinander ein, kehren gemeinsam ruhig zurück.
 - **Merkregel:** Beim Umlegen einer stehenden Figur: Gewichte nur dort glätten, wo Gelenke sind (Schulter, Ellbogen) – wo Körperteile sich in der Ausgangslage nur berühren (Hand am Oberschenkel), sonst wandert Haut mit. Berührungs-Brücken auftrennen und die Ränder schließen.
 - **Merkregel:** Haut aus BodyParts3D: Außenfläche per Strahltest („sieht ins Freie“) bestimmen, danach Öffnungen schließen – kein Normalen-Knochen-Test.
 - **Merkregel:** Punkt-Filter für eine Form („Unterseite weglassen“) bei neuer Form neu prüfen – flach von der Seite und von beiden Seiten ansehen.

@@ -56,6 +56,8 @@ const STATES = [
   // seit 20.11.2026 geht die Tür auf Antippen auf und man geht über die Zeit hindurch (vorher am Scrollweg)
   // (der Prüfstand rollt beim Laden einmal durch die ganze Seite – dabei gilt die Tür als „vorbeigescrollt“ und steht offen; deshalb reset())
   { id: 'tuer-halb', go: async (p, settle) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#doorTrack', 0)(p); await settle(4000); await p.evaluate(() => window.__door && window.__door.open()); }, wait: 1900 }, { id: 'tuer-drin', go: go('#doorTrack', 0), wait: 6000 }, // halb hindurch · drinnen, Knöpfe da
+  // Tür · Raum (23.11.2026): die übrigen drei Blickrichtungen (vorne = tuer-drin)
+  ...[[1, 'rechts'], [2, 'hinten'], [3, 'links']].map(([k, n]) => ({ id: 'raum-' + n, go: async (p) => { await go('#doorTrack', 0)(p); await p.evaluate((k) => window.__door && window.__door.go(k), k); }, wait: 3200 })),
   { id: 'kontakt', go: go('#kontakt', -0.1) },
 ];
 // jump: eigene Schwelle für den Sprung (Regel 4 gilt für Kapitelübergänge; allgemein 8)
@@ -68,7 +70,8 @@ const FILMS = [
   { id: '03-C1-nach-04', go: stop(0), k: 1.4, wait: 5000 },
   { id: '04-zurueck-nach-03', go: go('#dach', 0.1), k: -0.9 },
   { id: 'leistungen-nach-manuthera', go: go('#manuthera', -0.7), k: 0.9 },
-  { id: 'stosswelle-nach-05', go: go('#tuer', -0.7), k: 0.9 },
+  { id: 'stosswelle-nach-05', go: async (p) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#tuer', -0.7)(p); }, k: 0.9 }, // erster Besuch: Tür zu (seit 23.11. Raum: ist er schon offen, zieht er beim Scrollen als Ganzes mit – wie ein Bild, gewollt)
+  { id: 'raum-umsehen', go: async (p, settle) => { await go('#doorTrack', 0)(p); await p.evaluate(() => { if (window.__door) { window.__door.inside(); window.__door.go(0); } }); /* inside(): der Film davor schließt die Tür (erster Besuch) */ await settle(2600); await p.evaluate(() => window.__door && window.__door.go(1)); }, k: 0, wait: 100, jump: 8 }, // eine Drehung (2 s): Dinge ziehen seitlich vorbei (gewollt)
   { id: 'tuer-hindurch', go: async (p, settle) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#doorTrack', 0)(p); await settle(4500); await p.evaluate(() => window.__door && window.__door.open()); }, k: 0, wait: 100, jump: 8 }, // Tür antippen: der Rahmen zieht am Bild vorbei (gewollt) // ganzer Weg durch die Tür in einem Wisch: der Rahmen zieht am Bild vorbei (gewollt)
 ];
 

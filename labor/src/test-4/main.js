@@ -3,6 +3,8 @@
 // 0 Körper → 1 Bewegung → 2 Wirbelsäule (Scan) → 3 Dachlinie (fließt ins Linienhaus, seit 14.11.2026) → 4 HOP-Kreise
 // Kapitel 01 seit 16.11.2026 (Auftrag K, Go Kai): „Von Kopf bis Fuß“ als eigene Bühne (Baustein ../kopf-fuss/kapitel.js); Form 0 erscheint
 // erst am Ende des Kapitels deckungsgleich mit dessen Figur (Übergabe, kf.fitE/handK) und löst sich in die Bewegungslinien auf.
+// Seit 23.11.2026 (Go Kai „1“ zum Entwurf figur-echt.html): Kapitel 01 = echte Figur, Stufe 1 „anatomisch echt“ (../figur-echt/kapitel.js,
+// Daten assets/figur-echt.bin, nach dem Start geladen); ?figur=heute zeigt zum Vergleich die Figur bis 23.11. (../feinschliff).
 import * as THREE from 'three';
 import Lenis from 'lenis';
 import { spinePointsGen, spineStippleGen, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
@@ -18,8 +20,11 @@ import { initHouse } from '../haus-licht/house.js';
 import { ECHT } from '../wirbel-echt/echt.js';
 import { initStosswelle } from '../stosswelle/welle.js';
 import { initVorfall, SEG as VF_SEG } from '../vorfall/film.js';
-import { initKopfFuss } from '../feinschliff/kapitel.js';
-import { initDoorStage, DOOR_PLAN } from '../tuer/buehne.js';
+import { initKopfFuss } from '../figur-echt/kapitel.js';
+import { loadEcht } from '../figur-echt/daten.js';
+import { initStage } from '../tuer-raum/stage.js';
+import { STATIONS, PITCH0, GEO } from '../tuer-raum/raum.js';
+import { makeTapHints } from '../tuer-raum/hinweis.js';
 import { initRuhe } from './ruhe.js';
 import { initFarbe } from './farbe.js';
 
@@ -298,8 +303,9 @@ const vert = /* glsl */`
       p = rotY(p, sin(uTime*.3)*.25);
       // 21.11. abends (Kai: „perfekt an das Hauptlogo der Startseite anpassen“): flache Farben des Logos A (#6FA02F · #305869 · #3F86B5),
       // weiße Buchstaben, feiner heller Rand – aufgehellt, weil die Punkte mit Lücken stehen (sonst wirkt die Fläche dunkler als das Logo)
-      col = kind4 < .5 ? cLg0 * 1.75 : kind4 < 1.5 ? cLg1 * 2.1 : kind4 < 2.5 ? cLg2 * 1.75 : kind4 < 3.5 ? vec3(1.) : vec3(1.15);
-      al = aW.y; dw = uDr4 * (kind4 > 3.5 ? .6 : kind4 > 2.5 ? .38 : .62) * uXf[4].w;
+      // 22.11. (Kai: „heller“): kräftiger und etwas zum Hellen hin, Punkte etwas größer (mehr Fläche gedeckt)
+      col = kind4 < .5 ? mix(cLg0 * 2.35, vec3(1.), .1) : kind4 < 1.5 ? mix(cLg1 * 2.9, vec3(1.), .12) : kind4 < 2.5 ? mix(cLg2 * 2.3, vec3(1.), .1) : kind4 < 3.5 ? vec3(1.1) : vec3(1.25);
+      al = aW.y; dw = uDr4 * (kind4 > 3.5 ? .64 : kind4 > 2.5 ? .4 : .7) * uXf[4].w;
     }
     p = p * uXf[i].w + uXf[i].xyz;
     if(i==2){
@@ -954,8 +960,8 @@ function setActive(i) {
 // ---------- Nerven-Infos im Raum (PC): erscheinen Schritt für Schritt entlang der Bahn ----------
 const NINFO = {
   c12: { exit: 'Nervenaustritt C1–C2', nerv: 'Nn. suboccipitales · N. occipitalis major', gef: 'Tiefe Nackenmuskulatur', ziel: 'Hinterkopf', typ: 'Typisch: Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen', tgt: [84, 30] },
-  c56: { exit: 'Nervenaustritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [18, 234] },
-  th712: { exit: 'Nervenaustritt Th7–Th12', nerv: 'Untere Interkostalnerven · Bauchwand', gef: 'Gefühl: Rippenbogen, Bauchwand', ziel: 'bis zur Nabelhöhe (Th10)', typ: 'Typisch: gürtelförmiger Schmerz am Rippenbogen, Steifigkeit am Übergang zur LWS', tgt: [86, 195] }, // Flanke auf Nabelhöhe
+  c56: { exit: 'Nervenaustritt C5–C6', nerv: 'Bizeps · Schulterheber', gef: 'Gefühl: Armaußenseite', ziel: 'bis zum Daumen', typ: 'Typisch: Ausstrahlung bis in den Daumen, Kribbeln, Schwäche beim Beugen', tgt: [24, 229] }, // Daumenspitze der echten Figur (23.11.)
+  th712: { exit: 'Nervenaustritt Th7–Th12', nerv: 'Untere Interkostalnerven · Bauchwand', gef: 'Gefühl: Rippenbogen, Bauchwand', ziel: 'bis zur Nabelhöhe (Th10)', typ: 'Typisch: gürtelförmiger Schmerz am Rippenbogen, Steifigkeit am Übergang zur LWS', tgt: [86, 174] }, // Bauchwand auf Nabelhöhe (echte Figur, 23.11.)
   th16: { exit: 'Nervenaustritt Th1–Th6', nerv: 'Interkostalnerven, obere Rippen', gef: 'Brustkorbwand · Zwischenrippen', ziel: 'Brustkorb', typ: 'Typisch: atemabhängiges Stechen, Schmerz zwischen den Schulterblättern', tgt: [80, 118] },
   l45: { exit: 'Nervenaustritt L4–L5', nerv: 'Richtung N. ischiadicus · L5 hebt den Fuß', gef: 'Gefühl: Schienbein', ziel: 'bis zur Großzehe', typ: 'Typisch: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche', tgt: [89, 410] },
   s1: { exit: 'Nervenaustritt S1 · ISG', nerv: 'Wade · Achillessehnenreflex', gef: 'Gefühl: Beinrückseite, Fußaußenrand', ziel: 'bis zur Ferse', typ: 'Typisch: Ausstrahlung bis zur Ferse, einseitiger Kreuzschmerz', tgt: [72, 412], pre: 'Iliosakralgelenk (ISG): verbindet Becken und Wirbelsäule.' },
@@ -2023,28 +2029,157 @@ const tTitle = $('#t-title');
 splitLetters(tTitle);
 new IntersectionObserver((es, ob) => es.forEach((e) => { if (e.isIntersecting) { tTitle.classList.add('open'); ob.disconnect(); } }), { threshold: 0.4 }).observe(tTitle);
 
-// ---------- Tür-Bühne „Hineingehen“ (19.11.2026, Go Kai „3a“; löst Tür C vom 18.11. ab) ----------
-// Kai: „dass man wie in die Tür rein geht und dort dann erst die Buttons für Termin oder Details stehen“. Kapitel 05 beginnt mit
-// einer klebenden Bühne (#doorTrack, 230 % Bildhöhe): Überschrift oben, darunter groß die Tür. Der Scrollweg p (0 … 1) öffnet sie
-// und führt hindurch (Baustein src/tuer/buehne.js, gezeichnet auf dem Grafikchip); drinnen blenden die zwei Knöpfe ein.
-// Klasse an <html>: door-walk = Bühne mit Weg. Ohne sie (ohne JavaScript, Software-Grafik, „Bewegung anhalten/reduzieren“,
-// kein Grafikchip) stehen Überschrift und Knöpfe einfach da. Die Zeichenfläche ist nur in der Nähe der Bühne eingeschaltet
-// (Go „1b“: sie lag am 18.11. dauernd bildschirmgroß über der Seite). Prüfhilfe: window.__door.
+// ---------- Tür · Raum (Go Kai 23.11.2026; Entwurf tuer-raum.html, von Kai abgenommen – löst die Tür-Bühne „Hineingehen“ ab) ----------
+// Kai: „Tür klicken, hineintreten, der Rahmen der Tür wird zur Bildschirmumrandung, dann umsehen – die Infos stehen dort, wo man hinschaut.“
+// Kapitel 05 ist eine Bühne (#doorTrack, eine Bildhöhe): Überschrift oben, darunter die Tür (Bausteine src/tuer-raum: stage.js = Tür +
+// Rahmen → Bildschirmrand + Raum, raum.js = vier Richtungen aus geordneten Punkten). Antippen → hindurch → drinnen Empfang (Termin),
+// Uhr (Zeiten, „Geöffnet“ leuchtet nur, wenn offen), Ablage (Telefon), Fenster (Anfahrt). Die vier Textblöcke stehen als Wandschrift im
+// Raum (Homographie → matrix3d), Terminbuch/Telefon/Fenster sind antippbar, „Termin buchen“ steht immer unten (Termin-Blatt).
+// Zeichenfläche liegt IN der Bühne (scrollt mit ihr, Bühnen-Koordinaten) – fest über dem Fenster schwamm sie am iPhone gegen den Text.
+// Klasse door-walk an <html>: Bühne an. Ohne sie (ohne JavaScript, Software-Grafik, „Bewegung anhalten/reduzieren“) stehen die vier
+// Blöcke untereinander. Prüfhilfe: window.__door (open, reset, inside, go(k)).
+let praxisOffen = false; // aus der Öffnungszeiten-Anzeige (weiter unten), für das „Geöffnet“-Schild im Raum
 const doorStage = (() => {
   const doorGate = riegel(3.6); // Staub sammelt sich zur Tür: Auslöser beim Hereinkommen, Ablauf über die Zeit
-  const cv = $('#cStage'), glowEl = $('#cGlow'), track = $('#doorTrack'), inEl = $('#doorIn');
-  if (!cv || !track || !inEl) return null;
-  const sticky = $('.door-sticky', track), cue = $('.door-cue', track), H = document.documentElement;
+  const cv = $('#cStage'), glowEl = $('#cGlow'), track = $('#doorTrack'), raumEl = $('#raum');
+  if (!cv || !track || !raumEl) return null;
+  const sticky = $('.door-sticky', track), cue = $('.door-cue', track), topEl = $('.door-top', track), hit = $('#doorHit'), nav = $('#top'), bar = $('.raum-bar', raumEl);
+  const tabs = $$('.raum-tabs [role="tab"]', raumEl), panels = $$('.rp', raumEl), hits = $$('.hit', raumEl), H = document.documentElement;
   const still = () => paused || reduced || H.classList.contains('no-gl');
-  let st = null, failed = false, last = performance.now(), on = false, walk = null, lastClip = '', lastG = -1, lastCue = -1;
-  const setWalk = (v) => { if (v === walk) return; walk = v; H.classList.toggle('door-walk', v); if (!v) { inEl.style.opacity = ''; inEl.style.transform = ''; inEl.classList.add('is-on'); lastG = -1; } chapDirty(); };
+  const ease = (x) => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, x)));
+  const ROT_SEK = 2.0, DOOR_SEK = 4.2, ROOM_SEK = 2.6;
+  let st = null, failed = false, last = performance.now(), on = false, walk = null, opened = false, doorP = 0, rIn = 0, roomOn = false, lastCue = -1, lastTop = -1;
+  let cur = 0, yawFrom = 0, yawTo = 0, yawT = 1, drag = 0, hot = -1, lay = null, hh = 0, mm = 0;
+  const yawBase = () => yawFrom + (yawTo - yawFrom) * ease(yawT);
+  const resetBoards = () => { [...panels, ...hits].forEach((el) => { el.style.transform = ''; el.style.opacity = ''; el.style.visibility = ''; el.style.width = ''; }); lay = null; boardKey.fill(''); hitKey.fill(''); };
+  const setWalk = (v) => { if (v === walk) return; walk = v; H.classList.toggle('door-walk', v); if (!v) { H.classList.remove('raum-on'); roomOn = false; resetBoards(); } chapDirty(); };
   const off = () => { if (!on) return; on = false; cv.classList.remove('on'); glowEl.classList.remove('on'); if (st) st.clear(); };
-  // Tastatur: Fokus auf einem noch verborgenen Knopf → ans Ende der Bühne (Tür offen, Knöpfe da)
-  const hit = $('#doorHit'), DOOR_SEK = 3.8;
-  let opened = false, doorP = 0;
-  const open = () => { if (opened) return; opened = true; if (hit) hit.hidden = true; };
-  if (hit) hit.addEventListener('click', open);
-  inEl.addEventListener('focusin', () => { if (walk && !opened) { open(); doorP = 1; } });
+  const open = (now) => { if (!opened) { opened = true; if (hit) hit.hidden = true; } if (now) { doorP = 1; rIn = 1; } };
+  if (hit) hit.addEventListener('click', () => open(false));
+  raumEl.addEventListener('focusin', () => { if (walk && !opened) open(true); else if (walk && rIn < 1) rIn = 1; });
+  // Blickrichtungen (Reiter)
+  function go(k, how = 'turn') {
+    const n = ((k % STATIONS) + STATIONS) % STATIONS, step = k - cur, now = yawBase() + drag;
+    cur = n;
+    tabs.forEach((t, i) => { t.setAttribute('aria-selected', String(i === n)); t.tabIndex = i === n ? 0 : -1; });
+    let target = yawTo + step * (Math.PI / 2);
+    if (how === 'tab') { let d = n * (Math.PI / 2) - (((yawTo % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; target = yawTo + d; }
+    yawFrom = now; yawTo = target; yawT = still() || how === 'now' ? 1 : 0; drag = 0;
+    if (step || how === 'tab') H.classList.add('raum-turned');
+  }
+  tabs.forEach((t, i) => t.addEventListener('click', () => { if (i !== cur) go(i, 'tab'); }));
+  $('#rnPrev').addEventListener('click', () => go(cur - 1));
+  $('#rnNext').addEventListener('click', () => go(cur + 1));
+  $('.raum-tabs', raumEl).addEventListener('keydown', (e) => {
+    const k = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    if (!k && e.key !== 'Home' && e.key !== 'End') return;
+    e.preventDefault();
+    if (k) go(cur + k); else go(e.key === 'Home' ? 0 : STATIONS - 1, 'tab');
+    tabs[cur].focus();
+  });
+  // Uhrzeit für die Zeiger (Praxis-Zeit)
+  const tick = () => { try { const p = {}; new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date()).forEach((x) => { p[x.type] = x.value; }); hh = +p.hour; mm = +p.minute; } catch (e) { const d = new Date(); hh = d.getHours(); mm = d.getMinutes(); } };
+  tick(); setInterval(tick, 15000);
+
+  // Schrift im Raum: Lage der Wandschrift je Richtung, Brennweite und Ausschnitt (Handy: über den Dingen, PC: daneben)
+  const YB = [0.12, 0.5, -0.1, 0.44], OBJ_LOW = -0.95, OBJ_HALF = 0.85, D_OBJ = GEO.R, D_WALL = GEO.WALL, EYE = GEO.EYE_UP;
+  const HITQ = [[-0.25, -0.22, 0.37, 0.05, 0.04], null, [-0.42, -0.46, 0.03, -0.25, 0.0], [-0.62, -0.44, 0.62, 0.36, GEO.WALL - GEO.R]];
+  const boardKey = panels.map(() => ''), hitKey = hits.map(() => '');
+  function layout(w, h, desk) {
+    const rem = parseFloat(getComputedStyle(H).fontSize) || 16, key = `${w}|${h}|${desk}|${rem}`;
+    if (lay && lay.key === key) return lay;
+    const W0 = Math.round(desk ? Math.min(w * 0.32, 30 * rem) : Math.min(w - 3 * rem, 23 * rem));
+    panels.forEach((p) => { p.style.width = W0 + 'px'; });
+    const Hs = panels.map((p) => p.offsetHeight);
+    const navB = nav ? nav.offsetTop + nav.offsetHeight : 0, ins = desk ? 14 : 8;
+    const top = navB + (desk ? 28 : 16), botm = (bar ? bar.offsetTop : h - 120) - (desk ? 24 : 14), aH = Math.max(160, botm - top), mid = (top + botm) / 2;
+    const gap = 4 * rem;
+    let F, cx, yEye;
+    if (!desk) {
+      let Fh = Infinity; YB.forEach((yb, k) => { Fh = Math.min(Fh, (aH - Hs[k] - 8) / ((-OBJ_LOW + EYE) / D_OBJ + (yb - EYE) / D_WALL)); });
+      F = Math.max(180, Math.min(Fh, (w * 0.94 * D_OBJ) / (2 * OBJ_HALF), 900));
+      const botRel = ((EYE - OBJ_LOW) * F) / D_OBJ;
+      let topRel = 0; YB.forEach((yb, k) => { topRel = Math.min(topRel, -((yb - EYE) * F) / D_WALL - Hs[k]); });
+      yEye = mid - (topRel + botRel) / 2; cx = w / 2;
+    } else {
+      F = Math.max(300, Math.min((aH * 0.9) / ((EYE - OBJ_LOW) / D_OBJ + 0.2 / D_WALL), (w * 0.86 - W0 - gap) / ((2 * OBJ_HALF) / D_OBJ)));
+      const half = (OBJ_HALF * F) / D_OBJ;
+      cx = w / 2 - (-half + half + gap + W0) / 2;
+      yEye = mid - (-((0.5 - EYE) * F) / D_WALL + ((EYE - OBJ_LOW) * F) / D_OBJ) / 2;
+    }
+    const zW = D_WALL - D_OBJ - 0.012, s = D_WALL / F;
+    lay = { key, W0, Hs, F, cx, yEye, sp: ((desk ? 5.6 : 4.4) * D_OBJ) / F, border: [ins, navB + 6, w - ins, h - ins], rect: [0, top - 30, w, botm + 30] };
+    lay.boards = Hs.map((hp, k) => {
+      const bw = W0 * s, bh = hp * s;
+      const x0 = desk ? ((OBJ_HALF * F) / D_OBJ + gap) * s : -bw / 2, y0 = desk ? EYE + (yEye - mid) * s - bh / 2 : YB[k];
+      return [[x0, y0 + bh, zW], [x0 + bw, y0 + bh, zW], [x0 + bw, y0, zW], [x0, y0, zW]];
+    });
+    boardKey.fill(''); hitKey.fill('');
+    return lay;
+  }
+  function quadMatrix(W, Hh, q) { // Element (W × Hh) → Viereck im Bild: Homographie als CSS matrix3d
+    const [x0, y0, x1, y1, x2, y2, x3, y3] = q;
+    const dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3, det = dx1 * dy2 - dx2 * dy1;
+    if (Math.abs(det) < 1e-9) return null;
+    const g = (dx3 * dy2 - dx2 * dy3) / det, hq = (dx1 * dy3 - dx3 * dy1) / det;
+    const a = (x1 - x0 + g * x1) / W, b = (x3 - x0 + hq * x3) / Hh, d = (y1 - y0 + g * y1) / W, e = (y3 - y0 + hq * y3) / Hh;
+    return `matrix3d(${a.toFixed(6)},${d.toFixed(6)},0,${(g / W).toFixed(9)},${b.toFixed(6)},${e.toFixed(6)},0,${(hq / Hh).toFixed(9)},0,0,1,0,${x0.toFixed(2)},${y0.toFixed(2)},0,1)`;
+  }
+  const angTo = (yaw, k) => Math.abs(((((yaw - (k * Math.PI) / 2) % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI)) - Math.PI);
+  function placeBoards(cam) {
+    panels.forEach((p, k) => {
+      const op = roomOn ? (1 - smooth(0.1, 0.5, angTo(cam.yaw, k))) * smooth(0.35, 0.9, rIn) : 0;
+      let tf = '';
+      if (op > 0.005) {
+        const q = []; for (const c of lay.boards[k]) { const r = st.project(k, c[0], c[1], c[2], cam); if (!r) { q.length = 0; break; } q.push(r[0], r[1]); }
+        if (q.length === 8) tf = quadMatrix(lay.W0, lay.Hs[k], q) || '';
+      }
+      const key = `${op.toFixed(3)}|${tf}`;
+      if (key === boardKey[k]) return; boardKey[k] = key;
+      p.style.transform = tf; p.style.opacity = tf ? op.toFixed(3) : '0'; p.style.visibility = tf && op > 0.02 ? 'visible' : 'hidden';
+    });
+    hits.forEach((el, i) => {
+      const k = +el.dataset.k, hq = HITQ[k], act = roomOn && rIn > 0.9 && yawT >= 1 && !drag && angTo(cam.yaw, k) < 0.12;
+      let tf = '';
+      if (act) {
+        const q = []; for (const c of [[hq[0], hq[3]], [hq[2], hq[3]], [hq[2], hq[1]], [hq[0], hq[1]]]) { const r = st.project(k, c[0], c[1], hq[4], cam); if (!r) { q.length = 0; break; } q.push(r[0], r[1]); }
+        if (q.length === 8) tf = quadMatrix(100, 100, q) || '';
+      }
+      if (tf === hitKey[i]) return; hitKey[i] = tf;
+      el.style.transform = tf; el.style.visibility = tf ? 'visible' : 'hidden';
+      if (!tf && hot === k) hot = -1;
+    });
+  }
+  hits.forEach((el) => { el.addEventListener('pointerenter', () => { hot = +el.dataset.k; }); el.addEventListener('pointerleave', () => { hot = -1; }); });
+  const taps = makeTapHints({ host: raumEl, hits, project: (k, x, y, z, cam) => (st ? st.project(k, x, y, z, cam) : null) }); // A: Dinge in Bernstein + Tipp-Hinweis (Go Kai 23.11.)
+  // Kopf drehen: Maus (PC) bzw. Finger beim Wischen (Handy, auch auf der Schrift; ein Link löst nach einem Wisch nicht aus)
+  let pyT = 0, psT = 0, py = 0, ps = 0, suppress = 0;
+  const fine = matchMedia('(hover: hover) and (pointer: fine)');
+  sticky.addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse' || !fine.matches || !roomOn) return; pyT = (e.clientX / innerWidth - 0.5) * 0.07; psT = -(e.clientY / innerHeight - 0.5) * 16; });
+  sticky.addEventListener('pointerleave', () => { pyT = 0; psT = 0; });
+  {
+    let sx = 0, sy = 0, id = null, horiz = null, t0 = 0;
+    sticky.addEventListener('pointerdown', (e) => { if (!roomOn || e.pointerType === 'mouse' || e.target.closest('.raum-bar')) return; id = e.pointerId; sx = e.clientX; sy = e.clientY; horiz = null; t0 = performance.now(); });
+    sticky.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== id) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if (horiz === null && Math.hypot(dx, dy) > 10) horiz = Math.abs(dx) > Math.abs(dy) * 1.2;
+      if (horiz && !still()) drag = Math.max(-0.7, Math.min(0.7, (-dx / Math.max(320, sticky.clientWidth)) * 1.25));
+    });
+    const end = (e) => {
+      if (e.pointerId !== id) return;
+      const dx = e.clientX - sx, fast = Math.abs(dx) / Math.max(1, performance.now() - t0) > 0.35;
+      id = null;
+      if (horiz) suppress = performance.now() + 450;
+      if (horiz && (Math.abs(dx) > 48 || (fast && Math.abs(dx) > 20))) go(cur + (dx < 0 ? 1 : -1));
+      else if (drag) { yawFrom = yawBase() + drag; yawT = 0; drag = 0; } // zurückfedern
+      horiz = null;
+    };
+    sticky.addEventListener('pointerup', end); sticky.addEventListener('pointercancel', end);
+    sticky.addEventListener('click', (e) => { if (performance.now() < suppress && e.target.closest('a,button')) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { lay = null; });
+  addEventListener('resize', () => { lay = null; });
   setWalk(!still());
   frameFns.push((now) => {
     const dt = Math.min(0.1, (now - last) / 1000); last = now;
@@ -2052,31 +2187,44 @@ const doorStage = (() => {
     if (!walk) { off(); return; }
     const r = track.getBoundingClientRect(), vh = innerHeight;
     // (Höhe prüfen: ist der Inhalt ausgeblendet – Messbilder des Prüfstands –, hat die Bühne keine Höhe)
-    if (!opened && r.height > vh * 0.5 && r.bottom < vh * 0.3) { opened = true; doorP = 1; hit && (hit.hidden = true); }
+    if (!opened && r.height > vh * 0.5 && r.bottom < vh * 0.3) open(true); // ohne Antippen vorbeigescrollt: beim Zurückkommen offen
     if (r.top > vh * 1.5 || r.bottom < -vh * 0.3) { off(); return; } // weit weg: Zeichenfläche aus, nichts messen
-    if (!st) { st = initDoorStage({ cv, glow: glowEl, isStill: still }); if (!st) { failed = true; return; } }
+    if (!st) { st = initStage({ cv, glow: glowEl, isStill: still, soft: true }); if (!st) { failed = true; return; } }
     if (st.dead) { failed = true; return; }
     if (!on) { on = true; cv.classList.add('on'); glowEl.classList.add('on'); }
-    // die Bühne endet an den Kanten ihres Abschnitts – nie über dem Text davor oder danach
-    const clip = `inset(${Math.max(0, Math.round(r.top))}px 0 ${Math.max(0, Math.round(vh - r.bottom))}px 0)`;
-    if (clip !== lastClip) { lastClip = clip; cv.style.clipPath = clip; glowEl.style.clipPath = clip; }
-    const sr = sticky.getBoundingClientRect(), hb = tTitle.getBoundingClientRect().bottom, desk = isDesktop();
+    const S = sticky.getBoundingClientRect(), w = sticky.clientWidth, h = sticky.clientHeight, desk = isDesktop();
+    if (!h) return;
+    const L = layout(w, h, desk);
+    if (opened) doorP = Math.min(1, doorP + dt / DOOR_SEK);
+    if (st.p >= 0.5) rIn = Math.min(1, rIn + dt / ROOM_SEK); // der Raum sammelt sich schon, während man durch die Tür geht
+    if (yawT < 1) yawT = Math.min(1, yawT + dt / ROT_SEK);
+    const kp = 1 - Math.exp(-dt * 2.2); py += (pyT - py) * kp; ps += (psT - ps) * kp;
+    const hb = tTitle.getBoundingClientRect().bottom - S.top;
+    const room = rIn > 0 ? { rect: L.rect, cx: L.cx, cy: L.yEye + ps, F: L.F, sp: L.sp, rad: desk ? 1.2 : 1.0, yaw: yawBase() + drag + py, pitch: PITCH0, rIn: ease(rIn),
+      pulse: angTo(yawBase(), 2) < 0.05 && yawT >= 1 && !still(), hh, mm, open: praxisOffen, hot, edgeAll: true } : null;
+    if (room) { const fl = taps.flash(); room.flashK = fl.k; room.flash = fl.v; }
     st.frame(dt, {
-      w: cv.clientWidth, h: vh, desk, cx: cv.clientWidth / 2,
-      areaTop: hb + (desk ? 8 : 18), areaBot: sr.bottom - (desk ? 44 : 30), fadeY: hb - 8,
-      fWant: weich(doorGate(smooth(vh * 0.95, vh * 0.12, r.top), dt)), // Tür entsteht, sobald die Bühne hereinkommt – über die Zeit (20.11.), nicht am Scrollweg
-      // 20.11. (Kai im Arbeitsblatt: „Gerne auf die Tür drücken, bzw. klicken“): die Tür geht auf Antippen/Klick auf und man geht über die
-      // Zeit hindurch (vorher am Scrollweg). Wer ohne Antippen weiterscrollt, findet sie beim Zurückkommen offen (Knöpfe erreichbar).
-      pWant: weich(doorP = opened ? Math.min(1, doorP + dt / DOOR_SEK) : 0),
+      w, h, desk, cx: w / 2, areaTop: hb + (desk ? 8 : 18), areaBot: h - (desk ? 44 : 30), fadeY: hb - 8,
+      fWant: weich(doorGate(smooth(vh * 0.95, vh * 0.12, r.top), dt)), // Tür entsteht, sobald die Bühne hereinkommt – über die Zeit
+      pWant: ease(doorP), border: L.border, room,
     });
-    const g = smooth(DOOR_PLAN.gate, DOOR_PLAN.gate + 0.12, st.p);
-    if (Math.abs(g - lastG) > 0.004 || (g === 0) !== (lastG === 0) || (g === 1) !== (lastG === 1)) {
-      lastG = g; inEl.style.opacity = g.toFixed(3); inEl.style.transform = `translateY(${((1 - g) * 14).toFixed(1)}px)`; inEl.classList.toggle('is-on', g > 0.5);
+    const ro = rIn > 0.3;
+    if (ro !== roomOn) { roomOn = ro; H.classList.toggle('raum-on', ro); }
+    if (room) {
+      placeBoards(room);
+      const calm = roomOn && rIn >= 1 && yawT >= 1 && !drag && angTo(yawBase(), cur) < 0.06;
+      taps.frame(dt, room, { on: roomOn, k: calm ? cur : -1, ang: (k) => angTo(room.yaw, k), still: still() });
     }
+    const to = 1 - smooth(0.02, 0.25, st.walk);
+    if (Math.abs(to - lastTop) > 0.01) { lastTop = to; topEl.style.opacity = to.toFixed(2); topEl.style.visibility = to < 0.01 ? 'hidden' : ''; }
     const c = st.f > 0.9 ? 1 - smooth(0.02, 0.1, st.p) : 0;
     if (cue && Math.abs(c - lastCue) > 0.01) { lastCue = c; cue.style.opacity = c.toFixed(2); }
   });
-  return { get st() { return st; }, get walk() { return walk; }, get on() { return on; }, open, get opened() { return opened; }, reset() { opened = false; doorP = 0; if (hit) hit.hidden = false; } }; // reset: Prüfhilfe (Tür wieder zu)
+  return {
+    get st() { return st; }, get walk() { return walk; }, get on() { return on; }, get opened() { return opened; }, get cur() { return cur; }, get rIn() { return rIn; }, get lay() { return lay; },
+    open: () => open(false), inside: () => open(true), go: (k) => go(k, 'tab'),
+    reset() { opened = false; doorP = 0; rIn = 0; if (hit) hit.hidden = false; go(0, 'now'); yawFrom = yawTo = 0; H.classList.remove('raum-turned'); }, // Prüfhilfe (Tür wieder zu)
+  };
 })();
 window.__door = doorStage;
 // Leistungen: ein Impuls läuft durch den Namen (Maus darüber bzw. beim Durchscrollen auf dem Handy)
@@ -2341,18 +2489,21 @@ function tick() {
 }
 // ---------- Kapitel 01 „Von Kopf bis Fuß“ (Auftrag K, Go Kai 16.11.2026) ----------
 // eigene Bühne (Baustein), läuft vor tick im selben Bildtakt; Sprünge (Striche rechts, Pille „Weiter“) gleiten über Lenis
-kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced, handover: true,
+// Stufe 1 der echten Figur; die Daten lädt der Baustein nur mit WebGL (Funktion statt Promise); bis sie da sind, bleibt die Bühne leer
+const figurHeute = new URLSearchParams(location.search).get('figur') === 'heute';
+kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced, handover: true, stufe: 'echt', data: figurHeute ? null : () => loadEcht(),
   scrollTo: (y, sm) => (lenis ? lenis.scrollTo(y, sm ? { duration: 1.6 } : { immediate: true }) : window.scrollTo({ top: y, behavior: sm ? 'smooth' : 'auto' })) });
 window.__kf = kf; // Prüfhilfe: __kf.state(), __kf.go(u)
-// Form 0 der Hauptwolke = dieselben Punkte wie die Figur in Kapitel 01 (Übergabe deckungsgleich, gleicher Punktabstand)
-{ const cl = kf.cloud();
+// Form 0 der Hauptwolke = dieselben Punkte wie die Figur in Kapitel 01 (Übergabe deckungsgleich, gleicher Punktabstand) –
+// seit 23.11. erst, wenn die Bühne steht (Daten der echten Figur geladen oder Rückfall auf die Figur von heute)
+kf.onReady(() => { const cl = kf.cloud();
   if (cl && renderer) {
     figureForm(N, cl, BODY_SCALE, body.pos, body.f0, body.heat);
     uniforms.uTilt.value = cl.tilt;
     ['position', 'aF0', 'aHeat'].forEach((k) => { geo.attributes[k].needsUpdate = true; });
     silFill();
     if (!morphSet) { geo.attributes.pos2.array.set(body.pos); geo.attributes.pos2.needsUpdate = true; } // bis die Wirbelsäule gerechnet ist
-  } }
+  } });
 frameFns.push((now) => kf.update(now));
 frameFns.push(tick);
 
@@ -2508,6 +2659,7 @@ if (!reduced) requestAnimationFrame(() => {
           t = k === 1 ? 'Morgen ab 8:30' : DAYS[info(k).wd] + ' ab 8:30';
         }
         openEl.textContent = t; openEl.hidden = false;
+        praxisOffen = t.startsWith('Heute geöffnet'); openEls.forEach((el) => el.classList.toggle('is-now', praxisOffen)); // Raum: „Geöffnet“-Schild
       } catch (e) { openEl.hidden = true; }
     };
     upd(); setInterval(upd, 60000);

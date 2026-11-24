@@ -43,8 +43,16 @@ const PAGES = {
   // Feinschliff (17.11.2026, Go Kai): Studie zu Kap. 01 – Figur aus „Figur plus“ mit geordneten, gestochenen Punkten, Kantenlicht,
   // Antwort unter Maus/Finger, ruhigerer Schrift; Umschalter bisher / neu (bisher = src/figur-plus, nur gelesen). Puls unberührt.
   'feinschliff': { out: 'feinschliff.html' },
+  // Echte Figur (23.11.2026, Go Kai „Empfehlung“): Entwurf zu Kap. 01 – Figur aus BodyParts3D (Haut, Skelett, Gehirn, Muskeln, Nervenwege),
+  // Stufe 1 anatomisch echt, 1+2 mit Scan-Linie, Filmlicht, Röntgen-Lupe; Umschalter heute · 1 · 1+2 (heute = src/feinschliff, nur gelesen). Puls unberührt.
+  'figur-echt': { out: 'figur-echt.html' },
   // Tür (16.11.2026, Go Kai): Entwurf zu Kap. 05 – Knöpfe erscheinen erst mit der offenen Partikel-Tür, Varianten A | C (Canvas 2D, kein WebGL)
   'tuer': { out: 'tuer.html' },
+  // Tür · Raum (22.11.2026, Go Kai „a c“): Kapitel 05 als Raum – Tür antippen, der Rahmen wird zum Bildschirmrand, drinnen umsehen
+  // (vier Blickrichtungen mit Termin, Zeiten, Telefon & mehr, Anfahrt). Bühne src/tuer-raum/stage.js + raum.js; Puls unberührt.
+  'tuer-raum': { out: 'tuer-raum.html' },
+  // Beispiel „Hervorheben“ (23.11.2026, Kai: „an einem Beispiel zeigen“): Tür · Raum mit Umschalter Vorher · A Kanten · B Pille · C Licht · Alle, nur am Terminbuch
+  'tuer-hervor': { out: 'tuer-hervorheben.html', dir: 'tuer-raum', studie: 'hervor' },
   // Stoßwelle in Punkten (20.11.2026 nachts, Kai im Arbeitsblatt 4): Entwurf – Punkt-Grafik mit echtem Fersenbein, Vergleich mit der Linien-Bühne in Puls
   'stosswelle-punkte': { out: 'stosswelle-punkte.html' },
   // Logo-Vergleich (21.11.2026, Kai: altes Logo lassen, zusätzlich eine Mischung zeigen): A flach · B Mischung · C nach dem Original
@@ -104,11 +112,16 @@ function liveHead(head, page) {
   const url = page === 'index.html' ? BASE : `${BASE}${page}`;
   const title = LIVE_TITLE[page];
   const desc = (head.match(/<meta name="description" content="([^"]*)">/) || [, ''])[1];
+  // Sicherheitsregeln der Seite (21./22.11.2026, Kai im Arbeitsblatt zu den Technik-Entscheidungen: „du entscheidest, was sinnvoll ist“):
+  // die Seite darf nur Eigenes laden – keine fremden Skripte, Schriften, Bilder oder Abrufe; einzige Ausnahme der Optica-Kalender im Termin-Blatt
+  // (erst nach Klick, eigenes Fenster). Inline-Skript/-CSS sind nötig, weil alles in einer Datei steckt. Kein frame-ancestors (in <meta> wirkungslos).
+  const CSP = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src https://termine.opticaviva.de; form-action 'none'; base-uri 'self'; object-src 'none'";
   const extra = [
+    `<meta http-equiv="Content-Security-Policy" content="${CSP}">`,
     `<link rel="canonical" href="${url}">`,
     `<meta name="theme-color" content="#0B0F12">`,
     `<link rel="icon" href="${FAVICON}">`,
-    `<link rel="apple-touch-icon" href="${BASE}apple-touch-icon.png">`,
+    `<link rel="apple-touch-icon" href="apple-touch-icon.png">`, // relativ: gleiche Herkunft auch unter www. (Sicherheitsregeln)
     `<meta property="og:type" content="website">`,
     `<meta property="og:locale" content="de_DE">`,
     `<meta property="og:site_name" content="HOP – Home of Physiotherapy">`,
@@ -206,6 +219,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   { const acts = tpl.match(/<!--KF-ACTS-->([\s\S]*?)<!--\/KF-ACTS-->/); if (acts) tpl = tpl.replace(acts[0], '').replace('<!--KF-ACTS-SLOT-->', () => acts[1]); }
   if (P) tpl = applyPatches(tpl, P.page, 'page.html');
   if (cfg.studie === 'ruhe') tpl = applyPatches(tpl, [["classList.add('js','ruhe')", "classList.add('js','ruhe','studie-ruhe')"], ['<title>HOP Puls Scan</title>', '<title>HOP Text ruhig</title>']], 'textruhe');
+  if (cfg.studie === 'hervor') tpl = applyPatches(tpl, [["classList.add('js')", "classList.add('js','studie-hervor')"], ['<title>HOP Tür · Raum</title>', '<title>HOP Hervorheben</title>']], 'hervor');
   if (cfg.studie === 'farbe') tpl = applyPatches(tpl, [["classList.add('js','ruhe')", "classList.add('js','ruhe','studie-farbe')"], ['<title>HOP Puls Scan</title>', '<title>HOP Farbstudie</title>']], 'farbstudie');
   if (cfg.root) ROOT_LINKS.forEach(([re, to]) => { tpl = tpl.replace(re, to); });
   // Datenschutz § 4 Online-Terminbuchung (<!--TERMIN-->…): ohne Termin-Blatt heraus, folgende §§ eins zurück
@@ -226,7 +240,7 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   if (cfg.live === 'index.html') {
     // Bilder für Link-Vorschau und Home-Bildschirm (Quelle labor/assets/, erzeugt aus der Seite selbst)
     // + Standbilder für Browser ohne WebGL (A2): eigene Dateien, nicht eingebettet
-    for (const img of ['og.jpg', 'apple-touch-icon.png', 'still-hero.webp', 'still-achse.webp', 'still-dach.webp', 'still-manu.webp', 'hop-physiotherapie.vcf', 'wirbelsaeule-echt.bin', 'motive-anatomie.bin', 'manu-figur.bin', 'vorfall-1.webp', 'vorfall-2.webp', 'vorfall-3.webp', 'vorfall-4.webp', 'vorfall-5.webp']) {
+    for (const img of ['og.jpg', 'apple-touch-icon.png', 'still-hero.webp', 'still-achse.webp', 'still-dach.webp', 'still-manu.webp', 'hop-physiotherapie.vcf', 'wirbelsaeule-echt.bin', 'motive-anatomie.bin', 'manu-figur.bin', 'figur-echt.bin', 'vorfall-1.webp', 'vorfall-2.webp', 'vorfall-3.webp', 'vorfall-4.webp', 'vorfall-5.webp']) {
       const src = join(root, 'assets', img);
       if (existsSync(src)) copyFileSync(src, join(root, liveDir, img)); else console.warn(`⚠ fehlt: assets/${img}`);
     }

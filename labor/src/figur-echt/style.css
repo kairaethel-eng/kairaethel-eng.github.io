@@ -1,0 +1,90 @@
+html{font-size:clamp(100%,calc(50% + .5vw),137.5%)} /* wie Puls (13.11.): achtet die Browser-Schriftgröße, wächst ab 1600 px */
+/* Entwurf „Echte Figur“ (23.11.2026): Seite wie src/feinschliff/style.css – dort: Seite wie src/figur-plus/style.css (Kopfleiste, Knöpfe, Fuß), Bühne aus dem Baustein-CSS
+   ../kopf-fuss/kapitel.css + ../figur-plus/plus.css (beide nur gelesen) + fein.css (zweite Zeichenfläche, Umschalter, ruhigere Schrift). */
+:root{
+  --ink:#0A161B; --ink2:#10222A; --ink3:#173039;
+  --txt:#EDE8DC; --dim:#B0BFC3; --mute:#7F959C; --line:rgba(237,232,220,.12);
+  --amber:#E09A35; --amber-deep:#C5811C; --green:#86B84E; --blue:#5AA2D6;
+  --sans:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --disp:"Archivo Expanded","Archivo","Helvetica Neue",Arial,sans-serif;
+  --serif:"Libre Caslon Text",Georgia,"Times New Roman",serif;
+  --gut:max(1rem,env(safe-area-inset-left,0px));
+  --gut-r:max(1rem,env(safe-area-inset-right,0px));
+  --ease:cubic-bezier(.2,.7,.1,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ink);color:var(--txt);font:400 1.0625rem/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
+a{color:inherit}
+p{margin:0;text-wrap:pretty}
+h1,h2{margin:0;font-family:var(--disp);font-weight:800;letter-spacing:-.03em;line-height:.98;text-wrap:balance}
+em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--amber);letter-spacing:-.01em}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:3px}
+.wrap{width:100%;max-width:90rem;margin:0 auto;padding-left:max(var(--gut),5vw);padding-right:max(var(--gut-r),5vw)}
+.kicker{display:flex;align-items:baseline;gap:.75rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:1.375rem}
+.kicker i{font:italic 400 1.25rem/1 var(--serif);letter-spacing:0;text-transform:none;color:var(--amber)}
+.small{font-size:.875rem;color:var(--mute);max-width:60ch}
+.skip{position:fixed;z-index:60;left:1rem;top:0;transform:translateY(-200%);padding:.875rem 1.25rem;background:var(--amber);color:#14110A;font:700 .8125rem/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;text-decoration:none;border-radius:0 0 3px 3px}
+.skip:focus,.skip:focus-visible{transform:none;outline:2px solid #14110A;outline-offset:-5px}
+
+/* Kopfleiste (wie die anderen Labor-Seiten, hier mit Verlauf statt Fläche – die Figur reicht bis oben) */
+.top{position:fixed;z-index:20;top:0;left:0;right:0;display:flex;align-items:center;gap:1.375rem;padding:calc(env(safe-area-inset-top,0px) + .75rem) max(var(--gut-r),3vw) .75rem max(var(--gut),3vw);background:linear-gradient(rgba(10,22,27,.94),rgba(10,22,27,.7) 65%,rgba(10,22,27,0))}
+.brand{display:flex;align-items:center;min-height:2.75rem;flex:none}
+.brand svg{width:4.5rem;height:auto;display:block}
+.top-title{font:600 .75rem/1.2 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.top-title .tt-sub{color:var(--amber);letter-spacing:.08em}
+.motion-btn{appearance:none;margin-left:auto;display:inline-flex;align-items:center;gap:.4375rem;height:2.75rem;padding:0 .875rem;border-radius:1.375rem;border:1px solid var(--line);background:rgba(16,34,42,.55);color:var(--dim);font:600 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:color .3s,border-color .3s}
+.motion-btn:hover{color:var(--txt);border-color:rgba(237,232,220,.3)}
+.motion-btn svg{width:.875rem;height:.875rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.motion-btn .i-play{display:none}
+.motion-btn[aria-pressed="true"]{color:var(--amber);border-color:rgba(224,154,53,.5)}
+.motion-btn[aria-pressed="true"] .i-play{display:block;fill:currentColor}
+.motion-btn[aria-pressed="true"] .i-pause{display:none}
+.paused-note{position:fixed;z-index:40;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 1.25rem);transform:translateX(-50%);display:flex;align-items:center;gap:.875rem;padding:.625rem .75rem .625rem 1.125rem;border-radius:1.5rem;background:rgba(16,34,42,.95);border:1px solid rgba(224,154,53,.55);color:var(--txt);font:500 .875rem/1.2 var(--sans);box-shadow:0 .75rem 2.5rem rgba(0,0,0,.4);transition:opacity .5s,transform .5s;white-space:nowrap}
+.paused-note button{min-height:2.75rem;padding:0 1rem;border-radius:1.375rem;border:0;background:var(--amber);color:#14110A;font:700 .75rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.paused-note.gone{opacity:0;transform:translate(-50%,1rem);pointer-events:none}
+html.paused *,html.paused *::before,html.paused *::after{animation-play-state:paused!important}
+
+/*@include ../kopf-fuss/kapitel.css*/
+/*@include ../figur-plus/plus.css*/
+/*@include ../feinschliff/fein.css*/
+
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:3.25rem;padding:0 1.75rem;border-radius:3px;background:var(--amber);color:#14110A;text-decoration:none;font:700 .8125rem/1 var(--sans);letter-spacing:.15em;text-transform:uppercase;border:1.5px solid var(--amber);text-shadow:none;transition:transform .3s var(--ease),box-shadow .3s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 .75rem 2.5rem -10px rgba(224,154,53,.6)}
+.btn svg{width:1rem;height:1rem;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+.kf-foot{position:relative;z-index:2;padding:4rem 0 calc(env(safe-area-inset-bottom,0px) + 3rem);border-top:1px solid var(--line)}
+.kf-links{display:flex;flex-wrap:wrap;gap:.5rem 1.75rem;margin-top:1rem}
+.kf-links a{display:inline-flex;align-items:center;min-height:2.75rem;color:var(--txt);font-weight:600;text-decoration-color:rgba(224,154,53,.6);text-underline-offset:.25em}
+
+/* Handy und Tablet hochkant (≤ 920 px, wie Puls): Figur oben, Blickpunkt ~34 % der Höhe, Text unten auf einem Verlauf */
+@media (max-width:920px){
+  .top{gap:.875rem}
+  .brand svg{width:3.75rem}
+  .top-title{font-size:.6875rem;letter-spacing:.12em}
+  .motion-btn{padding:0 .75rem;min-width:2.75rem;justify-content:center}
+  .motion-btn span{display:none}
+  .vsw button{padding:0 .75rem}
+}
+@media (max-width:30rem){
+  .top-title .tt-sub,.top-title .tt-pre{display:none}
+  .top{gap:.625rem}
+  .vsw button{padding:0 .625rem;letter-spacing:.08em}
+}
+
+html:not(.js) .motion-btn,html:not(.js) .vsw{display:none}
+@media print{
+  .top,.skip,.paused-note{display:none!important}
+  body{background:#fff;color:#000}.kf-txt,.kicker{color:#333}
+}
+
+/* Entwurf „Echte Figur“: Umschalter mit drei Stufen (heute · 1 · 1+2) – am Handy schmal; Ladezeile solange die Daten kommen */
+.vsw button{padding:0 .875rem}
+@media (max-width:600px){.top{gap:.625rem}.top-title .tt-pre,.top-title .tt-sub{display:none}.vsw button{padding:0 .625rem;letter-spacing:.06em}.motion-btn span{display:none}}
+@media (max-width:380px){.top-title{display:none}}
+.fe-load{position:fixed;z-index:15;left:50%;top:50%;transform:translate(-50%,-50%);font:600 .75rem/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);transition:opacity .6s}
+.fe-load.gone{opacity:0;pointer-events:none}
+.kf-foot .quelle{margin-top:.75rem}
+.takt{position:fixed;z-index:40;left:.5rem;bottom:calc(env(safe-area-inset-bottom,0px) + .5rem);padding:.5rem .625rem;border-radius:.375rem;border:1px solid rgba(224,154,53,.6);background:rgba(10,22,27,.94);color:var(--txt);font:500 .6875rem/1.45 ui-monospace,Menlo,Consolas,monospace}
+.takt pre{margin:0;font:inherit;white-space:pre}

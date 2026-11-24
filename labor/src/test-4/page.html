@@ -7,8 +7,6 @@
 <!--BODY-->
 <a class="skip" href="#start">Zum Inhalt</a>
 <canvas id="gl" aria-hidden="true"></canvas>
-<div class="c-glow" id="cGlow" aria-hidden="true"></div>
-<canvas class="c-stage" id="cStage" aria-hidden="true"></canvas>
 <div class="grain" aria-hidden="true"></div>
 <div class="turn-note" id="turnNote"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7.5" y="2.5" width="9" height="19" rx="2"/><path d="M3.5 10a8 8 0 0 1 1.6-3.6M20.5 14a8 8 0 0 1-1.6 3.6"/></svg><span>Bitte hochkant halten – so sehen Sie alles.</span><button type="button" id="turnClose" aria-label="Hinweis schließen">×</button></div>
 
@@ -307,6 +305,7 @@
           <div class="manu-modes" id="manuModes" role="group" aria-label="Bewegung der Liege zeigen">
             <button type="button" aria-pressed="false"><span>Traktion</span><i></i></button>
             <button type="button" aria-pressed="false"><span>Flexion</span><i></i></button>
+            <button type="button" aria-pressed="false"><span>Extension</span><i></i></button>
             <button type="button" aria-pressed="false"><span>Seitneigung</span><i></i></button>
             <button type="button" aria-pressed="false"><span>Rotation</span><i></i></button>
           </div>
@@ -314,7 +313,7 @@
         </div>
         <div class="manu-stage">
           <div class="still still-manu" aria-hidden="true"></div>
-          <canvas id="glManu" role="img" aria-label="Partikel-Darstellung der Manuthera-Liege mit liegender Person in Bauchlage. Die Liegeteile zeigen nacheinander Traktion, Flexion, Seitneigung und Rotation."></canvas>
+          <canvas id="glManu" role="img" aria-label="Partikel-Darstellung der Manuthera-Liege mit liegender Person in Bauchlage. Die Liegeteile zeigen nacheinander Traktion, Flexion, Extension, Seitneigung und Rotation."></canvas>
           <p class="manu-hint"><span class="only-fine">Ziehen zum Drehen</span><span class="only-touch">Seitlich wischen zum Drehen</span> · schematisch</p>
         </div>
       </div>
@@ -438,42 +437,92 @@
 
 
   <section class="chapter door" id="tuer" data-stage="3" aria-labelledby="t-title">
-    <!-- Tür-Bühne „Hineingehen“ (19.11.2026, Go Kai „3a“): Überschrift oben, darunter groß die Tür (Zeichenfläche #cStage, fest hinter
-         dem Text). Beim Weiterscrollen öffnet sie sich, man geht hindurch, drinnen stehen die zwei Knöpfe. Ohne JavaScript, ohne
-         Grafikchip oder bei „Bewegung anhalten“: Überschrift und Knöpfe stehen einfach da (main.js: doorStage). -->
+    <!-- Tür · Raum (Go Kai 23.11.2026; Entwurf tuer-raum.html, von Kai abgenommen): Überschrift oben, darunter die Tür. Antippen → sie geht
+         auf, man geht hindurch, der Türrahmen wird zum Bildschirmrand, drinnen sieht man sich am Empfang in vier Richtungen um (Wandschrift
+         an der Wand, Terminbuch/Telefon/Fenster antippbar). Zeichenfläche liegt IN der Bühne (scrollt mit ihr). Ohne JavaScript, ohne
+         Grafikchip oder bei „Bewegung anhalten“: die vier Blöcke stehen untereinander (main.js: doorStage, Bausteine src/tuer-raum). -->
     <div class="door-track" id="doorTrack">
       <div class="door-sticky">
+        <div class="c-glow" id="cGlow" aria-hidden="true"></div>
+        <canvas class="c-stage" id="cStage" aria-hidden="true"></canvas>
         <div class="wrap door-top">
           <p class="kicker"><i>05</i> Tür</p>
           <h2 id="t-title">Die Tür steht<br><em>offen.</em></h2>
         </div>
         <button type="button" class="door-hit" id="doorHit" aria-label="Tür öffnen und eintreten"></button>
         <p class="door-cue" aria-hidden="true"><span class="only-touch">Tippen Sie auf die Tür</span><span class="only-fine">Klicken Sie auf die Tür</span></p>
-        <div class="wrap door-in" id="doorIn">
-          <a class="btn" href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener" data-termin aria-haspopup="dialog">Termin buchen</a>
-          <a class="btn btn-ghost" href="#kontakt">Kontakt &amp; Anfahrt</a>
+
+        <div class="raum" id="raum">
+          <a class="hit" data-k="0" href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener" data-termin tabindex="-1" aria-hidden="true" title="Termin buchen"></a>
+          <a class="hit" data-k="2" href="tel:+4971819931470" tabindex="-1" aria-hidden="true" title="Anrufen"></a>
+          <a class="hit" data-k="3" href="https://www.google.com/maps/search/?api=1&amp;query=Schlichtener%20Stra%C3%9Fe%2087%2C%2073614%20Schorndorf" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true" title="In Google Maps öffnen"></a>
+
+          <article class="rp" id="rp0" role="tabpanel" aria-labelledby="rt0">
+            <header class="rp-head"><p class="rp-dir"><i>vorne</i> Empfang</p><h3>Ihr <em>Termin.</em></h3></header>
+            <div class="rp-body">
+              <p>Buchen Sie online. Oder fragen Sie per E-Mail an, dann melde ich mich mit einem Terminvorschlag.</p>
+              <p class="rp-acts">
+                <a class="rp-mail" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage&amp;body=Guten%20Tag%20Herr%20Raethel%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20einen%20Termin%20anfragen.%0D%0A%0D%0AName%3A%0D%0AR%C3%BCckrufnummer%3A%0D%0AWunschzeiten%3A%0D%0A%C3%84rztliche%20Verordnung%20vorhanden%20%28ja%2Fnein%29%3A%0D%0A%0D%0AMeine%20Beschwerde%20schildere%20ich%20Ihnen%20bitte%20erst%20im%20Gespr%C3%A4ch%2C%20nicht%20per%20E-Mail.%0D%0A%0D%0AVielen%20Dank">Per E-Mail anfragen</a>
+                <button type="button" class="rp-copy" id="copyMail" hidden>Adresse kopieren</button>
+              </p>
+              <p class="rp-tap" aria-hidden="true"><span class="only-touch">Tippen Sie auf das Terminbuch, um online zu buchen.</span><span class="only-fine">Klicken Sie auf das Terminbuch, um online zu buchen.</span></p>
+              <p class="rp-note"><a id="mailAddr" href="mailto:kontakt@hopphysio.de">kontakt@hopphysio.de</a> · Gesundheitsangaben bitte erst im Gespräch.<span class="copy-state" id="copyState" role="status"></span></p>
+            </div>
+          </article>
+
+          <article class="rp" id="rp1" role="tabpanel" aria-labelledby="rt1">
+            <header class="rp-head"><p class="rp-dir"><i>rechts</i> Uhr</p><h3>Meine <em>Zeiten.</em></h3></header>
+            <div class="rp-body">
+              <p class="rp-big">Mo–Fr 8:30–19:30 Uhr</p>
+              <p>Samstag nach Absprache, sonntags und feiertags geschlossen.</p>
+              <p class="dd-open" id="openNow" hidden></p>
+            </div>
+          </article>
+
+          <article class="rp" id="rp2" role="tabpanel" aria-labelledby="rt2">
+            <header class="rp-head"><p class="rp-dir"><i>hinten</i> Ablage</p><h3>Gut zu <em>wissen.</em></h3></header>
+            <div class="rp-body">
+              <p class="rp-big"><a href="tel:+4971819931470">07181 9931470</a></p>
+              <p>Nur Anrufbeantworter, ich rufe Sie zurück. <a href="hop-physiotherapie.vcf" download>Im Telefon speichern</a></p>
+              <p class="rp-note">Kassen, privat und Selbstzahler. Verordnung bitte zum ersten Termin mitbringen.</p>
+              <p class="rp-tap" aria-hidden="true"><span class="only-touch">Tippen Sie auf das Telefon, um anzurufen.</span><span class="only-fine">Klicken Sie auf das Telefon, um anzurufen.</span></p>
+            </div>
+          </article>
+
+          <article class="rp" id="rp3" role="tabpanel" aria-labelledby="rt3">
+            <header class="rp-head"><p class="rp-dir"><i>links</i> Fenster</p><h3>So finden Sie <em>her.</em></h3></header>
+            <div class="rp-body">
+              <p class="rp-big"><a href="https://www.google.com/maps/search/?api=1&amp;query=Schlichtener%20Stra%C3%9Fe%2087%2C%2073614%20Schorndorf" target="_blank" rel="noopener">Schlichtener Straße 87, 73614 Schorndorf</a></p>
+              <p>Parken direkt vor dem Haus. Bus: „Schlichtener Straße“ oder „Grauhalde“.</p>
+              <p class="rp-tap" aria-hidden="true"><span class="only-touch">Tippen Sie aufs Fenster für die Karte.</span><span class="only-fine">Klicken Sie aufs Fenster für die Karte.</span></p>
+            </div>
+          </article>
+
+          <div class="raum-bar">
+            <div class="raum-nav">
+              <button type="button" class="rn" id="rnPrev" aria-label="Nach links umsehen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+              <div class="raum-tabs" role="tablist" aria-label="Im Raum umsehen">
+                <button type="button" role="tab" id="rt0" aria-controls="rp0" aria-selected="true" aria-label="Vorne: Empfang und Termin"><i></i></button>
+                <button type="button" role="tab" id="rt1" aria-controls="rp1" aria-selected="false" tabindex="-1" aria-label="Rechts: Uhr und Zeiten"><i></i></button>
+                <button type="button" role="tab" id="rt2" aria-controls="rp2" aria-selected="false" tabindex="-1" aria-label="Hinten: Telefon und mehr"><i></i></button>
+                <button type="button" role="tab" id="rt3" aria-controls="rp3" aria-selected="false" tabindex="-1" aria-label="Links: Fenster und Anfahrt"><i></i></button>
+              </div>
+              <button type="button" class="rn" id="rnNext" aria-label="Nach rechts umsehen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+            </div>
+            <p class="raum-hint" aria-hidden="true"><span class="only-touch">Zur Seite wischen: umsehen</span><span class="only-fine">‹ › oder Pfeiltasten: umsehen</span></p>
+            <a class="btn raum-termin" href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener" data-termin aria-haspopup="dialog">Termin buchen</a>
+          </div>
         </div>
       </div>
     </div>
-    <div class="wrap door-inner" id="kontakt" aria-labelledby="k-title">
-      <div>
-        <h3 class="door-h3" id="k-title">Kontakt &amp; Anfahrt</h3>
-        <p class="lead">Buchen Sie Ihren Termin direkt online. Oder schreiben Sie mir eine E-Mail bzw. sprechen Sie auf den Anrufbeantworter, dann melde ich mich mit einem Terminvorschlag.</p>
-        <div class="actions">
-          <a class="btn" href="https://termine.opticaviva.de/a/OdP5VfcRbLlahtgHFBJAi1O99CVzeCnx" target="_blank" rel="noopener" data-termin aria-haspopup="dialog">Online-Termin buchen</a>
-          <a class="btn btn-ghost" href="mailto:kontakt@hopphysio.de?subject=Terminanfrage&amp;body=Guten%20Tag%20Herr%20Raethel%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20einen%20Termin%20anfragen.%0D%0A%0D%0AName%3A%0D%0AR%C3%BCckrufnummer%3A%0D%0AWunschzeiten%3A%0D%0A%C3%84rztliche%20Verordnung%20vorhanden%20%28ja%2Fnein%29%3A%0D%0A%0D%0AMeine%20Beschwerde%20schildere%20ich%20Ihnen%20bitte%20erst%20im%20Gespr%C3%A4ch%2C%20nicht%20per%20E-Mail.%0D%0A%0D%0AVielen%20Dank">Per E-Mail anfragen</a>
-          <a class="btn btn-ghost" href="tel:+4971819931470">07181 9931470</a>
-          <button type="button" class="btn btn-ghost" id="copyMail" hidden>E-Mail-Adresse kopieren</button>
-        </div>
-        <p class="copy-state" id="copyState" role="status"></p>
-        <p class="small">Bitte keine ausführlichen Gesundheitsangaben per E-Mail oder auf dem Anrufbeantworter. Die besprechen wir persönlich.</p>
-      </div>
+    <div class="wrap door-inner alles" id="kontakt" aria-labelledby="k-title">
+      <h3 class="alles-h" id="k-title">Alles auf einen <em>Blick.</em></h3>
       <div class="facts-box">
       <dl class="facts lp-zone" id="facts">
-        <div><dt>E-Mail</dt><dd><a id="mailAddr" href="mailto:kontakt@hopphysio.de">kontakt@hopphysio.de</a></dd></div>
+        <div><dt>E-Mail</dt><dd><a href="mailto:kontakt@hopphysio.de">kontakt@hopphysio.de</a></dd></div>
         <div><dt>Telefon</dt><dd><a href="tel:+4971819931470">07181 9931470</a><span class="dd-note">Nur Anrufbeantworter. Ich rufe Sie zurück, schneller geht es per E-Mail.</span><a class="vc lp-x" href="hop-physiotherapie.vcf" download>Praxis im Telefon speichern</a></dd></div>
         <div><dt>Adresse</dt><dd><a href="https://www.google.com/maps/search/?api=1&amp;query=Schlichtener%20Stra%C3%9Fe%2087%2C%2073614%20Schorndorf" target="_blank" rel="noopener">Schlichtener Straße 87, 73614 Schorndorf</a><span class="dd-note lp-x">In Google Maps öffnen</span></dd></div>
-        <div><dt>Zeiten</dt><dd>Mo–Fr 8:30–19:30 Uhr<br>Sa nach Absprache<br>So und feiertags geschlossen<span class="dd-note lp-x">Termine nach Vereinbarung</span><span class="dd-open" id="openNow" hidden></span></dd></div>
+        <div><dt>Zeiten</dt><dd>Mo–Fr 8:30–19:30 Uhr<br>Sa nach Absprache<br>So und feiertags geschlossen<span class="dd-note lp-x">Termine nach Vereinbarung</span></dd></div>
         <div class="lp-x"><dt>Abrechnung</dt><dd>Kassenpatienten, Privatpatienten und Selbstzahler<span class="dd-note">Ihre ärztliche Verordnung (falls vorhanden) bitte zum ersten Termin mitbringen.</span></dd></div>
         <div class="lp-x"><dt>Parken</dt><dd>Direkt vor dem Haus und in der Nähe</dd></div>
         <div class="lp-x"><dt>ÖPNV</dt><dd>VVS-Bus „Schlichtener Straße“ / „Grauhalde“</dd></div>
@@ -486,7 +535,7 @@
       <span>© 2026 HOP – Home of Physiotherapy · Kai Raethel</span>
       <span><a href="recht-impressum.html">Impressum</a> · <a href="recht-datenschutz.html">Datenschutz</a></span>
       <span class="lab">Testseite 4 · Puls · Scan</span>
-      <span class="credit">Wirbelsäule, Film „Bandscheibenvorfall“, Knochen in den Leistungs-Motiven und bei der Stoßwelle sowie die Figur auf der Manuthera: BodyParts3D, © The Database Center for Life Science licensed under <a href="https://creativecommons.org/licenses/by/4.0/deed.de" rel="license noopener" target="_blank">CC Attribution 4.0 International</a> · <a href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html" rel="noopener" target="_blank">Quelle</a>. Verändert: vereinfacht und als Punktwolke dargestellt.</span>
+      <span class="credit">Figur am Seitenanfang (Körper, Skelett, Gehirn, Muskeln), Wirbelsäule, Film „Bandscheibenvorfall“, Knochen in den Leistungs-Motiven und bei der Stoßwelle sowie die Figur auf der Manuthera: BodyParts3D, © The Database Center for Life Science licensed under <a href="https://creativecommons.org/licenses/by/4.0/deed.de" rel="license noopener" target="_blank">CC Attribution 4.0 International</a> · <a href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html" rel="noopener" target="_blank">Quelle</a>. Verändert: vereinfacht und als Punktwolke dargestellt; Nervenbahnen der Figur eigene Zeichnung entlang dieser Daten.</span>
     </footer>
   </section>
 </main>
