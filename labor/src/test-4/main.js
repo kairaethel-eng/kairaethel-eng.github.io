@@ -24,6 +24,7 @@ import { initKopfFuss } from '../figur-echt/kapitel.js';
 import { loadEcht } from '../figur-echt/daten.js';
 import { initStage } from '../tuer-raum/stage.js';
 import { STATIONS, PITCH0, GEO } from '../tuer-raum/raum.js';
+import { makeTapHints } from '../tuer-raum/hinweis.js';
 import { initRuhe } from './ruhe.js';
 import { initFarbe } from './farbe.js';
 
@@ -2150,6 +2151,7 @@ const doorStage = (() => {
     });
   }
   hits.forEach((el) => { el.addEventListener('pointerenter', () => { hot = +el.dataset.k; }); el.addEventListener('pointerleave', () => { hot = -1; }); });
+  const taps = makeTapHints({ host: raumEl, hits, project: (k, x, y, z, cam) => (st ? st.project(k, x, y, z, cam) : null) }); // A: Dinge in Bernstein + Tipp-Hinweis (Go Kai 23.11.)
   // Kopf drehen: Maus (PC) bzw. Finger beim Wischen (Handy, auch auf der Schrift; ein Link löst nach einem Wisch nicht aus)
   let pyT = 0, psT = 0, py = 0, ps = 0, suppress = 0;
   const fine = matchMedia('(hover: hover) and (pointer: fine)');
@@ -2199,7 +2201,8 @@ const doorStage = (() => {
     const kp = 1 - Math.exp(-dt * 2.2); py += (pyT - py) * kp; ps += (psT - ps) * kp;
     const hb = tTitle.getBoundingClientRect().bottom - S.top;
     const room = rIn > 0 ? { rect: L.rect, cx: L.cx, cy: L.yEye + ps, F: L.F, sp: L.sp, rad: desk ? 1.2 : 1.0, yaw: yawBase() + drag + py, pitch: PITCH0, rIn: ease(rIn),
-      pulse: angTo(yawBase(), 2) < 0.05 && yawT >= 1 && !still(), hh, mm, open: praxisOffen, hot } : null;
+      pulse: angTo(yawBase(), 2) < 0.05 && yawT >= 1 && !still(), hh, mm, open: praxisOffen, hot, edgeAll: true } : null;
+    if (room) { const fl = taps.flash(); room.flashK = fl.k; room.flash = fl.v; }
     st.frame(dt, {
       w, h, desk, cx: w / 2, areaTop: hb + (desk ? 8 : 18), areaBot: h - (desk ? 44 : 30), fadeY: hb - 8,
       fWant: weich(doorGate(smooth(vh * 0.95, vh * 0.12, r.top), dt)), // Tür entsteht, sobald die Bühne hereinkommt – über die Zeit
@@ -2207,7 +2210,11 @@ const doorStage = (() => {
     });
     const ro = rIn > 0.3;
     if (ro !== roomOn) { roomOn = ro; H.classList.toggle('raum-on', ro); }
-    if (room) placeBoards(room);
+    if (room) {
+      placeBoards(room);
+      const calm = roomOn && rIn >= 1 && yawT >= 1 && !drag && angTo(yawBase(), cur) < 0.06;
+      taps.frame(dt, room, { on: roomOn, k: calm ? cur : -1, ang: (k) => angTo(room.yaw, k), still: still() });
+    }
     const to = 1 - smooth(0.02, 0.25, st.walk);
     if (Math.abs(to - lastTop) > 0.01) { lastTop = to; topEl.style.opacity = to.toFixed(2); topEl.style.visibility = to < 0.01 ? 'hidden' : ''; }
     const c = st.f > 0.9 ? 1 - smooth(0.02, 0.1, st.p) : 0;

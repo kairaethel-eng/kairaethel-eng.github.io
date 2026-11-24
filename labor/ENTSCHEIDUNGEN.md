@@ -12,6 +12,10 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **Zurückgestellt (Runde 2, nur mit Go):** B3 echte Kamera je Station, B5 Raum (Punktboden, Spiegelung, Dunst, Staub in Ebenen), B6 Auftritt (dunkel, Scan baut auf, Kamera fährt zurück).
 - **Merkregeln:** Figur bleibt **neutral** – Intimbereich und Gesicht immer glätten (Werkzeug `tools/figur-echt.mjs`), nie Rohhaut zeigen. Nichts Anatomisches frei erfinden: was BodyParts3D hat, kommt aus den Daten; die Nerven fehlen dort (Rumpf/Arme/Beine) und werden **entlang echter Landmarken berechnet**, nicht frei gezeichnet. Schädel und Kopfhaut treten zurück, solange das Gehirn zu sehen ist (sonst weißer Fleck). Rückseiten fallen weg (die Figur dreht sich nur ±7°). Hauptgrafik bleibt der Körper: Knochen/Muskeln sind Schichten darunter, nie heller als die Linie.
 
+## Anklickbare Dinge im Raum (Go Kai 23.11.2026 „a, mit einer kleinen Tipp-Animation“)
+- **Entschieden:** A – antippbare Dinge in Bernstein; dazu ein kurzer Tipp-Hinweis beim Ankommen (zweimal, höchstens zweimal je Ankunft, nur solange unbenutzt) und Aufleuchten beim Antippen. Nicht gewählt: Pille (B), Lichtkegel (C) – Beispiel bleibt in `tuer-hervorheben.html`.
+- **Merkregel:** Neue antippbare Dinge im Raum: Punkte als Art 4 bauen (werden automatisch Bernstein), Lage des Hinweises in `hinweis.js` `TAP_AT`, Tastfläche in `HITQ`.
+
 ## Tür · Raum in Puls (Go Kai 23.11.2026)
 - **Entschieden:** Der Raum ersetzt in Puls und `live/` die Tür-Bühne „Hineingehen“ und den bisherigen Kontaktteil. Termin-Knopf und Terminbuch öffnen das Termin-Blatt; „Alles auf einen Blick“ (Angabenliste mit Leuchtpille) steht darunter.
 - **Merkregel:** Neue Tür-/Raum-Arbeit nur noch in `src/tuer-raum` (gemeinsam für Puls und Entwurf); `src/tuer` ist Archiv der Entwurfsseite `tuer.html`.

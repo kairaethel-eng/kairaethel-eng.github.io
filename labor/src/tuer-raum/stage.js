@@ -163,7 +163,7 @@ export function initStage({ cv, glow, isStill, soft, roomOpts }) {
       pS += (o.pWant - pS) * kf; if (Math.abs(o.pWant - pS) < 0.0015) pS = o.pWant;
       const rm = o.room;
       const key = `${f.toFixed(3)}|${pS.toFixed(4)}|${Math.round(o.areaTop)}|${Math.round(o.cx)}|${Math.round(o.fadeY)}|${o.border.map(Math.round).join(',')}` +
-        (rm ? `|${rm.yaw.toFixed(4)}|${rm.pitch.toFixed(4)}|${rm.rIn.toFixed(3)}|${rm.cx | 0}|${rm.cy | 0}|${rm.F | 0}|${rm.hh}:${rm.mm}|${rm.rect.map(Math.round).join(',')}|${rm.hvKey || ''}` : '');
+        (rm ? `|${rm.yaw.toFixed(4)}|${rm.pitch.toFixed(4)}|${rm.rIn.toFixed(3)}|${rm.cx | 0}|${rm.cy | 0}|${rm.F | 0}|${rm.hh}:${rm.mm}|${rm.rect.map(Math.round).join(',')}|${rm.fxKey || ''}|${rm.edgeAll ? 1 : 0}|${rm.flashK}|${(rm.flash || 0).toFixed(2)}|${rm.hot}` : '');
       const doorAlive = !still && (f > 0.75 || pS > 0.06) && (!rm || rm.rIn < 1);
       const alive = doorAlive || (!still && rm && rm.pulse);
       if (key === lastKey) { if (!alive) return; skip = !skip; if (skip) return; }

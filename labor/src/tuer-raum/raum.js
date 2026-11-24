@@ -257,7 +257,9 @@ export function makeRoom(opt = {}) { // opt.logoY: Höhe der HOP-Kreise auf der 
         if (kind === 2) { a = o.pulse ? 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(o.t * 2.4)) : 1; sz = rad * 1.9; }
         else if (kind === 3) { if (!o.open) { col = 0; a *= 0.2; } } // „Geöffnet“ leuchtet nur, wenn die Praxis offen ist
         else if (kind === 4) {
+          if (o.edgeAll) { col = 1; a = Math.min(1, a * 1.25 + 0.06); } // A (Go Kai 23.11.): antippbare Dinge in Bernstein
           if (o.hot === curK) a = Math.min(1, a * 1.7 + 0.08); // antippbares Ding unter der Maus
+          if (o.flashK === curK && o.flash > 0) a = Math.min(1, a * (1 + 1.4 * o.flash) + 0.25 * o.flash); // Aufleuchten nach dem Antippen
           if (hv && hv.k === curK) { // Beispiel „Hervorheben“: A Bernstein-Kanten · C einmal aufleuchten · Rückmeldung beim Antippen
             if (hv.edge) { col = 1; a = Math.min(1, a * 1.25 + 0.06); }
             a = Math.min(1, a * (1 + 0.9 * (hv.glow || 0) + 1.4 * (hv.flash || 0)) + 0.25 * (hv.flash || 0));

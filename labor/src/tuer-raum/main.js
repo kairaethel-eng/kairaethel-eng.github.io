@@ -13,6 +13,7 @@
 // Puls (src/test-4) und die Tür-Bühne (src/tuer/buehne.js) sind unberührt. Prüfhilfe: window.__raum.
 import { initStage } from './stage.js';
 import { STATIONS, PITCH0, GEO } from './raum.js';
+import { makeTapHints } from './hinweis.js';
 
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const H = document.documentElement;
@@ -185,6 +186,7 @@ function placeBoards(cam) {
   });
 }
 hits.forEach((a) => { a.addEventListener('pointerenter', () => { hot = +a.dataset.k; }); a.addEventListener('pointerleave', () => { hot = -1; }); });
+const taps = makeTapHints({ host: raumEl, hits, project: (k, x, y, z, cam) => (st ? st.project(k, x, y, z, cam) : null) }); // A + Tipp-Hinweis (Go Kai 23.11.)
 
 // C: Kopf drehen – Maus (PC) bzw. Finger beim Wischen (Handy)
 let pyT = 0, psT = 0, py = 0, ps = 0, suppress = 0;
@@ -268,7 +270,7 @@ function hvFrame(dt, cam) {
     else { hvPill.style.opacity = '0'; hvPill.style.visibility = 'hidden'; }
   }
   const hv = { k: 0, edge: f.edge, glow, beam, flash };
-  return { hv, hvKey: `${hvS.mode}|${beam.toFixed(3)}|${glow.toFixed(3)}|${flash.toFixed(3)}` };
+  return { hv, fxKey: `${hvS.mode}|${beam.toFixed(3)}|${glow.toFixed(3)}|${flash.toFixed(3)}` };
 }
 
 // Messanzeige ?takt=1 (Bilder je Sekunde)
@@ -306,6 +308,7 @@ function frame(now) {
       yaw: yawBase() + drag + py, pitch: PITCH0, rIn: easeSine(rIn), pulse: angTo(yawBase(), 2) < 0.05 && yawT >= 1 && !still(), hh, mm, open: praxisOpen, hot,
     };
     const hx = hvFrame(dt, room); if (hx) Object.assign(room, hx);
+    const fl = taps.flash(); room.edgeAll = !HV; room.flashK = fl.k; room.flash = fl.v;
   }
   st.frame(dt, {
     w, h, desk, cx: w / 2,
@@ -314,7 +317,11 @@ function frame(now) {
   });
   const ro = rIn > 0.3;
   if (ro !== roomOn) { roomOn = ro; H.classList.toggle('raum-on', ro); }
-  if (room) placeBoards(room);
+  if (room) {
+    placeBoards(room);
+    const calm = roomOn && rIn >= 1 && yawT >= 1 && !drag && angTo(yawBase(), cur) < 0.06;
+    taps.frame(dt, room, { on: roomOn && !HV, k: calm && !HV ? cur : -1, ang: (k) => angTo(room.yaw, k), still: still() });
+  }
   const to = 1 - smooth(0.02, 0.25, st.walk);
   if (Math.abs(to - lastTop) > 0.01) { lastTop = to; topEl.style.opacity = to.toFixed(2); topEl.style.visibility = to < 0.01 ? 'hidden' : ''; }
   const c = st.f > 0.9 ? 1 - smooth(0.02, 0.1, st.p) : 0;
