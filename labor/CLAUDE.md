@@ -4,35 +4,36 @@ Kurz gehalten (seit 18.11.2026, Go Kai „D“): hier stehen nur Regeln, Stand u
 stehen wörtlich in `labor/TECHNIK.md` – dort gezielt nachschlagen, nicht alles lesen.
 
 ## Wer / was
-- Kai Raethel, Physiotherapeut, Praxis **HOP – Home of Physiotherapy**, Schorndorf. Skills `kai-arbeitsweise` + `hop-praxis` gelten (Deutsch, knapp; [B]/[A]/[O]-Kennzeichnung).
+- Kai Raethel, Physiotherapeut, Praxis **HOP – Home of Physiotherapy**, Schorndorf. Skills `kai-arbeitsweise` + `hop-praxis` gelten (Deutsch, knapp; [B]/[A]/[O]-Kennzeichnung). Kai duzen, locker; die Sie-Form gilt nur für Website- und Patiententexte.
 - **Regel:** Erst erörtern, dann „Go“. Screenshots/Feedback von Kai = kein Auftrag → je Punkt Ursache, 2–3 Optionen, Empfehlung, Go abwarten. Ausdrückliches „Go“ = selbstständig umsetzen.
 - Kai prüft visuell auf **iPhone** (meist im Browser der Claude-App, Fenster rund 390×692) und PC (Chrome). Kai will keine Screenshots geschickt bekommen. Kosten: alles kostenlos halten.
-- **„prüfen und sichern“** (Kai, 24.11.2026): alle offenen Aufgaben des Chats ins Claude Doc „HOP – Arbeitsblatt offene Aufgaben“ eintragen (https://claude.ai/artifact/3gohGz57mTaSZwY8uAfViu, neuer Abschnitt oben unter „Einträge“), dazu `UEBERGABE.md` pflegen, committen, pushen.
+- **„prüfen und sichern“** (Kai, 24.11.2026): alle offenen Aufgaben des Chats ins Claude Doc „HOP – Arbeitsblatt offene Aufgaben“ eintragen (https://claude.ai/artifact/3gohGz57mTaSZwY8uAfViu, neuer Abschnitt oben unter „Einträge“; was Kai ansehen soll, in die „Sichtprüf-Liste“ dort), dazu `UEBERGABE.md` pflegen, committen, pushen.
 - Bei Bewegungsthemen hilft ein kurzer Bildschirmfilm von Kai mehr als ein Standbild – darum bitten.
 
 ## So lesen (statt alles zu laden)
 1. Diese Datei.
-2. `UEBERGABE.md`: nur die Kopfzeile und die obersten ▶-Abschnitte (aktueller Stand, offene Rückmeldungen).
+2. `UEBERGABE.md`: Kopf, Liste „Offen“ und die obersten ▶-Abschnitte. `archiv/` nur gezielt durchsuchen (grep), nie ganz lesen.
 3. `ENTSCHEIDUNGEN.md`: die obersten Abschnitte; weiter unten nur, wenn das Thema berührt wird.
 4. `TECHNIK.md`: nur den Abschnitt zum Baustein, an dem gearbeitet wird. `LIVEGANG.md` nur beim Thema Livegang/Wurzel.
+Das gilt auch für die Leseliste in der Wurzel-`CLAUDE.md`: gezielt lesen, nicht ganz.
 
 ## Stand in Kürze
+Kein Verlauf – nur was heute gilt. Was wann warum entstand: `UEBERGABE.md`, Älteres in `archiv/`.
 - Richtung **„Puls · Scan“**: dunkel, Partikel, Bernstein-Akzente. Quellen `labor/src/test-4/` → `test-4-puls-scan.html` (Labor) und `live/` („Stand jetzt“, https://kairaethel-eng.github.io/labor/live/).
-- Seitenfolge: 01 Von Kopf bis Fuß (echte Figur: Körper, Skelett, Gehirn, Muskeln, Nerven) → 02 Bewegung (Perlenbänder) → § Hausordnung (HOP-Kreise) → 03 Achse (echte Wirbelsäule, Scanner, Film „Bandscheibenvorfall“) → 04 Dach (Linienhaus, Leistungen mit Motiven, Manuthera, Stoßwelle) → 05 Tür (Raum: Tür antippen, umsehen, Wandschrift).
-- Seit 17./18.11.2026 gilt der **Feinschliff-Stil** auf der ganzen Seite (Studie `feinschliff.html`, Vergleich `puls-vor-feinschliff.html`).
-- Seit 18.11.2026 abends: **Kapitel-Auftakt** vor den Kapiteln 02–05 (große Ziffer, Name, Linie), **Staub** als Übergang 03 ↔ 04, Streifen von Kapitel 02 auch am Handy/Tablet.
-- Seit 19.11.2026: **Tür-Bühne „Hineingehen“** in Kapitel 05 (Knöpfe erst drinnen), Logo mit lesbarem H · O · P, **Messanzeige** `?takt=1` (Bilder je Sekunde auf Kais Gerät). Das Stottern der Partikel tritt laut Kai seit 22.11. nicht mehr auf.
-- Seit 20.11.2026: **Leistungs-Motive und Manuthera im Stil von Figur und Wirbelsäule** (geordnete Punkte aus `src/shared/raster.js`, Kantenlicht, verdeckte Rückseite); **Übergänge laufen über die Zeit** (Auslöser beim Hereinscrollen, Staub bei jedem Formwechsel, Auftritt der Nebenbühnen aus Staub). Nachts: Arbeitsblatt 3 abgearbeitet – **echte Knochen** (BodyParts3D) in den anatomischen Motiven, Manuthera detaillierter, **Tür öffnet auf Antippen**, Logo neu gezeichnet und groß am Start, Abläufe langsamer. Gegen Mitternacht: Arbeitsblatt 4 abgearbeitet – **Logo nach dem Original**, Kiefergelenk im Blick, Abläufe noch langsamer, Schilder einheitlich, Entwurf **`stosswelle-punkte.html`** (Punkt-Grafik mit echtem Fersenbein, wartet auf Kais Urteil). Seit 21.11.2026: **Stoßwelle in Kapitel 04 als Punkt-Grafik** (echtes Fersenbein; Linien-Zeichnung als Rückfall), in der Kopfleiste wieder das flache Logo, Vergleich **`logo.html`** (A flach · B Mischung · C Original). Abends/spät: **Staub beim Raumwechsel im Linienhaus** (in Puls übernommen), **HOP-Kreise aus Punkten = Logo A** der Kopfleiste; Logo A bleibt. Offene Punkte für Kai: **Arbeitsblatt 4, aktualisiert** (Adresse in `UEBERGABE.md` oben) – zuerst auslesen. Es arbeiten zeitweise zwei Sitzungen an der Seite: vor dem Veröffentlichen immer `git fetch origin main` und zusammenführen.
-- Seit 21.11.2026: Kais Screenshot-Punkte umgesetzt (Abstand nach 01, Leitsatz als Zitatblock, Wirbelsäule am Handy ohne Überlappung + „Mehr“-Pille, Dach: Raumtext gleich unter dem Haus) – wartet auf Kais Sichtprüfung (`UEBERGABE.md` oben).
-- Seit 21.11.2026 nachmittags: **echte Figur auf der Manuthera** (Körperoberfläche BodyParts3D, `assets/manu-figur.bin`, Werkzeug `tools/manu-figur.mjs`) – wartet auf Kais Sichtprüfung.
-- Seit 22.11.2026: Manuthera-Figur ohne „Spitze an der Hüfte“ (Arm-Gewichte unter dem Ellbogen bereinigt, Figur neu erzeugt) – wartet auf Kais Sichtprüfung.
-- Seit 22.11.2026 abends: **Manuthera mit beweglichem Kopf- und Brustteil** (Abläufe je Abschnitt Kopf → Brust → Becken, Mittelteil fest wie bei der echten Liege), Wirbel leuchten nach Bewegung (seit 23.11. Verlauf Bernstein → Rot-Orange), Kamera passt sich beim Drehen an; seit 23.11. fünfte Behandlung **Extension**, von Hand gedrehter Blick bleibt stehen – von Kai abgenommen (24.11.); Hüfte, Kopf-/Brustteil und Hände nicht einzeln bestätigt.
-- Seit 22.11.2026: **„Text ruhig“** – Erklärtext an Manuthera, Stoßwelle und Kontakt hinter Bernstein-Leuchtpunkt-Knöpfen, klappt am Ort auf (Klasse `ruhe`, `src/test-4/ruhe.js`); Vergleich `textruhe.html` – wartet auf Kais Sichtprüfung. Neues Aufklappbares immer mit diesem Muster (`.lp-btn`/`.lp-zone`/`.lp-x`), höchstens ein pulsierender Punkt im Bild.
-- Seit 22.11.2026 spät: **Raumlicht „Kräftig“** (Go Kai) – jedes Kapitel ein Raum mit eigenem Licht, Logo-Farben als Raumfarben; Kai lässt es ein paar Tage wirken. Offen: Nerven-Shader Kap. 03 kompiliert auf echter Grafik nicht (`uFade`/`uClip` doppelt, `main.js` `addNerves`) – Fix wartet auf Go. Prüfstand für diese Runde noch nicht gelaufen (lokal kein Playwright).
-- Seit 22.11.2026 nachts: Entwurf **`tuer-raum.html`** (Go Kai „a c“) – Kapitel 05 als Raum: Tür antippen, Rahmen wird Bildschirmrand, vier Blickrichtungen mit den Kontakt-Infos; seit 23.11. Runde 2 (Go Kai „Empfehlung“): Text als Wandschrift im Raum (matrix3d), Buch/Telefon/Fenster antippbar, Zeichenfläche in der Bühne (kein Schwimmen beim Scrollen); Stand 1 = `tuer-raum-v1.html`. Von Kai abgenommen (23.11. „passt alles“) und **seit 23.11. in Puls + `live/` übernommen** (Go Kai) – ersetzt Tür-Bühne und Kontaktteil; antippbare Dinge in Bernstein + Tipp-Hinweis. **Offen (Kai 24.11.):** Tischflächen und Punkt-Schriften („GEÖFFNET“, HOP auf dem Tresen) – Befund in `UEBERGABE.md`, Start-Prompt `labor/PROMPT-Feinschliff-Kapitel-05.md`.
-- Seit 23.11.2026: Entwurf **`figur-echt.html`** (Go Kai „Empfehlung“) – Startfigur aus echten Daten (Haut neutralisiert, Skelett, Gehirn mit Windungen, Muskeln der Stationen, Nervenwege an echten Landmarken; Werkzeug `tools/figur-echt.mjs`) + Scan-Linie, Filmlicht, Röntgen-Lupe; Umschalter heute · 1 · 1+2. **Seit 23.11. abends Stufe 1 in Puls + `live/`** (Go Kai „1“; Kapitel 01 = `../figur-echt/kapitel.js`, `?figur=heute` = alte Figur) – wartet auf Kais Sichtprüfung.
+- Seitenfolge: 01 Von Kopf bis Fuß (echte Figur: Körper, Skelett, Gehirn, Muskeln, Nerven; `../figur-echt/kapitel.js`) → 02 Bewegung (Perlenbänder) → § Hausordnung (HOP-Kreise = Logo A) → 03 Achse (echte Wirbelsäule, Scanner, Film „Bandscheibenvorfall“) → 04 Dach (Linienhaus, Leistungen mit Motiven, Manuthera mit fünf Behandlungen, Stoßwelle als Punkt-Grafik) → 05 Tür (Raum: Tür antippen, umsehen, Wandschrift, antippbare Dinge in Bernstein).
+- Auf der ganzen Seite gelten: Feinschliff-Stil, Kapitel-Auftakt vor 02–05, Staub bei jedem Formwechsel, Abläufe über die Zeit, „Text ruhig“ (Erklärtext hinter Leuchtpunkt-Knöpfen, Klasse `ruhe`, `src/test-4/ruhe.js`; Neues zum Aufklappen immer mit `.lp-btn`/`.lp-zone`/`.lp-x`, höchstens ein pulsierender Punkt im Bild), Raumlicht „Kräftig“ (Kai lässt es wirken).
+- Von Kai abgenommen: Film „Bandscheibenvorfall“ (16.11.), Raum Kapitel 05 als Entwurf (23.11.), Manuthera als Ganzes (24.11.). Alles andere steht in der Liste „Offen“ oben in `UEBERGABE.md`.
+- Schalter zum Vergleichen und Messen: `?takt=1` (Bilder je Sekunde auf Kais Gerät), `?farbe=heute|leise|mittel`, `?figur=heute` (Figur bis 23.11.).
+- Bekannt und offen: Nerven-Shader Kap. 03 kompiliert auf echter Grafik nicht (`uFade`/`uClip` doppelt, `main.js` `addNerves`) – Fix wartet auf Go. Kapitel 05: Tischflächen und Punkt-Schriften („GEÖFFNET“, HOP am Tresen) – Start-Prompt `labor/PROMPT-Feinschliff-Kapitel-05.md`. Der Prüfstand meldet seit dem Raumlicht je 11 bekannte Befunde (Text auf unruhigem Grund, Stelle im Ring verdeckt) – Frage an Kai steht in der Sichtprüf-Liste.
+- Es arbeiten zeitweise zwei Sitzungen an der Seite: vor dem Veröffentlichen immer `git fetch origin main` und zusammenführen. Besser: eine Website-Sitzung zur Zeit.
 - Startadresse (`/index.html`, `/impressum.html`, `/datenschutz.html`) ist eine Übergangsseite und wird **nie ohne ausdrückliches Go** geändert. Livegang ruht.
-- Entwurfsseiten und Archiv (Figur plus, Tür, Haus-Licht, Fusion, Zuhause, Manuthera, Vorfall …): Liste und Technik in `TECHNIK.md`.
+- Entwurfsseiten und Vergleiche (Figur plus, Tür, Haus-Licht, Logo, Farbstudie, Fusion, Zuhause, Manuthera, Vorfall …): Liste und Technik in `TECHNIK.md`.
+
+## Doku kurz halten (seit 24.11.2026, Go Kai)
+- **`UEBERGABE.md`:** Kopf höchstens fünf Zeilen. Darunter **eine** Liste „Offen“ (Kai am Zug · Claude wartet auf Go) – dort pflegen, nicht in jedem Abschnitt neu „wartet auf …“ schreiben. Je Runde ein kurzer ▶-Abschnitt (Auftrag, was geändert, geprüft, Rückweg).
+- **Auslagern:** Abschnitte, die abgenommen oder älter als etwa eine Woche sind, wandern nach `archiv/` (Datei je Zeitraum, nur anhängen). Vorher Offenes in die Liste „Offen“ übernehmen. Gleiches gilt für `ENTSCHEIDUNGEN.md`: oben nur Regeln, die für die laufende Seite gelten.
+- **Sichtprüfungen:** Alles, was Kai ansehen soll, steht im Arbeitsblatt unter „Sichtprüf-Liste“ (Link, wo hinschauen, worauf achten). Stehen dort **mehr als fünf** offene Punkte, vor neuem Bauen Kai auf die Liste hinweisen und fragen, ob er erst prüfen will.
+- **Rollen:** Arbeitsblatt = Kais Aufgaben und Sichtprüfungen · `UEBERGABE.md` = technischer Stand für Claude · Projekt-Backlog = nur ganze Vorhaben, keine Einzelschritte.
 
 ## Gestaltungsregeln (prüfbar – gelten für alles Neue)
 - **Punkte:** geordnet (gleicher Abstand, gleiche Größe, scharfer Rand), kein Zittern, kein Zufall im ruhenden Bild.
@@ -77,6 +78,7 @@ LIVE_ROOT=1 node build.mjs live                 # Wurzel – NUR nach Kais Go (L
 | Thema | Wo |
 |---|---|
 | Stand, offene Punkte, Kais Rückmeldungen | `UEBERGABE.md` (oben) |
+| Ältere Runden und Entscheidungen | `archiv/` (durchsuchen, nicht laden) |
 | Entscheidungen und Merkregeln | `ENTSCHEIDUNGEN.md` |
 | Bausteine, Dateien, Shader, Werkzeuge im Einzelnen | `TECHNIK.md` |
 | Detailprüfung, Checkliste, Prüfstand | `PRUEFUNG.md` |
