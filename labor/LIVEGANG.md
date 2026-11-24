@@ -3,6 +3,8 @@
 Entscheidung Kai 2.11.2026. Stand 14.11.2026 spät (Auftrag Z): **„Stand jetzt“ = https://kairaethel-eng.github.io/labor/live/** – alles Neue auf einer Seite (echte Wirbelsäule, Film „Bandscheibenvorfall“, Linienhaus, Stoßwelle). Livegang wartet auf Kais Go.
 Markierung: **[B]** selbst geprüft · **[A]** abgeleitet · **[O]** offen.
 
+**Stand 24.11.2026 abends (Kai):** Die Wurzel ist **offline** (Übergangsseite entfernt, `robots.txt` sperrt alles, `.nojekyll`; Commit `8535f18`). Beim Livegang (Schritt 7) `robots.txt` durch die echte ersetzen (`Disallow: /labor/`), `.nojekyll` darf bleiben. Der Wurzel-Bau verweigert sich, solange Platzhalter (`data-platzhalter`, „[Bitte ergänzen]“) in den Seiten stehen.
+
 ## ▶ Aufgabenliste bis zum Livegang (Auftrag Z, 14.11.2026 spät) – Reihenfolge = Nummer
 | Nr | Wer | Was | Hinweis |
 |---|---|---|---|

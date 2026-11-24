@@ -39,7 +39,7 @@ function setPaused(v, save = true) {
   paused = v;
   document.documentElement.classList.toggle('paused', v);
   const b = document.getElementById('motionBtn');
-  if (b) { b.setAttribute('aria-pressed', String(v)); const l = v ? 'Bewegung fortsetzen' : 'Bewegung anhalten'; b.setAttribute('aria-label', l); b.title = l; }
+  if (b) { b.setAttribute('aria-pressed', String(v)); const l = v ? 'Animation fortsetzen' : 'Animation anhalten'; b.setAttribute('aria-label', l); b.title = l; }
   if (save) try { localStorage.setItem('hop-motion', v ? 'paused' : 'on'); } catch (e) { /* ohne Speicher */ }
 }
 document.getElementById('motionBtn')?.addEventListener('click', () => setPaused(!paused));
@@ -447,7 +447,7 @@ addEventListener('resize', resize); resize();
 
 // ---------- Manifest: Wort für Wort ----------
 const statement = $('.statement');
-(function splitWords(el) {
+function splitWords(el) {
   [...el.childNodes].forEach((n) => {
     if (n.nodeType === 3) {
       const frag = document.createDocumentFragment();
@@ -458,8 +458,10 @@ const statement = $('.statement');
       n.replaceWith(frag);
     } else if (n.nodeType === 1) { n.classList.add('word'); }
   });
-})(statement);
-const words = $$('.word', statement);
+}
+// 24.11.2026 (Befund Weltklasse-Prüfung C4): Überschrift kurz, der Rest als Unterzeile (.statement-sub) – beide leuchten Wort für Wort auf
+const stAll = $$('#bewegung .statement'); stAll.forEach(splitWords);
+const words = stAll.flatMap((el) => $$('.word', el));
 
 // ---------- Achse: gestochener Knochen + lebendes Nervensystem ----------
 // Abtastlinie von oben nach unten: darüber erscheint die Wirbelsäule im Detail, darunter sind noch die
@@ -657,10 +659,11 @@ function addNerves() {
   nGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(nAll * 3), 3));
   [['aRow', aRow], ['aPhase', aPhase], ['aSpeed', aSpeed], ['aKind', aKindN], ['aZone', aZoneN], ['aStart', aStart]].forEach(([k, v]) => nGeo.setAttribute(k, new THREE.BufferAttribute(v, 1)));
   nGeo.setAttribute('aOff', new THREE.BufferAttribute(aOff, 3));
+  // uFade/uClip stehen schon in GLSL_COMMON – hier nicht noch einmal deklarieren (sonst kompiliert der Shader nicht, Befund 24.11.)
   const nerveMat = new THREE.ShaderMaterial({
     uniforms: sU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: GLSL_COMMON + /* glsl */`
-      uniform sampler2D uCurves, uPeriTex; uniform float uRows, uGhostV, uFade, uClip;
+      uniform sampler2D uCurves, uPeriTex; uniform float uRows, uGhostV;
       attribute float aRow, aPhase, aSpeed, aKind, aZone, aStart; attribute vec3 aOff;
       varying vec3 vCol; varying float vA;
       vec3 curveAt(sampler2D tex, float row, float rows, float t){
@@ -2437,8 +2440,8 @@ function tick() {
   uniforms.uFadeMid.value = isDesktop() ? 0.62 : 0.7;
 
   // Manifest
-  const sr = statement.getBoundingClientRect();
-  const sp = clamp((VH * 0.85 - sr.top) / (sr.height + VH * 0.35));
+  const sr = statement.getBoundingClientRect(), srB = stAll[stAll.length - 1].getBoundingClientRect().bottom;
+  const sp = clamp((VH * 0.85 - sr.top) / (srB - sr.top + VH * 0.35));
   const lit = Math.floor(sp * words.length * 1.1);
   words.forEach((w, i) => w.classList.toggle('lit', reduced || i < lit));
 

@@ -133,6 +133,7 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 /* Manifest */
 .manifest{min-height:0;padding-block:6rem 0} /* nach der Figur: der freie Teil ihrer Bühne zählt zum Abstand mit */
 .statement{font-family:var(--sans);font-weight:500;font-size:clamp(1.75rem,3.9vw,3.875rem);line-height:1.12;letter-spacing:-.02em;max-width:22ch}
+.statement-sub{font-size:clamp(1.25rem,2.1vw,1.875rem);font-weight:400;line-height:1.35;letter-spacing:-.01em;max-width:32ch;margin-top:1.25rem} /* 24.11.: Rest des Leitsatzes als Unterzeile (Überschrift am PC höchstens zwei Zeilen) */
 .statement .word{opacity:.16;transition:opacity .4s}
 .statement .word.lit{opacity:1}
 .sign{position:relative;margin:4rem 0 0;padding:1.75rem 0 0 clamp(2.75rem,5vw,4.25rem);max-width:40rem}
@@ -1127,3 +1128,22 @@ html.door-walk .tap-hint{display:block;position:absolute;z-index:3;left:0;top:0;
 @keyframes tapRing{0%{opacity:.85;transform:scale(.3)}100%{opacity:0;transform:scale(1.7)}}
 @media (prefers-reduced-motion:reduce){.tap-hint{display:none!important}}
 html.paused .tap-hint{display:none!important}
+/* 24.11.2026 (Befund C2): Schnellwege unter „Die Tür steht offen.“ – PC immer, Handy nur ohne Tür-Bühne */
+.door-quick{display:none;flex-wrap:wrap;gap:.75rem;margin-top:1.75rem}
+html:not(.door-walk) .door-quick{display:flex}
+@media (min-width:921px){.door-quick{display:flex}}
+/* 24.11.2026 (Befund E1): größere Tippflächen ohne sichtbare Verschiebung – Kontaktlinks rund 44 px, Fußzeile mindestens 24 px */
+.facts dd>a:first-child{display:inline-block;padding-block:.875rem;margin-block:-.875rem}
+.foot a{display:inline-block;padding-block:.375rem;margin-block:-.375rem}
+/* 24.11.2026 (Befund B1): Über mich – Porträt + drei Fakten; Platzhalter gestrichelt in Bernstein, bis Kais Daten da sind */
+.ueber{display:grid;grid-template-columns:minmax(0,12rem) minmax(0,1fr);gap:1.25rem 2rem;align-items:center;margin-top:3.5rem;max-width:44rem}
+.ueber-bild,.ueber-foto{width:100%;aspect-ratio:4/5;border-radius:3px;object-fit:cover}
+.ueber-bild{display:flex;align-items:center;justify-content:center;border:1px dashed rgba(224,154,53,.6);background:rgba(10,22,27,.55);color:var(--amber);font:600 .75rem/1.3 var(--sans);letter-spacing:.16em;text-transform:uppercase;text-align:center;padding:1rem}
+.ueber-fakten{list-style:none;margin:0;padding:0;display:grid;gap:1rem}
+.ueber-fakten li{display:grid;gap:.25rem;padding-bottom:1rem;border-bottom:1px solid var(--line)}
+.ueber-fakten li:last-child{border-bottom:0;padding-bottom:0}
+.ueber-fakten b{font:500 1.25rem/1.2 var(--sans);color:var(--txt)}
+.ueber-fakten span{font-size:.9375rem;color:var(--dim)}
+.ueber [data-platzhalter] span,.ueber-fakten [data-platzhalter] b{text-decoration:underline dashed rgba(224,154,53,.5);text-underline-offset:.25em}
+.ueber-bild[data-platzhalter] span{text-decoration:none}
+@media (max-width:560px){.ueber{grid-template-columns:minmax(0,7.5rem) minmax(0,1fr);gap:1rem 1.25rem;margin-top:2.5rem}.ueber-fakten b{font-size:1.0625rem}.ueber-fakten span{font-size:.875rem}}

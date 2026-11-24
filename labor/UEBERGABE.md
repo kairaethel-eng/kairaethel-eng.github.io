@@ -7,12 +7,13 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 ## Offen (hier pflegen – nicht in jedem Abschnitt neu „wartet auf …“ schreiben)
 
 **Kai am Zug**
+- Daten für die Platzhalter (`data-platzhalter`): Porträt (Hochformat 4:5), drei Fakten in Kap. 02 (Jahr „Physiotherapeut seit“, Details Manuelle Therapie, Details CMD); Impressum Behörde + Berufshaftpflicht. Der Wurzel-Bau bricht ab, solange Platzhalter da sind.
 - Sichtprüfungen: alle in der **Sichtprüf-Liste** im Arbeitsblatt (Link oben). Stand 24.11.: mehr als fünf offen → vor neuem Bauen erst darauf hinweisen (`CLAUDE.md` „Doku kurz halten“).
 - Entscheiden und liefern: Abschnitt „Kai entscheidet oder liefert“ im Arbeitsblatt; alles zum Livegang (Porträt, Raumfotos, FAQ, Impressum, Anwalt, Anrufbeantworter, Zwei-Faktor) in `LIVEGANG.md`.
 - Kapitel 05, Feinschliff (Tischflächen, Punkt-Schriften „GEÖFFNET“ und HOP am Tresen): Befund im Abschnitt „Kai 24.11.2026“ unten, Start-Prompt `PROMPT-Feinschliff-Kapitel-05.md` – läuft in einem eigenen Chat.
 
 **Claude wartet auf Go**
-- Nerven-Shader Kap. 03 kompiliert auf echter Grafik nicht (`uFade`/`uClip` doppelt, `src/test-4/main.js` `addNerves`) – Fix ist eine Zeile. Damit hängt zusammen: „Rückenmark schimmert am iPhone durch den Knochen“ (Frage vom 14.11., unbeantwortet).
+- Entwurf „Weltklasse-Prüfung“ (Branch `claude/project-thread-6psvm8`, PR) wartet auf Kais Durchsicht und Go zum Veröffentlichen von `labor/` – Abschnitt ▶ 24.11. unten. Mit dem Nerven-Fix neu ansehen: „Rückenmark schimmert am iPhone durch den Knochen“ (Frage vom 14.11.).
 - Raumlicht: Der Prüfstand meldet seit „Kräftig“ auf iPhone und PC je 11 bekannte Befunde (Text auf unruhigem Grund bei Th1/Th7, Wartebereich, Stoßwelle, Hinweis vor 05, Kontakt; Stelle im Ring der Figur zu 36–53 % verdeckt). Lösung (Licht hinter Text und Figur dämpfen) nur nach Kais Urteil zum Raumlicht.
 - Echte Figur, Runde 2 (B3 Kamera je Station, B5 Raum mit Boden und Dunst, B6 Auftritt) – nur auf dem Entwurf `figur-echt.html`.
 - „Text ruhig“: weitere Stellen (Leitsatz Kap. 02, Raumkarten)? „Mehr“-Pille der Wirbelsäule auf den Leuchtpunkt umstellen? Variante B (Leuchtpunkte direkt an der Grafik) „ggf. später“.
@@ -44,6 +45,14 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abschnitt vor dem 22.11. meinen, zeigen jetzt ins Archiv.
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
+
+## ▶ 24.11.2026 abends – Weltklasse-Prüfung: Befund + Entwurf (Go Kai „alles, was du selbstständig machen kannst, als Entwurf“) und Wurzel offline
+- **Befund:** Claude Doc https://claude.ai/artifact/EatBCpdbSeroPytki2mmNf (A–F, priorisiert).
+- **Wurzel offline (Kai: „Seite erst mal offline setzen“, Wahl „Startseite weg, Vorschau bleibt“):** Commit `8535f18` direkt auf `main` – `index/impressum/datenschutz.html` der Wurzel entfernt, `robots.txt` (`Disallow: /`), `.nojekyll`. Geprüft [B]: `/` und `/impressum.html` → 404, `/labor/live/` → 200. Rückweg: `git revert 8535f18`.
+- **Entwurf (nur Branch/PR, nicht auf `main`):** A1 Anschrift LfDI BW → Lautenschlagerstraße 20, 70173 Stuttgart (`src/recht/datenschutz.html`) · A3 Nerven-Shader (`uFade`/`uClip` nicht doppelt) + Prüfstand zählt Shader-Fehler als Skriptfehler · B2 Kicker Start „Physiotherapie in Schorndorf“ · B3 Kap. 01 „Kein Durchlauf, keine Hektik.“ (Widerspruch zum Wartebereich) · C4 Kap. 02: Überschrift „Ein Zuhause für Ihren Körper.“, Rest als `.statement-sub` (leuchtet weiter Wort für Wort) · C3 Pause-Knopf sichtbar „Animation“ (Name und Datenschutz-Text angepasst, WCAG 2.5.3), Haltestelle Th7–12 „Rippen“ statt „Bauch“ · C2 PC: „Termin buchen · Anrufen · Route“ unter „Die Tür steht offen.“ (Handy nur ohne Tür-Bühne) · D1 HWG: Atlas-Axis, Schlingentisch, Fango/Kälte, Reizstrom mit „kann/soll“ · E1 Tippflächen Kontaktlinks ~44 px, Fußzeile ≥ 24 px · B1 Platzhalter Porträt + drei Fakten in Kap. 02 (`data-platzhalter`), `build.mjs` verweigert `LIVE_ROOT` bei Platzhaltern oder „[Bitte ergänzen]“.
+- **Bewusst nicht gemacht:** C6 Leistungs-Etiketten (Kai hat sie am 22.11. bestätigt) · C1 Bedien-Grammatik (Entscheidung Kai) · B4 Rückrufzeit/Barrierefreiheit/Hausbesuche (Kais Angaben) · F1/F2 Ladegewicht und Unterseiten (nach dem Livegang, ändert Regel „eine Datei“). Befund-Korrekturen: Fokus der Raum-Knöpfe ist da (am Etikett, Werkzeug misst nur den Knopf) · axe-Kontraste waren Zwischenstände von Einblendungen · „bis zur Großzehe“ zeigte ins Leere, weil die Nerven nicht gezeichnet wurden.
+- **Geprüft:** siehe PR (Prüfstand ia + d, Größen, axe, Überschriften).
+- **Rückweg:** Branch nicht mergen bzw. `git revert` des Merge-Commits.
 
 ## ▶ 24.11.2026 – Doku entrümpelt (Go Kai „Empfehlung“ nach Gesamtprüfung von Skills, Arbeitsweise und Sitzungen)
 - **Geändert (nur Doku, an der Website nichts):** `CLAUDE.md` – „Stand in Kürze“ ohne Chronik, neuer Abschnitt „Doku kurz halten“, Du-Anrede. `UEBERGABE.md` – neuer Kopf, Liste „Offen“, Abschnitte bis 21.11. nach `archiv/UEBERGABE-bis-2026-11-21.md` (wörtlich, nichts gelöscht). `ENTSCHEIDUNGEN.md` – überholte ganze Abschnitte nach `archiv/ENTSCHEIDUNGEN-ueberholt.md`; die übrigen alten Abschnitte enthalten noch gültige Merkregeln und bleiben.

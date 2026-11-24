@@ -9,7 +9,7 @@ const motionBtn = document.getElementById('motionBtn');
 function setPaused(v, save = true) {
   paused = v;
   document.documentElement.classList.toggle('paused', v);
-  if (motionBtn) { motionBtn.setAttribute('aria-pressed', v ? 'true' : 'false'); motionBtn.setAttribute('aria-label', v ? 'Bewegung fortsetzen' : 'Bewegung anhalten'); motionBtn.title = v ? 'Bewegung fortsetzen' : 'Bewegung anhalten'; }
+  if (motionBtn) { motionBtn.setAttribute('aria-pressed', v ? 'true' : 'false'); motionBtn.setAttribute('aria-label', v ? 'Animation fortsetzen' : 'Animation anhalten'); motionBtn.title = v ? 'Animation fortsetzen' : 'Animation anhalten'; }
   if (save) try { localStorage.setItem('hop-motion', v ? 'paused' : 'on'); } catch (e) { /* ohne Speicher */ }
 }
 motionBtn?.addEventListener('click', () => setPaused(!paused));

@@ -26,7 +26,7 @@
     <li><a href="#tuer"><i>05</i><span class="ct">Tür<small>Kontakt &amp; Termin</small></span></a></li>
   </ol>
   <button type="button" class="chap-now" id="chapNow" aria-expanded="false" aria-controls="chapters" aria-label="Kapitel wählen"></button>
-  <button type="button" class="motion-btn" id="motionBtn" aria-pressed="false" aria-label="Bewegung anhalten" title="Bewegung anhalten"><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bewegung</span></button>
+  <button type="button" class="motion-btn" id="motionBtn" aria-pressed="false" aria-label="Animation anhalten" title="Animation anhalten"><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Animation</span></button>
   <a class="btn btn-small" href="#tuer" data-termin aria-haspopup="dialog">Termin</a>
 </nav>
 
@@ -40,9 +40,21 @@
   <section class="chapter manifest" id="bewegung" data-stage="1" aria-labelledby="m-title">
     <div class="wrap">
       <p class="kicker"><i>02</i> Bewegung</p>
-      <h2 id="m-title" class="statement">Ein <em>Zuhause</em> für Ihren Körper. Ein Haus, in dem Sie ankommen, sich wohlfühlen und das ganze Spektrum der Physiotherapie unter einem Dach finden.</h2>
+      <h2 id="m-title" class="statement">Ein <em>Zuhause</em> für Ihren Körper.</h2>
+      <p class="statement statement-sub">Ein Haus, in dem Sie ankommen, sich wohlfühlen und das ganze Spektrum der Physiotherapie unter einem Dach finden.</p>
       <!-- 21.11.2026 (Kai: „Leitsatz besser, kreativer hervorheben“, Go 2a): eigener Block mit großem Anführungszeichen, Linie zeichnet sich beim Hereinscrollen unter „den ganzen Menschen“ -->
       <figure class="sign"><span class="q-mark" aria-hidden="true">„</span><blockquote><p>Ich betrachte nicht nur das Symptom, sondern <span class="q-hl">den ganzen Menschen.</span></p></blockquote><figcaption><i class="q-rule" aria-hidden="true"></i>Kai Raethel</figcaption></figure>
+      <!-- 24.11.2026 (Befund Weltklasse-Prüfung B1, Go Kai „Entwurf, meine Daten folgen“): Platz für Porträt + drei Fakten.
+           data-platzhalter: alles mit diesem Merkmal ersetzt Kai mit echten Angaben; build.mjs verweigert die Wurzel, solange es da ist.
+           Porträt später: <img class="ueber-foto" src="portrait.webp" alt="Kai Raethel in der Praxis" width="480" height="600"> statt des Rahmens. -->
+      <div class="ueber">
+        <div class="ueber-bild" data-platzhalter="portrait" role="img" aria-label="Platzhalter: Porträt von Kai Raethel folgt"><span>Porträt folgt</span></div>
+        <ul class="ueber-fakten">
+          <li data-platzhalter="fakt-1"><b>Seit 20…</b><span>Physiotherapeut · Jahr folgt</span></li>
+          <li data-platzhalter="fakt-2"><b>Manuelle Therapie</b><span>Zertifikat · Details folgen</span></li>
+          <li data-platzhalter="fakt-3"><b>CMD</b><span>Kiefer und Kopfgelenke · Details folgen</span></li>
+        </ul>
+      </div>
     </div>
   </section>
 
@@ -76,7 +88,7 @@
           <button type="button" data-seg="0" class="is-on"><b>C1–C2</b><span>Kopf</span></button>
           <button type="button" data-seg="1"><b>C5–C6</b><span>HWS</span></button>
           <button type="button" data-seg="2"><b>Th1–6</b><span>BWS</span></button>
-          <button type="button" data-seg="3"><b>Th7–12</b><span>Bauch</span></button>
+          <button type="button" data-seg="3"><b>Th7–12</b><span>Rippen</span></button>
           <button type="button" data-seg="4"><b>L4–L5</b><span>LWS</span></button>
           <button type="button" data-seg="5"><b>S1</b><span>Becken</span></button>
         </div>
@@ -285,12 +297,12 @@
         <li><button type="button" aria-expanded="false"><span class="ix-name">Sport-Physiotherapie</span><span class="ix-tag">Aktiv</span></button><div class="ix-body"><p>Vom ersten schmerzfreien Schritt bis zurück auf den Platz: Belastung wird gezielt gesteigert, sportartspezifisch getestet und dokumentiert.</p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">Schmerztherapie</span><span class="ix-tag">Individuell</span></button><div class="ix-body"><p>Schmerz hat immer eine Geschichte. Ich suche die Ursache und kombiniere manuelle Techniken, Übungen und Aufklärung zu einem Plan, der zu Ihrem Alltag passt.</p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">CMD-Therapie</span><span class="ix-tag">Spezialisierung</span></button><div class="ix-body"><p>Bei Kieferschmerz, Knirschen, Knacken oder eingeschränkter Mundöffnung behandle ich Kiefergelenk und Kaumuskulatur, oft abgestimmt mit Ihrem Zahnarzt. Die HWS wird immer mitbetrachtet.</p></div></li>
-        <li><button type="button" aria-expanded="false"><span class="ix-name">Atlas-Axis-Therapie</span><span class="ix-tag">Sanft</span></button><div class="ix-body"><p>Die beiden obersten Halswirbel steuern feinste Kopfbewegungen. Mit sehr sanften, präzisen Impulsen löse ich Spannungen in diesem sensiblen Bereich.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Atlas-Axis-Therapie</span><span class="ix-tag">Sanft</span></button><div class="ix-body"><p>Die beiden obersten Halswirbel steuern feinste Kopfbewegungen. Mit sehr sanften, präzisen Impulsen arbeite ich an Spannungen in diesem sensiblen Bereich.</p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">Stoßwellen-Therapie</span><span class="ix-tag ix-hi"><b class="dot" aria-hidden="true"></b>Neu</span></button><div class="ix-body"><p>Kurze mechanische Druckimpulse, über ein Handstück auf Sehnenansätze und verspannte Muskulatur gegeben. Häufig eingesetzt an Ferse, Achillessehne, Ellenbogen und Schulter. Selbstzahlerleistung.<a class="ix-link" href="#stosswelle">Stoßwelle ansehen <span aria-hidden="true">↑</span></a></p></div></li>
-        <li><button type="button" aria-expanded="false"><span class="ix-name">Traktion im Schlingentisch</span><span class="ix-tag">Entlastung</span></button><div class="ix-body"><p>Im Schlingentisch wird Ihr Körper teilweise schwerelos. Unter sanftem Zug entspannen Bandscheiben, Gelenke und Muskulatur.<button type="button" class="ix-link" data-vorfall aria-haspopup="dialog">Film: Bandscheibenvorfall <span aria-hidden="true">▸</span></button></p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Traktion im Schlingentisch</span><span class="ix-tag">Entlastung</span></button><div class="ix-body"><p>Im Schlingentisch wird Ihr Körper teilweise schwerelos. Der sanfte Zug soll Bandscheiben, Gelenke und Muskulatur entlasten.<button type="button" class="ix-link" data-vorfall aria-haspopup="dialog">Film: Bandscheibenvorfall <span aria-hidden="true">▸</span></button></p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">Osteopathische Ansätze</span><span class="ix-tag">Ganzheitlich</span></button><div class="ix-body"><p>Faszien, Gelenke und innere Strukturen beeinflussen sich gegenseitig. Mit sanften Techniken folge ich den Spannungsketten bis zur Ursache.</p></div></li>
-        <li><button type="button" aria-expanded="false"><span class="ix-name">Thermische Behandlung</span><span class="ix-tag">Fango · Kälte</span></button><div class="ix-body"><p>Tiefenwärme aus der Fangopackung lockert die Muskulatur und bereitet sie auf die Behandlung vor. Kälte dämpft akute Reizungen und Schwellungen. Je nach Beschwerde das passende Mittel.</p></div></li>
-        <li><button type="button" aria-expanded="false"><span class="ix-name">Reizstrom</span><span class="ix-tag">Ergänzend</span></button><div class="ix-body"><p>Elektrotherapie lindert Schmerzen und aktiviert geschwächte Muskeln, meist ergänzend zur manuellen Behandlung oder zum Üben.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Thermische Behandlung</span><span class="ix-tag">Fango · Kälte</span></button><div class="ix-body"><p>Tiefenwärme aus der Fangopackung kann die Muskulatur lockern und bereitet sie auf die Behandlung vor. Kälte kann akute Reizungen und Schwellungen dämpfen. Je nach Beschwerde das passende Mittel.</p></div></li>
+        <li><button type="button" aria-expanded="false"><span class="ix-name">Reizstrom</span><span class="ix-tag">Ergänzend</span></button><div class="ix-body"><p>Elektrotherapie kann Schmerzen lindern und geschwächte Muskeln aktivieren, meist ergänzend zur manuellen Behandlung oder zum Üben.</p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">Lojer Manuthera</span><span class="ix-tag ix-hi"><b class="dot" aria-hidden="true"></b>Highlight</span></button><div class="ix-body"><p>Die Manuthera erlaubt dreidimensionale Mobilisation und Traktion der Wirbelsäule in Positionen, die auf einer normalen Liege nicht möglich sind.<a class="ix-link" href="#manuthera">Manuthera in Bewegung ansehen <span aria-hidden="true">↑</span></a></p></div></li>
       </ol>
       <div class="serv-stage" aria-hidden="true"><canvas id="glServ"></canvas><p class="serv-name" id="servName"></p></div>
@@ -448,6 +460,8 @@
         <div class="wrap door-top">
           <p class="kicker"><i>05</i> Tür</p>
           <h2 id="t-title">Die Tür steht<br><em>offen.</em></h2>
+          <!-- 24.11.2026 (Befund Weltklasse-Prüfung C2): direkter Weg ohne Tür – PC neben der Tür; Handy hat „Termin“ in der Kopfleiste, ohne Bühne stehen die Knöpfe auch dort -->
+          <p class="door-quick"><a class="btn btn-small" href="#tuer" data-termin aria-haspopup="dialog">Termin buchen</a><a class="btn btn-small btn-ghost" href="tel:+4971819931470">Anrufen</a><a class="btn btn-small btn-ghost" href="https://www.google.com/maps/search/?api=1&amp;query=Schlichtener%20Stra%C3%9Fe%2087%2C%2073614%20Schorndorf" target="_blank" rel="noopener">Route</a></p>
         </div>
         <button type="button" class="door-hit" id="doorHit" aria-label="Tür öffnen und eintreten"></button>
         <p class="door-cue" aria-hidden="true"><span class="only-touch">Tippen Sie auf die Tür</span><span class="only-fine">Klicken Sie auf die Tür</span></p>

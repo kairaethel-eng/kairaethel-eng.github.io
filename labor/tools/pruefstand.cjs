@@ -170,6 +170,8 @@ const STILL = () => (window.__psHosts || []).map((h) => { if (!h.isConnected || 
     await ctx.addInitScript(() => { let a = 20261118; Math.random = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; });
     const p = await ctx.newPage(); const errs = [];
     p.on('pageerror', (e) => errs.push(e.message));
+    // Seit 24.11.: Shader-Fehler zählen mit (sie werfen keinen Skriptfehler, three.js meldet sie nur in der Konsole)
+    p.on('console', (m) => { const t = m.text(); if (/Shader Error|program not valid|ERROR: \d+:\d+:/.test(t)) errs.push('Shader: ' + (t.split('\n').find((l) => /ERROR: \d+:\d+:/.test(l))?.trim() || t.slice(0, 80))); });
     // Uhr der Seite: nach install() läuft sie zunächst in Echtzeit weiter – erst pauseAt() hält sie wirklich an.
     // Danach bewegt sich die Seite nur noch, wenn runFor() sie weiterstellt (settle), die Messbilder A/B/C zeigen denselben Augenblick.
     await p.clock.install({ time: new Date('2026-11-18T10:00:00') });

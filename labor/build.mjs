@@ -235,6 +235,8 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   // Build-Stempel (13.11.): Kurz-Hash des Inhalts – gleicher Quelltext = gleicher Stempel; im Browser: document.querySelector('meta[name=hop-build]').content
   const stamp = cfg.live || name === 'test-4' ? `<meta name="hop-build" content="${createHash('sha256').update(head + body).digest('hex').slice(0, 10)}">\n` : '';
   const full = `<!doctype html>\n<html lang="de">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n${stamp}${head}\n</head>\n<body>\n${body}\n</body>\n</html>\n`;
+  // 24.11.2026: Platzhalter für Kais Daten (data-platzhalter, „[Bitte ergänzen]“) dürfen nie in die Wurzel
+  if (LIVE_ROOT && cfg.live && /data-platzhalter|\[Bitte ergänzen\]/.test(body)) throw new Error(`${cfg.out}: enthält noch Platzhalter – erst Kais Daten eintragen`);
   mkdirSync(dirname(join(root, cfg.out)), { recursive: true });
   writeFileSync(join(root, cfg.out), full.replace(/\r\n?/g, '\n'));
   if (cfg.live === 'index.html') {
