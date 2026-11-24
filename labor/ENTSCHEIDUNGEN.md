@@ -1,7 +1,8 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 23.11.2026 (Echte Figur Stufe 1 in Puls + live (Go Kai „1“), wartet auf Sichtprüfung · Entwurf `figur-echt.html` · Text ruhig: in Puls + live übernommen, wartet auf Kais Sichtprüfung · Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
-Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+Stand: 24.11.2026 · Arbeitsstand ist **Puls · Scan** (`test-4-puls-scan.html`, Vorschau `live/`). Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+Neueste Entscheidung oben. Überholte ganze Abschnitte (Figur plus, Tür-Entwurf A/C, Willkommenszeile, Porträt-Entwürfe, Zuhause, Hausbesuch, alte Offen-Listen) liegen in `archiv/ENTSCHEIDUNGEN-ueberholt.md`.
+**Achtung bei Abschnitten vor dem 22.11.:** Dort stehen gültige Merkregeln neben Überholtem. Überholt sind insbesondere: Tür C und Tür-Bühne „Hineingehen“ (ersetzt durch den Raum, 23.11.), „Figur plus“ und die gezeichnete Figur (ersetzt durch die echte Figur, 23.11.), „Grün nur im Logo“ (seit 22.11. auch Raumfarbe), „kein Rot an der Manuthera“ (seit 23.11. Verlauf Bernstein → Rot-Orange), Logo nach dem Original / groß am Start (Logo A bleibt), Partikel-Haus, Röntgenblick, Ego-Rundgang, Kapitel 05 „Licht“. Was `CLAUDE.md` sagt, hat Vorrang.
 
 ## Außenauftritt – Eingangsschild und Werbung zur Straße (Kai 22.11.2026)
 - **Entschieden (Kai):**
@@ -195,14 +196,6 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - Puls, `src/kopf-fuss` und `figur-plus.html` unverändert. Übernahme in Puls, auf andere Formen und der Text-Stil seitenweit: je eigenes Go.
 - Passt zu Kais Urteil vom 11.11. („bei längerem Benutzen zu verpixelt und verspielt“) und zum Leitbild „ruhige Qualität“.
 
-## Figur plus: Körperkonturen, Gehirn, Nervensystem (Auftrag Kai 16.11.2026) – Entwurfsseite `figur-plus.html`, **Einbau in Puls offen**
-- **Kai:** deutlich menschliche Konturen; an Station 01 (Kopf) ein Gehirn; die Linien nach unten als Nervensystem aus dem Gehirn; **alles im bekannten Partikel-Stil** (also keine gestochene SVG-Lichtlinie mehr für die Bahnen).
-- Umgesetzt als eigene Entwurfsseite (Kopie des Bausteins in `src/figur-plus`), Puls und `src/kopf-fuss` unverändert. Ablauf, Texte, Lösen und Weiter-Hinweis bleiben wie in Kapitel 01.
-- Gestaltung: Kontur als eigene Punktlinie, Körper innen durchsichtiger, sobald die Nerven wachsen; Gehirn warmweiß (hebt sich von Bernstein = Spannung ab), Nerven Bernstein; Impulse vom Gehirn nach außen ruhig (~6 s), nach Merkregel „ruhig vor schnell“.
-- **Runde 2 (Kai 16.11.: „genau die Richtung … Konturen noch besser und anatomischer“):** Figur nach echten Körpermaßen in anatomischer Grundstellung (Handflächen nach vorn, Finger, Zehen) + Oberflächen-Anatomie als feine Linien, die zurücktreten, sobald die Nerven wachsen.
-- Schematisch, keine Lehrtafel (Hinweis im Fuß der Seite). Figur neutral, ohne Gesicht.
-- Verworfen: Gehirn/Nerven als SVG-Linien über den Partikeln (Kai will Partikel) – bleibt nur als Rückfall ohne WebGL (gepunktet).
-
 ## Auftrag K übernommen (Go Kai 16.11.2026: „bitte so übernehmen auf Puls“) – umgesetzt, wartet auf Sichtprüfung
 - **Kapitel 01 in Puls = „Von Kopf bis Fuß“** (Baustein `src/kopf-fuss/kapitel.*`); „Spannung lösen“ mit Willkommenszeile, Spannungsanzeige und automatischem Weitergleiten ist ersetzt. Leiste „01 Ankommen“. Schluss: „Termin buchen“ + „Zur Wirbelsäule“.
 - **Weiter-Hinweis A + B** (Kais Wahl): Fortschrittsbogen am Ring + kriechende Linie + Strich rechts füllt sich (A), Pille „Weiter scrollen“ nach ~3 s Stillstand, gleitet zur nächsten Station (B). Verworfen: nur A, nur B + Knopf, C Einrasten (iPhone ruckelig).
@@ -215,13 +208,6 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **„Bewegung anhalten/reduzieren“:** keine Kamerafahrt (Figur bleibt ganz, nur die Linie wächst mit dem Scrollen), Texte ohne Blenden. **Ohne WebGL:** Körper als Punktraster-Umriss (SVG), Spannung als Leuchten, Linie/Texte/Lösen wie sonst.
 - **Technik [A]:** eigene schlanke WebGL-2-Bühne (`gl.js`, Shader aus Puls übernommen) statt three.js – Seite 171 KB, Skript 23 KB. Körper-Punktwolke als **Kopie** aus `shapes.js` (Import hätte three.js mitgezogen).
 
-## Tür: Knöpfe erst mit offener Partikel-Tür (Idee Kai 16.11.2026, Go für eine Entwurfsseite) – **Tendenz C, Einbau in Puls offen**
-- **Kai 16.11.: „C finde ich toll, aber bitte deutlich langsamere Animation, es soll entspannt auf der Seite sein. Und Ruhe ausstrahlen.“** → C beruhigt: Schritt 6,4 s statt 1,75 s, weiche Kurven, kein Schnellvorlauf, Knöpfe langsam nacheinander. Merkregel für neue Bewegungen auf der Seite: ruhig vor schnell.
-- Entwurfsseite `tuer.html` mit zwei Varianten, Puls unverändert: **A „Tür im Text“** (Tür an der Stelle der Knöpfe, Blatt aus Partikeln schwingt auf und zerfällt, Linien-Rahmen bleibt) und **C-kurz „Ein Schritt hindurch“** (Dachlinie wird Türrahmen, Kamera geht hindurch; hängt an der Zeit, keine Extra-Strecke).
-- Verworfen: B als eigene Variante (reine Linien-Tür; ihr Rahmen steckt in A), C mit eigener Scroll-Strecke (zu viel Weg vor dem Termin-Knopf).
-- Feste Regeln für beide: läuft einmal, Knöpfe spätestens ~1,8 s nach dem Öffnen sichtbar, wenn sie im Bild sind (die erste Regel „höchstens ~1,5 s bis zum Termin-Knopf“ ist mit Kais Wunsch nach Ruhe gelockert; „Termin“ in der Kopfleiste bleibt immer erreichbar), Seite bleibt dunkel (kein „Licht ja“), Knöpfe immer per Tastatur erreichbar, „anhalten/reduzieren“/ohne JS = sofort offen.
-- Vorschlag in der Entwurfsseite: nur drei Knöpfe, „E-Mail-Adresse kopieren“ bei der Adresse.
-
 ## Vier Punkte (Go Kai 15.11.2026: „Go für alle Empfehlungen … wenn entspannt automatisch weiter runter, nicht mit Button“) – umgesetzt, wartet auf Sichtprüfung
 - **Film-Knopf L4–L5:** voller Bernstein-Knopf + leiser Puls-Ring (A+C), auch am Handy mit „Film · 37 s“. Verworfen: B (Vorschaubild-Kachel).
 - **Haus PC:** größer durch mehr Höhe, Layout gleich (A). Verworfen: B (Haus über ganze Breite), C (Spalten neu verteilt).
@@ -229,10 +215,6 @@ Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 - **16.11. (Kai: „überall diese Geschwindigkeit“):** Richtwert für alle Partikel-Übergänge beim Scrollen = ~1 Bildschirmhöhe (Handy-Start: Figur löst sich über 0,05–1,0 auf).
 - **16.11. (Kai):** Übergang 1 → 2 deutlich langsamer (4 s Pause, 7 s Gleiten); Finger-Wischen einfacher (breiterer Pinsel, jede Richtung, Rest ≤ 8 = gelöst).
 - **Spannung 0:** Lichtwelle Kopf → Füße (A), dann gleitet die Seite **automatisch** zu Kap. 02 (Kais Wunsch statt Knopf); nicht, wenn der Besucher selbst scrollt oder „Bewegung anhalten/reduzieren“ aktiv ist. Verworfen: B („Spannung gelöst.“), C als Knopf/Partikelstrom.
-
-## Willkommenszeile im Start (Go Kai 15.11.2026: „C … gleich umsetzen, Antwortzeile auch“) – umgesetzt
-- **Gewählt: C** – über „Spannung lösen.“ steht klein in Bernstein-Kursiv „Kommen Sie erst einmal an.“ (Einladung statt Aufgabe, passt zu §2 „ankommen dürfen“). Verworfen: A „Bevor wir anfangen:“, B „Willkommen. Zuallererst:“, D Überschrift ersetzen.
-- **Antwortzeile:** Ist die Spannung auf 0, wechselt die Zeile zu „Gut. Jetzt können wir anfangen.“ (bleibt danach stehen). Überschrift, Unterzeile und Knöpfe unverändert.
 
 ## Reihenfolge der Kapitel (Go Kai 14.11.2026 nachts: „Überschrift 1, Empfehlung A“) – umgesetzt, wartet auf Sichtprüfung
 - **Gewählt: A** – 01 Spannung → 02 Bewegung → § Hausordnung → 03 Achse → 04 Dach (Rundgang → Alle Leistungen → Manuthera → Stoßwelle) → 05 Tür. Grund: erst der Mensch (willkommen), dann Kompetenz, das Konkrete direkt vor dem Termin; die Hausordnung stand vorher dort, wo die wenigsten ankommen. Verworfen: B (Kais erste Idee: Hausordnung vor Bewegung, Dach vor Achse, Leistungen vom Haus getrennt).
@@ -325,48 +307,14 @@ Befunde und Messwerte: `UEBERGABE.md` ▶ „Gesamtprüfung Puls 13.11.2026“. 
 | Spannung & Wisch-Hinweis (Kai, 4.11.: 2B + 3A) | Spannungsanzeige erreicht jetzt 0 (vorher blieb sie wegen 8-bit-Rundung der Zeichenfläche bei 1). Bei 0: Beschriftung wird „Entspannt.“ (grün, kursiv), Figur atmet ruhiger und tiefer, Partikel zittern weniger. Manuthera „Seitlich wischen“: verschwindet erst nach echtem seitlichem Wischen/Ziehen (vorher schon beim Antippen/Scrollen über die Liege → am iPhone nie sichtbar), erscheint nach 1,5 s statt 3 s. | umgesetzt (⚠ Kai: iPhone prüfen) | umgesetzt |
 | Vergleichsseiten (Kai, 4.11.) | test-1 Achse, test-2 Puls, test-3 Puls + Achse aus der Labor-Übersicht (`labor/index.html`) entfernt – Kai besucht sie nicht mehr. Danach auf Kais Go ganz gelöscht (Seiten, Quellen `src/test-1…3`, Build-Einträge); zurückholbar aus dem Git-Verlauf. | – | – |
 
-## Offen aus der Prüfung (1.11.2026)
-- Anrufbeantworter einrichten (Ansage passend zur Website); Weg für Nachrichten per E-Mail (Telekom-SprachBox oder UniFi Talk) ⚠ prüfen. Später WhatsApp.
-- Grundriss stimmt nicht mit der echten Praxis überein (Kai, 1.11.) → Raumaufteilung und Therapien je Raum erst mit dem echten Scan festlegen.
-- Porträt-Fotos: kommen später.
-- Für die echte Seite: Favicon, Link-Vorschau (Open Graph), Praxis-Angaben für Google (strukturierte Daten), Seitentitel/Beschreibung final.
-- Vor Livegang entfernen: Hinweis „Schematischer Grundriss …“, „· schematisch“, „Testseite 4“ in der Fußzeile.
-- Rechtlich (Fachperson): Fußzeile verlinkt die neuen Rechtsseiten (`recht-*.html`); dort und im Wurzel-Impressum stehen noch „[Bitte ergänzen]“ (Behörde laut Urkunde, Berufshaftpflicht) – **öffentlich sichtbar**, Angaben von Kai nötig. „Osteopathische Ansätze“ bleibt (Kai, 1.11.) – Fachperson prüft mit.
-- ~~Kapitelleiste PC: während der Hausordnung ist „05 Tür“ markiert~~ Erledigt 2.11. (§-Eintrag in der PC-Leiste).
-- Übergangsseite (Wurzel) bei 320 px: Knopftext „Termin per E-Mail anfragen“ bricht zweizeilig um – Kosmetik, Wurzel nur nach Go.
-- Live-Wix-Seite hopphysio.de (1.11. geprüft): Banner „Telefon funktioniert noch nicht“, Tippfehler „Atomsphäre“, 15/19 Bilder ohne Alt-Text, Telefon dort ohne „nur Anrufbeantworter“ → Aussagen widersprechen der neuen Seite.
-
 ## Testadresse (ab 31.10.2026, Kais Go)
 - https://kairaethel-eng.github.io/labor/ (Übersicht) · Arbeitsstand: https://kairaethel-eng.github.io/labor/test-4-puls-scan.html
 - Nur Ordner `labor/` darf ohne neues Go auf `main`; die Wurzel (`index.html`, Impressum, Datenschutz = Übergangsseite seit 1.11.) nur nach ausdrücklichem Go. Alle Seiten `noindex`.
-
-## Offen für die echte Website
-- Inhalte aus V10 übernehmen: nur Porträt Kai und Einblicke (Kai 2.11.: Körperkarte weg), im Haus unterbringen.
-- ~~„12 Therapieformen“ (V10) vs. 11 aufgeführte Leistungen klären.~~ Erledigt 2.11.: 12 Einträge (Thermische Behandlung + Reizstrom getrennt, Manuthera Highlight).
-- Grundriss aus V10 ist schematisch – echte Raumaufteilung? Später echter 3D-Scan der Praxis (Handy-App, Export als PLY) → als Punktwolke im gleichen Stil einsetzbar (`src/test-4/praxis.js` liefert dieselbe Datenform).
-- Zuordnung Therapien → Räume im Rundgang ist eine Annahme (B1: MT, CMD, Atlas-Axis, Osteopathie, Schmerz, Fango/Reizstrom, Stoßwelle · B2: Manuthera, MT · Training: KG, Sport, Schlingentisch) – Kai prüft.
-- Flüssigkeit auf echten Handys messen (Testumgebung ohne Grafikkarte).
-- Seiten tragen `noindex`; Veröffentlichung erst nach Freigabe. Keine externen Abrufe (Schriften und Bibliotheken eingebettet).
-- **Livegang-Vorbereitung (2.11.2026, nach Hosting-Entscheidung):** Build-Ziel `live` (siehe `LIVEGANG.md`): Labor-Reste entfernt, Titel/Beschreibung, Canonical, Favicon (SVG inline), `apple-touch-icon.png`, Open Graph mit `og.jpg` (aus der Seite mit deren Schriften gezeichnet), schema.org `Physiotherapy` mit Adresse/Telefon/Zeiten. Vorschau `labor/live/` (noindex) → Kai prüft. E-Mail läuft laut DNS (MX) über Google Workspace → im Datenschutz ergänzen.
 
 ## Rechtsseiten (Go 31.10.2026, Entwurf)
 - **1.11.2026 überarbeitet (Kais Auftrag):** Datenschutz neu für Puls · Scan geschrieben: GitHub Pages (GitHub ist nach dem EU-US Data Privacy Framework zertifiziert, laut GitHub-Datenschutzerklärung geprüft), keine Cookies/Analyse/fremden Inhalte, „Bewegung anhalten“ im lokalen Speicher nur nach Klick (§ 25 Abs. 2 Nr. 2 TDDDG), Kontakt per E-Mail und Anrufbeantworter (Art. 6/9 DSGVO, Hinweis keine Gesundheitsangaben), Google-Maps-Link, Rechte, Aufsicht LfDI BW mit **neuer Adresse Heilbronner Straße 35, 70191 Stuttgart (seit 22.12.2025)**. Newsletter und Wix-Statistik entfernt (bei Einführung ergänzen). Impressum: „ich“-Form, Anrufbeantworter, Berufsbezeichnung präzisiert, „Regierungspräsidium Baden-Württemberg“ (gibt es so nicht) ersetzt durch Platzhalter „Behörde laut Erlaubnisurkunde“, PhysTh-APrV ergänzt, Haftung für Links. Lange Wörter in Überschriften mit Trennstellen (Handy zoomte vorher heraus). Puls · Scan verlinkt jetzt diese Entwürfe.
 - Offen: Berufshaftpflicht, Behörde laut Urkunde, E-Mail-Anbieter und Anrufbeantworter-Dienst (Auftragsverarbeitung), Fachperson. LfDI-Adresse Heilbronner Straße 35 am 1.11. auf der LfDI-Seite bestätigt; Wurzel-Datenschutz hat sie.
 - `recht-impressum.html`, `recht-datenschutz.html` (Quellen `src/recht`): dunkler Puls-Stil ohne 3D, HOP-Kreise als gestochene Partikel dezent im Hintergrund (Canvas 2D, atmen; „Bewegung anhalten“ wie Startseite), § 1 … in Kursivschrift, Inhaltsverzeichnis (PC mitlaufend, Handy aufklappbar), Druck hell. Texte **wörtlich** von der Live-Seite; Labor-Hinweis nennt Offenes (Berufshaftpflicht, Hosting-Abschnitt, § 3/§ 5 nur bei Nutzung, Fachperson prüfen).
-
-## Porträt (31.10.2026, Entwürfe mit Beispiel-Büste)
-- `portrait.html` (Quellen `src/portrait`): 1 „Spannung lösen“ (Stich, Foto erscheint unter Maus/Finger, heilt langsam zu), 2 „Aus Punkten wird ein Mensch“ (Scroll: Wolke → Gesicht → Foto mit leichter Tiefe), 3 „Echter 3D-Scan“ (gestochene Punktwolke in Echtfarben, dreht). Platzhalter-Büste wird im Browser gerendert (keine echte Person). Kais Foto kommt am 1.11.; für 2 zusätzlich Tiefenbild (kostenlos erzeugbar), für 3 Scan per iPhone-App.
-
-## Design 2 „Zuhause“ – Haus als Startmenü (31.10.2026, Entwurf)
-- `zuhause.html` (Quellen `src/zuhause`): ein Bildschirm, kein Scrollen. Gestochenes Partikel-Haus mit Einrichtung (gleiche Daten wie Puls · Scan) ist die Navigation; 7 Orte als Schilder + Raum-Leiste: 00 Tür (Termin & Kontakt), 01 Empfang (Willkommen), 02 Wohnzimmer (Hausordnung), 03 Behandlung 1 (Leistungen), 04 Behandlung 2 (Manuthera, mit Liegen-Bühne), 05 Training (Bewegung), 06 Dach (Wirbelsäule, Abschnitte als Reiter).
-- **1.11.:** „Dach = Wirbelsäule“ ersetzt durch **Wirbelsäulen-Modell** auf Ständer in Behandlung 1 (Ort 04): Panel zeigt drehbare gestochene Wirbelsäule (gleiche Geometrie wie Kapitel 03), Abschnitt-Knöpfe C1–S1 lassen den Abschnitt am Modell leuchten. Reihenfolge: 00 Tür · 01 Empfang · 02 Wohnzimmer · 03 Behandlung 1 · 04 Wirbelsäule · 05 Behandlung 2 · 06 Training.
-- Klick → Kamera fliegt hinein, Dach hebt sich, Wände vor der Kamera lösen sich auf (Puppenhaus-Blick); Inhalt als Panel rechts (PC) bzw. Blatt von unten (Handy); ‹ › / Pfeiltasten / Esc; Räume per Link direkt erreichbar (#manuthera usw.); „Klassische Ansicht“ verlinkt Puls · Scan. Texte aus Puls · Scan übernommen.
-- Offen: Kai vergleicht mit Puls · Scan; Wirbelsäule dort nur als Karten (3D-Scan in der klassischen Ansicht); Porträt später als eigener Ort möglich.
-
-## Zweites Konzept: „Hausbesuch“ (31.10.2026, nur PC)
-- Auf Kais Wunsch frei entworfen, ohne V10-Vorlage: filmischer Rundgang durch ein warmes Haus (Haustür → Empfang mit Tee → Wohnzimmer → Behandlung → Training → Garten). Licht folgt der echten Tageszeit des Besuchers (umschaltbar: Morgen/Mittag/Abend/Nacht). Lichtpunkte im Raum öffnen die Therapien. Danach klassische Infoseiten (FAQ, Kontakt).
-- Datei: `hausbesuch.html` (Quellen `src/haus`). Eigene Schriften: Fraunces + Hanken Grotesk (OFL, eingebettet).
-- Offen: Kai vergleicht mit Puls · Scan; FAQ-Texte sind Beispieltexte und müssen geprüft werden.
 
 ## Manuthera als Highlight (31.10.2026, Entwürfe)
 - Kai möchte die Manuthera als kleines Highlight der Praxis hervorheben, im Partikel-Stil. Vergleichsseite `manuthera.html` (Quellen `src/manu`); Entwurf A ist seit 31.10. in Puls · Scan eingebaut (siehe unten).
