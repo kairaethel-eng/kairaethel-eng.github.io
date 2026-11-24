@@ -4,6 +4,9 @@ Stand: 24.11.2026 · Arbeitsstand ist **Puls · Scan** (`test-4-puls-scan.html`,
 Neueste Entscheidung oben. Überholte ganze Abschnitte (Figur plus, Tür-Entwurf A/C, Willkommenszeile, Porträt-Entwürfe, Zuhause, Hausbesuch, alte Offen-Listen) liegen in `archiv/ENTSCHEIDUNGEN-ueberholt.md`.
 **Achtung bei Abschnitten vor dem 22.11.:** Dort stehen gültige Merkregeln neben Überholtem. Überholt sind insbesondere: Tür C und Tür-Bühne „Hineingehen“ (ersetzt durch den Raum, 23.11.), „Figur plus“ und die gezeichnete Figur (ersetzt durch die echte Figur, 23.11.), „Grün nur im Logo“ (seit 22.11. auch Raumfarbe), „kein Rot an der Manuthera“ (seit 23.11. Verlauf Bernstein → Rot-Orange), Logo nach dem Original / groß am Start (Logo A bleibt), Partikel-Haus, Röntgenblick, Ego-Rundgang, Kapitel 05 „Licht“. Was `CLAUDE.md` sagt, hat Vorrang.
 
+## Runde 2 der Weltklasse-Prüfung (Go Kai 24.11.2026 nachts: „alles, was du für sinnvoll hältst“)
+- **Merkregeln:** Raumlicht nie stärker als rund 0,2 direkt hinter einer Hauptgrafik (sonst meldet der Prüfstand „verdeckt“ und die Punkte wirken verwaschen). Kleine graue Texte im Raumlicht über `--mute` (heller Wert unter `html:not(.fx-aus)`). Leistungs-Etiketten nennen Körperregion oder Thema, nie „hilft bei“. Textvorschläge von Claude, die Kai noch nicht bestätigt hat, tragen `data-platzhalter`.
+
 ## Wurzel offline, Weltklasse-Prüfung als Entwurf (Kai 24.11.2026 abends)
 - **Entschieden (Kai):** GitHub-Startseite offline, solange die echte Seite bei Wix läuft („Startseite weg, Vorschau bleibt“): Wurzel-Dateien entfernt, `robots.txt` sperrt alles, `/labor/` bleibt als Vorschau (noindex).
 - **Go (Kai):** „Alles, was du selbstständig machen kannst, als Entwurf umsetzen; erst technisch perfekt, meine Daten folgen.“ → Branch + PR, nicht direkt auf `main`.

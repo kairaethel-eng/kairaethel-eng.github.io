@@ -7,6 +7,7 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 ## Offen (hier pflegen – nicht in jedem Abschnitt neu „wartet auf …“ schreiben)
 
 **Kai am Zug**
+- Textvorschlag „Ihr erster Besuch“ (Kap. 05, drei Fragen) bestätigen oder korrigieren – ist als Platzhalter markiert. Neue Leistungs-Etiketten (Körperregion statt Eigenschaft) ansehen.
 - Daten für die Platzhalter (`data-platzhalter`): Porträt (Hochformat 4:5), drei Fakten in Kap. 02 (Jahr „Physiotherapeut seit“, Details Manuelle Therapie, Details CMD); Impressum Behörde + Berufshaftpflicht. Der Wurzel-Bau bricht ab, solange Platzhalter da sind.
 - Sichtprüfungen: alle in der **Sichtprüf-Liste** im Arbeitsblatt (Link oben). Stand 24.11.: mehr als fünf offen → vor neuem Bauen erst darauf hinweisen (`CLAUDE.md` „Doku kurz halten“).
 - Entscheiden und liefern: Abschnitt „Kai entscheidet oder liefert“ im Arbeitsblatt; alles zum Livegang (Porträt, Raumfotos, FAQ, Impressum, Anwalt, Anrufbeantworter, Zwei-Faktor) in `LIVEGANG.md`.
@@ -14,7 +15,8 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 
 **Claude wartet auf Go**
 - Entwurf „Weltklasse-Prüfung“ (Branch `claude/project-thread-6psvm8`, PR) wartet auf Kais Durchsicht und Go zum Veröffentlichen von `labor/` – Abschnitt ▶ 24.11. unten. Mit dem Nerven-Fix neu ansehen: „Rückenmark schimmert am iPhone durch den Knochen“ (Frage vom 14.11.).
-- Raumlicht: Der Prüfstand meldet seit „Kräftig“ auf iPhone und PC je 11 bekannte Befunde (Text auf unruhigem Grund bei Th1/Th7, Wartebereich, Stoßwelle, Hinweis vor 05, Kontakt; Stelle im Ring der Figur zu 36–53 % verdeckt). Lösung (Licht hinter Text und Figur dämpfen) nur nach Kais Urteil zum Raumlicht.
+- Runde 2 der Weltklasse-Prüfung (Branch/PR, Abschnitt ▶ 24.11. nachts) wartet auf Kais Durchsicht: gedämpftes Licht hinter der Figur, hellere Kleintexte, neue Leistungs-Etiketten, Block „Ihr erster Besuch“.
+- Offen aus der Liste vom 24.11.: Bedien-Grammatik (Entscheidung Kai), Aufräumen/WebGL-Kontexte freigeben (ohne Grafikchip nicht prüfbar – mit Kais Messanzeige `?takt=1`), Standbilder neu rendern, Unterseiten und Ladegewicht nach dem Livegang.
 - Echte Figur, Runde 2 (B3 Kamera je Station, B5 Raum mit Boden und Dunst, B6 Auftritt) – nur auf dem Entwurf `figur-echt.html`.
 - „Text ruhig“: weitere Stellen (Leitsatz Kap. 02, Raumkarten)? „Mehr“-Pille der Wirbelsäule auf den Leuchtpunkt umstellen? Variante B (Leuchtpunkte direkt an der Grafik) „ggf. später“.
 - Befunde des zweiten Prüfers (18.11.), noch ohne Entscheidung: 7 Leistungs-Marken sehen aus wie Knöpfe · 9 Haltestellen-Marken 24 px, Pause-Knopf 38×40 px · 12 Benennungen („02 Bewegung“, „Behandlung 2“ vor „Behandlung 1“, Ort fehlt am Start).
@@ -45,6 +47,14 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abschnitt vor dem 22.11. meinen, zeigen jetzt ins Archiv.
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
+
+## ▶ 24.11.2026 nachts – Runde 2 (Go Kai „alles, was du für sinnvoll hältst“) → Branch/PR
+- **Lesbarkeit im Raumlicht (die 11 Befunde):** Ursache der „verdeckten“ Figur war keine Verdeckung, sondern das Licht: die Lichtschicht hob mittelhelle Punkte um mehr als die Messschwelle an (Figur wirkte verwaschen). Geändert: `farbe.js` PAL.start Hauptlicht 0,30 → 0,21 (PC) / 0,20 (Handy); `--mute` im Raumlicht #A3B5BB (`html:not(.fx-aus)`); aktive Haltestellen-Marke am Handy heller auf dunklerem Grund; `.alles .facts dt` heller. Ergebnis: iPhone 11 → 1, iPhone SE 0, PC und Laptop siehe PR. Der eine Rest (iPhone „kontakt“) ist die Leuchtpille am unteren Bildrand über dem auslaufenden Text – Bildausschnitt, kein Lesefehler.
+- **Leistungs-Etiketten:** Körperregion/Thema statt Eigenschaft (Gelenke · Rücken, Nach OP · Reha, Sport · Verletzung, Anhaltender Schmerz, Kiefer, Kopfgelenke · Nacken, Wirbelsäule, Faszien, Muskeln · Nerven); „Neu“, „Fango · Kälte“, „Highlight“ bleiben. Bewusst keine „hilft bei“-Formulierung (HWG).
+- **„Ihr erster Besuch“:** drei Fragen unter „Alles auf einen Blick“ (`.besuch`, Bausteine `.sw-q`), `data-platzhalter="erster-besuch"` bis Kai bestätigt. Bewusst ohne Aussage zu Behandlung ohne Verordnung und zu Absagen (Kais Angaben nötig).
+- **Nicht gemacht (begründet):** Bedien-Grammatik – Geschmack und großer Umbau, erst Entscheidung Kai. Toter Code/WebGL-Kontexte freigeben – ohne Grafikchip blind, Nutzen für Besucher klein. Standbilder neu rendern – Werkzeug dafür nicht eindeutig.
+- **Geprüft:** Prüfstand ia, ie (neu), d, l (neu) voll; `sizes.cjs`; axe. Filme ia selbst angesehen. 2560 und Tablet weiter offen.
+- **Rückweg:** PR nicht mergen bzw. Merge-Commit reverten.
 
 ## ▶ 24.11.2026 abends – Weltklasse-Prüfung: Befund + Entwurf (Go Kai „alles, was du selbstständig machen kannst, als Entwurf“) und Wurzel offline
 - **Befund:** Claude Doc https://claude.ai/artifact/EatBCpdbSeroPytki2mmNf (A–F, priorisiert).

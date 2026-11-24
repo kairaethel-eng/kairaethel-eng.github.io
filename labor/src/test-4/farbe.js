@@ -10,8 +10,8 @@ const B = [63, 134, 181], BL = [90, 162, 214], G = [111, 160, 47], P = [48, 88, 
 // w = Grundton (Stufe „kraeftig“ = 1), d/m = Lichter am PC / am Handy: Farbe c, Lage x/y und Größe rx/ry in % des Fensters, Stärke a
 const PAL = {
   start: { w: [6, 14, 34],
-    d: [{ c: B, x: 23, y: 50, rx: 36, ry: 62, a: 0.30 }, { c: P, x: 88, y: 6, rx: 40, ry: 38, a: 0.16 }],
-    m: [{ c: B, x: 50, y: 48, rx: 85, ry: 46, a: 0.30 }, { c: P, x: 92, y: 0, rx: 60, ry: 30, a: 0.14 }] },
+    d: [{ c: B, x: 23, y: 50, rx: 36, ry: 62, a: 0.21 }, { c: P, x: 88, y: 6, rx: 40, ry: 38, a: 0.16 }],
+    m: [{ c: B, x: 50, y: 48, rx: 85, ry: 46, a: 0.20 }, { c: P, x: 92, y: 0, rx: 60, ry: 30, a: 0.14 }] },
   bewegung: { w: [8, 22, 12],
     d: [{ c: G, x: 82, y: 62, rx: 38, ry: 55, a: 0.20 }, { c: B, x: 8, y: 12, rx: 36, ry: 40, a: 0.10 }],
     m: [{ c: G, x: 62, y: 74, rx: 90, ry: 45, a: 0.20 }, { c: B, x: 0, y: 8, rx: 60, ry: 30, a: 0.10 }] },

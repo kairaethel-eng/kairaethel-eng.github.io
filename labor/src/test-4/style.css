@@ -1147,3 +1147,14 @@ html:not(.door-walk) .door-quick{display:flex}
 .ueber [data-platzhalter] span,.ueber-fakten [data-platzhalter] b{text-decoration:underline dashed rgba(224,154,53,.5);text-underline-offset:.25em}
 .ueber-bild[data-platzhalter] span{text-decoration:none}
 @media (max-width:560px){.ueber{grid-template-columns:minmax(0,7.5rem) minmax(0,1fr);gap:1rem 1.25rem;margin-top:2.5rem}.ueber-fakten b{font-size:1.0625rem}.ueber-fakten span{font-size:.875rem}}
+/* 24.11.2026 (Go Kai „alles Sinnvolle“, Befund E2): kleine graue Texte im Raumlicht heller – die Lichtschicht hellt den Grund auf */
+html:not(.fx-aus){--mute:#A3B5BB}
+/* 24.11.2026: „Ihr erster Besuch“ unter „Alles auf einen Blick“ (Bausteine der Stoßwellen-Fragen) */
+.besuch{margin-top:clamp(3rem,7vh,4.5rem);max-width:44rem}
+.besuch .alles-h + .sw-q{border-top:1px solid var(--line)}
+/* 24.11.2026 (Befund E2): aktive Haltestellen-Marke am Handy und Kontakt-Schlagworte im Bernsteinlicht kontrastreicher */
+@media (max-width:920px){.scan-stop.is-on{color:#FFD694;background:rgba(18,13,5,.95)}}
+.alles .facts dt{color:#D3DBDD}
+/* 24.11.2026: Richtungs-Zeile im Raum heller (niedrige Laptop-Fenster: sie steht mitten im Bernsteinlicht) */
+html.door-walk .rp-dir{color:#DDE3E4}
+html.door-walk .rp-dir i{color:#F6C36F}
