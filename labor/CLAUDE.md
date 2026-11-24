@@ -26,7 +26,7 @@ Kein Verlauf – nur was heute gilt. Was wann warum entstand: `UEBERGABE.md`, Ä
 - Schalter zum Vergleichen und Messen: `?takt=1` (Bilder je Sekunde auf Kais Gerät), `?farbe=heute|leise|mittel`, `?figur=heute` (Figur bis 23.11.).
 - Bekannt und offen: Nerven-Shader Kap. 03 kompiliert auf echter Grafik nicht (`uFade`/`uClip` doppelt, `main.js` `addNerves`) – Fix wartet auf Go. Kapitel 05: Tischflächen und Punkt-Schriften („GEÖFFNET“, HOP am Tresen) – Start-Prompt `labor/PROMPT-Feinschliff-Kapitel-05.md`. Der Prüfstand meldet seit dem Raumlicht je 11 bekannte Befunde (Text auf unruhigem Grund, Stelle im Ring verdeckt) – Frage an Kai steht in der Sichtprüf-Liste.
 - Es arbeiten zeitweise zwei Sitzungen an der Seite: vor dem Veröffentlichen immer `git fetch origin main` und zusammenführen. Besser: eine Website-Sitzung zur Zeit.
-- Startadresse (`/index.html`, `/impressum.html`, `/datenschutz.html`) ist eine Übergangsseite und wird **nie ohne ausdrückliches Go** geändert. Livegang ruht.
+- Startadresse: seit 24.11.2026 **offline** (Kai; Wurzel-Dateien entfernt, `robots.txt` sperrt alles, Vorschau `/labor/live/` bleibt). Wurzel wird **nie ohne ausdrückliches Go** wieder befüllt. Livegang ruht, die echte Seite läuft bis dahin bei Wix.
 - Entwurfsseiten und Vergleiche (Figur plus, Tür, Haus-Licht, Logo, Farbstudie, Fusion, Zuhause, Manuthera, Vorfall …): Liste und Technik in `TECHNIK.md`.
 
 ## Doku kurz halten (seit 24.11.2026, Go Kai)
