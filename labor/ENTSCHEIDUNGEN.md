@@ -3,6 +3,23 @@
 Stand: 23.11.2026 (Echte Figur Stufe 1 in Puls + live (Go Kai „1“), wartet auf Sichtprüfung · Entwurf `figur-echt.html` · Text ruhig: in Puls + live übernommen, wartet auf Kais Sichtprüfung · Screenshots 21.11.: vier Punkte umgesetzt, wartet auf Sichtprüfung · Stil auf alle Punkt-Grafiken + Übergänge über die Zeit: umgesetzt, wartet auf Sichtprüfung · Abstände/Überschriften/kürzere Figur umgesetzt, Kai schickt Screenshots · Feinschliff seitenweit: Kai „gefällt mir gut“ · Studie Feinschliff: Kai „sieht bis jetzt super aus“ · Auftrag K in Puls übernommen · Entwurf Tür, Tendenz C · Entwurf Figur plus wartet auf Sichtprüfung) · Arbeitsstand ist **Testseite 4 „Puls · Scan“** (`test-4-puls-scan.html`), Livegang-Vorschau `live/` = **„Stand jetzt“**.
 Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 
+## Außenauftritt – Eingangsschild und Werbung zur Straße (Kai 22.11.2026)
+- **Entschieden (Kai):**
+  - Eingang **A** (Hausschild 40 × 60 cm, HOP-Tinte, Logo-Kreise, Lichtkranz).
+  - Straße **Drei Lichter** (Logo-Kreise als Scheiben an der Fassade).
+  - Das Haus gehört Kai.
+  - Nicht gewählt: B, C, Figur aus Licht, Nasenschild, Projektor, Fenster-Folie. Sie bleiben auf der Seite als Archiv.
+- **Vorschlag Claude, offen:** Nachbesserung für Raumlicht.
+  - Lichtkranz je Scheibe in ihrer Logo-Farbe; Buchstaben abends weiß; Scheiben Ø 45 cm (unter 1 m²).
+  - Eingang in Bernstein 2200 K.
+  - Jahres-Zeitschaltuhr Okt.–März bis 20 Uhr.
+  - Seite: https://claude.ai/artifact/73G6RX49t7Xu4cnEqsr5rc
+- **Merkregeln, falls umgesetzt:**
+  - Weg kühl → warm wie die Website: Logo-Farben an der Fassade, Bernstein an der Tür.
+  - Kein Blinken, keine Bewegung.
+  - Kreise immer waagerecht (senkrecht + beleuchtet = Ampel).
+  - Auf Schildern keine Heilversprechen, kein „Zentrum“.
+
 ## Echte Figur in Puls (Go Kai „1“, 23.11.2026 abends)
 - **Entschieden:** Stufe 1 „anatomisch echt“ ist Kapitel 01 in Puls und `live/` (Haut, Skelett, Gehirn, Muskeln, Nervenwege; Licht wie bisher). Stufe 2 (Scan-Linie, Filmlicht, Lupe) bleibt nur auf der Entwurfsseite `figur-echt.html`.
 - **Merkregeln:** Spannung eines Muskels nur innerhalb des Rings seiner Station (gemessen und gelöst wird nur dort). Daten der Figur erst laden, wenn WebGL da ist; Form 0 der Hauptwolke erst füllen, wenn die Bühne steht (`kf.onReady`). Vergleich mit der alten Figur über `?figur=heute`.
