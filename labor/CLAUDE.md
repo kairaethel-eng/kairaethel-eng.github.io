@@ -7,6 +7,7 @@ stehen wörtlich in `labor/TECHNIK.md` – dort gezielt nachschlagen, nicht alle
 - Kai Raethel, Physiotherapeut, Praxis **HOP – Home of Physiotherapy**, Schorndorf. Skills `kai-arbeitsweise` + `hop-praxis` gelten (Deutsch, knapp; [B]/[A]/[O]-Kennzeichnung).
 - **Regel:** Erst erörtern, dann „Go“. Screenshots/Feedback von Kai = kein Auftrag → je Punkt Ursache, 2–3 Optionen, Empfehlung, Go abwarten. Ausdrückliches „Go“ = selbstständig umsetzen.
 - Kai prüft visuell auf **iPhone** (meist im Browser der Claude-App, Fenster rund 390×692) und PC (Chrome). Kai will keine Screenshots geschickt bekommen. Kosten: alles kostenlos halten.
+- **„prüfen und sichern“** (Kai, 24.11.2026): alle offenen Aufgaben des Chats ins Claude Doc „HOP – Arbeitsblatt offene Aufgaben“ eintragen (https://claude.ai/artifact/3gohGz57mTaSZwY8uAfViu, neuer Abschnitt oben unter „Einträge“), dazu `UEBERGABE.md` pflegen, committen, pushen.
 - Bei Bewegungsthemen hilft ein kurzer Bildschirmfilm von Kai mehr als ein Standbild – darum bitten.
 
 ## So lesen (statt alles zu laden)
