@@ -111,9 +111,9 @@ void main(){
   float pk = uPtr.w * exp(-dot(dp, dp) / (uPtr.z * uPtr.z));
   p.xy += dp * pk * .13 * (1. - uKino * .7);
   // Fassungen K, M (Kai 25.11. nachts: „dezent lebendig“): die Nerven wiegen sich ganz leise wie in einer ruhigen Strömung. Ein Feld über
-  // den Raum – was am selben Ort liegt, bewegt sich gleich (Äste bleiben an ihrer Bahn); am Rückenmark null, nach außen bis 0,9 Einheiten.
+  // den Raum – was am selben Ort liegt, bewegt sich gleich (Äste bleiben an ihrer Bahn); am Rückenmark null, nach außen bis 1,2 Einheiten.
   { float far = smoothstep(2., 46., length(vec2(aPos.x, (aPos.z + 9.) * .6)));
-    p += vec3(sin(uTime*.62 + aPos.y*.045 + aPos.z*.05), sin(uTime*.5 + aPos.x*.05) * .5, cos(uTime*.55 + aPos.y*.04 - aPos.x*.045)) * far * .9 * uPulse * uNs * isNerve * step(.001, uArea.w); }
+    p += vec3(sin(uTime*.62 + aPos.y*.045 + aPos.z*.05), sin(uTime*.5 + aPos.x*.05) * .5, cos(uTime*.55 + aPos.y*.04 - aPos.x*.045)) * far * 1.2 * uPulse * uNs * isNerve * step(.001, uArea.w); }
   float z = p.z;
   float cw = cos(uView.w), sw = sin(uView.w);
   p = vec3(cw*p.x + sw*z, p.y - z * uTilt, -sw*p.x + cw*z);
@@ -285,10 +285,13 @@ void main(){
     vec3 tint = mix(mix(cBone, cWarm, .3), lc, mix(.8, 1., on));
     vec3 ch = mix(mix(cDeep * 1.1, lc * .45, .55), tint, L1) + mix(cRim, lc, .6) * back * .4 + vec3(1., .97, .9) * sp2 * .5;
     ch = mix(ch, mix(lc, vec3(1., .97, .9), .45), on * .3 * cav);
-    { // Signal (nur im Blick „Nervensystem“ – im Gehirn-Blick bleibt alles ruhig): ein weiches Licht läuft das Rückenmark hinunter,
-      // im selben Takt wie auf den Nerven (dort tritt es an jeder Wurzel aus)
-      float phC = fract((uMarkY - aPos.y) * 1.03 / 170. - uTime * .16);
-      ch = mix(ch, vec3(1., .95, .84), pow(phC, 5.) * smoothstep(1., .96, phC) * uPulse * uNs * isSt * .55); }
+    { // Impulse (nur im Blick „Nervensystem“ – im Gehirn-Blick bleibt alles ruhig): Licht läuft das Rückenmark hinunter (warm) und leiser
+      // wieder hinauf (kühl), im selben Takt wie auf den Nerven – dort tritt es an jeder Wurzel aus und kommt dort wieder an
+      float wC = (uMarkY - aPos.y) * 1.03, kC = uPulse * uNs * isSt;
+      float pO = fract(wC / 150. - uTime * .3), sO = pow(pO, 10.) * smoothstep(1., .975, pO) * kC;
+      float pI = fract(-wC / 190. - uTime * .13 + .4), sI = pow(pI, 6.) * smoothstep(1., .96, pI) * kC * .45;
+      ch = mix(ch, vec3(1., .92, .72), min(1., sO)); ch = mix(ch, vec3(.72, .9, 1.), min(1., sI * 1.4));
+      ch *= 1. - .18 * kC + .9 * sO + .6 * sI; }
     col = mix(col, ch, hk);
     a = mix(a, min(1., a * (1. + ar * 2.2) + ar * .3), isBrain * (1. - hv));
     a = mix(a, min(1., (lit + sp2 * .3) * mix(1., .7, uAreaK * (1. - on) * (1. - isSt)) * (1. + on * .22) * (1. + .45 * klein)) * rev * uNerve, hk); // aktiver Lappen: über die Farbe heller, nicht über die Deckkraft (sonst geht die Form verloren)
@@ -297,13 +300,21 @@ void main(){
   d = mix(d, (.34 + .08*im) * (1. + ar * .3) * mix(1., .78, step(.001, uArea.w)), isBrain);
   d = mix(d, uSpH * .92 * (1. + ar * .1), isBrain * kK * smoothstep(.3, 1., hv)); // im Gehirn-Blick: dichte Punkte (0,92 des Abstands), die Fläche schließt sich zum Körper
   float ph = fract(aN.z/170. - uTime*.16);
-  float pulse = pow(ph, 9.) * uPulse;
-  // K, M im Blick „Nervensystem“: weiches Signal, läuft vom Rückenmark hinaus in jeden Ast (Kopf hell, Schweif läuft aus)
-  float sig = pow(ph, 5.) * smoothstep(1., .96, ph) * uPulse * uNs * kK;
-  col = mix(col, mix(cLine, cWarm, clamp(front2*.8 + pulse + sig*.9, 0., 1.)), isNerve);
+  float nsk = uPulse * uNs * kK * (1. - smoothstep(0., .15, fe)); // im Flug zum Leitsatz keine Impulse mehr (sonst funkelt der Staub)
+  float pulse = pow(ph, 9.) * uPulse * (1. - uNs * kK);
+  // K, M im Blick „Nervensystem“ (Kai 25.11. 23:07: „Nerven ab Rückenmark dezent lebendig, pulsierend zum Beispiel“): Impulse laufen vom
+  // Gehirn das Rückenmark hinunter und treten an jeder Wurzel in den Ast hinaus (warm, heller Kopf, weicher Schweif, die Perlen schwellen
+  // dabei kurz an) – an den Rippen läuft das als Welle von oben nach unten. Leiser und kühler kommen Empfindungen von außen zurück.
+  // Damit die Impulse zu sehen sind, tritt die Grundhelligkeit der Nerven etwas zurück (die Deckkraft ist dort schon am Anschlag).
+  float phO = fract(aN.z / 150. - uTime * .3), sigO = pow(phO, 10.) * smoothstep(1., .975, phO) * nsk;
+  float phI = fract(-aN.z / 190. - uTime * .13 + .4), sigI = pow(phI, 6.) * smoothstep(1., .96, phI) * nsk * .45;
+  vec3 cn = mix(cLine, cWarm, clamp(front2*.8 + pulse, 0., 1.));
+  cn = mix(cn, vec3(1., .92, .72), min(1., sigO)); cn = mix(cn, vec3(.72, .9, 1.), min(1., sigI * 1.4));
+  cn *= 1. - .22 * nsk + 1. * sigO + .7 * sigI;
+  col = mix(col, cn, isNerve);
   // mit feinem Gehirn: die Nerven erscheinen zusammen mit Gehirn und Rückenmark und bleiben im Gehirn-Blick stehen (laufen unter dem Stamm weiter)
-  a = mix(a, rev * (.6 + .2*aN.w) * (1. + pulse*.8*(1. - .7*hv) + front2*.5 + sig*.7) * uNerve * (1. + lens*.5) * mix(1. - .97 * uHirn, smoothstep(.05, .8, hv), kK) * (1. + .5 * uNs), isNerve);
-  d = mix(d, (.34 + .1*aN.w) * (1. + pulse*.45*(1. - hv) + front2*.3 + sig*.3) * mix(1., .8, uHirn * kK), isNerve); // im Gehirn-Blick feine Stränge
+  a = mix(a, rev * (.6 + .2*aN.w) * (1. + pulse*.8*(1. - .7*hv) + front2*.5 + (sigO + sigI)*.7) * uNerve * (1. + lens*.5) * mix(1. - .97 * uHirn, smoothstep(.05, .8, hv), kK) * (1. + .5 * uNs), isNerve);
+  d = mix(d, (.34 + .1*aN.w) * (1. + pulse*.45*(1. - hv) + front2*.3 + sigO*.45 + sigI*.3) * mix(1., .8, uHirn * kK), isNerve); // im Gehirn-Blick feine Stränge
   // K, M im Profil: eine Bahn, die genau auf den Betrachter zuläuft (Ischias-Wurzel quer durchs Becken), stünde als heller Balken da –
   // ihre Perlen liegen dann alle hintereinander. Je steiler die Bahn zur Bildebene steht, desto leiser.
   { vec3 tn = aNrm * isNerve; float tz = -sw*tn.x + cw*tn.z + tn.y * uTilt;

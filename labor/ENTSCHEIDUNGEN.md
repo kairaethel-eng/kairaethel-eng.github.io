@@ -4,6 +4,11 @@ Stand: 25.11.2026 · Arbeitsstand ist **Puls · Scan** (`test-4-puls-scan.html`,
 Neueste Entscheidung oben. Überholte ganze Abschnitte (Figur plus, Tür-Entwurf A/C, Willkommenszeile, Porträt-Entwürfe, Zuhause, Hausbesuch, alte Offen-Listen) liegen in `archiv/ENTSCHEIDUNGEN-ueberholt.md`.
 **Achtung bei Abschnitten vor dem 22.11.:** Dort stehen gültige Merkregeln neben Überholtem. Überholt sind insbesondere: Tür C und Tür-Bühne „Hineingehen“ (ersetzt durch den Raum, 23.11.), „Figur plus“ und die gezeichnete Figur (ersetzt durch die echte Figur, 23.11.), „Grün nur im Logo“ (seit 22.11. auch Raumfarbe), „kein Rot an der Manuthera“ (seit 23.11. Verlauf Bernstein → Rot-Orange), Logo nach dem Original / groß am Start (Logo A bleibt), Partikel-Haus, Röntgenblick, Ego-Rundgang, Kapitel 05 „Licht“. Was `CLAUDE.md` sagt, hat Vorrang.
 
+## 25.11.2026 spät nachts – Weg M, Runde 3: Impulse, feineres Gehirn (Kai)
+- Kai: Nerven ab Rückenmark „dezent lebendig … pulsierend zum Beispiel“. Umgesetzt als Impulse, die dem echten Weg folgen (Gehirn → Rückenmark → Wurzel → Ast, leiser zurück). Das Gehirn selbst bleibt ruhig (Kais Wunsch vom 25.11. abends gilt weiter).
+- **Merkregel:** Soll etwas aufleuchten, braucht es Spielraum. Steht eine Fläche schon an der vollen Deckkraft, ist ein Signal darauf unsichtbar – Grundhelligkeit zurücknehmen und das Signal über Farbe und Größe führen.
+- **Feiner heißt mehr Punkte, nicht mehr Megabyte:** Punkte entstehen im Browser aus dem Netz. Die Grenze setzt das Netz (Kantenlänge) und die Grafikleistung des Geräts, nicht die Ladegröße. Am Handy vorsichtig steigern und Kai messen lassen (`&takt=1`).
+
 ## 25.11.2026 nachts – Weg M, Runde 2: Profil-Fahrt, Leitsatz aus Partikeln (Kai)
 - Kai: Figur „seitlich wieder“ sehen; vom Gehirn am Rückenmark hinunter, dann bildet eine Animation den Leitsatz, daraus die Linien von Kapitel 02; Nerven nicht „kantig und unlebendig“.
 - **Punkte, die Schrift bilden, sind Übergang – gelesen wird echte Schrift.** Die Ziele der Punkte werden aus der echten Überschrift vermessen (gleiche Stelle, gleiche Zeilen, nach jeder Größenänderung neu); sobald der Satz steht, blendet die HTML-Überschrift darüber ein. So bleibt die Regel „Punkt-Schrift, die gelesen werden soll, wird echte Schrift“ gewahrt.

@@ -350,7 +350,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const t0 = performance.now();
     if (gl) try {
       if (d) { // echte Figur
-        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense, hirn: HIRN, shell: !!VAR.shell, hirnSp: big ? 0.3 : 0.38, areale: AREALE.map((a) => [a[4], a[5]]), ruhig: HIRN });
+        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense, hirn: HIRN, shell: !!VAR.shell, hirnSp: big ? (innerWidth >= 1700 ? 0.22 : 0.25) : 0.33, areale: AREALE.map((a) => [a[4], a[5]]), ruhig: HIRN });
         if (HIRN && d.parts.some((q) => q.kind === 'brain2')) document.querySelectorAll('[data-quelle-hirn]').forEach((e) => { e.hidden = false; }); // Namensnennung der Gehirn-Quelle (CC BY-SA 3.0) – nur, wenn sie gezeigt wird
         if (HIRN && pts.brain && pts.brain[0][0] < 1e8) {
           const B = pts.brain, c = B.map((r) => (r[0] + r[1]) / 2), h = B.map((r) => (r[1] - r[0]) / 2);
