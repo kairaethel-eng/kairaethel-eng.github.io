@@ -10,6 +10,8 @@
 //     B4 Röntgen-Lupe – unter Maus/Finger wird die Haut in einem weichen Kreis durchsichtig, darunter Knochen, Nerven, Muskeln.
 const VERT = `#version 300 es
 in vec3 aPos; in vec3 aNrm; in vec4 aRand; in float aSt; in float aHeat; in vec2 aC; in vec4 aN;
+in vec4 aTo;            // nur Nerven-Perlen der Fassungen K, M: Ziel im Leitsatz (x, y in Bildpunkten der Bühne), Verzögerung 0…1, Art (0 vergeht · 1 Schrift · 2 Hervorhebung)
+uniform float uTxt, uDot, uMarkY; uniform vec3 cT0, cT1; // uTxt: der Leitsatz entsteht (0…1, über die Zeit) · uDot: Punktgröße in der Schrift (Bildpunkte) · uMarkY: Anfang des Rückenmarks · cT0/cT1: Farben der Schrift
 uniform vec2 uRes, uAnchor;
 uniform vec4 uView;   // Blickpunkt x, y (Grundriss, Körpermitte = 0, y oben), Maßstab px/Einheit, Drehung (Wiegen)
 uniform float uTime, uBreath, uCalm, uIntro, uUnit, uSp, uSpB, uDpr, uZoom, uTip, uPulse, uNerve, uTilt, uScroll, uKino, uEnd;
@@ -74,7 +76,7 @@ void main(){
     } else {
       sizeQ = min(1000., aN.y * 3.4 * uUnit); vSoft = 1.; zN = .97;
       cQ = mix(cDeep, lobeCol(uLobe), .55 * uAreaK);
-      aQ = smoothstep(.9, 1., max(uHirn, uNs)) * uNerve * (.085 + .035 * uAreaK);
+      aQ = smoothstep(.9, 1., max(uHirn, uNs)) * uNerve * (.085 + .035 * uAreaK) * (1. - smoothstep(0., .5, uTxt));
     }
     gl_Position = aQ < .004 ? vec4(2., 2., 2., 1.) : vec4(sQ.x/uRes.x*2. - 1., 1. - sQ.y/uRes.y*2., zN, 1.);
     gl_PointSize = sizeQ; vSize = sizeQ; vCol = cQ; vA = aQ;
@@ -108,6 +110,10 @@ void main(){
     dp = mix(dp, vec2(c0*p.x + s0*p.z, p.y - (-s0*p.x + c0*p.z) * uTilt) - uPtr.xy, kK); }
   float pk = uPtr.w * exp(-dot(dp, dp) / (uPtr.z * uPtr.z));
   p.xy += dp * pk * .13 * (1. - uKino * .7);
+  // Fassungen K, M (Kai 25.11. nachts: „dezent lebendig“): die Nerven wiegen sich ganz leise wie in einer ruhigen Strömung. Ein Feld über
+  // den Raum – was am selben Ort liegt, bewegt sich gleich (Äste bleiben an ihrer Bahn); am Rückenmark null, nach außen bis 0,9 Einheiten.
+  { float far = smoothstep(2., 46., length(vec2(aPos.x, (aPos.z + 9.) * .6)));
+    p += vec3(sin(uTime*.62 + aPos.y*.045 + aPos.z*.05), sin(uTime*.5 + aPos.x*.05) * .5, cos(uTime*.55 + aPos.y*.04 - aPos.x*.045)) * far * .9 * uPulse * uNs * isNerve * step(.001, uArea.w); }
   float z = p.z;
   float cw = cos(uView.w), sw = sin(uView.w);
   p = vec3(cw*p.x + sw*z, p.y - z * uTilt, -sw*p.x + cw*z);
@@ -119,10 +125,22 @@ void main(){
   { float sc2 = 1. - smoothstep(.1, 1., hv); // Fassung K: das Gehirn sammelt sich bei der Ankunft aus feinem Staub
     p.xy += dir.xy * isBrain * step(.001, uArea.w) * sc2 * sc2 * (10. + aRand.w * 16.); }
   vec2 s = uAnchor + vec2(p.x - uView.x, -(p.y - uView.y)) * uView.z;
-  gl_Position = vec4(s.x/uRes.x*2. - 1., 1. - s.y/uRes.y*2., clamp(-p.z / 90., -.98, .98), 1.);
+  // Fassungen K, M (Kai 25.11. nachts: „dann mit einer tollen Animation den Leitspruch bildet“): die Nerven-Perlen lösen sich von oben nach
+  // unten aus dem Körper und schreiben den Leitsatz, in Lesereihenfolge gestaffelt (aTo.z). Sie fließen in drei Strömen wie Bänder
+  // (Vorgriff auf Kapitel 02): unterwegs feiner Staub, am Ziel ein Punkt der Schrift. fe = Weg dieser Perle 0…1.
+  float fe = 0., zf = clamp(-p.z / 90., -.98, .98);
+  if (isNerve * kK > .5 && uTxt > 0.) {
+    float e0 = clamp(uTxt * 2.2 - aTo.z * 1.2, 0., 1.);
+    fe = e0 * e0 * e0 * (e0 * (e0 * 6. - 15.) + 10.);
+    vec2 dl = aTo.xy - s; float len = length(dl), band = floor(aRand.x * 3.) - 1., env = sin(3.14159 * fe);
+    vec2 qn = vec2(-dl.y, dl.x) / max(len, 1.);
+    s = mix(s, aTo.xy, fe) + qn * env * len * (band * .075 + sin(fe * 8. + band * 2.1 - uTime * 1.1) * .022 + (aRand.y - .5) * .012);
+    zf = mix(zf, -.98, step(.001, fe));
+  }
+  gl_Position = vec4(s.x/uRes.x*2. - 1., 1. - s.y/uRes.y*2., zf, 1.);
 
   // Licht: Normale nach dem Wiegen; zum Betrachter = facing; Rückseiten verschwinden weich
-  vec3 n = aNrm;
+  vec3 n = aNrm * (1. - isNerve); // Nerven-Perlen tragen in aNrm die Richtung ihrer Bahn (K, M), keine Flächen-Normale
   float hasN = step(.01, dot(n, n));
   vec3 nv = vec3(cw*n.x + sw*n.z, n.y, -sw*n.x + cw*n.z);
   float facing = clamp(nv.z + n.y * uTilt, -1., 1.);
@@ -267,6 +285,10 @@ void main(){
     vec3 tint = mix(mix(cBone, cWarm, .3), lc, mix(.8, 1., on));
     vec3 ch = mix(mix(cDeep * 1.1, lc * .45, .55), tint, L1) + mix(cRim, lc, .6) * back * .4 + vec3(1., .97, .9) * sp2 * .5;
     ch = mix(ch, mix(lc, vec3(1., .97, .9), .45), on * .3 * cav);
+    { // Signal (nur im Blick „Nervensystem“ – im Gehirn-Blick bleibt alles ruhig): ein weiches Licht läuft das Rückenmark hinunter,
+      // im selben Takt wie auf den Nerven (dort tritt es an jeder Wurzel aus)
+      float phC = fract((uMarkY - aPos.y) * 1.03 / 170. - uTime * .16);
+      ch = mix(ch, vec3(1., .95, .84), pow(phC, 5.) * smoothstep(1., .96, phC) * uPulse * uNs * isSt * .55); }
     col = mix(col, ch, hk);
     a = mix(a, min(1., a * (1. + ar * 2.2) + ar * .3), isBrain * (1. - hv));
     a = mix(a, min(1., (lit + sp2 * .3) * mix(1., .7, uAreaK * (1. - on) * (1. - isSt)) * (1. + on * .22) * (1. + .45 * klein)) * rev * uNerve, hk); // aktiver Lappen: über die Farbe heller, nicht über die Deckkraft (sonst geht die Form verloren)
@@ -276,13 +298,19 @@ void main(){
   d = mix(d, uSpH * .92 * (1. + ar * .1), isBrain * kK * smoothstep(.3, 1., hv)); // im Gehirn-Blick: dichte Punkte (0,92 des Abstands), die Fläche schließt sich zum Körper
   float ph = fract(aN.z/170. - uTime*.16);
   float pulse = pow(ph, 9.) * uPulse;
-  col = mix(col, mix(cLine, cWarm, clamp(front2*.8 + pulse, 0., 1.)), isNerve);
+  // K, M im Blick „Nervensystem“: weiches Signal, läuft vom Rückenmark hinaus in jeden Ast (Kopf hell, Schweif läuft aus)
+  float sig = pow(ph, 5.) * smoothstep(1., .96, ph) * uPulse * uNs * kK;
+  col = mix(col, mix(cLine, cWarm, clamp(front2*.8 + pulse + sig*.9, 0., 1.)), isNerve);
   // mit feinem Gehirn: die Nerven erscheinen zusammen mit Gehirn und Rückenmark und bleiben im Gehirn-Blick stehen (laufen unter dem Stamm weiter)
-  a = mix(a, rev * (.6 + .2*aN.w) * (1. + pulse*.8*(1. - .7*hv) + front2*.5) * uNerve * (1. + lens*.5) * mix(1. - .97 * uHirn, smoothstep(.05, .8, hv), kK) * (1. + .5 * uNs), isNerve);
-  d = mix(d, (.34 + .1*aN.w) * (1. + pulse*.45*(1. - hv) + front2*.3) * mix(1., .8, uHirn * kK), isNerve); // im Gehirn-Blick feine Stränge
+  a = mix(a, rev * (.6 + .2*aN.w) * (1. + pulse*.8*(1. - .7*hv) + front2*.5 + sig*.7) * uNerve * (1. + lens*.5) * mix(1. - .97 * uHirn, smoothstep(.05, .8, hv), kK) * (1. + .5 * uNs), isNerve);
+  d = mix(d, (.34 + .1*aN.w) * (1. + pulse*.45*(1. - hv) + front2*.3 + sig*.3) * mix(1., .8, uHirn * kK), isNerve); // im Gehirn-Blick feine Stränge
+  // K, M im Profil: eine Bahn, die genau auf den Betrachter zuläuft (Ischias-Wurzel quer durchs Becken), stünde als heller Balken da –
+  // ihre Perlen liegen dann alle hintereinander. Je steiler die Bahn zur Bildebene steht, desto leiser.
+  { vec3 tn = aNrm * isNerve; float tz = -sw*tn.x + cw*tn.z + tn.y * uTilt;
+    a *= mix(1., mix(.22, 1., smoothstep(.15, .62, sqrt(max(0., 1. - tz*tz)))), step(.01, dot(tn, tn))); }
 
   // Schlussbild „Nervensystem“ (K, M): Haut und Muskeln werden zu Glas – es bleibt der Umriss als Lichtkante
-  a *= mix(1., .07 + .5 * edge, uNs * (isSkin + isShell));
+  a *= mix(1., (.07 + .5 * edge) * (1. - .45 * smoothstep(0., .6, uTxt)), uNs * (isSkin + isShell)); // die Nerven haben den Körper verlassen: der Umriss bleibt leise stehen
   // Zeiger: Stufe 1 wie heute (größer, warmweiß); in Stufe 2 übernimmt die Lupe – dort nur die inneren Schichten heller
   float pv = pk * (1. - hide) * mix(1., rev, isBrain + isNerve) * mix(1., isBone + isNerve + isBrain + isMus, uKino);
   col = mix(col, vec3(1., .95, .86), pv * .7);
@@ -291,13 +319,20 @@ void main(){
   // Rand der Lupe (e–g): feiner heller Ring auf der Haut, damit man am Handy sieht, wo sie steht (über dem Finger)
   { float lr = exp(-pow((length(dp) - uPtr.z * 1.25) / (uPtr.z * .09), 2.)) * uPtr.w * uLens * isSkin;
     col = mix(col, cWarm, lr * .8); a = max(a, lr * .8); }
+  // Perle im Flug zum Leitsatz: Farbe und Deckkraft (beim Ablösen leise – sonst blitzt es dort, wo viele Bahnen dicht liegen –, unterwegs
+  // höchstens 55 %, am Ziel Punkt der Schrift; überzählige vergehen)
+  { float on = step(.5, aTo.w), k0 = smoothstep(0., .18, fe), k1 = smoothstep(.72, 1., fe);
+    col = mix(col, mix(cT0, cT1, step(1.5, aTo.w)), smoothstep(.45, 1., fe) * on);
+    a = mix(a, mix(.22 + .33 * smoothstep(.1, .5, fe), on * .95, k1), k0); }
   a *= front;
-  float want = d * uUnit, size = max(1.6 * uDpr, want), thin = want / size;
+  float want = d * uUnit;
+  want = mix(want, mix(1.5, uDot, smoothstep(.75, 1., fe)) * uDpr, smoothstep(0., .2, fe));
+  float size = max(1.6 * uDpr, want), thin = want / size;
   gl_PointSize = size; vSize = size;
   vCol = col;
   vA = clamp(a, 0., 1.) * mix(thin * thin, 1., isBrain * kK) * li; // deckendes Gehirn: auch klein (Schlussbild) in voller Helligkeit – die Tiefe ordnet die Punkte
   // Fassung K: das Gehirn wird deckend gezeichnet (Tiefe), vOp = wie viel davon schon da ist (Auflösen über ein festes Punktmuster)
-  vOp = mix(1., front * rev * uNerve * smoothstep(.05, .8, hv) * li, isBrain * kK);
+  vOp = mix(1., front * rev * uNerve * smoothstep(.05, .8, hv) * li * (1. - smoothstep(0., .45, uTxt)), isBrain * kK); // … und lösen sich wieder auf, wenn der Leitsatz entsteht
 }`;
 const FRAG = `#version 300 es
 precision mediump float;
@@ -326,23 +361,40 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
   const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
   const prog = gl.createProgram();
   gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
+  gl.bindAttribLocation(prog, 0, 'aPos'); // Platz 0 ist immer belegt (aTo hat nur bei den Nerven-Perlen einen Puffer)
   gl.linkProgram(prog);
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
   gl.useProgram(prog);
   const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+  const bufs = [];
   const attr = (name, data, size) => {
     const loc = gl.getAttribLocation(prog, name); if (loc < 0) return;
     const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
     gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
+    bufs.push([loc, b, size]);
   };
   attr('aPos', pts.pos, 3); attr('aNrm', pts.nrm, 3); attr('aRand', pts.rnd, 4); attr('aSt', pts.st, 1); attr('aHeat', pts.heat, 1); attr('aC', pts.ctr, 2); attr('aN', pts.nfo, 4);
   const count = pts.count;
+  // Fassungen K, M: die Nerven-Perlen (pts.nerv, zusammenhängender Bereich) schreiben am Schluss den Leitsatz. Sie bekommen dafür ein Ziel
+  // je Perle (aTo) – ein zweiter Satz von Attributen auf denselben Puffern (mit Versatz) plus ein kleiner eigener Puffer; alle anderen
+  // Punkte lesen für aTo den festen Wert 0.
+  const NV = pts.hirn && pts.nerv && pts.nerv[1] > pts.nerv[0] ? pts.nerv : null, locTo = gl.getAttribLocation(prog, 'aTo');
+  let vaoN = null, toBuf = null;
+  if (locTo >= 0) gl.vertexAttrib4f(locTo, 0, 0, 0, 0);
+  if (NV && locTo >= 0) {
+    vaoN = gl.createVertexArray(); gl.bindVertexArray(vaoN);
+    for (const [loc, b, size] of bufs) { gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, NV[0] * size * 4); }
+    toBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, toBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array((NV[1] - NV[0]) * 4), gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(locTo); gl.vertexAttribPointer(locTo, 4, gl.FLOAT, false, 0, 0);
+    gl.bindVertexArray(vao);
+  }
   const U = {};
   const n = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
   for (let i = 0; i < n; i++) { const u = gl.getActiveUniform(prog, i); U[u.name.replace(/\[0\]$/, '')] = gl.getUniformLocation(prog, u.name); }
   gl.uniform3fv(U.cDeep, hex(deep || '#44788E')); gl.uniform3fv(U.cBone, hex('#E4E3D8')); gl.uniform3fv(U.cAmber, hex('#E89C30'));
   gl.uniform3fv(U.cCalm, hex('#86BEE6')); gl.uniform3fv(U.cLine, hex('#F0AE50')); gl.uniform3fv(U.cWarm, hex('#FFE6BA'));
   gl.uniform3fv(U.cRim, hex('#7FB4E0')); gl.uniform3fv(U.cKey, hex('#FFD9A0'));
+  gl.uniform3fv(U.cT0, hex('#E4E3D8')); gl.uniform3fv(U.cT1, hex('#E89C30')); gl.uniform1f(U.uDot, 2); gl.uniform1f(U.uMarkY, pts.mark && pts.mark.length ? pts.mark[0][1] : 166);
   const tex = gl.createTexture();
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -355,6 +407,9 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
   return {
     upload,
     setDeep(h) { gl.useProgram(prog); gl.uniform3fv(U.cDeep, hex(h || '#44788E')); },
+    // Ziele der Nerven-Perlen im Leitsatz: to = je Perle x, y (Bildpunkte der Bühne), Verzögerung, Art; dot = Punktgröße; c0/c1 = Farben [r, g, b]
+    nerven: NV ? NV[1] - NV[0] : 0,
+    setTargets(to, dot, c0, c1) { if (!toBuf) return; gl.bindBuffer(gl.ARRAY_BUFFER, toBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, to); gl.uniform1f(U.uDot, dot); if (c0) gl.uniform3fv(U.cT0, c0); if (c1) gl.uniform3fv(U.cT1, c1); },
     draw(u) {
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -368,7 +423,7 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
       gl.uniform1f(U.uTilt, u.tilt); gl.uniform1f(U.uScroll, u.scroll);
       gl.uniform1f(U.uKino, u.kino); gl.uniform1f(U.uEnd, u.end);
       gl.uniform1f(U.uQuiet, u.quiet || 0); gl.uniform1f(U.uLight, u.light || 0); gl.uniform1f(U.uGround, u.ground || 0); gl.uniform1f(U.uScanIn, u.scanIn || 0); gl.uniform1f(U.uInner, u.inner || 0); gl.uniform1f(U.uHalf, u.half || 0); gl.uniform1f(U.uLens, u.lens || 0); gl.uniform1f(U.uDense, u.dense || 0); gl.uniform1f(U.uGlass, u.glass || 0.9); gl.uniform1f(U.uAreaK, u.areaK || 0); gl.uniform1f(U.uHirn, u.hirn || 0); gl.uniform1f(U.uShell, u.shell || 0); gl.uniform1f(U.uNs, u.ns || 0); gl.uniform1f(U.uLobe, u.lobe == null ? -1 : u.lobe); gl.uniform1f(U.uAreaI, u.areaI == null ? -1 : u.areaI); gl.uniform1f(U.uSpH, (pts.hirn && pts.hirn.sp) || 0.42); { const B = pts.hirn ? [...pts.hirn.c, pts.hirn.r] : [0, 0, 0, 1]; gl.uniform4f(U.uBC, B[0], B[1], B[2], B[3]); } { const A = u.area || [0, 0, 0, 0]; gl.uniform4f(U.uArea, A[0], A[1], A[2], A[3]); }
-      gl.uniform3fv(U.uStC, u.stc);
+      gl.uniform3fv(U.uStC, u.stc); gl.uniform1f(U.uTxt, u.txt || 0);
       gl.uniform4f(U.uPtr, u.ptr[0], u.ptr[1], u.ptr[2], u.ptr[3]);
       const Hn = u.solid && pts.hirn;
       if (!Hn) { gl.uniform1f(U.uSolid, 0); gl.drawArrays(gl.POINTS, 0, count); return; }
@@ -378,7 +433,11 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
       gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.depthMask(true); gl.disable(gl.BLEND);
       gl.uniform1f(U.uSolid, 1); gl.drawArrays(gl.POINTS, Hn.b0, Hn.b1 - Hn.b0);
       gl.enable(gl.BLEND); gl.depthMask(false); gl.uniform1f(U.uSolid, 0);
-      gl.drawArrays(gl.POINTS, Hn.b1, count - Hn.b1);
+      if (vaoN) { // Nerven-Perlen mit ihrem Ziel (eigener Satz von Attributen), davor und danach der Rest
+        if (NV[0] > Hn.b1) gl.drawArrays(gl.POINTS, Hn.b1, NV[0] - Hn.b1);
+        gl.bindVertexArray(vaoN); gl.drawArrays(gl.POINTS, 0, NV[1] - NV[0]); gl.bindVertexArray(vao);
+        if (count > NV[1]) gl.drawArrays(gl.POINTS, NV[1], count - NV[1]);
+      } else gl.drawArrays(gl.POINTS, Hn.b1, count - Hn.b1);
       gl.depthMask(true); gl.disable(gl.DEPTH_TEST);
     },
   };

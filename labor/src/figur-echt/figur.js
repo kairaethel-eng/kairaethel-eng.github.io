@@ -102,7 +102,49 @@ function nerveList(list) {
   });
   return out;
 }
+// Fassungen K, M (Kai 25.11.2026 nachts: „die peripheren Nerven sind mir zu kantig und unlebendig“): die Bahnen sind an echten Landmarken
+// gerechnet (Unterrand der Rippen, Fingerknochen …) und tragen deren Zacken; eine läuft sogar ein Stück zurück. Für die Nahansicht:
+// Umwege entfernen, gleichmäßig neu abtasten (1 Einheit), dann mitteln (1-2-1, Anfang und Ende bleiben stehen; je länger die Bahn,
+// desto weiter – höchstens rund 4 Einheiten). Äste setzen danach wieder genau auf ihrer Stammbahn an. Rückenmark und Endfaden bleiben
+// (sie geben den Wirbelkanal wieder). Die Standardseite nutzt die Bahnen unverändert.
+function glatt(list) {
+  const out = list.map((n) => ({ ...n }));
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+  out.forEach((n, i) => {
+    if (i < 2 || n.pts.length < 4) return;
+    let Q = n.pts.map((q) => q.slice());
+    if (n.parent >= 0) { // Ansatz: nächster Punkt auf der (schon geglätteten) Stammbahn
+      const P = out[n.parent].pts; let best = null, bd = 1e9;
+      for (let k = 1; k < P.length; k++) { const ab = sub(P[k], P[k - 1]), t = Math.min(1, Math.max(0, dot(sub(Q[0], P[k - 1]), ab) / Math.max(1e-9, dot(ab, ab)))), c = [0, 1, 2].map((j) => P[k - 1][j] + ab[j] * t), d = dist(c, Q[0]); if (d < bd) { bd = d; best = c; } }
+      if (best && bd < 2) Q[0] = best; // weiter entfernt beginnt die Bahn frei (Lendenwurzeln unter dem Ende des Rückenmarks)
+    }
+    // Ischias: in den Daten hängt er am Ende des Endfadens und läuft von dort auf einer Höhe nach vorn und zur Seite (23 Einheiten) – im
+    // Profil stand das als heller Balken quer im Becken. Seine Wurzeln (L4–S3) sammeln sich in Wirklichkeit schräg abwärts zur Hüfte:
+    // der Ansatz rückt am Endfaden 20 Einheiten höher, der waagrechte Anlauf entfällt.
+    if (/^Ischias/.test(n.name)) { let k = 1; while (k < Q.length - 2 && Math.abs(Q[k][1] - Q[0][1]) < 1.5) k++;
+      const P = out[1].pts, y0 = Q[0][1] + 20; let a = P[0]; for (const q of P) if (Math.abs(q[1] - y0) < Math.abs(a[1] - y0)) a = q;
+      if (k > 3) Q = [a.slice(), ...Q.slice(k)]; }
+    // Zwischenrippennerven: die Bahn läuft von der Wirbelsäule um den Brustkorb nach vorn. An den kurzen unteren Rippen kehrt sie in den
+    // Daten um und läuft zurück zur Wirbelsäule – sie endet deshalb dort, wo sie am weitesten vorn ist (Winkel um die Körperachse).
+    if (/^Zwischenrippennerv/.test(n.name)) { let top = -9, at = 0; Q.forEach((q, k) => { const w = Math.atan2(q[2], Math.abs(q[0])); if (w > top) { top = w; at = k; } }); if (at > 2) Q = Q.slice(0, at + 1); }
+    // Haarnadel: kommt die Bahn nach einem langen Umweg wieder dicht an sich selbst vorbei (näher als 9 Einheiten, Umweg mehr als das
+    // 2,5-Fache und über 20 Einheiten) und läuft danach noch weiter, entfällt der Umweg (Oberschenkelnerv an der Leiste)
+    { const La = [0]; for (let k = 1; k < Q.length; k++) La.push(La[k - 1] + dist(Q[k], Q[k - 1]));
+      let bi = -1, bj = -1, bw = 0;
+      for (let a = 0; a < Q.length; a++) for (let b = a + 2; b < Q.length; b++) { const d = dist(Q[a], Q[b]), w = La[b] - La[a]; if (d < 9 && w > 20 && w > 2.5 * d && w > bw && La[La.length - 1] - La[b] > 10) { bw = w; bi = a; bj = b; } }
+      if (bi >= 0) Q = [...Q.slice(0, bi + 1), ...Q.slice(bj)]; }
+    const L = [0]; for (let k = 1; k < Q.length; k++) L.push(L[k - 1] + dist(Q[k], Q[k - 1]));
+    const total = L[L.length - 1], m = Math.max(6, Math.round(total)), ds = total / m;
+    let R = [], j = 1;
+    for (let k = 0; k <= m; k++) { const s = total * k / m; while (j < L.length - 1 && L[j] < s) j++; const f = (s - L[j - 1]) / Math.max(1e-9, L[j] - L[j - 1]), A = Q[j - 1], B = Q[j]; R.push([0, 1, 2].map((c) => A[c] + (B[c] - A[c]) * f)); }
+    const sig = Math.min(4.2, Math.max(0.8, total * 0.07)), pass = Math.max(1, Math.round(2 * sig * sig / (ds * ds)));
+    for (let p = 0; p < pass; p++) { const T = R.map((q) => q.slice()); for (let k = 1; k < m; k++) for (let c = 0; c < 3; c++) R[k][c] = (T[k - 1][c] + 2 * T[k][c] + T[k + 1][c]) / 4; }
+    n.pts = R;
+  });
+  return out;
+}
 // Bahn des Leuchtpunkts (SVG) im Grundriss: Mitte (Scheitel → Teilung), dann je Bein die Hauptbahn – y steigt überall
+// (K, M übergeben die ungeglätteten Bahnen: geglättet setzt der Ischias höher am Endfaden an und begänne nicht mehr an der Teilung)
 export function linesOf(nerves, split) {
   const legs = nerves.filter((n) => n.main && n.pts[0][0] === 0 && Math.abs(n.by[0] - split) < 0.6);
   return [[[100, CROWN], [100, split]], ...legs.slice(0, 2).map((n) => n.pts.map((p) => [p[0] + BODY_W / 2, BODY_H / 2 - p[1]]))];
@@ -172,6 +214,13 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
     const cv = covered(x, y, z, nx, ny, nz);
     put(x, y, z, nx, ny, nz, 0, head, coarse ? 1 : 0, (fein(x, by) || (shell && !cv) ? 2 : 0) + cv, skinHeat(x, y));
   });
+  // Fassungen K, M (25.11.2026 nachts, Kai: „die Figur hätte ich gerne seitlich wieder gesehen“): die Fahrt am Rückenmark zeigt die Figur
+  // im Profil – dafür braucht der Umriss auch den Rücken (sonst bliebe sie von der Seite hinten offen). Gleiches Raster wie vorn (ein
+  // gröberes stand im Profil als gestrichelte Linie da); von vorn sind diese Punkte nie zu sehen (Rückseiten fallen im Shader weg), in
+  // Form 0 der Hauptwolke bleiben sie verborgen (Kennung „grob“ 0).
+  // Am Handy ist das Raster vorn weiter (bis 2,6) – am Rücken stünde es im Profil als Perlenkette da: dort enger (höchstens 1,5) und mit
+  // der Kennung des feinen Rasters (kleinere Punkte).
+  if (hirn) rows(skin, Math.min(sp, 1.5), (x, y, z, nx, ny, nz) => { if (nz >= -0.42) return; put(x, y, z, nx, ny, nz, 0, 0, 0, sp > 1.5 ? 1 : 0, null); });
   // Hände und Füße feiner (Fassung J, 25.11.2026, Kai: „Füße, Hände … detaillierter“): ein zweites, engeres Raster nur dort (Kennung 1);
   // die Punkte des normalen Rasters in diesen Bereichen tragen Kennung 2 und treten zurück, sobald das feine gezeigt wird (uDense)
   if (detail) rows(skin, sp * 0.56, (x, y, z, nx, ny, nz) => {
@@ -326,8 +375,8 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
     }
   }
   // A5 Nerven: Perlen entlang der echten Wege; dicke Bahnen als mehrere Stränge nebeneinander (in der Bildebene versetzt)
-  const nerves = nerveList(data.head.nerves);
-  const NS = 0.62, GAP = 0.52;
+  const nerves = nerveList(hirn ? glatt(data.head.nerves) : data.head.nerves);
+  const NS = 0.62, GAP = 0.52, n0 = St.length;
   for (const N of nerves) {
     if (VS && N === nerves[0]) continue; // Rückenmark steht als Körper (Schlauch) da
     const K = Math.max(1, Math.round(2 * N.r / GAP));
@@ -345,10 +394,14 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
         if (K > 1 && Math.abs(o) > rr - 0.1) continue;
         const by = BODY_H / 2 - y;
         const [vx, vz] = versatz(y);
-        put(x - ty / tl * o + vx, y + tx / tl * o, z + vz, 0, 0, 0, 3, N.main ? by : N.ry0 + s * N.rate, N.d0 + s, N.w);
+        // K, M: Äste laufen zum Ende hin feiner aus (wie ein Zweig) – die Hauptbahnen behalten ihre Stärke
+        // K, M: die Richtung der Bahn fährt im Normalen-Feld mit (der Shader dimmt Bahnen, die auf den Betrachter zulaufen)
+        const tz = B[2] - A[2], t3 = hirn && !N.main ? Math.hypot(tx, ty, tz) || 1 : 0;
+        put(x - ty / tl * o + vx, y + tx / tl * o, z + vz, t3 ? tx / t3 : 0, t3 ? ty / t3 : 0, t3 ? tz / t3 : 0, 3, N.main ? by : N.ry0 + s * N.rate, N.d0 + s, hirn && !N.main ? N.w * (1 - 0.4 * s / N.total) : N.w);
       }
     }
   }
+  const n1 = St.length;
   // Raum: wenige große, unscharfe Punkte vor und hinter der Figur
   const rd = rng(424242);
   for (let k = 0; k < dust; k++) { Pp.push(rd(), rd(), 0); Nn.push(0, 0, 1); Nf.push(4, 0.25 + rd() * 0.75, rd(), 0.35 + rd() * 0.65); St.push(-1); Ht.push(0); Ct.push(0, 0); }
@@ -363,5 +416,5 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   const count = St.length, rnd = new Float32Array(count * 4), rr = rng(77);
   for (let k = 0; k < rnd.length; k++) rnd[k] = rr();
   const split = data.head.split;
-  return { pos: new Float32Array(Pp), nrm: new Float32Array(Nn), st: new Float32Array(St), heat: new Float32Array(Ht), ctr: new Float32Array(Ct), rnd, nfo: new Float32Array(Nf), count, nBody, spB, lines: linesOf(nerves, split), split, brain: BB, lobes, hirn: hirnInfo };
+  return { pos: new Float32Array(Pp), nrm: new Float32Array(Nn), st: new Float32Array(St), heat: new Float32Array(Ht), ctr: new Float32Array(Ct), rnd, nfo: new Float32Array(Nf), count, nBody, spB, lines: linesOf(hirn ? nerveList(data.head.nerves) : nerves, split), split, brain: BB, lobes, hirn: hirnInfo, nerv: [n0, n1], mark: nerves.slice(0, 2).flatMap((n) => n.pts.map((q) => { const v = versatz(q[1]); return [q[0] + v[0], q[1], q[2] + v[1]]; })) }; // nerv: Bereich der Nerven-Perlen (sie schreiben in K, M den Leitsatz) · mark: Mittellinie Rückenmark + Endfaden (Fahrt am Rückenmark)
 }

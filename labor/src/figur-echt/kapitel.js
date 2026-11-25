@@ -76,9 +76,14 @@ const KEYS_HIRN = [
   [1.16, TIP_H, 1], [1.50, TIP_H, 'h1'],
   [1.86, TIP_H, 2], [2.20, TIP_H, 'h2'],
   [2.56, TIP_H, 3], [2.90, TIP_H, 'h3'],
-  [3.44, 290, 'E'], [3.64, SOLE, 'E'], // der Blick steht – die Nerven wachsen noch bis in die Füße
+  // Fahrt am Rückenmark (25.11.2026 nachts, Kai: „von der Gehirn-Ansicht das Nervensystem/Rückenmark runter scrollen“, „die Figur seitlich“):
+  // der Blick schwenkt ins Profil und gleitet am Rückenmark hinunter (R1 Hals und Brust, R2 Lende); die Nerven wachsen mit der Lichtspitze
+  // aus dem Rückenmark. Dann die ganze Figur von der Seite ('E') – dort entsteht über die Zeit der Leitsatz (S.txt, siehe update).
+  [3.34, 176, 'R1'], [3.76, 276, 'R2'],
+  [4.18, SOLE, 'E'], [4.5, SOLE, 'E'],
 ];
-const U_LEN_HIRN = 4.05; // CSS --len setzt initKopfFuss selbst (U_LEN + 1)
+const U_LEN_HIRN = 4.95; // CSS --len setzt initKopfFuss selbst (U_LEN + 1)
+const SATZ_SEK = 3.9, SATZ_FLUG = 0.82, SATZ_AB = 0.26; // Leitsatz: Dauer des Ablaufs · Anteil, in dem die Punkte fliegen und schreiben (danach blendet die echte Schrift ein) · Beginn so viele Bildschirmhöhen vor der Ankunft im Schlussbild
 let ON_VOR = 0.3; // so früh vor der Ankunft gilt die Station als aktiv (ins Gehirn: 0,22 – die Fahrten sind kürzer)
 const stOn = (i, u) => u > ARR[i] - ON_VOR && u < LEAVE[i] + 0.12;
 // Text der Station (18.11., Go Kai „3“): erst, wenn die Fahrt fast angekommen ist – vorher stand er über der Figur, während sie noch fuhr
@@ -113,6 +118,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // m (Kai 25.11. abends: „die Hauptfigur darf gerne L sein … danach sollte es in das nun gebaute Gehirn K übergehen“): Muskelfigur außen,
   // Fahrt ins Gehirn wie K; am Schluss fährt der Blick zurück und zeigt das ganze Nervensystem (Übergang zu Kapitel 02)
   const HIRN = START === 'k' || START === 'm';
+  const YAW_E = 0.9; // Schlussbild von K, M: die ganze Figur von der Seite (halbes Profil)
   if (HIRN) { KEYS = KEYS_HIRN; U_LEN = U_LEN_HIRN; ARR = STATIONS.map((_, i) => KEYS[1 + 2 * i][0]); LEAVE = STATIONS.map((_, i) => KEYS[2 + 2 * i][0]); U_END = KEYS[KEYS.length - 1][0]; ON_VOR = 0.22; root.style.setProperty('--len', (U_LEN + 1).toFixed(2)); }
   const AREALE = [ // Name, Blickrichtung (Drehung um die Hochachse), Mitte im Gehirn (−1…1: rechts, oben, vorn), Radius (Anteil der Breite)
     ['Hören · Schläfenlappen', -1.15, [0.8, -0.32, 0.22], 0.34, 2, 1], ['Denken · Stirnlappen', -0.3, [0.3, 0.3, 0.8], 0.38, 0, 1], // dazu: Hirnlappen (Kennung in figur.js) und Seite
@@ -207,7 +213,19 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       HB.ar.forEach((A, i) => { const o = V[i], nx = HB.ar[i + 1] ? HB.ar[i + 1].yaw : A.yaw + 1.4;
         V[i] = blick(A, A.yaw, sB, o);
         V['h' + i] = blick(A, A.yaw + (nx - A.yaw) * 0.22, sB * 1.05, o); }); // Ende des Halts: schon ein Stück weitergedreht, etwas näher
-      V.A.yaw = VAR.turn; V.S.yaw = 0; V.E.yaw = 0;
+      // Am PC sind V.A, V.S und V.E dasselbe Objekt – eigene Kopien, sonst überschreibt die letzte Drehung die erste (so stand die Figur
+      // von M am PC beim Start von vorn statt leicht gedreht wie in L; Kai 25.11. nachts: „die Figur hätte ich gerne seitlich wieder gesehen“)
+      V.A = { ...V.A, yaw: VAR.turn }; V.S = { ...V.S, yaw: 0 }; V.E = { ...V.E, yaw: YAW_E };
+      // Fahrt am Rückenmark: Blick von der Seite (yaw), Mitte auf dem Rückenmark in der Grundriss-Höhe by, um vor Einheiten zur Brust hin
+      const mk = pts.mark || [];
+      if (mk.length > 1) {
+        const markAt = (y) => { let k = 1; while (k < mk.length - 1 && mk[k][1] > y) k++; const A = mk[k - 1], B = mk[k], f = clamp((A[1] - y) / Math.max(1e-9, A[1] - B[1])); return [A[0] + (B[0] - A[0]) * f, A[2] + (B[2] - A[2]) * f]; };
+        const seite = (by, yaw, s, vor) => { const y = BODY_H / 2 - by, q = markAt(y); return { fx: Math.cos(yaw) * q[0] + Math.sin(yaw) * (q[1] + vor), fy: y - q[1] * TILT, s, ax: V[3].ax, ay: desk ? H * 0.52 : H * 0.5, yaw }; };
+        const sR = desk ? Math.min(H * 0.84 / 132, W * 0.38 / 64) : Math.min(H * 0.76 / 132, W * 0.94 / 66);
+        V.R1 = seite(114, 1.5, sR, 9); V.R2 = seite(212, 1.36, sR * 0.6, 6);
+      } else { V.R1 = V.E; V.R2 = V.E; }
+    } else if (HIRN) { // ohne feine Daten (kein Grafikchip, Laden misslungen): die Halte der Strecke brauchen trotzdem einen Blick – sonst bricht die Fahrt ab
+      STATIONS.forEach((_, i) => { V['h' + i] = V[i]; }); V.R1 = V.E; V.R2 = V.E;
     }
     dpr = Math.min(devicePixelRatio || 1, 2);
     if (gl) {
@@ -222,6 +240,55 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     }
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     dirty = true; lastTipKey = ''; lastOn = '';
+    satzMessen();
+  }
+  // ---------- Leitsatz aus Punkten (K, M – 25.11.2026 nachts, Kai: „dann mit einer tollen Animation den Leitspruch bildet“) ----------
+  // Die Nerven-Perlen schreiben die Überschrift des Schlussbilds. Gemessen wird die echte Schrift: jedes Zeichen steht dort, wo der Browser
+  // es setzt (Range), und wird in derselben Schrift auf eine Zeichenfläche gemalt; ein geordnetes Raster (gleicher Abstand, jede zweite
+  // Zeile versetzt) liest daraus die Punkte. Am Ende legt sich die echte Überschrift (HTML) deckungsgleich darüber – gelesen wird Schrift,
+  // keine Punkte. Die Hauptbühne nimmt dieselben Punkte als Form 0 (satz()) und löst sie in die Linien von Kapitel 02.
+  const SATZ = { n: 0, pts: null, dot: 2, E: null, key: '' }, satzFns = [], endH2 = $('h2', endEl);
+  if (HIRN && endH2) { endH2.style.transition = 'none'; endH2.style.transform = 'none'; } // die Überschrift blendet hier über den Ablauf ein (update), ohne Versatz
+  function satzMessen() {
+    if (!HIRN || !HB || !st || !st.nerven || !endH2 || !pts.nerv || !V.E) return;
+    const sr = stage.getBoundingClientRect(), hr = endH2.getBoundingClientRect();
+    if (!hr.width || !hr.height) return;
+    const key = [W, H, hr.left - sr.left, hr.top - sr.top, hr.width, hr.height, V.E.s, V.E.ax, V.E.ay, document.fonts ? document.fonts.status : ''].map((x) => (typeof x === 'number' ? x.toFixed(2) : x)).join('|');
+    if (key === SATZ.key) return;
+    const K = 2, pad = 4, cv = document.createElement('canvas'); cv.width = Math.ceil((hr.width + pad * 2) * K); cv.height = Math.ceil((hr.height + pad * 2) * K);
+    const cx = cv.getContext('2d', { willReadFrequently: true }); if (!cx) return;
+    cx.scale(K, K); cx.textBaseline = 'alphabetic';
+    const tw = document.createTreeWalker(endH2, NodeFilter.SHOW_TEXT), rg = document.createRange(), rgb = (c) => (c.match(/[\d.]+/g) || [228, 227, 216]).slice(0, 3).map((x) => +x / 255);
+    let fs = 0, c0 = null, c1 = null;
+    for (let nd = tw.nextNode(); nd; nd = tw.nextNode()) {
+      const el = nd.parentElement, cs = getComputedStyle(el), em = !!el.closest('em');
+      cx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const m = cx.measureText('Hg'), asc = m.fontBoundingBoxAscent || m.actualBoundingBoxAscent;
+      fs = Math.max(fs, parseFloat(cs.fontSize)); if (em) c1 = c1 || rgb(cs.color); else c0 = c0 || rgb(cs.color);
+      cx.fillStyle = em ? '#f00' : '#0f0'; // Kennfarbe: Rot = Hervorhebung (Bernstein), Grün = Schrift
+      for (let i = 0; i < nd.data.length; i++) { if (/\s/.test(nd.data[i])) continue; rg.setStart(nd, i); rg.setEnd(nd, i + 1); const q = rg.getClientRects()[0]; if (!q || !q.width) continue; cx.fillText(nd.data[i], q.left - hr.left + pad, q.top - hr.top + pad + asc); }
+    }
+    const img = cx.getImageData(0, 0, cv.width, cv.height).data, lh = parseFloat(getComputedStyle(endH2).lineHeight) || fs, Nb = pts.nerv[1] - pts.nerv[0];
+    let g = clamp(fs / 24, 1.9, 2.6), T = [];
+    for (let vers = 0; vers < 4; vers++) { // Raster: Punktabstand g, Zeilen im Abstand g·0,866, jede zweite versetzt; nie mehr Ziele als Perlen
+      T = [];
+      for (let j = 0, y = pad + g / 2; y < hr.height + pad; j++, y += g * 0.866) for (let x = pad + (j & 1 ? g / 2 : 0); x < hr.width + pad; x += g) {
+        const o = (Math.round(y * K) * cv.width + Math.round(x * K)) * 4; if (img[o + 3] < 128) continue;
+        T.push([hr.left - sr.left + x - pad, hr.top - sr.top + y - pad, img[o] > img[o + 1] ? 2 : 1, Math.floor((y - pad) / lh)]);
+      }
+      if (T.length <= Nb) break; g *= Math.sqrt(T.length / Nb) * 1.02;
+    }
+    const Nt = T.length; if (!Nt || Nt > Nb) return;
+    T.sort((a, b) => a[3] - b[3] || a[0] - b[0] || a[1] - b[1]); // Lesereihenfolge: Zeile, dann von links nach rechts
+    // Perlen von oben nach unten (Kopf zuerst) auf die Ziele in Lesereihenfolge: die Bahnen des Halses schreiben den Anfang, die der Beine
+    // das Ende. Mehrere Perlen teilen sich ein Ziel – die erste bleibt als Punkt der Schrift, die anderen vergehen beim Ankommen.
+    const n0 = pts.nerv[0], ord = Array.from({ length: Nb }, (_, i) => i).sort((a, b) => pts.pos[(n0 + b) * 3 + 1] - pts.pos[(n0 + a) * 3 + 1]), to = new Float32Array(Nb * 4);
+    ord.forEach((bi, r) => { const t = Math.min(Nt - 1, Math.floor(r * Nt / Nb)), q = T[t];
+      to[bi * 4] = q[0]; to[bi * 4 + 1] = q[1]; to[bi * 4 + 2] = (t / Nt) * 0.86 + pts.rnd[(n0 + bi) * 4 + 2] * 0.14; to[bi * 4 + 3] = r === Math.ceil(t * Nb / Nt) ? q[2] : 0; });
+    st.setTargets(to, g * 0.78, c0, c1);
+    const P = new Float32Array(Nt * 3); T.forEach((q, i) => { P[i * 3] = q[0]; P[i * 3 + 1] = q[1]; P[i * 3 + 2] = q[2]; });
+    SATZ.n = Nt; SATZ.pts = P; SATZ.dot = g * 0.78; SATZ.E = { ...V.E }; SATZ.key = key;
+    satzFns.forEach((f) => f());
   }
   // Texthöhen ändern sich nach dem ersten Layout noch (Schrift fertig geladen, Umschalter bisher/neu) → neu messen,
   // sonst steht die Figur am Handy in der Überschrift
@@ -253,6 +320,9 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       const t = (u - a[0]) / (b[0] - a[0]), e = easeIO(t);
       const hold = a[2] === b[2], travel = typeof a[2] === 'number' && typeof b[2] === 'number' && !hold;
       if (HIRN && V['h0']) { const drift = b[2] === 'h' + a[2], dreh = typeof b[2] === 'number' && String(a[2])[0] === 'h'; // Halt mit Bewegung · Drehung zum nächsten Areal
+        // Fahrt am Rückenmark: ohne Halt durch R1 und R2 (anfahren nach dem Kleinhirn, gleiten, ausrollen im Schlussbild)
+        const r = b[2] === 'R1' ? t * t * (2 - t) : b[2] === 'R2' ? t : a[2] === 'R2' ? 1 - (1 - t) * (1 - t) * (1 + t) : -1;
+        if (r >= 0) return { tip: lerp(a[1], b[1], r), view: mixView(V[a[2]], V[b[2]], r) };
         return { tip: lerp(a[1], b[1], e), view: drift ? mixView(V[a[2]], V[b[2]], t) : mixView(V[a[2]], V[b[2]], e, dreh ? 0.05 : 0) }; }
       return { tip: lerp(a[1], b[1], hold ? t : e), view: hold ? V[a[2]] : mixView(V[a[2]], V[b[2]], e, travel ? 0.14 : 0) };
     }
@@ -357,6 +427,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // ---------- Zustand ----------
   const S = {
     u: 0, us: 0, tip: CROWN, view: null, time: 0, breath: 0, calm: 0, intro: still() ? 1 : 0, sway: 0, cur: -1, hold: 0, idle: 0, lastU: -1,
+    txt: 0, txtWant: -1, weg: 0, // K, M: der Leitsatz entsteht (0…1 über die Zeit) · er löst sich in die Linien von Kapitel 02
     act: [0, 0, 0, 0], draw: [0, 0, 0, 0], auto: [0, 0, 0, 0], sol: [0, 0, 0, 0], done: [false, false, false, false], rest: [1, 1, 1, 1], ok: [false, false, false, false],
   };
   const relV = new Float32Array(4), actV = new Float32Array(4);
@@ -490,7 +561,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       hand.classList.remove('on');
       // liegt die Bühne über dem Fenster, ist sie fertig übergeben (18.11.: seit dem Kapitel-Auftakt grenzt Kapitel 02 nicht mehr
       // direkt an – nach einem Sprung blieb hk sonst bei 0 stehen und die Punktwolke der Seite unsichtbar)
-      if (r.bottom < -50) { hk = 1; S.u = S.us = U_LEN; }
+      if (r.bottom < -50) { hk = 1; S.u = S.us = U_LEN; S.txt = S.txtWant = 1; S.weg = 1; }
       return;
     }
     if (!H || stage.clientHeight !== H || stage.clientWidth !== W) layout();
@@ -527,6 +598,17 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     // (im Baustein zieht sich die Lichtlinie vorher zurück – für die Übergabe an Puls; hier gibt es keine Übergabe)
     hk = smooth(U_LEN - 0.35, U_LEN - 0.05, u);
     const lineK = handover && !(HIRN && HB) ? 1 - smooth(U_LEN - 0.55, U_LEN - 0.22, u) : 1; // ins Gehirn: das Nervensystem bleibt stehen und wird übergeben
+    // Fahrt am Rückenmark (K, M): Haut und Muskeln stehen als Glas im Profil, kein Röntgenblick – die Nerven wachsen mit der Lichtspitze
+    const fahrt = HIRN && HB ? smooth(LEAVE[3] + 0.04, LEAVE[3] + 0.3, u) : 0;
+    // Leitsatz (K, M): Auslöser kurz vor der Ankunft im Schlussbild, der Ablauf läuft über die Zeit; zurück, wenn man wieder hinauf scrollt.
+    // Weiter unten (weg) löst sich der Satz in die Linien von Kapitel 02 (Hauptbühne) – die echte Schrift weicht dann den Punkten.
+    if (HIRN && HB && SATZ.n) {
+      const ab = KEYS[KEYS.length - 2][0] - SATZ_AB, was = S.txt, los = smooth(U_LEN - 0.16, U_LEN - 0.04, u);
+      if (S.txtWant < 0) { S.txtWant = u > ab ? 1 : 0; S.txt = S.txtWant; } else if (u > ab) S.txtWant = 1; else if (u < ab - 0.1) S.txtWant = 0;
+      S.txt = sl ? S.txtWant : S.txtWant > S.txt ? Math.min(1, S.txt + dt / SATZ_SEK) : S.txtWant < S.txt ? Math.max(0, S.txt - dt / (SATZ_SEK * 0.55)) : S.txt;
+      if (los > 0.3) S.weg = 1; else if (los < 0.12) S.weg = 0;
+      if (was !== S.txt) dirty = true;
+    }
     const nsK = HIRN && HB ? smooth(LEAVE[3] + 0.02, LEAVE[3] + 0.2, u) : 0; // Schlussbild „Nervensystem“
     // Wiegen + Atem (wie Puls), gleiche Werte für Partikel und SVG
     const sway = (sl ? 0 : Math.sin(S.time * 0.25) * (HIRN ? 0.07 + 0.11 * smooth(1.6, 3, v.s / V.A.s) : 0.12)) + (HIRN && HB ? (v.yaw || 0) : VAR.turn * (1 - smooth(0.02, 0.5, u))); S.sway = sway; // ?start=c|d: am Start leicht gedreht, dreht sich mit dem ersten Scrollen nach vorn
@@ -555,8 +637,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       if (relaxDirty) { st.upload(); if (stOld) stOld.upload(); }
       const common = { W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
       if (mixK > 0) st.draw({ ...common, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC, quiet: VAR.quiet, light: VAR.light, ground: VAR.ground, scanIn: VAR.scanIn, half: VAR.half, lens: VAR.lens, dense: VAR.dense, glass: VAR.glass, shell: VAR.shell,
-        inner: VAR.cycle ? (sl ? 0.6 : (() => { const ph = (S.time % 11) / 11; return smooth(0.18, 0.4, ph) - smooth(0.68, 0.9, ph); })()) : VAR.zoomIn ? smooth(1.12, 1.6, v.s / V.A.s) : VAR.inner,
-        ...(HIRN && HB && cur >= 0 ? { solid: 1, ns: nsK, areaI: cur, lobe: HB.ar[cur].lobe, area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) } : HIRN && HB ? { solid: 1, ns: nsK, area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) } : {}) });
+        inner: VAR.cycle ? (sl ? 0.6 : (() => { const ph = (S.time % 11) / 11; return smooth(0.18, 0.4, ph) - smooth(0.68, 0.9, ph); })()) : VAR.zoomIn ? smooth(1.12, 1.6, v.s / V.A.s) * (1 - fahrt) : VAR.inner,
+        ...(HIRN && HB && cur >= 0 ? { solid: 1, ns: nsK, areaI: cur, lobe: HB.ar[cur].lobe, area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt), txt: SATZ.n ? Math.min(1, S.txt / SATZ_FLUG) : 0 } : HIRN && HB ? { solid: 1, ns: nsK, area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt), txt: SATZ.n ? Math.min(1, S.txt / SATZ_FLUG) : 0 } : {}) });
       if (stOld && mixK < 1) stOld.draw({ ...common, intro: 1 });
       relaxDirty = false;
     }
@@ -647,7 +729,10 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     // Start- und Schlusstext
     const heroA = sl ? (u < 0.15 ? 1 : 0) : 1 - smooth(0.03, 0.22, u); // fertig ausgeblendet, bevor der Text der ersten Station kommt (ab ARR − 0,3)
     heroEl.style.opacity = fmt(heroA); heroEl.style.visibility = heroA < 0.01 ? 'hidden' : '';
-    endEl.classList.toggle('on', u > (HIRN ? KEYS[KEYS.length - 2][0] - 0.14 : U_END - 0.3));
+    if (HIRN && HB && SATZ.n) { // erst schreiben die Punkte den Satz, dann legt sich die echte Schrift darüber; Unterzeile und Knöpfe folgen
+      endH2.style.opacity = fmt(smooth(SATZ_FLUG + 0.02, 1, S.txt));
+      endEl.classList.toggle('on', S.txt > SATZ_FLUG + 0.02 && !S.weg);
+    } else { if (HIRN && endH2 && endH2.style.opacity) endH2.style.opacity = ''; endEl.classList.toggle('on', u > (HIRN ? KEYS[KEYS.length - 2][0] - 0.14 : U_END - 0.3)); }
   }
   addEventListener('resize', () => { H = 0; });
 
@@ -655,16 +740,19 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     update,
     setStyle, style: () => mode, echt: () => echt,
     onReady: (f) => (ready ? f() : readyFns.push(f)), // Bühne steht (Daten geladen oder Rückfall) – Puls füllt dann Form 0
-    cloud: () => (st ? { pts, sp: SP, tilt: TILT, nerv: HIRN && !!HB } : null), // nerv: Form 0 der Hauptbühne ist das Nervensystem (Schlussbild der Fassungen K, M) // für Form 0 der Hauptbühne (Puls): dieselben Punkte, derselbe Abstand
+    cloud: () => (st ? { pts, sp: SP, tilt: TILT } : null), // für Form 0 der Hauptbühne (Puls): dieselben Punkte, derselbe Abstand
     pointer: () => PT, // Zeiger (Bildpunkte der Bühne, Stärke k) – Puls führt damit seine eigenen Bühnen
-    state: () => ({ stil: mode, mix: +mixK.toFixed(2), kino: +kinoK.toFixed(2), echt, buildMs, sp: +SP.toFixed(2), ptr: +PT.k.toFixed(2), u: +S.u.toFixed(3), us: +S.us.toFixed(3), tip: +S.tip.toFixed(1), cur: S.cur, idle: +S.idle.toFixed(1), act: S.act.map((x) => +x.toFixed(2)), auto: S.auto.map((x) => +x.toFixed(2)), sol: S.sol.map((x) => +x.toFixed(2)), rest: S.rest.map((x) => +x.toFixed(2)), done: S.done.slice(), gl: !!st, n: pts.count, still: still(), handK: +hk.toFixed(2), view: S.view && { s: +S.view.s.toFixed(2), ax: Math.round(S.view.ax), ay: Math.round(S.view.ay) } }),
+    state: () => ({ stil: mode, mix: +mixK.toFixed(2), kino: +kinoK.toFixed(2), echt, buildMs, sp: +SP.toFixed(2), ptr: +PT.k.toFixed(2), u: +S.u.toFixed(3), us: +S.us.toFixed(3), tip: +S.tip.toFixed(1), cur: S.cur, idle: +S.idle.toFixed(1), act: S.act.map((x) => +x.toFixed(2)), auto: S.auto.map((x) => +x.toFixed(2)), sol: S.sol.map((x) => +x.toFixed(2)), rest: S.rest.map((x) => +x.toFixed(2)), done: S.done.slice(), gl: !!st, n: pts.count, still: still(), handK: +hk.toFixed(2), txt: +S.txt.toFixed(2), satz: SATZ.n, view: S.view && { s: +S.view.s.toFixed(2), ax: Math.round(S.view.ax), ay: Math.round(S.view.ay) } }),
     go: (u) => scrollTo(trackTop() + u * H, false),
     ring: (i) => ringPx[i].map((x) => Math.round(x)),
     relax: () => relaxCv.toDataURL(), // Zeichenfläche „Entspannung“ als Bild (Prüfen)
     // Übergabe an Puls
     fitE: () => (V.E ? { ...V.E, ay: V.E.ay + stageTop, W, H } : null), // Schlussbild; wandert mit, wenn die Bühne am Ende wegscrollt
     handK: () => hk,
-    sway: () => S.sway, breath: () => S.breath, calm: () => S.calm,
+    // K, M: Form 0 der Hauptbühne ist der Leitsatz – er steht still (kein Wiegen, kein Atem), sonst läge er nicht auf der echten Schrift
+    sway: () => (SATZ.n ? 0 : S.sway), breath: () => (SATZ.n ? 0 : S.breath), calm: () => S.calm,
+    satz: () => (SATZ.n ? SATZ : null), onSatz: (f) => { satzFns.push(f); if (SATZ.n) f(); }, // Punkte des Leitsatzes (Bildpunkte der Bühne, Art) + Blick E, neu nach jedem Vermessen
+    los: () => (HIRN && HB && SATZ.n ? smooth(U_LEN - 0.16, U_LEN - 0.04, S.us) : -1), // Auslöser für den Formwechsel Satz → Linien (statt der Lage von Kapitel 02)
     gl: () => !!st,
   };
 }
