@@ -1,7 +1,7 @@
 // Raumlicht + Logo-Farben (Farbstudie 22.11.2026, Go Kai: „Kräftig … übernehmen, alle anderen speichern“).
 // Jedes Kapitel ist ein Raum mit eigenem, weichem Licht aus der HOP-Palette, der Weg führt von kühl nach warm:
 // 01 Abendblau · 02 Grün · § Logo-Farben · 03 Röntgenblau · 04 Petrol + warmes Fensterlicht · 05 Bernstein (drinnen).
-// Technik: eine Lichtschicht #farblicht (position:fixed, mix-blend-mode:screen, über der Seite, unter Hinweisen/Dialogen),
+// Technik: eine Lichtschicht html::before (position:fixed, mix-blend-mode:screen, über der Seite, unter Hinweisen/Dialogen; bis 25.11. #farblicht),
 // Hintergrund aus zwei bis drei weichen Ellipsen je Kapitel + Grundton; zwischen zwei Kapiteln wird überblendet.
 // Logo-Farben (Stufen mittel/kraeftig): html.fx-logo färbt Kapitel-Ziffern, Linien, Menü (style.css), Figur Kapitel 01 (html[data-deep],
 // ../feinschliff/gl.js setDeep) und Band 2 der Perlenbänder (uniform cLane). Bernstein bleibt die Farbe für Handlung.
@@ -37,34 +37,43 @@ export const STUFEN = {
   kraeftig: { light: 1.45, wash: 1, logo: true, name: 'Kräftig', t: 'Farbräume: jedes Kapitel deutlich eingefärbt, Licht stärker. Stand in Puls seit 22.11.' },
 };
 const DEEP = { logo: '#3F86B5', heute: '#44788E' }, LANE = '#7FB346';
+// ein Licht als CSS-Verlauf (g aus PAL, w = Lichtstärke der Stufe, k = Anteil beim Überblenden)
+const grad = (g, w, k) => {
+  const a = g.a * w * k; if (a < 0.004) return null;
+  const c = g.c.join(','), f = (m) => (a * m).toFixed(3);
+  return `radial-gradient(ellipse ${g.rx}% ${g.ry}% at ${g.x}% ${g.y}%,rgba(${c},${f(1)}),rgba(${c},${f(0.6)}) 28%,rgba(${c},${f(0.27)}) 55%,rgba(${c},${f(0.07)}) 80%,rgba(${c},0))`;
+};
+// Erstes Bild (25.11.2026, Kai: „beim ersten Aufrufen erscheint ganz kurz der alte dunkle Hintergrund“): das Licht von Kapitel 01 in der
+// Stufe „kraeftig“ als fertiges CSS. build.mjs setzt es an die Stelle der Marke FARBE-START in style.css – so steht das Farbkonzept
+// schon im allerersten Bild, bevor das Skript läuft und sogar bevor der Seiteninhalt gelesen ist. Dafür ist die Lichtschicht kein
+// eigenes Element mehr, sondern html::before (gibt es, sobald das CSS im Kopf gelesen ist); das Skript schreibt nur noch --fx-licht.
+// Gleiche Rechnung wie paint(0, 0, 0).
+export function startCss() {
+  const p = STUFEN.kraeftig, P0 = PAL.start, w = P0.w.map((v) => Math.round(v * p.wash)).join(',');
+  const bg = (key) => [...P0[key].map((g) => grad(g, p.light, 1)).filter(Boolean), `linear-gradient(rgb(${w}),rgb(${w}))`].join(',');
+  return `html::before{background:var(--fx-licht,${bg('d')})}@media (max-width:920px){html::before{background:var(--fx-licht,${bg('m')})}}`;
+}
 
 export function initFarbe({ uniforms }) {
   const root = document.documentElement;
   const q = new URLSearchParams(location.search).get('farbe');
   let cur = STUFEN[q] ? q : 'kraeftig';
-  const layer = document.createElement('div');
-  layer.id = 'farblicht'; layer.setAttribute('aria-hidden', 'true');
-  document.body.append(layer);
+  const licht = (bg) => root.style.setProperty('--fx-licht', bg); // Lichtschicht = html::before (style.css), seit 25.11. ohne eigenes Element
   const mq = matchMedia('(max-width:920px)');
   const lane0 = uniforms.cLane.value.clone();
   const el = (id) => document.querySelector(`.auftakt-blk[data-for="${id}"]`) || document.getElementById(id);
-  const grad = (g, w, k) => {
-    const a = g.a * w * k; if (a < 0.004) return null;
-    const c = g.c.join(','), f = (m) => (a * m).toFixed(3);
-    return `radial-gradient(ellipse ${g.rx}% ${g.ry}% at ${g.x}% ${g.y}%,rgba(${c},${f(1)}),rgba(${c},${f(0.6)}) 28%,rgba(${c},${f(0.27)}) 55%,rgba(${c},${f(0.07)}) 80%,rgba(${c},0))`;
-  };
   // Hintergrund der Lichtschicht: Kapitel c, zum nächsten n hin mit k (0..1) überblendet
   let last = '', nowC = -1;
   const paint = (c, n, k) => {
     const p = STUFEN[cur];
-    if (!p.light && !p.wash) { if (last !== 'none') { layer.style.background = 'none'; last = 'none'; } return; }
+    if (!p.light && !p.wash) { if (last !== 'none') { licht('none'); last = 'none'; } return; }
     const P0 = PAL[ORDER[c]], P1 = PAL[ORDER[n]], key = mq.matches ? 'm' : 'd', parts = [];
     P0[key].forEach((g) => { const s = grad(g, p.light, 1 - k); if (s) parts.push(s); });
     if (k > 0) P1[key].forEach((g) => { const s = grad(g, p.light, k); if (s) parts.push(s); });
     const w = P0.w.map((v, j) => Math.round((v + (P1.w[j] - v) * k) * p.wash)).join(',');
     parts.push(`linear-gradient(rgb(${w}),rgb(${w}))`);
     const bg = parts.join(',');
-    if (bg !== last) { layer.style.background = bg; last = bg; }
+    if (bg !== last) { licht(bg); last = bg; }
     if (c !== nowC) { nowC = c; root.style.setProperty('--fx-now', NOW[c]); }
   };
   // beim Start ohne Layout-Abfrage: Raum von Kapitel 01; ab „load“ folgt das Licht dem Scrollen

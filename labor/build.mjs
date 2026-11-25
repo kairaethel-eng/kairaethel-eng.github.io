@@ -119,7 +119,7 @@ function liveHead(head, page) {
   const extra = [
     `<meta http-equiv="Content-Security-Policy" content="${CSP}">`,
     `<link rel="canonical" href="${url}">`,
-    `<meta name="theme-color" content="#0B0F12">`,
+    `<meta name="theme-color" content="${page === 'index.html' ? '#102339' : '#0B0F12'}">`, // Startseite: Grundton von Kapitel 01 im Raumlicht (25.11.; vorher überall #0B0F12, das alte Dunkel)
     `<link rel="icon" href="${FAVICON}">`,
     `<link rel="apple-touch-icon" href="apple-touch-icon.png">`, // relativ: gleiche Herkunft auch unter www. (Sicherheitsregeln)
     `<meta property="og:type" content="website">`,
@@ -209,6 +209,8 @@ for (const [name, cfg] of Object.entries(PAGES)) {
   // Baustein-CSS einbinden (14.11.2026, Linienhaus): /*@include pfad*/ relativ zum Quellordner der Seite
   // (21.11.2026: auch verschachtelt – ein eingebundener Baustein darf selbst einbinden, Pfade gelten relativ zu seiner eigenen Datei)
   { const inc = (text, base) => text.replace(/\/\*@include ([^*]+?)\*\//g, (m, f) => { const file = join(base, f.trim()); return inc(readFileSync(file, 'utf8'), dirname(file)); }); css = inc(css, dir); }
+  // Startlicht für das erste Bild (25.11.2026): CSS aus src/test-4/farbe.js an die Marke in style.css – eine Quelle für Skript und erstes Bild
+  if (css.includes('/*FARBE-START*/')) { const F = await import(pathToFileURL(join(root, 'src', 'test-4', 'farbe.js')).href); css = css.replace('/*FARBE-START*/', () => F.startCss()); }
   if (cfg.live) css = css.replace(/\/\*[\s\S]*?\*\//g, ''); // Live: Arbeitskommentare („Testseite 4 …“) raus
   if (cfg.live) css = css.replace(/url\(assets\//g, 'url('); // Standbilder (ohne WebGL) liegen neben der Live-Seite
   if (P) css += P.css;

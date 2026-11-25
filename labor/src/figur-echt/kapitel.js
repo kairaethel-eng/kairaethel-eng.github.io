@@ -190,7 +190,12 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     dpr = Math.min(devicePixelRatio || 1, 2);
     if (gl) {
       const cw = Math.round(W * dpr), ch = Math.round(H * dpr);
-      if (canvas.width !== cw || canvas.height !== ch) { canvas.width = cw; canvas.height = ch; }
+      if (canvas.width !== cw || canvas.height !== ch) {
+        canvas.width = cw; canvas.height = ch;
+        // 25.11.2026 (Kai: „beim ersten Aufrufen kurz der alte dunkle Hintergrund“): eine neu bemessene Zeichenfläche ist schwarz, bis
+        // etwas gezeichnet wird – solange die Figur noch lädt, sofort im Seitengrund füllen (sonst steht dort ein dunkleres Feld)
+        if (!st) { gl.viewport(0, 0, cw, ch); gl.clearColor(10 / 255, 22 / 255, 27 / 255, 1); gl.clear(gl.COLOR_BUFFER_BIT); }
+      }
       if (stOld && (canvasOld.width !== cw || canvasOld.height !== ch)) { canvasOld.width = cw; canvasOld.height = ch; }
     }
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);

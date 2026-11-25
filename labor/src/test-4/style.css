@@ -979,10 +979,11 @@ html.ruhe .facts-box > .lp-btn{margin-top:1rem}
 .vsw-ruhe button[aria-pressed="true"]{background:var(--amber);color:#14110A}
 /* Raumlicht + Logo-Farben (Go Kai 22.11.2026: „Kräftig“; Baustein farbe.js, Vergleich farbstudie.html).
    Die Lichtschicht liegt über der Seite (auch über der Kopfleiste), unter Hinweisen und Dialogen; „screen“ hellt nur auf. */
-#farblicht{position:fixed;inset:0;z-index:21;pointer-events:none;mix-blend-mode:screen;transition:opacity .9s ease}
-html.fx-aus #farblicht,html.licht #farblicht{display:none}
-@media (prefers-contrast:more){#farblicht{display:none}}
-@media print{#farblicht,.fx-wahl,.fx-info{display:none!important}}
+html::before{content:"";position:fixed;inset:0;z-index:21;pointer-events:none;mix-blend-mode:screen} /* Lichtschicht (25.11.: ohne eigenes Element, damit sie im ersten Bild steht) */
+/*FARBE-START*/
+html.fx-aus::before,html.licht::before{display:none}
+@media (prefers-contrast:more){html::before{display:none}}
+@media print{html::before,.fx-wahl,.fx-info{display:none!important}}
 /* Logo-Farben als Raumfarben: Kapitel-Ziffern, Linien, Menü. Bernstein bleibt die Farbe für Handlung (Knöpfe, Leuchtpunkte, Kursivwort). */
 .auftakt-blk[data-for="bewegung"]{--cc:#8DBF55}
 .auftakt-blk[data-for="achse"]{--cc:#5AA2D6}
