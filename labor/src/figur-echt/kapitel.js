@@ -91,17 +91,24 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // 25.11. morgens (Kai: „C wegen Drehung gut … innere Strukturen zu wenig sichtbar, am Handy liegt der Finger auf der Lupe“):
   // e Glaskörper (Innenleben dauerhaft) · f halb Haut, halb Innenleben · g Haut und Innenleben im ruhigen Wechsel – alle auf Basis von C,
   // Lupe auch hier, am Handy steht sie über dem Finger
-  const START = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'].includes(Q.get('start')) ? Q.get('start') : '';
-  const INNEN = 'efgij'.includes(START) && START !== ''; // j (Kai 25.11. 11:17): Übersicht nur feines Relief, Röntgenblick mit Innenleben erst beim Heranzoomen an die Station // i (Kai 25.11.: „H und E kombinieren“): feines Relief als halb durchsichtige Hülle über dem Innenleben
+  const START = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'].includes(Q.get('start')) ? Q.get('start') : '';
+  const INNEN = 'efgijk'.includes(START) && START !== '';
+  // k (Kai 25.11. 11:21, mit Film eines Punkte-Gehirns): Start wie J; beim ersten Scrollen fährt der Blick ins Gehirn, die vier Texte
+  // gehören dort zu vier Arealen (das Gehirn dreht sich von einem zum nächsten) – keine Fahrt den Körper hinunter
+  const HIRN = START === 'k';
+  const AREALE = [ // Name, Blickrichtung (Drehung um die Hochachse), Mitte im Gehirn (−1…1: rechts, oben, vorn), Radius (Anteil der Breite)
+    ['Hören · Schläfenlappen', -1.15, [0.8, -0.32, 0.22], 0.34], ['Denken · Stirnlappen', -0.3, [0.3, 0.3, 0.8], 0.38],
+    ['Bewegung · Scheitellappen', 0.75, [-0.4, 0.6, -0.05], 0.36], ['Gleichgewicht · Kleinhirn', 2.6, [-0.15, -0.72, -0.7], 0.34]];
+  let HB = null; // Maße des Gehirns (nach dem Laden): Mitte, halbe Ausdehnung, Areale in Körpermaßen // j (Kai 25.11. 11:17): Übersicht nur feines Relief, Röntgenblick mit Innenleben erst beim Heranzoomen an die Station // i (Kai 25.11.: „H und E kombinieren“): feines Relief als halb durchsichtige Hülle über dem Innenleben
   // h (Kai: „auch das Äußere dürfte anatomischer sein“): feines Raster schon in der Übersicht + kräftiges Licht von vorn links (Relief)
-  const VAR = { quiet: START ? 1 : 0, light: 'hij'.includes(START) && START ? 0.9 : START ? 0.5 : 0, dense: 'hij'.includes(START) && START ? 1 : 0, glass: START === 'i' ? 0.62 : START === 'j' ? 0.82 : 0.9, zoomIn: START === 'j', ground: START && START !== 'b' ? 1 : 0, turn: START && START !== 'b' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0,
+  const VAR = { quiet: START ? 1 : 0, light: 'hijk'.includes(START) && START ? 0.9 : START ? 0.5 : 0, dense: 'hijk'.includes(START) && START ? 1 : 0, glass: START === 'i' ? 0.62 : START === 'j' ? 0.82 : 0.9, zoomIn: START === 'j' || START === 'k', ground: START && START !== 'b' ? 1 : 0, turn: START && START !== 'b' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0,
     inner: START === 'e' || START === 'f' || START === 'i' ? 1 : 0, half: START === 'f' ? 1 : 0, cycle: START === 'g', lens: INNEN ? 1 : 0, lift: INNEN ? 78 : 0 };
   if (START) document.documentElement.dataset.start = START;
   if (Q.has('start')) { // Umschalter für den Vergleich: bleibt unten im Bild, solange man mit ?start= auf der Seite ist
     const nav = document.createElement('nav'); nav.setAttribute('aria-label', 'Startfigur vergleichen');
     nav.style.cssText = 'position:fixed;z-index:60;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + .75rem);transform:translateX(-50%);display:flex;gap:.25rem;padding:.25rem;border-radius:2rem;background:rgba(10,22,27,.92);border:1px solid rgba(255,255,255,.18);font:600 .8125rem/1 system-ui,sans-serif';
-    const NAMEN = { a: 'heute', b: 'ruhig', c: 'Boden, gedreht', d: 'Auftritt', e: 'Glaskörper', f: 'halb und halb', g: 'im Wechsel', h: 'feines Relief', i: 'Relief + innen', j: 'Relief, Röntgen nah' };
-    [['a', 'A'], ['b', 'B'], ['c', 'C'], ['d', 'D'], ['e', 'E'], ['f', 'F'], ['g', 'G'], ['h', 'H'], ['i', 'I'], ['j', 'J']].forEach(([k, t]) => { const l = document.createElement('a'); l.href = `?start=${k}`; const on = (START || 'a') === k; l.textContent = on ? `${t} ${NAMEN[k]}` : t; l.style.cssText = `padding:.625rem .5rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
+    const NAMEN = { a: 'heute', b: 'ruhig', c: 'Boden, gedreht', d: 'Auftritt', e: 'Glaskörper', f: 'halb und halb', g: 'im Wechsel', h: 'feines Relief', i: 'Relief + innen', j: 'Relief, Röntgen nah', k: 'ins Gehirn' };
+    [['a', 'A'], ['b', 'B'], ['c', 'C'], ['d', 'D'], ['e', 'E'], ['f', 'F'], ['g', 'G'], ['h', 'H'], ['i', 'I'], ['j', 'J'], ['k', 'K']].forEach(([k, t]) => { const l = document.createElement('a'); l.href = `?start=${k}`; const on = (START || 'a') === k; l.textContent = on ? `${t} ${NAMEN[k]}` : t; l.style.cssText = `padding:.625rem .44rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
     document.body.appendChild(nav);
   }
   const shade = $('.kf-shade'), bodyG = $('.kf-bodyg'), heroEl = $('.kf-hero'), endEl = $('.kf-end'), wire = $('.kf-wire'), hand = $('.kf-hand');
@@ -174,6 +181,12 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     STATIONS.forEach((St, i) => {
       V[i] = { fx: St.c[0] - BODY_W / 2, fy: BODY_H / 2 - St.c[1], s: sRef * St.zoom[desk ? 1 : 0], ax: desk ? W * 0.23 : W / 2, ay: desk ? H * 0.5 : stAy };
     });
+    if (HIRN && HB) { // Blick je Areal: Gehirn füllt die Bühne, das Areal steht in der Bildmitte
+      const sB = Math.min((desk ? W * 0.34 : W * 0.74) / (2 * Math.max(HB.h[0], HB.h[2])), (desk ? H * 0.6 : (TXT.txt - TXT.head || H * 0.5) * 0.74) / (2 * HB.h[1]));
+      HB.ar.forEach((A, i) => { const cw = Math.cos(A.yaw), sw = Math.sin(A.yaw), k = 0.12; // Areal nur halb zur Mitte gerückt: das ganze Gehirn bleibt im Bild
+        V[i] = { fx: cw * (HB.c[0] + (A.p[0] - HB.c[0]) * k) + sw * (HB.c[2] + (A.p[2] - HB.c[2]) * k), fy: HB.c[1] + (A.p[1] - HB.c[1]) * k - HB.c[2] * TILT, s: sB, ax: V[i].ax, ay: V[i].ay, yaw: A.yaw }; });
+      V.A.yaw = VAR.turn; V.S.yaw = 0; V.E.yaw = 0;
+    }
     dpr = Math.min(devicePixelRatio || 1, 2);
     if (gl) {
       const cw = Math.round(W * dpr), ch = Math.round(H * dpr);
@@ -189,7 +202,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   document.fonts?.ready.then(() => { H = 0; });
   const mixView = (a, b, t, dip = 0) => {
     const s = Math.exp(lerp(Math.log(a.s), Math.log(b.s), t)) * (1 - dip * Math.sin(Math.PI * t));
-    return { fx: lerp(a.fx, b.fx, t), fy: lerp(a.fy, b.fy, t), s, ax: lerp(a.ax, b.ax, t), ay: lerp(a.ay, b.ay, t) };
+    return { fx: lerp(a.fx, b.fx, t), fy: lerp(a.fy, b.fy, t), s, ax: lerp(a.ax, b.ax, t), ay: lerp(a.ay, b.ay, t), yaw: lerp(a.yaw || 0, b.yaw || 0, t) };
   };
   function plan(u) {
     if (still()) { // keine Fahrt: Figur bleibt ganz, nur die Linie wächst mit dem Scrollen
@@ -230,7 +243,13 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const t0 = performance.now();
     if (gl) try {
       if (d) { // echte Figur
-        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense });
+        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense, hirn: HIRN });
+        if (HIRN && pts.brain && pts.brain[0][0] < 1e8) {
+          const B = pts.brain, c = B.map((r) => (r[0] + r[1]) / 2), h = B.map((r) => (r[1] - r[0]) / 2);
+          HB = { c, h, ar: AREALE.map(([name, yaw, q, r]) => ({ name, yaw, p: q.map((v, k) => c[k] + v * h[k]), r: r * 2 * h[0] })) };
+          arts.forEach((a, i) => { const k = $('.kicker', a); if (k && HB.ar[i]) k.innerHTML = `<i>0${i + 1}</i> ${HB.ar[i].name}`; });
+          H = 0; // Blicke neu rechnen
+        }
         st = createStage(gl, pts, relaxCv, document.documentElement.dataset.deep || '#3F86B5');
         echt = true; GEO.echt = { LINES: pts.lines, SPLIT: pts.split };
       } else { // Daten fehlen (oder ?figur=heute in Puls): die Figur von heute
@@ -470,7 +489,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     hk = smooth(U_LEN - 0.35, U_LEN - 0.05, u);
     const lineK = handover ? 1 - smooth(U_LEN - 0.55, U_LEN - 0.22, u) : 1;
     // Wiegen + Atem (wie Puls), gleiche Werte für Partikel und SVG
-    const sway = (sl ? 0 : Math.sin(S.time * 0.25) * 0.12) + VAR.turn * (1 - smooth(0.02, 0.5, u)); S.sway = sway; // ?start=c|d: am Start leicht gedreht, dreht sich mit dem ersten Scrollen nach vorn
+    const sway = (sl ? 0 : Math.sin(S.time * 0.25) * (HIRN ? 0.07 : 0.12)) + (HIRN && HB ? (v.yaw || 0) : VAR.turn * (1 - smooth(0.02, 0.5, u))); S.sway = sway; // ?start=c|d: am Start leicht gedreht, dreht sich mit dem ersten Scrollen nach vorn
     const br = Math.sin(S.breath) * (1 + S.calm * 1.3), kx = 1 + br * 0.007, ky = 1 + br * 0.004, cx = kx * Math.cos(sway);
     const M = [v.s * cx, v.s * ky, v.ax - (BODY_W / 2 * cx + v.fx) * v.s, v.ay - (BODY_H / 2 * ky - v.fy) * v.s]; // Grundriss → Bildschirm
     const toS = (bx, by) => [M[0] * bx + M[2], M[1] * by + M[3]];
@@ -496,7 +515,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       if (relaxDirty) { st.upload(); if (stOld) stOld.upload(); }
       const common = { W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
       if (mixK > 0) st.draw({ ...common, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC, quiet: VAR.quiet, light: VAR.light, ground: VAR.ground, scanIn: VAR.scanIn, half: VAR.half, lens: VAR.lens, dense: VAR.dense, glass: VAR.glass,
-        inner: VAR.cycle ? (sl ? 0.6 : (() => { const ph = (S.time % 11) / 11; return smooth(0.18, 0.4, ph) - smooth(0.68, 0.9, ph); })()) : VAR.zoomIn ? smooth(1.12, 1.6, v.s / V.A.s) : VAR.inner });
+        inner: VAR.cycle ? (sl ? 0.6 : (() => { const ph = (S.time % 11) / 11; return smooth(0.18, 0.4, ph) - smooth(0.68, 0.9, ph); })()) : VAR.zoomIn ? smooth(1.12, 1.6, v.s / V.A.s) : VAR.inner,
+        ...(HIRN && HB && cur >= 0 ? { area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) } : HIRN && HB ? { area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) } : {}) });
       if (stOld && mixK < 1) stOld.draw({ ...common, intro: 1 });
       relaxDirty = false;
     }
@@ -526,14 +546,15 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const full = S.tip >= SOLE - 0.3;
     tips.forEach((g, k) => {
       const p = tipPts[k];
-      if (!p || full) { g.setAttribute('visibility', 'hidden'); return; }
+      if (!p || full || (HIRN && u > 0.25)) { g.setAttribute('visibility', 'hidden'); return; }
       const [x, y] = toS(p[0], p[1]);
       g.setAttribute('visibility', 'visible'); g.setAttribute('transform', `translate(${fmt(x)} ${fmt(y)})`);
     });
     // Ringe (mit Fortschritt im Halt), Stellen, Striche rechts
     const onKey = [];
     STATIONS.forEach((St, i) => {
-      const [x, y] = toS(St.c[0], St.c[1]), rr = St.r * v.s;
+      let [x, y] = toS(St.c[0], St.c[1]), rr = St.r * v.s;
+      if (HIRN && HB) { const A = HB.ar[i], cw = Math.cos(sway), sw = Math.sin(sway); x = v.ax + (cw * A.p[0] + sw * A.p[2] - v.fx) * v.s; y = v.ay - (A.p[1] - A.p[2] * TILT - v.fy) * v.s; rr = A.r * v.s; }
       ringPx[i][0] = x; ringPx[i][1] = y; ringPx[i][2] = rr;
       const on = stOn(i, u);
       const { g, ring, halo, prog } = rings[i];

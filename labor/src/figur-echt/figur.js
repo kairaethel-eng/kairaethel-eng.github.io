@@ -107,7 +107,7 @@ export function linesOf(nerves, split) {
 }
 
 // sp = Abstand der Haut-Punkte (Grundriss-Einheiten), dust = Zahl der großen unscharfen Punkte im Raum, data = decode(…)
-export function echtPoints({ sp = 1.6, dust = 26, data, detail = false }) {
+export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = false }) { // hirn (Fassung K): Gehirn rundum und dichter, Maße in .brain
   const Pp = [], Nn = [], St = [], Ht = [], Ct = [], Nf = [];
   const put = (x, y, z, nx, ny, nz, kind, a, b, c, heat = null) => {
     Pp.push(x, y, z); Nn.push(nx, ny, nz); Nf.push(kind, a, b, c);
@@ -144,11 +144,13 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false }) {
   }
   // A2 Gehirn: Großhirn mit echten Windungen, Kleinhirn, Hirnstamm – erscheint mit der Lichtspitze von oben nach unten
   // (Innenwände an der Mittelspalte entfallen – sie lägen von vorn gesehen als helle Naht über der Mitte)
-  const spBr = clamp(sp * 0.42, 0.62, 0.95);
+  const spBr = hirn ? 0.5 : clamp(sp * 0.42, 0.62, 0.95);
+  const BB = [[1e9, -1e9], [1e9, -1e9], [1e9, -1e9]];
   for (const p of data.parts.filter((q) => q.kind === 'brain')) {
     const w = p.id === 'gehirn/grosshirn' ? 0.7 : p.id === 'gehirn/kleinhirn' ? 0.55 : 0.45;
     rows(p, spBr, (x, y, z, nx, ny, nz) => {
-      if (nz < -0.2) return;
+      if (nz < -0.2 && !hirn) return;
+      [x, y, z].forEach((c, k) => { if (c < BB[k][0]) BB[k][0] = c; if (c > BB[k][1]) BB[k][1] = c; });
       if (p.id === 'gehirn/grosshirn' && Math.abs(x) < 4.5 && Math.abs(nx) > 0.6) return;
       const by = BODY_H / 2 - y; put(x, y, z, nx, ny, nz, 2, CROWN + (by - CROWN) * 0.72, 0, w);
     });
@@ -204,5 +206,5 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false }) {
   const count = St.length, rnd = new Float32Array(count * 4), rr = rng(77);
   for (let k = 0; k < rnd.length; k++) rnd[k] = rr();
   const split = data.head.split;
-  return { pos: new Float32Array(Pp), nrm: new Float32Array(Nn), st: new Float32Array(St), heat: new Float32Array(Ht), ctr: new Float32Array(Ct), rnd, nfo: new Float32Array(Nf), count, nBody, spB, lines: linesOf(nerves, split), split };
+  return { pos: new Float32Array(Pp), nrm: new Float32Array(Nn), st: new Float32Array(St), heat: new Float32Array(Ht), ctr: new Float32Array(Ct), rnd, nfo: new Float32Array(Nf), count, nBody, spB, lines: linesOf(nerves, split), split, brain: BB };
 }

@@ -13,7 +13,7 @@ in vec3 aPos; in vec3 aNrm; in vec4 aRand; in float aSt; in float aHeat; in vec2
 uniform vec2 uRes, uAnchor;
 uniform vec4 uView;   // Blickpunkt x, y (Grundriss, Körpermitte = 0, y oben), Maßstab px/Einheit, Drehung (Wiegen)
 uniform float uTime, uBreath, uCalm, uIntro, uUnit, uSp, uSpB, uDpr, uZoom, uTip, uPulse, uNerve, uTilt, uScroll, uKino, uEnd;
-uniform float uQuiet, uLight, uGround, uScanIn, uInner, uHalf, uLens, uDense, uGlass; // uGlass: wie durchsichtig die Haut über dem Innenleben wird (e–g 0,9 · i 0,62: das Relief bleibt als Hülle) // e–g (25.11. morgens, Kai: „innere Strukturen zu wenig sichtbar“): Innenleben dauerhaft (ganz / halbe Seite), Lupe auch ohne Filmlicht // Vergleich Startfigur (25.11.2026, ?start=b|c|d): Muskeln nur an der aktiven Stelle · Tiefe im Rumpf · Boden · Scan-Linie beim Auftritt
+uniform float uQuiet, uLight, uGround, uScanIn, uInner, uHalf, uLens, uDense, uGlass, uAreaK, uHirn; uniform vec4 uArea; // Fassung K: Areal im Gehirn (Mitte, Radius) leuchtet // uGlass: wie durchsichtig die Haut über dem Innenleben wird (e–g 0,9 · i 0,62: das Relief bleibt als Hülle) // e–g (25.11. morgens, Kai: „innere Strukturen zu wenig sichtbar“): Innenleben dauerhaft (ganz / halbe Seite), Lupe auch ohne Filmlicht // Vergleich Startfigur (25.11.2026, ?start=b|c|d): Muskeln nur an der aktiven Stelle · Tiefe im Rumpf · Boden · Scan-Linie beim Auftritt
 uniform vec4 uRel, uAct;
 uniform vec4 uPtr;
 uniform vec3 uStC[4];  // Stationen: Mitte x, y (Körpermitte = 0, y oben), Radius
@@ -124,7 +124,7 @@ void main(){
   float isDet = isSkin * step(.5, aN.w) * (1. - step(1.5, aN.w)), isRep = isSkin * step(1.5, aN.w); // Hände/Füße: feines Raster (nur mit uDense) ersetzt dort das normale
   a *= mix(1., uDense, isDet) * mix(1., 1. - uDense, isRep);
   float d = uSp * .5 * mix(1., mix(1.85, 1., fineK), coarse * isSkin) * mix(1., .74, isDet);
-  float tenK = smoothstep(.06, .62, tension);
+  float tenK = smoothstep(.06, .62, tension) * (1. - uHirn);
   col = mix(col, cAmber, tenK * (.72 + .28*throb));
   a = mix(a, .55 + .45*throb, tenK * .8);
   d *= 1. + tension*.34*throb;
@@ -133,7 +133,7 @@ void main(){
   col = mix(col, cBone, uCalm * .12 * (1. - on));
   // Haut: Glas (verspannte Stellen bleiben sichtbar), Kopf frei für das Gehirn (nur der Umriss bleibt), Lupe
   float hide = isSkin * max(max(glass * (1. - tenK*.6*(1. - im*.75)) * (1. - rim*.85), aN.y * brainK * (1. - smoothstep(.5, .95, rim) * (1. - im*.7))), lens * (1. - rim*.55));
-  a *= 1. - hide;
+  a *= (1. - hide) * (1. - .88 * uHirn * isSkin); // Fassung K: im Gehirn tritt die Haut fast ganz zurück
   // B1 Scan-Ring: wo die Linie die Haut schneidet (nur während die Linie durch den Körper läuft)
   float band = exp(-pow((by - uTip) / 1.15, 2.)) * uKino * isSkin * step(14., uTip) * (1. - step(418., uTip)) * uNerve;
   col = mix(col, mix(cLine, cWarm, .35), band * .9);
@@ -153,10 +153,12 @@ void main(){
   // Schädel tritt zurück, solange das Gehirn zu sehen ist (Station Kopf), Rippen und Hände etwas leiser
   float soft = aN.w > 1.5 ? 1. - .78 * brainK * (1. - smoothstep(60., 120., uTip)) * (1. - uEnd * .4) : mix(1., .62, aN.w);
   a = mix(a, mix(.34 + .52*rim, .5 + .5*rim + .25*key, im) * boneShow * mix(soft, max(soft, .8), im * step(aN.w, 1.5)) * mix(coarse, 1., max(fineK, im)), isBone);
+  a *= 1. - .7 * uHirn * isBone;
   d = mix(d, uSpB * .46 * mix(1., mix(1.5, 1., fineK), coarse), isBone);
 
   // ---------- Muskeln (A4): zeigen sich mit ihrer Spannung (Bernstein) bzw. gelöst (Blau), sonst nur unter der Lupe ----------
-  float musShow = max(smoothstep(.04, .4, tension + relaxed*.7) * (.38 + .62*act) * mix(1., act, uQuiet), lens * .55) * uNerve;
+  float musShowK = 1. - uHirn;
+  float musShow = musShowK * max(smoothstep(.04, .4, tension + relaxed*.7) * (.38 + .62*act) * mix(1., act, uQuiet), lens * .55) * uNerve;
   vec3 cm = mix(cDeep * 1.2, cAmber, tenK * (.72 + .28*throb));
   cm = mix(cm, cCalm, relaxed * .85);
   col = mix(col, cm, isMus);
@@ -170,10 +172,13 @@ void main(){
   vec3 cbr = mix(cLine, cWarm, .35 + .5*rim);
   cbr = mix(cbr, vec3(1., .97, .9), clamp(front2*.55 + wave*.7, 0., 1.));
   cbr = mix(cbr, cbr * (.55 + .6*key) + cRim * back * .5, uKino * .7);
+  float ar = uAreaK * exp(-dot(aPos - uArea.xyz, aPos - uArea.xyz) / (uArea.w * uArea.w));
+  cbr = mix(cbr, mix(cAmber, cWarm, .3 + .25*sin(uTime*1.6 - length(aPos - uArea.xyz)*.8)), ar * .9);
   col = mix(col, cbr, isBrain);
   // Gehirn: die Ränder der Windungen tragen das Bild (Kantenlicht), die Flächen bleiben leise – sonst wird es ein weißer Fleck
   a = mix(a, rev * (.09 + .14*im + (.55 + .4*im)*pow(rim, 1.4 - .35*im) + .1*aN.w + wave*.3) * (1. - .25*smoothstep(70., 210., uTip)) * uNerve, isBrain);
-  d = mix(d, .34 + .08*im, isBrain);
+  a = mix(a, min(1., a * mix(1., .42, uHirn) * (1. + ar * 2.2) + ar * .3), isBrain); // dichtes Gehirn (K): leiser, sonst wird es weiß; das Areal trägt
+  d = mix(d, (.34 + .08*im) * (1. + ar * .3) * mix(1., .78, step(.001, uArea.w)), isBrain);
   float ph = fract(aN.z/170. - uTime*.16);
   float pulse = pow(ph, 9.) * uPulse;
   col = mix(col, mix(cLine, cWarm, clamp(front2*.8 + pulse, 0., 1.)), isNerve);
@@ -254,7 +259,7 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
       gl.uniform1f(U.uTip, u.tip); gl.uniform1f(U.uPulse, u.pulse); gl.uniform1f(U.uNerve, u.nerve);
       gl.uniform1f(U.uTilt, u.tilt); gl.uniform1f(U.uScroll, u.scroll);
       gl.uniform1f(U.uKino, u.kino); gl.uniform1f(U.uEnd, u.end);
-      gl.uniform1f(U.uQuiet, u.quiet || 0); gl.uniform1f(U.uLight, u.light || 0); gl.uniform1f(U.uGround, u.ground || 0); gl.uniform1f(U.uScanIn, u.scanIn || 0); gl.uniform1f(U.uInner, u.inner || 0); gl.uniform1f(U.uHalf, u.half || 0); gl.uniform1f(U.uLens, u.lens || 0); gl.uniform1f(U.uDense, u.dense || 0); gl.uniform1f(U.uGlass, u.glass || 0.9);
+      gl.uniform1f(U.uQuiet, u.quiet || 0); gl.uniform1f(U.uLight, u.light || 0); gl.uniform1f(U.uGround, u.ground || 0); gl.uniform1f(U.uScanIn, u.scanIn || 0); gl.uniform1f(U.uInner, u.inner || 0); gl.uniform1f(U.uHalf, u.half || 0); gl.uniform1f(U.uLens, u.lens || 0); gl.uniform1f(U.uDense, u.dense || 0); gl.uniform1f(U.uGlass, u.glass || 0.9); gl.uniform1f(U.uAreaK, u.areaK || 0); gl.uniform1f(U.uHirn, u.hirn || 0); { const A = u.area || [0, 0, 0, 0]; gl.uniform4f(U.uArea, A[0], A[1], A[2], A[3]); }
       gl.uniform3fv(U.uStC, u.stc);
       gl.uniform4f(U.uPtr, u.ptr[0], u.ptr[1], u.ptr[2], u.ptr[3]);
       gl.drawArrays(gl.POINTS, 0, count);
