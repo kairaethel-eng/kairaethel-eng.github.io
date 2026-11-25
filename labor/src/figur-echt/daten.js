@@ -16,12 +16,18 @@ export function decode(gz) {
     }
     const idx = new Uint32Array(p.nt * 3); let o = base + p.i, hw = 0;
     for (let j = 0; j < idx.length; j++) { let d = 0, sh = 0, b; do { b = raw[o++]; d |= (b & 127) << sh; sh += 7; } while (b & 128); idx[j] = hw - d; if (d === 0) hw++; }
-    return { id: p.id, kind: p.kind, st: p.st, pos, idx };
+    const ao = p.a != null ? raw.slice(base + p.a, base + p.a + nv) : null; // feines Gehirn: Verdeckung je Ecke (0 frei … 255 tief)
+    return { id: p.id, kind: p.kind, st: p.st, pos, idx, ao };
   });
   return { head, parts };
 }
 
 // Laden (Labor: assets/…, Live: neben der Seite – HOP_ASSETS setzt build.mjs)
-export const loadEcht = () => fetch(HOP_ASSETS + 'figur-echt.bin')
-  .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
-  .then(decode);
+// Fassung K (?start=k): das feine Gehirn liegt in einer eigenen Datei (hirn-echt.bin, „Brain for Blender“ von Anderson M. Winkler,
+// brainder.org, CC BY-SA 3.0 – verändert) und wird nur dort geladen; seine Teile (Art brain2) kommen zu den übrigen dazu.
+const get = (f) => fetch(HOP_ASSETS + f).then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }).then(decode);
+export const loadEcht = () => {
+  const hirn = new URLSearchParams(location.search).get('start') === 'k';
+  return Promise.all([get('figur-echt.bin'), hirn ? get('hirn-echt.bin').catch(() => null) : null])
+    .then(([d, h]) => { if (h) d.parts.push(...h.parts); return d; });
+};

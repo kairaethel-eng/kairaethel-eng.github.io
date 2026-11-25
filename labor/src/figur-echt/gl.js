@@ -13,24 +13,26 @@ in vec3 aPos; in vec3 aNrm; in vec4 aRand; in float aSt; in float aHeat; in vec2
 uniform vec2 uRes, uAnchor;
 uniform vec4 uView;   // Blickpunkt x, y (Grundriss, Körpermitte = 0, y oben), Maßstab px/Einheit, Drehung (Wiegen)
 uniform float uTime, uBreath, uCalm, uIntro, uUnit, uSp, uSpB, uDpr, uZoom, uTip, uPulse, uNerve, uTilt, uScroll, uKino, uEnd;
-uniform float uQuiet, uLight, uGround, uScanIn, uInner, uHalf, uLens, uDense, uGlass, uAreaK, uHirn, uShell, uLobe; uniform vec4 uArea; // Fassung K: Areal im Gehirn (Mitte, Radius) leuchtet // uGlass: wie durchsichtig die Haut über dem Innenleben wird (e–g 0,9 · i 0,62: das Relief bleibt als Hülle) // e–g (25.11. morgens, Kai: „innere Strukturen zu wenig sichtbar“): Innenleben dauerhaft (ganz / halbe Seite), Lupe auch ohne Filmlicht // Vergleich Startfigur (25.11.2026, ?start=b|c|d): Muskeln nur an der aktiven Stelle · Tiefe im Rumpf · Boden · Scan-Linie beim Auftritt
+uniform float uQuiet, uLight, uGround, uScanIn, uInner, uHalf, uLens, uDense, uGlass, uAreaK, uHirn, uShell, uLobe, uAreaI, uSpH; uniform vec4 uArea, uBC; // uBC: Mitte und Radius des Gehirns (Fassung K) · uAreaI: Station · uSpH: Punktabstand im Gehirn // Fassung K: Areal im Gehirn (Mitte, Radius) leuchtet // uGlass: wie durchsichtig die Haut über dem Innenleben wird (e–g 0,9 · i 0,62: das Relief bleibt als Hülle) // e–g (25.11. morgens, Kai: „innere Strukturen zu wenig sichtbar“): Innenleben dauerhaft (ganz / halbe Seite), Lupe auch ohne Filmlicht // Vergleich Startfigur (25.11.2026, ?start=b|c|d): Muskeln nur an der aktiven Stelle · Tiefe im Rumpf · Boden · Scan-Linie beim Auftritt
 uniform vec4 uRel, uAct;
 uniform vec4 uPtr;
 uniform vec3 uStC[4];  // Stationen: Mitte x, y (Körpermitte = 0, y oben), Radius
 uniform sampler2D uRelax;
 uniform vec3 cDeep, cBone, cAmber, cCalm, cLine, cWarm, cRim, cKey;
-out vec3 vCol; out float vA; out float vSize; out float vSoft;
+out vec3 vCol; out float vA; out float vSize; out float vSoft; out float vOp;
 float pick(vec4 v, float i){ return i < .5 ? v.x : i < 1.5 ? v.y : i < 2.5 ? v.z : v.w; }
+// Farbe je Hirnlappen (Fassung K): Stirn Blau · Zentralregion Grün · Schläfe Bernstein · Scheitel Türkis · Hinterhaupt Sand · Kleinhirn Violettblau · Stamm und Innenfläche hell
+vec3 lobeCol(float lb){ return lb < .5 ? vec3(.36, .66, .93) : lb < 1.5 ? vec3(.62, .84, .42) : lb < 2.5 ? vec3(.96, .68, .28) : lb < 3.5 ? vec3(.32, .74, .78) : lb < 4.5 ? vec3(.93, .86, .7) : lb < 5.5 ? vec3(.5, .62, .95) : lb < 6.5 ? vec3(.9, .88, .82) : vec3(.55, .7, .8); }
 void main(){
   float kind = aN.x;
-  vSoft = 0.;
+  vSoft = 0.; vOp = 1.;
   if (kind > 3.5 && kind < 4.5) { // Raum: große unscharfe Punkte, wandern mit dem Scrollen (nah = schneller) und treiben langsam
     float dep = aN.y;
     vec2 q = aPos.xy;
     q.y = fract(q.y - uScroll * .11 * dep + sin(uTime * .05 + aRand.x * 6.283) * .02);
     q.x += sin(uTime * .04 + aRand.y * 6.283) * .02;
     vec2 s = (q * 1.2 - .1) * uRes;
-    gl_Position = vec4(s.x / uRes.x * 2. - 1., 1. - s.y / uRes.y * 2., 0., 1.);
+    gl_Position = vec4(s.x / uRes.x * 2. - 1., 1. - s.y / uRes.y * 2., -1., 1.);
     float size = uDpr * (14. + 44. * aN.w * dep) * clamp(uRes.y / 900., .8, 1.5);
     gl_PointSize = size; vSize = size; vSoft = 1.;
     vCol = mix(cBone, mix(cAmber, cRim, uKino * .6), step(.72, aN.z) * .7);
@@ -49,13 +51,42 @@ void main(){
     if (vA < .004) gl_Position = vec4(2., 2., 2., 1.);
     return;
   }
+  if (kind > 8.5) { // Gehirn-Bühne (Fassung K): 9 Leuchten · 10 Signal-Bögen · 11 Lichthof – erst, wenn der Blick im Gehirn angekommen ist
+    float cg = cos(uView.w), sg = sin(uView.w);
+    vec3 q = vec3(cg*aPos.x + sg*aPos.z, aPos.y - aPos.z * uTilt, -sg*aPos.x + cg*aPos.z);
+    vec2 sQ = uAnchor + vec2(q.x - uView.x, -(q.y - uView.y)) * uView.z;
+    float show = smoothstep(.9, 1., uHirn) * uNerve, zN = clamp(-q.z / 90., -.98, .98);
+    float sizeQ = 1., aQ = 0.; vec3 cQ = vec3(1.);
+    if (kind < 9.5) {
+      float lb = aC.x, on = (1. - step(.5, abs(lb - uLobe))) * uAreaK;
+      float fc = clamp(-sg*aNrm.x + cg*aNrm.z + aNrm.y * uTilt, 0., 1.);
+      float tw = pow(max(0., sin(uTime * (.45 + aRand.x * .8) + aRand.y * 6.283)), 40.) * uPulse;
+      float wv = pow(.5 + .5 * sin(uTime * 1.7 - length(aPos - uArea.xyz) * .85), 3.) * uPulse;
+      sizeQ = uUnit * (2.6 + 1.6 * tw + .8 * on * wv); vSoft = 1.; zN -= .02;
+      cQ = mix(lobeCol(lb), vec3(1., .96, .88), tw * .6);
+      aQ = show * smoothstep(.05, .5, fc) * (on * (.035 + .05 * wv) + tw * .16);
+    } else if (kind < 10.5) {
+      float t = aN.z, on = (1. - step(.5, abs(aN.y - uAreaI))) * uAreaK;
+      float f = fract(t - uTime * .2 - aN.w), pl = pow(f, 14.) * uPulse;
+      sizeQ = max(1.4 * uDpr, uUnit * uSpH * (.42 + .75 * pl));
+      cQ = mix(lobeCol(uLobe), vec3(1., .96, .88), .25 + .7 * pl);
+      aQ = show * on * (.13 + .87 * pl) * pow(sin(3.14159 * t), .6);
+    } else {
+      sizeQ = min(1000., aN.y * 3.4 * uUnit); vSoft = 1.; zN = .97;
+      cQ = mix(cDeep, lobeCol(uLobe), .55 * uAreaK);
+      aQ = show * (.085 + .035 * uAreaK);
+    }
+    gl_Position = aQ < .004 ? vec4(2., 2., 2., 1.) : vec4(sQ.x/uRes.x*2. - 1., 1. - sQ.y/uRes.y*2., zN, 1.);
+    gl_PointSize = sizeQ; vSize = sizeQ; vCol = cQ; vA = aQ;
+    return;
+  }
   vec3 p = aPos;
   float isSkin = 1. - step(.5, kind);
   float isBrain = step(1.5, kind) * (1. - step(2.5, kind));
   float isNerve = step(2.5, kind) * (1. - step(3.5, kind));
   float isBone = step(4.5, kind) * (1. - step(5.5, kind));
   float isMus = step(5.5, kind) * (1. - step(6.5, kind));
-  float isShell = step(7.5, kind);                  // Fassung L: Hülle der oberflächlichen Muskeln
+  float isShell = step(7.5, kind) * (1. - step(8.5, kind));                  // Fassung L: Hülle der oberflächlichen Muskeln
   float by = 215. - aPos.y;                  // Grundriss-Höhe (11 Scheitel … 419 Sohle)
   vec2 uv = vec2(p.x/200. + .5, by/430.);
   float on = step(-.5, aSt);
@@ -87,7 +118,7 @@ void main(){
   { float sc2 = 1. - smoothstep(.1, 1., uHirn); // Fassung K: das Gehirn sammelt sich bei der Ankunft aus feinem Staub
     p.xy += dir.xy * isBrain * step(.001, uArea.w) * sc2 * sc2 * (10. + aRand.w * 16.); }
   vec2 s = uAnchor + vec2(p.x - uView.x, -(p.y - uView.y)) * uView.z;
-  gl_Position = vec4(s.x/uRes.x*2. - 1., 1. - s.y/uRes.y*2., 0., 1.);
+  gl_Position = vec4(s.x/uRes.x*2. - 1., 1. - s.y/uRes.y*2., clamp(-p.z / 90., -.98, .98), 1.);
 
   // Licht: Normale nach dem Wiegen; zum Betrachter = facing; Rückseiten verschwinden weich
   vec3 n = aNrm;
@@ -203,29 +234,32 @@ void main(){
     // das aktive Areal leuchtet und sendet ruhige Wellen, einzelne Punkte „feuern“, im Hirnstamm laufen Signale nach unten
     float ao = 1. - aN.z, hk = uHirn * isBrain, lb = aC.x;
     float on = (1. - step(.5, abs(lb - uLobe))) * uAreaK;
-    vec3 lc = lb < .5 ? vec3(.36, .66, .93) : lb < 1.5 ? vec3(.62, .84, .42) : lb < 2.5 ? vec3(.96, .68, .28) : lb < 3.5 ? vec3(.32, .74, .78) : lb < 4.5 ? vec3(.93, .86, .7) : lb < 5.5 ? vec3(.5, .62, .95) : vec3(.9, .88, .82);
+    vec3 lc = lobeCol(lb);
+    float fog = mix(.42, 1., smoothstep(-.7, .8, (p.z - (-sw*uBC.x + cw*uBC.z)) / max(1., uBC.w)));   // hinten leiser: Tiefe
+    float inn = step(6.5, lb);                                                                 // Innenfläche: zurückhaltend
     float fill = max(0., dot(nv, normalize(vec3(.6, .25, .76)))) * hasN;
-    float lit = (.1 + .74 * key + .3 * fill + .26 * rim) * mix(.2, 1., ao * ao) + .3 * back * ao;
-    float L1 = clamp(.3 + .8 * (key + .4 * fill) * ao, 0., 1.);
+    float lit = ((.4 + .48 * key + .26 * fill + .28 * rim) * mix(.07, 1., ao * sqrt(ao)) + .3 * back * ao) * fog * (1. - .5 * inn);
+    float L1 = clamp(.42 + .7 * (key + .4 * fill) * ao, 0., 1.);
     vec3 tint = mix(mix(cBone, cWarm, .3), lc, mix(.82, 1., on));
     vec3 ch = mix(mix(cDeep * 1.1, lc * .45, .55), tint, L1) + mix(cRim, lc, .6) * back * .4;
     float dA = length(aPos - uArea.xyz);
     float wv = pow(.5 + .5 * sin(uTime * 1.7 - dA * .85), 3.) * uPulse;
-    ch = mix(ch, mix(lc, vec3(1., .97, .9), .6), on * (.18 + .5 * wv) * ao);
+    ch = mix(ch, mix(lc, vec3(1., .97, .9), .5), on * (.1 + .4 * wv) * ao);
     float tw = pow(max(0., sin(uTime * (.45 + aRand.x * .8) + aRand.y * 6.283)), 40.) * ao * uPulse; // Feuern
     ch = mix(ch, vec3(1., .97, .9), tw * .8);
-    float sg = step(5.5, lb) * pow(fract(aPos.y * .09 + uTime * .45), 7.) * uPulse;                  // Hirnstamm: Signal abwärts
+    float sg = step(5.5, lb) * (1. - inn) * pow(fract(aPos.y * .09 + uTime * .45), 7.) * uPulse;                  // Hirnstamm: Signal abwärts
     ch = mix(ch, cWarm, sg * .8);
     col = mix(col, ch, hk);
     a = mix(a, min(1., a * (1. + ar * 2.2) + ar * .3), isBrain * (1. - uHirn));
-    a = mix(a, min(1., lit * mix(1., .6, uAreaK * (1. - on)) * (1. + on * (.55 + .5 * wv)) + on * .1 * ao + tw * .5 + sg * .4) * rev * uNerve, hk);
+    a = mix(a, min(1., lit * mix(1., .72, uAreaK * (1. - on)) * (1. + on * (.1 + .3 * wv)) + tw * .5 + sg * .4) * rev * uNerve, hk); // aktiver Lappen: über die Farbe heller, nicht über die Deckkraft (sonst geht die Form verloren)
     { float as = smoothstep(.1, 1., uHirn); a *= mix(1., .12 + .88 * as * as, isBrain * step(.001, uArea.w)); } // im Staub leise, sonst weißer Fleck
     ar = mix(ar, on * .5 + tw, uHirn); }
   d = mix(d, (.34 + .08*im) * (1. + ar * .3) * mix(1., .78, step(.001, uArea.w)), isBrain);
+  d = mix(d, uSpH * .8 * (1. + ar * .12), isBrain * step(.001, uArea.w) * smoothstep(.3, 1., uHirn)); // im Gehirn-Blick: dichte Punkte (0,8 des Abstands), die Fläche schließt sich
   float ph = fract(aN.z/170. - uTime*.16);
   float pulse = pow(ph, 9.) * uPulse;
   col = mix(col, mix(cLine, cWarm, clamp(front2*.8 + pulse, 0., 1.)), isNerve);
-  a = mix(a, rev * (.6 + .2*aN.w) * (1. + pulse*.8 + front2*.5) * uNerve * (1. + lens*.5) * (1. - .8 * uHirn), isNerve);
+  a = mix(a, rev * (.6 + .2*aN.w) * (1. + pulse*.8 + front2*.5) * uNerve * (1. + lens*.5) * (1. - .97 * uHirn), isNerve);
   d = mix(d, (.34 + .1*aN.w) * (1. + pulse*.45 + front2*.3), isNerve);
 
   // Zeiger: Stufe 1 wie heute (größer, warmweiß); in Stufe 2 übernimmt die Lupe – dort nur die inneren Schichten heller
@@ -241,15 +275,25 @@ void main(){
   gl_PointSize = size; vSize = size;
   vCol = col;
   vA = clamp(a, 0., 1.) * thin * thin * li;
+  // Fassung K: das Gehirn wird deckend gezeichnet (Tiefe), vOp = wie viel davon schon da ist (Auflösen über ein festes Punktmuster)
+  vOp = mix(1., front * rev * uNerve * smoothstep(.05, .8, uHirn) * li, isBrain * step(.001, uArea.w));
 }`;
 const FRAG = `#version 300 es
 precision mediump float;
-in vec3 vCol; in float vA; in float vSize; in float vSoft; out vec4 o;
-uniform float uAlpha;
+in vec3 vCol; in float vA; in float vSize; in float vSoft; in float vOp; out vec4 o;
+uniform float uAlpha, uSolid;
 void main(){
   float d = length(gl_PointCoord - .5);
   float aa = min(.25, 1.3 / vSize);
   float disc = 1. - smoothstep(.5 - aa, .5, d);
+  if (uSolid > .5) { // Gehirn (Fassung K): deckende Punkte mit Tiefe – was hinten liegt, ist verdeckt; Rand weich gegen den Grund
+    if (d > .5) discard;
+    float h = fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453);
+    if (vOp < .02 + h * .96) discard;
+    vec3 bg = vec3(.0392, .0863, .1059);
+    o = vec4(bg + vCol * vA * uAlpha * disc, 1.);
+    return;
+  }
   float a = mix(disc, smoothstep(.5, .0, d), vSoft) * vA * uAlpha;
   if (a < .002) discard;
   o = vec4(vCol * a, a);
@@ -292,7 +336,7 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
     setDeep(h) { gl.useProgram(prog); gl.uniform3fv(U.cDeep, hex(h || '#44788E')); },
     draw(u) {
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.uniform2f(U.uRes, u.W, u.H); gl.uniform2f(U.uAnchor, u.ax, u.ay);
       gl.uniform4f(U.uView, u.fx, u.fy, u.s, u.sway);
       gl.uniform1f(U.uTime, u.time); gl.uniform1f(U.uBreath, u.breath); gl.uniform1f(U.uCalm, u.calm);
@@ -302,10 +346,31 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
       gl.uniform1f(U.uTip, u.tip); gl.uniform1f(U.uPulse, u.pulse); gl.uniform1f(U.uNerve, u.nerve);
       gl.uniform1f(U.uTilt, u.tilt); gl.uniform1f(U.uScroll, u.scroll);
       gl.uniform1f(U.uKino, u.kino); gl.uniform1f(U.uEnd, u.end);
-      gl.uniform1f(U.uQuiet, u.quiet || 0); gl.uniform1f(U.uLight, u.light || 0); gl.uniform1f(U.uGround, u.ground || 0); gl.uniform1f(U.uScanIn, u.scanIn || 0); gl.uniform1f(U.uInner, u.inner || 0); gl.uniform1f(U.uHalf, u.half || 0); gl.uniform1f(U.uLens, u.lens || 0); gl.uniform1f(U.uDense, u.dense || 0); gl.uniform1f(U.uGlass, u.glass || 0.9); gl.uniform1f(U.uAreaK, u.areaK || 0); gl.uniform1f(U.uHirn, u.hirn || 0); gl.uniform1f(U.uShell, u.shell || 0); gl.uniform1f(U.uLobe, u.lobe == null ? -1 : u.lobe); { const A = u.area || [0, 0, 0, 0]; gl.uniform4f(U.uArea, A[0], A[1], A[2], A[3]); }
+      gl.uniform1f(U.uQuiet, u.quiet || 0); gl.uniform1f(U.uLight, u.light || 0); gl.uniform1f(U.uGround, u.ground || 0); gl.uniform1f(U.uScanIn, u.scanIn || 0); gl.uniform1f(U.uInner, u.inner || 0); gl.uniform1f(U.uHalf, u.half || 0); gl.uniform1f(U.uLens, u.lens || 0); gl.uniform1f(U.uDense, u.dense || 0); gl.uniform1f(U.uGlass, u.glass || 0.9); gl.uniform1f(U.uAreaK, u.areaK || 0); gl.uniform1f(U.uHirn, u.hirn || 0); gl.uniform1f(U.uShell, u.shell || 0); gl.uniform1f(U.uLobe, u.lobe == null ? -1 : u.lobe); gl.uniform1f(U.uAreaI, u.areaI == null ? -1 : u.areaI); gl.uniform1f(U.uSpH, (pts.hirn && pts.hirn.sp) || 0.42); { const B = pts.hirn ? [...pts.hirn.c, pts.hirn.r] : [0, 0, 0, 1]; gl.uniform4f(U.uBC, B[0], B[1], B[2], B[3]); } { const A = u.area || [0, 0, 0, 0]; gl.uniform4f(U.uArea, A[0], A[1], A[2], A[3]); }
       gl.uniform3fv(U.uStC, u.stc);
       gl.uniform4f(U.uPtr, u.ptr[0], u.ptr[1], u.ptr[2], u.ptr[3]);
-      gl.drawArrays(gl.POINTS, 0, count);
+      const Hn = u.solid && pts.hirn;
+      if (!Hn) { gl.uniform1f(U.uSolid, 0); gl.drawArrays(gl.POINTS, 0, count); return; }
+      // Fassung K: erst alles vor dem Gehirn (Haut, Knochen) wie gewohnt, dann das Gehirn deckend mit Tiefe,
+      // dann der Rest (Leuchten, Bögen, Lichthof, Nerven, Staub) leuchtend darüber – aber hinter dem Gehirn verdeckt
+      gl.uniform1f(U.uSolid, 0); gl.drawArrays(gl.POINTS, 0, Hn.b0);
+      gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.depthMask(true); gl.disable(gl.BLEND);
+      gl.uniform1f(U.uSolid, 1); gl.drawArrays(gl.POINTS, Hn.b0, Hn.b1 - Hn.b0);
+      gl.enable(gl.BLEND); gl.depthMask(false); gl.uniform1f(U.uSolid, 0);
+      gl.drawArrays(gl.POINTS, Hn.b1, count - Hn.b1);
+      gl.depthMask(true); gl.disable(gl.DEPTH_TEST);
     },
   };
+}
+
+// Zeichenfläche mit Tiefenpuffer (nur Fassung K – das Gehirn wird deckend gezeichnet); sonst wie ../feinschliff/gl.js glContext
+export function glContextTiefe(canvas) {
+  const glQ = new URLSearchParams(location.search).get('gl');
+  let gl = null;
+  try { gl = canvas.getContext('webgl2', { alpha: false, antialias: false, depth: true, stencil: false, premultipliedAlpha: true, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: !glQ }); } catch (e) { /* ohne WebGL 2 */ }
+  if (gl && !glQ) try {
+    const e = gl.getExtension('WEBGL_debug_renderer_info');
+    if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(String(gl.getParameter(e ? e.UNMASKED_RENDERER_WEBGL : gl.RENDERER)))) { gl.getExtension('WEBGL_lose_context')?.loseContext(); gl = null; }
+  } catch (e) { /* Name nicht lesbar: WebGL bleibt an */ }
+  return gl;
 }

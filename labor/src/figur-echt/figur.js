@@ -28,8 +28,8 @@ function normals(pos, idx) {
   return N;
 }
 // Zeilen über ein Netz (wie ../shared/netz.js rows, Scheiben quer zur Höhe y) – zusätzlich je Punkt Zeile r und Stelle k (grobes Raster).
-// fn(x, y, z, nx, ny, nz, coarse)
-function rows({ pos, idx }, sp, fn) {
+// fn(x, y, z, nx, ny, nz, coarse, wert) – wert: der Wert je Ecke aus ao (0…255), entlang der Zeile mitgeführt (sonst 0)
+function rows({ pos, idx, ao }, sp, fn) {
   const N = normals(pos, idx), nv = pos.length / 3, dy = sp * 0.866;
   let lo = Infinity, hi = -Infinity;
   for (let i = 1; i < pos.length; i += 3) { if (pos[i] < lo) lo = pos[i]; if (pos[i] > hi) hi = pos[i]; }
@@ -44,7 +44,7 @@ function rows({ pos, idx }, sp, fn) {
         const p = I[e], q = I[(e + 1) % 3], hp = h[e], hq = h[(e + 1) % 3];
         if ((hp < y) === (hq < y)) continue;
         const f = (y - hp) / (hq - hp), key = p < q ? p * nv + q : q * nv + p;
-        cut.push({ key, x: [0, 1, 2].map((c) => pos[p * 3 + c] + (pos[q * 3 + c] - pos[p * 3 + c]) * f), n: [0, 1, 2].map((c) => N[p * 3 + c] + (N[q * 3 + c] - N[p * 3 + c]) * f) });
+        cut.push({ key, x: [0, 1, 2].map((c) => pos[p * 3 + c] + (pos[q * 3 + c] - pos[p * 3 + c]) * f), n: [0, 1, 2].map((c) => N[p * 3 + c] + (N[q * 3 + c] - N[p * 3 + c]) * f), a: ao ? ao[p] + (ao[q] - ao[p]) * f : 0 });
       }
       if (cut.length === 2) slices[r].push(cut);
     }
@@ -72,7 +72,7 @@ function rows({ pos, idx }, sp, fn) {
         const f = (s - L[j - 1]) / Math.max(1e-9, L[j] - L[j - 1]), A = line[j - 1], B = line[j];
         const p = [0, 1, 2].map((c) => A.x[c] + (B.x[c] - A.x[c]) * f); let n = [0, 1, 2].map((c) => A.n[c] + (B.n[c] - A.n[c]) * f);
         const l = Math.hypot(n[0], n[1], n[2]) || 1; n = [n[0] / l, n[1] / l, n[2] / l];
-        fn(p[0], p[1], p[2], n[0], n[1], n[2], (yAbs & 1) === 0 && ((k & 1) === 0) === ((yAbs & 2) === 0));
+        fn(p[0], p[1], p[2], n[0], n[1], n[2], (yAbs & 1) === 0 && ((k & 1) === 0) === ((yAbs & 2) === 0), A.a + (B.a - A.a) * f);
       }
     }
   });
@@ -108,7 +108,7 @@ export function linesOf(nerves, split) {
 }
 
 // sp = Abstand der Haut-Punkte (Grundriss-Einheiten), dust = Zahl der großen unscharfen Punkte im Raum, data = decode(…)
-export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = false, shell = false }) { // hirn (Fassung K): Gehirn rundum und dichter, Maße in .brain
+export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = false, shell = false, hirnSp = 0.42, areale = [] }) { // hirnSp: Punktabstand im feinen Gehirn · areale: [Hirnlappen, Seite] je Station (Signal-Bögen) // hirn (Fassung K): Gehirn rundum und dichter, Maße in .brain
   const Pp = [], Nn = [], St = [], Ht = [], Ct = [], Nf = [];
   const put = (x, y, z, nx, ny, nz, kind, a, b, c, heat = null) => {
     Pp.push(x, y, z); Nn.push(nx, ny, nz); Nf.push(kind, a, b, c);
@@ -168,12 +168,13 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   }
   // A2 Gehirn: Großhirn mit echten Windungen, Kleinhirn, Hirnstamm – erscheint mit der Lichtspitze von oben nach unten
   // (Innenwände an der Mittelspalte entfallen – sie lägen von vorn gesehen als helle Naht über der Mitte)
-  const spBr = hirn ? 0.42 : clamp(sp * 0.42, 0.62, 0.95);
+  const spBr = hirn ? hirnSp : clamp(sp * 0.42, 0.62, 0.95);
   const BB = [[1e9, -1e9], [1e9, -1e9], [1e9, -1e9]];
   // Fassung K: feine Netze (Art brain2), nach Hirnlappen getrennt (Kennung je Punkt in ctr.x: 0 Stirn · 1 Zentralregion · 2 Schläfe ·
   // 3 Scheitel · 4 Hinterhaupt · 5 Kleinhirn · 6 Stamm); dazu je Punkt die Tiefe unter der Hüllfläche (nfo.z: Furchen dunkel, Windungen hell)
   const fine = hirn && data.parts.some((q) => q.kind === 'brain2');
-  const LOBE = { stirn: 0, zentral: 1, schlaefe: 2, scheitel: 3, hinterhaupt: 4, kleinhirn: 5, stamm: 6 }, lobes = [];
+  const LOBE = { stirn: 0, zentral: 1, schlaefe: 2, scheitel: 3, hinterhaupt: 4, kleinhirn: 5, stamm: 6, innen: 7 }, lobes = []; // 7 = Innenfläche (Gürtelwindung, Insel, Schnittfläche)
+  const b0 = St.length; let b1 = b0, hirnInfo = null;
   if (!fine) for (const p of data.parts.filter((q) => q.kind === 'brain')) {
     const gross = p.id.endsWith('grosshirn');
     const w = gross ? 0.7 : p.id.endsWith('kleinhirn') ? 0.55 : 0.45;
@@ -186,35 +187,46 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   } else {
     const all = [];
     for (const p of data.parts.filter((q) => q.kind === 'brain2')) {
-      const lb = LOBE[p.id.split('/')[1]] ?? 0, gross = lb < 5;
-      rows(p, spBr, (x, y, z, nx, ny, nz) => {
+      const lb = LOBE[p.id.split('/')[1]] ?? 0, gross = lb < 5 || lb === 7;
+      rows(p, spBr, (x, y, z, nx, ny, nz, coarse, wert) => {
         [x, y, z].forEach((c, k) => { if (c < BB[k][0]) BB[k][0] = c; if (c > BB[k][1]) BB[k][1] = c; });
-        if (gross && Math.abs(x) < 4.5 && Math.abs(nx) > 0.6) return;
-        all.push([x, y, z, nx, ny, nz, 0, lb]);
-      });
-    }
-    // Hüllfläche: größter Abstand von der Mitte in jeder Richtung (Raster 4°, Nachbarn mitgenommen) – Großhirn je Hälfte, Kleinhirn, Stamm
-    for (const sel of [(q) => q[7] < 5 && q[0] <= 0, (q) => q[7] < 5 && q[0] > 0, (q) => q[7] === 5, (q) => q[7] === 6]) {
-      const L = all.filter(sel); if (!L.length) continue;
-      const c = [0, 1, 2].map((k) => L.reduce((a, q) => a + q[k], 0) / L.length);
-      const NA = 90, NB = 45, mx = new Float32Array(NA * NB), cell = [];
-      for (const q of L) {
-        const dx = q[0] - c[0], dy = q[1] - c[1], dz = q[2] - c[2], r = Math.hypot(dx, dy, dz) || 1;
-        const ia = Math.min(NA - 1, Math.floor((Math.atan2(dz, dx) / (2 * Math.PI) + 0.5) * NA)), ib = Math.min(NB - 1, Math.floor(Math.acos(clamp(dy / r, -1, 1)) / Math.PI * NB));
-        const i = ib * NA + ia; if (r > mx[i]) mx[i] = r; cell.push([ia, ib, r]);
-      }
-      L.forEach((q, n) => {
-        const [ia, ib, r] = cell[n]; let m = 0;
-        for (let b = Math.max(0, ib - 2); b <= Math.min(NB - 1, ib + 2); b++) for (let a = -2; a <= 2; a++) { const v = mx[b * NA + (ia + a + NA) % NA]; if (v > m) m = v; }
-        q[6] = clamp((m - r) / 2.2); // 0 = auf der Hüllfläche (Windung), 1 = rund 9 mm tief (Furche)
+        all.push([x, y, z, nx, ny, nz, wert / 255, lb]); // Verdeckung je Punkt kommt aus der Datei (tools/figur-echt.mjs, Abschnitt 6)
       });
     }
     // Mitte je Lappen und Seite (außen liegende Punkte) – dorthin zeigt der Blick des Areals
-    for (let lb = 0; lb < 7; lb++) lobes[lb] = [-1, 1].map((sd) => {
-      const L = all.filter((q) => q[7] === lb && (lb >= 5 || (q[0] > 0) === (sd > 0)) && q[6] < 0.3); if (!L.length) return [0, 0, 0];
+    for (let lb = 0; lb < 8; lb++) lobes[lb] = [-1, 1].map((sd) => {
+      const L = all.filter((q) => q[7] === lb && (lb === 5 || lb === 6 || (q[0] > 0) === (sd > 0)) && q[6] < 0.3); if (!L.length) return [0, 0, 0];
       return [0, 1, 2].map((k) => L.reduce((a, q) => a + q[k], 0) / L.length);
     });
-    for (const [x, y, z, nx, ny, nz, ao, lb] of all) { const by = BODY_H / 2 - y; put(x, y, z, nx, ny, nz, 2, CROWN + (by - CROWN) * 0.72, ao, 0.6, { st: -1, h: 0, cx: lb, cy: 0 }); }
+    for (const [x, y, z, nx, ny, nz, ao, lb] of all) { if (ao > 0.9) continue; const by = BODY_H / 2 - y; put(x, y, z, nx, ny, nz, 2, CROWN + (by - CROWN) * 0.72, ao, 0.6, { st: -1, h: 0, cx: lb, cy: 0 }); }
+    b1 = St.length;
+    // --- Gehirn-Bühne (Fassung K, 25.11.2026: „Gehirn der Extraklasse“): Leuchten, Signal-Bögen, Lichthof – alles geordnet, kein Zufall in der Lage
+    const C = BB.map((r) => (r[0] + r[1]) / 2), R = Math.max(...BB.map((r) => (r[1] - r[0]) / 2));
+    // Art 9 Leuchten: jeder siebte Punkt auf den Windungen, groß und weich – trägt das Licht des aktiven Areals und das „Feuern“ nach außen
+    all.forEach((q, i) => { if (i % 7 === 0 && q[6] < 0.35) put(q[0], q[1], q[2], q[3], q[4], q[5], 9, 0, 0, 0, { st: -1, h: 0, cx: q[7], cy: 0 }); });
+    // Art 10 Signal-Bögen (bildlich, keine Anatomie-Daten): vom Areal der Station in ruhigen Bögen über die Oberfläche zu den anderen
+    // Lappen derselben Seite, zur Gegenseite, zum Kleinhirn und zum Hirnstamm; nfo.y = Station, nfo.z = Ort auf dem Bogen 0…1, nfo.w = Versatz
+    const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], len = (a) => Math.hypot(a[0], a[1], a[2]) || 1;
+    const out = (pnt, k) => { const d = sub(pnt, C), l = len(d); return [C[0] + d[0] / l * (l + k), C[1] + d[1] / l * (l + k), C[2] + d[2] / l * (l + k)]; };
+    areale.forEach(([lb, sd], ai) => {
+      const A = lobes[lb] && lobes[lb][sd]; if (!A || !(A[0] || A[1] || A[2])) return;
+      const ziele = [];
+      for (let o = 0; o < 5; o++) if (o !== lb && lobes[o]) ziele.push(lobes[o][sd]);
+      if (lb < 5) ziele.push(lobes[lb][1 - sd]);
+      if (lb !== 5) ziele.push(lobes[5][0]);
+      if (lobes[6]) ziele.push(lobes[6][0]);
+      ziele.forEach((B, zi) => {
+        if (!B || !(B[0] || B[1] || B[2])) return;
+        const A1 = out(A, 1.2), B1 = out(B, 1.2), mid = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2, (A[2] + B[2]) / 2];
+        const dm = sub(mid, C), lm = len(dm), hgt = R * 1.02 + len(sub(A, B)) * 0.3;
+        const M = [C[0] + dm[0] / lm * hgt * 1.25, C[1] + dm[1] / lm * hgt * 1.25, C[2] + dm[2] / lm * hgt * 1.25];
+        const n = Math.max(24, Math.round((len(sub(M, A1)) + len(sub(B1, M))) / 0.42));
+        for (let k = 0; k <= n; k++) { const t = k / n, u = 1 - t; put(u * u * A1[0] + 2 * u * t * M[0] + t * t * B1[0], u * u * A1[1] + 2 * u * t * M[1] + t * t * B1[1], u * u * A1[2] + 2 * u * t * M[2] + t * t * B1[2], 0, 0, 0, 10, ai, t, (zi * 0.381966) % 1); }
+      });
+    });
+    // Art 11 Lichthof: ein großer weicher Punkt hinter dem Gehirn (scheint zwischen den Punkten durch)
+    put(C[0], C[1], C[2], 0, 0, 0, 11, R, 0, 0);
+    hirnInfo = { b0, b1, c: C, r: R, sp: spBr };
   }
   // A4 Muskeln der Stationen: Spannung sitzt im Muskel (Nacken: Trapezius absteigend + Levator scapulae; Hüfte: Gluteus medius, Piriformis, Psoas)
   const spM = clamp(sp * 0.8, 0.9, 2);
@@ -267,5 +279,5 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   const count = St.length, rnd = new Float32Array(count * 4), rr = rng(77);
   for (let k = 0; k < rnd.length; k++) rnd[k] = rr();
   const split = data.head.split;
-  return { pos: new Float32Array(Pp), nrm: new Float32Array(Nn), st: new Float32Array(St), heat: new Float32Array(Ht), ctr: new Float32Array(Ct), rnd, nfo: new Float32Array(Nf), count, nBody, spB, lines: linesOf(nerves, split), split, brain: BB, lobes };
+  return { pos: new Float32Array(Pp), nrm: new Float32Array(Nn), st: new Float32Array(St), heat: new Float32Array(Ht), ctr: new Float32Array(Ct), rnd, nfo: new Float32Array(Nf), count, nBody, spB, lines: linesOf(nerves, split), split, brain: BB, lobes, hirn: hirnInfo };
 }

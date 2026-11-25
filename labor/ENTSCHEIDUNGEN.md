@@ -1,8 +1,14 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 24.11.2026 · Arbeitsstand ist **Puls · Scan** (`test-4-puls-scan.html`, Vorschau `live/`). Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+Stand: 25.11.2026 · Arbeitsstand ist **Puls · Scan** (`test-4-puls-scan.html`, Vorschau `live/`). Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 Neueste Entscheidung oben. Überholte ganze Abschnitte (Figur plus, Tür-Entwurf A/C, Willkommenszeile, Porträt-Entwürfe, Zuhause, Hausbesuch, alte Offen-Listen) liegen in `archiv/ENTSCHEIDUNGEN-ueberholt.md`.
 **Achtung bei Abschnitten vor dem 22.11.:** Dort stehen gültige Merkregeln neben Überholtem. Überholt sind insbesondere: Tür C und Tür-Bühne „Hineingehen“ (ersetzt durch den Raum, 23.11.), „Figur plus“ und die gezeichnete Figur (ersetzt durch die echte Figur, 23.11.), „Grün nur im Logo“ (seit 22.11. auch Raumfarbe), „kein Rot an der Manuthera“ (seit 23.11. Verlauf Bernstein → Rot-Orange), Logo nach dem Original / groß am Start (Logo A bleibt), Partikel-Haus, Röntgenblick, Ego-Rundgang, Kapitel 05 „Licht“. Was `CLAUDE.md` sagt, hat Vorrang.
+
+## 25.11.2026 – Gehirn der Extraklasse (Kai: „gerne Recherche, am besten kostenlos“)
+- Für die Rinde des Gehirns gilt eine zweite Quelle neben BodyParts3D: „Brain for Blender“ (brainder.org, CC BY-SA 3.0). Daten mit der Bedingung „Weitergabe unter gleichen Bedingungen“ liegen **immer in einer eigenen Datei** mit Quelle und Lizenz im Kopf, nie gemischt in `figur-echt.bin`; die Namensnennung erscheint dort, wo die Daten gezeigt werden.
+- Kleinhirn und Hirnstamm bleiben aus BodyParts3D (dort sind die Blätter des Kleinhirns modelliert). Regel bleibt: nichts Anatomisches erfinden – Lage und Größe dürfen an das Großhirn angepasst werden, die Form nicht.
+- Flächen, die als Körper gelesen werden sollen (Gehirn in der Nahansicht), werden deckend mit Tiefe gezeichnet; die additive Wolke bleibt für alles Durchscheinende.
+- Bezahl-Optionen sind nur Vorschläge an Kai; ohne sein Go wird nichts gekauft (Regel „alles kostenlos halten“).
 
 ## 25.11.2026 – Kais Rückmeldung zur Vorschau
 - Punkt-Schrift, die gelesen werden soll, wird echte Schrift (HTML im Raum), keine Buchstaben aus wenigen Punkten.

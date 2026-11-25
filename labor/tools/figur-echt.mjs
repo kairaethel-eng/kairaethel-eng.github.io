@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { MeshoptSimplifier } from 'three/examples/jsm/libs/meshopt_simplifier.module.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const [dirA, dirB, listA, listB, preview] = process.argv.slice(2);
+const [dirA, dirB, listA, listB, preview, hirnDir] = process.argv.slice(2); // hirnDir (optional): Ordner mit pial_DK_obj/ und subcortical_obj/ von brainder.org → assets/hirn-echt.bin
 if (!dirA || !dirB || !listA || !listB) { console.error('Aufruf: node tools/figur-echt.mjs <partof-obj-Ordner> <isa-obj-Ordner> <partof_element_parts.txt> <isa_element_parts.txt> [Vorschau-Ordner]'); process.exit(1); }
 const OUT = join(root, 'assets', 'figur-echt.bin');
 const QUELLE = 'BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International';
@@ -340,14 +340,6 @@ const PARTS = [
   ['gehirn/grosshirn', 'brain', ['angular gyrus', 'inferior frontal gyrus', 'inferior temporal gyrus', 'middle frontal gyrus', 'middle temporal gyrus', 'occipital lobe', 'postcentral gyrus', 'precentral gyrus', 'superior frontal gyrus', 'superior parietal lobule', 'supramarginal gyrus'].flatMap(LR), 13000],
   ['gehirn/kleinhirn', 'brain', ['cerebellum'], 3000],
   ['gehirn/stamm', 'brain', ['midbrain', 'pons', 'medulla oblongata'], 1400],
-  // Fassung K (25.11.2026, Kai: „Gehirn noch besser als im Video“): dieselben Teile mit viel mehr Dreiecken – nur für den Blick ins Gehirn
-  ['hirnfein/stirn', 'brain2', ['superior frontal gyrus', 'middle frontal gyrus', 'inferior frontal gyrus'].flatMap(LR), 30000],
-  ['hirnfein/zentral', 'brain2', ['precentral gyrus', 'postcentral gyrus'].flatMap(LR), 16000],
-  ['hirnfein/schlaefe', 'brain2', ['middle temporal gyrus', 'inferior temporal gyrus'].flatMap(LR), 16000],
-  ['hirnfein/scheitel', 'brain2', ['angular gyrus', 'supramarginal gyrus', 'superior parietal lobule'].flatMap(LR), 16000],
-  ['hirnfein/hinterhaupt', 'brain2', LR('occipital lobe'), 12000],
-  ['hirnfein/kleinhirn', 'brain2', ['cerebellum'], 14000],
-  ['hirnfein/stamm', 'brain2', ['midbrain', 'pons', 'medulla oblongata'], 3600],
   ['muskel/nacken', 'muscle', [...LR('levator scapulae'), 'descending part of left trapezius', 'descending part of right trapezius'], 3600, 1],
   ['muskel/huefte', 'muscle', [...LR('gluteus medius'), ...LR('piriformis'), ...LR('psoas major')], 4200, 2],
 ];
@@ -584,26 +576,145 @@ const nerveOut = NERVES.map((n) => {
   return { pts: pts.map((p) => p.map((v) => +v.toFixed(2))), r: n.r, main: n.main, parent: n.parent, w: +n.w.toFixed(2), name: n.name };
 });
 const head = { quelle: QUELLE, bearbeitung: 'Teile ausgewählt, Haut neutralisiert, Netze vereinfacht, Koordinaten in den Grundriss von Kapitel 01 umgerechnet; Nervenbahnen an echten Landmarken berechnet', einheit: 'Grundriss-Einheiten', massstab: +K.toFixed(6), split: +(215 - T(SPLIT_P)[1]).toFixed(2), parts: [], nerves: nerveOut };
-const chunks = []; let offB = 0, nT = 0;
-for (const { id, kind, st, mesh } of out) {
-  const m = mesh, nv = m.pos.length / 3, nt = m.idx.length / 3;
-  const lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
-  for (let i = 0; i < m.pos.length; i++) { lo[i % 3] = Math.min(lo[i % 3], m.pos[i]); hi[i % 3] = Math.max(hi[i % 3], m.pos[i]); }
-  const q = new Uint16Array(m.pos.length);
-  for (let i = 0; i < m.pos.length; i++) q[i] = Math.round((m.pos[i] - lo[i % 3]) / Math.max(1e-6, hi[i % 3] - lo[i % 3]) * 65535);
-  const pb = new Uint8Array(nv * 6);
-  for (let i = 0; i < nv; i++) for (let k = 0; k < 3; k++) { const d = (q[i * 3 + k] - (i ? q[i * 3 - 3 + k] : 0)) & 0xFFFF; pb[k * 2 * nv + i] = d & 255; pb[(k * 2 + 1) * nv + i] = d >> 8; }
-  const ib = []; let hw = 0;
-  for (const i of m.idx) { let d = hw - i; if (d === 0) hw++; while (d > 127) { ib.push((d & 127) | 128); d >>= 7; } ib.push(d); }
-  const ibuf = Uint8Array.from(ib);
-  head.parts.push({ id, kind, st, nv, nt, lo: lo.map((v) => +v.toFixed(4)), hi: hi.map((v) => +v.toFixed(4)), p: offB, i: offB + pb.length, il: ibuf.length });
-  chunks.push(pb, ibuf); offB += pb.length + ibuf.length; nT += nt;
+function pack(head, out, file) {
+  const chunks = []; let offB = 0, nT = 0;
+  for (const { id, kind, st, mesh, ao } of out) {
+    const m = mesh, nv = m.pos.length / 3, nt = m.idx.length / 3;
+    const lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
+    for (let i = 0; i < m.pos.length; i++) { lo[i % 3] = Math.min(lo[i % 3], m.pos[i]); hi[i % 3] = Math.max(hi[i % 3], m.pos[i]); }
+    const q = new Uint16Array(m.pos.length);
+    for (let i = 0; i < m.pos.length; i++) q[i] = Math.round((m.pos[i] - lo[i % 3]) / Math.max(1e-6, hi[i % 3] - lo[i % 3]) * 65535);
+    const pb = new Uint8Array(nv * 6);
+    for (let i = 0; i < nv; i++) for (let k = 0; k < 3; k++) { const d = (q[i * 3 + k] - (i ? q[i * 3 - 3 + k] : 0)) & 0xFFFF; pb[k * 2 * nv + i] = d & 255; pb[(k * 2 + 1) * nv + i] = d >> 8; }
+    const ib = []; let hw = 0;
+    for (const i of m.idx) { let d = hw - i; if (d === 0) hw++; while (d > 127) { ib.push((d & 127) | 128); d >>= 7; } ib.push(d); }
+    const ibuf = Uint8Array.from(ib);
+    const part = { id, kind, st, nv, nt, lo: lo.map((v) => +v.toFixed(4)), hi: hi.map((v) => +v.toFixed(4)), p: offB, i: offB + pb.length, il: ibuf.length };
+    chunks.push(pb, ibuf); offB += pb.length + ibuf.length; nT += nt;
+    if (ao) { part.a = offB; chunks.push(ao); offB += ao.length; } // je Ecke: Verdeckung 0 (frei) … 255 (tief in der Furche)
+    head.parts.push(part);
+  }
+  const hj = Buffer.from(JSON.stringify(head), 'utf8'), len = Buffer.alloc(4); len.writeUInt32LE(hj.length);
+  const rawB = Buffer.concat([len, hj, ...chunks.map((c) => Buffer.from(c.buffer, c.byteOffset, c.byteLength))]);
+  const gz = gzipSync(rawB, { level: 9 });
+  writeFileSync(file, gz);
+  console.log(`${head.parts.length} Teile, ${nT} Dreiecke → ${(rawB.length / 1024).toFixed(0)} KB roh, ${(gz.length / 1024).toFixed(0)} KB gepackt: ${file}`);
 }
-const hj = Buffer.from(JSON.stringify(head), 'utf8'), len = Buffer.alloc(4); len.writeUInt32LE(hj.length);
-const rawB = Buffer.concat([len, hj, ...chunks.map((c) => Buffer.from(c.buffer, c.byteOffset, c.byteLength))]);
-const gz = gzipSync(rawB, { level: 9 });
-writeFileSync(OUT, gz);
-console.log(`${head.parts.length} Teile, ${nT} Dreiecke, ${nerveOut.length} Nervenbahnen, Teilung bei Grundriss-Höhe ${head.split} → ${(rawB.length / 1024).toFixed(0)} KB roh, ${(gz.length / 1024).toFixed(0)} KB gepackt: ${OUT}`);
+pack(head, out, OUT);
+console.log(`${nerveOut.length} Nervenbahnen, Teilung bei Grundriss-Höhe ${head.split}`);
+
+// =====================================================================================================
+// 6  Feines Gehirn für den Blick ins Gehirn (Fassung K, 25.11.2026, Kai: „ein Gehirn der Extraklasse“) → assets/hirn-echt.bin
+// =====================================================================================================
+// Quelle: „Brain for Blender“ von Anderson M. Winkler (brainder.org/brain-for-blender), CC BY-SA 3.0 – Rinden-Oberfläche (pial) eines
+// echten Gehirns aus dem MRT (FreeSurfer), nach Desikan-Killiany in Areale geteilt. Kleinhirn und Hirnstamm: BodyParts3D (CC BY 4.0).
+// Hier: Areale zu Hirnlappen zusammengefasst, vereinfacht, an die Stelle des Großhirns der Figur gelegt (Mitte und Größe des Kastens).
+if (hirnDir) {
+  const D = (n) => join(hirnDir, 'pial_DK_obj', n), U = (n) => join(hirnDir, 'subcortical_obj', `${n}.obj`);
+  const both = (names) => names.flatMap((n) => [D(`lh.pial.DK.${n}.obj`), D(`rh.pial.DK.${n}.obj`)]);
+  const LAPPEN = [
+    ['stirn', ['superiorfrontal', 'rostralmiddlefrontal', 'caudalmiddlefrontal', 'parsopercularis', 'parstriangularis', 'parsorbitalis', 'lateralorbitofrontal', 'medialorbitofrontal', 'frontalpole']],
+    ['zentral', ['precentral', 'postcentral', 'paracentral']],
+    ['schlaefe', ['superiortemporal', 'middletemporal', 'inferiortemporal', 'bankssts', 'fusiform', 'transversetemporal', 'entorhinal', 'temporalpole', 'parahippocampal']],
+    ['scheitel', ['superiorparietal', 'inferiorparietal', 'supramarginal', 'precuneus']],
+    ['hinterhaupt', ['lateraloccipital', 'lingual', 'cuneus', 'pericalcarine']],
+    ['innen', ['caudalanteriorcingulate', 'rostralanteriorcingulate', 'posteriorcingulate', 'isthmuscingulate', 'insula', 'unknown']],
+  ];
+  const RATE = +(process.env.HIRN_RATE || 0.26); // Anteil der Dreiecke, der bleibt
+  const meshes = LAPPEN.map(([id, names]) => [id, load(both(names).filter((f) => existsSync(f)))]);
+  // Kleinhirn und Hirnstamm bleiben aus BodyParts3D (dort mit den feinen Blättern des Kleinhirns modelliert; die Netze der Quelle oben
+  // stammen aus einer groben Raster-Einteilung und sind nur Klumpen). Die Hälften sind an der Mittelebene flach geschnitten –
+  // die Schnittflächen entfallen (sie lägen sonst als helle Wand im Inneren).
+  const ohneSchnitt = (m) => {
+    const idx = [];
+    for (let t = 0; t < m.idx.length; t += 3) {
+      const a = m.idx[t] * 3, b = m.idx[t + 1] * 3, c = m.idx[t + 2] * 3;
+      if (Math.abs(m.pos[a] + 0.65) < 0.6 && Math.abs(m.pos[b] + 0.65) < 0.6 && Math.abs(m.pos[c] + 0.65) < 0.6) continue;
+      idx.push(m.idx[t], m.idx[t + 1], m.idx[t + 2]);
+    }
+    return { pos: m.pos, idx };
+  };
+  const BP = { kleinhirn: [['cerebellum'], 46000], stamm: [['midbrain', 'pons', 'medulla oblongata'], 9000] };
+  for (const id in BP) meshes.push([id, ohneSchnitt(load(filesOf(BP[id][0]))), BP[id][1]]);
+  // Kasten der Rinde (Quelle) und des Großhirns der Figur (BodyParts3D) → Lage und Größe
+  const box = (ms) => { const lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9]; for (const m of ms) for (let i = 0; i < m.pos.length; i++) { lo[i % 3] = Math.min(lo[i % 3], m.pos[i]); hi[i % 3] = Math.max(hi[i % 3], m.pos[i]); } return [lo, hi]; };
+  const [sl, sh] = box(meshes.slice(0, 5).map((q) => q[1]));
+  const [tl, th] = box([load(filesOf(PARTS.find((q) => q[0] === 'gehirn/grosshirn')[2]))]);
+  const k = ((th[0] - tl[0]) / (sh[0] - sl[0]) + (th[1] - tl[1]) / (sh[1] - sl[1]) + (th[2] - tl[2]) / (sh[2] - sl[2])) / 3;
+  const sc = [0, 1, 2].map((c) => (sl[c] + sh[c]) / 2), tc = [0, 1, 2].map((c) => (tl[c] + th[c]) / 2);
+  // Quelle: x rechts, y vorn, z oben · BodyParts3D: x links, y hinten, z oben → halbe Drehung um die Hochachse
+  const outH = [];
+  // Umlaufsinn prüfen: die Normalen müssen nach außen zeigen (Summe der Spatprodukte um die Mitte > 0), sonst Dreiecke umdrehen
+  const outward = (m, o) => {
+    let v = 0;
+    for (let t = 0; t < m.idx.length; t += 3) {
+      const [a, b, c] = [0, 1, 2].map((e) => { const i = m.idx[t + e] * 3; return [m.pos[i] - o[0], m.pos[i + 1] - o[1], m.pos[i + 2] - o[2]]; });
+      v += a[0] * (b[1] * c[2] - b[2] * c[1]) + a[1] * (b[2] * c[0] - b[0] * c[2]) + a[2] * (b[0] * c[1] - b[1] * c[0]);
+    }
+    if (v < 0) for (let t = 0; t < m.idx.length; t += 3) { const x = m.idx[t + 1]; m.idx[t + 1] = m.idx[t + 2]; m.idx[t + 2] = x; }
+    return v < 0;
+  };
+  // Lage von Kleinhirn und Stamm: Das Gehirn der Quelle ist ein einzelner Mensch, sein Kleinhirn sitzt etwas höher und ist breiter als
+  // das Modell von BodyParts3D. Das feine Kleinhirn wird deshalb an die Stelle des Kleinhirns der Quelle gelegt (Mitte und Größe des
+  // Kastens, ein Maßstab für alle Achsen); der Stamm geht mit, damit beide zusammenbleiben.
+  const zuFigur = (x, y, z) => [tc[0] - (x - sc[0]) * k, tc[1] - (y - sc[1]) * k, tc[2] + (z - sc[2]) * k];
+  const kq = load([U('Left-Cerebellum-Cortex'), U('Right-Cerebellum-Cortex')]);
+  for (let i = 0; i < kq.pos.length; i += 3) { const q = zuFigur(kq.pos[i], kq.pos[i + 1], kq.pos[i + 2]); kq.pos[i] = q[0]; kq.pos[i + 1] = q[1]; kq.pos[i + 2] = q[2]; }
+  const [ql, qh] = box([kq]), [bl, bh] = box([meshes.find((q) => q[0] === 'kleinhirn')[1]]);
+  const k2 = ((qh[0] - ql[0]) / (bh[0] - bl[0]) + (qh[1] - ql[1]) / (bh[1] - bl[1]) + (qh[2] - ql[2]) / (bh[2] - bl[2])) / 3;
+  const qc = [0, 1, 2].map((c) => (ql[c] + qh[c]) / 2), bc = [0, 1, 2].map((c) => (bl[c] + bh[c]) / 2);
+  qc[0] = bc[0]; // seitlich bleibt alles auf der Mittelebene des Körpers (Rückenmark)
+  console.log(`Kleinhirn: Maßstab ${k2.toFixed(3)}, versetzt um ${(qc[1] - bc[1]).toFixed(1)} mm nach hinten und ${(qc[2] - bc[2]).toFixed(1)} mm nach oben`);
+  for (const [id, m0, ziel] of meshes) {
+    const gedreht = outward(m0, ziel ? centroid(m0) : sc);
+    if (gedreht) console.log(`hirnfein/${id}: Umlaufsinn gedreht`);
+    const pos = new Array(m0.pos.length);
+    for (let i = 0; i < m0.pos.length; i += 3) {
+      const q = ziel ? [0, 1, 2].map((c) => qc[c] + (m0.pos[i + c] - bc[c]) * k2) : zuFigur(m0.pos[i], m0.pos[i + 1], m0.pos[i + 2]);
+      pos[i] = q[0]; pos[i + 1] = q[1]; pos[i + 2] = q[2];
+    }
+    const t0 = m0.idx.length / 3, m = simplify({ pos, idx: m0.idx }, ziel || Math.round(t0 * RATE), 0.004);
+    outH.push({ id: `hirnfein/${id}`, kind: 'brain2', st: -1, mesh: Tm(m) });
+    console.log(`hirnfein/${id.padEnd(12)} ${String(t0).padStart(7)} → ${String(m.idx.length / 3).padStart(6)} Dreiecke`);
+  }
+  // Verdeckung je Ecke (Furchen dunkel, Windungen hell): wie viel Fläche liegt im Umkreis von 3 Einheiten (12 mm) oberhalb der
+  // Tangentialebene der Ecke? Auf einer Windung fast nichts, an einer Furchenwand die Gegenwand. Gewichtet mit der Fläche je Ecke.
+  {
+    const V = [];
+    for (const o of outH) {
+      const { pos, idx } = o.mesh, nv = pos.length / 3, N = new Float64Array(nv * 3), Ar = new Float64Array(nv);
+      for (let t = 0; t < idx.length; t += 3) {
+        const a = idx[t] * 3, b = idx[t + 1] * 3, c = idx[t + 2] * 3;
+        const ux = pos[b] - pos[a], uy = pos[b + 1] - pos[a + 1], uz = pos[b + 2] - pos[a + 2], vx = pos[c] - pos[a], vy = pos[c + 1] - pos[a + 1], vz = pos[c + 2] - pos[a + 2];
+        const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, ar = Math.hypot(nx, ny, nz) / 6;
+        for (const i of [a, b, c]) { N[i] += nx; N[i + 1] += ny; N[i + 2] += nz; Ar[i / 3] += ar; }
+      }
+      o.v0 = V.length;
+      for (let i = 0; i < nv; i++) { const l = Math.hypot(N[i * 3], N[i * 3 + 1], N[i * 3 + 2]) || 1; V.push([pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2], N[i * 3] / l, N[i * 3 + 1] / l, N[i * 3 + 2] / l, Ar[i]]); }
+    }
+    const RR = 3, G = new Map(), gk = (x, y, z) => `${Math.floor(x / RR)},${Math.floor(y / RR)},${Math.floor(z / RR)}`;
+    V.forEach((v, i) => { const k = gk(v[0], v[1], v[2]); let l = G.get(k); if (!l) G.set(k, l = []); l.push(i); });
+    const occ = new Float64Array(V.length);
+    V.forEach((v, i) => {
+      let s = 0;
+      for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
+        const l = G.get(gk(v[0] + a * RR, v[1] + b * RR, v[2] + c * RR)); if (!l) continue;
+        for (const j of l) {
+          const w = V[j], dx = w[0] - v[0], dy = w[1] - v[1], dz = w[2] - v[2], d = Math.hypot(dx, dy, dz);
+          if (d > RR || d < 0.15) continue;
+          const h = (dx * v[3] + dy * v[4] + dz * v[5]) / d; if (h < 0.12) continue;
+          s += w[6] * (h - 0.12) * (1 - d / RR);
+        }
+      }
+      occ[i] = s;
+    });
+    const sorted = Array.from(occ).sort((a, b) => a - b), q = (f) => sorted[Math.floor(f * (sorted.length - 1))], norm = q(0.8);
+    console.log(`Verdeckung: Median ${q(0.5).toFixed(2)}, 80 % ${norm.toFixed(2)}, 95 % ${q(0.95).toFixed(2)} → 80 % = ganz dunkel`);
+    for (const o of outH) { const nv = o.mesh.pos.length / 3; o.ao = new Uint8Array(nv); for (let i = 0; i < nv; i++) o.ao[i] = Math.round(255 * Math.min(1, occ[o.v0 + i] / norm)); }
+  }
+  console.log(`Gehirn: Maßstab ${k.toFixed(3)} (Kasten Quelle ${sl.map((v, c) => (sh[c] - v).toFixed(0)).join(' × ')} mm → Figur ${tl.map((v, c) => (th[c] - v).toFixed(0)).join(' × ')} mm)`);
+  pack({ quelle: 'Großhirn: Brain for Blender, © Anderson M. Winkler (brainder.org), licensed under CC Attribution-ShareAlike 3.0 Unported · Kleinhirn und Hirnstamm: BodyParts3D, © The Database Center for Life Science, licensed under CC Attribution 4.0 International', bearbeitung: 'Areale zu Hirnlappen zusammengefasst, Netze vereinfacht, Schnittflächen entfernt, Kleinhirn und Stamm an das Großhirn angepasst (Lage, Größe), Verdeckung je Ecke berechnet, in den Grundriss von Kapitel 01 umgerechnet', lizenz: 'CC BY-SA 3.0 (diese Datei als Ganzes; Weitergabe unter gleichen Bedingungen)', parts: [] }, outH, join(root, 'assets', 'hirn-echt.bin'));
+}
 if (preview) { // Vorschau: Nerven als dünne Röhren (BodyParts3D-Koordinaten)
   const tube = { pos: [], idx: [] };
   for (const n of NERVES) for (let i = 0; i < n.pts.length - 1; i++) {

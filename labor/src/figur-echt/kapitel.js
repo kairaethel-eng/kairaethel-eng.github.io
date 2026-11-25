@@ -35,7 +35,7 @@ import { STATIONS, LINES as LINES_H, lineTo, BODY_SVG, CROWN, SOLE, SPLIT as SPL
 import { finePoints } from '../feinschliff/figur.js';
 import { glContext, createStage as fineStage } from '../feinschliff/gl.js';
 import { echtPoints } from './figur.js';
-import { createStage } from './gl.js';
+import { createStage, glContextTiefe } from './gl.js';
 
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
@@ -238,7 +238,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   const rctx = relaxCv.getContext('2d', { willReadFrequently: true });
   rctx.fillStyle = '#000'; rctx.fillRect(0, 0, RW, RH);
   let relaxDirty = true, measureDirty = false;
-  let gl = glContext(canvas), st = null, pts = null;
+  let gl = (HIRN ? glContextTiefe : glContext)(canvas), st = null, pts = null;
   // Punktabstand: in der Übersicht liegen die Haut-Punkte rund 2,8 (Handy 2,5) Bildpunkte auseinander (wie heute)
   const big = innerWidth > 920, figH0 = SOLE - CROWN;
   const sA0 = big ? Math.min((innerHeight * 0.93 - 84) / figH0, innerWidth * 0.34 / BODY_W) : Math.min((innerHeight * 0.6 - 88) / figH0, innerWidth * 0.86 / BODY_W);
@@ -251,7 +251,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const t0 = performance.now();
     if (gl) try {
       if (d) { // echte Figur
-        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense, hirn: HIRN, shell: !!VAR.shell });
+        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense, hirn: HIRN, shell: !!VAR.shell, hirnSp: big ? 0.3 : 0.38, areale: AREALE.map((a) => [a[4], a[5]]) });
+        if (HIRN && d.parts.some((q) => q.kind === 'brain2')) document.querySelectorAll('[data-quelle-hirn]').forEach((e) => { e.hidden = false; }); // Namensnennung der Gehirn-Quelle (CC BY-SA 3.0) – nur, wenn sie gezeigt wird
         if (HIRN && pts.brain && pts.brain[0][0] < 1e8) {
           const B = pts.brain, c = B.map((r) => (r[0] + r[1]) / 2), h = B.map((r) => (r[1] - r[0]) / 2);
           HB = { c, h, ar: AREALE.map(([name, yaw, q, r, lobe, side]) => { const L = pts.lobes && pts.lobes[lobe] && pts.lobes[lobe][side]; return { name, yaw, lobe: L ? lobe : -1, p: L && (L[0] || L[1] || L[2]) ? L.slice() : q.map((v, k) => c[k] + v * h[k]), r: r * 2 * h[0] * (L ? 0.5 : 1) }; }) };
@@ -524,7 +525,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       const common = { W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
       if (mixK > 0) st.draw({ ...common, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC, quiet: VAR.quiet, light: VAR.light, ground: VAR.ground, scanIn: VAR.scanIn, half: VAR.half, lens: VAR.lens, dense: VAR.dense, glass: VAR.glass, shell: VAR.shell,
         inner: VAR.cycle ? (sl ? 0.6 : (() => { const ph = (S.time % 11) / 11; return smooth(0.18, 0.4, ph) - smooth(0.68, 0.9, ph); })()) : VAR.zoomIn ? smooth(1.12, 1.6, v.s / V.A.s) : VAR.inner,
-        ...(HIRN && HB && cur >= 0 ? { lobe: HB.ar[cur].lobe, area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) } : HIRN && HB ? { area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) } : {}) });
+        ...(HIRN && HB && cur >= 0 ? { solid: 1, areaI: cur, lobe: HB.ar[cur].lobe, area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) } : HIRN && HB ? { solid: 1, area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) } : {}) });
       if (stOld && mixK < 1) stOld.draw({ ...common, intro: 1 });
       relaxDirty = false;
     }
