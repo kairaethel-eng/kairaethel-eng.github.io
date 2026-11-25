@@ -97,11 +97,11 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // gehören dort zu vier Arealen (das Gehirn dreht sich von einem zum nächsten) – keine Fahrt den Körper hinunter
   const HIRN = START === 'k';
   const AREALE = [ // Name, Blickrichtung (Drehung um die Hochachse), Mitte im Gehirn (−1…1: rechts, oben, vorn), Radius (Anteil der Breite)
-    ['Hören · Schläfenlappen', -1.15, [0.8, -0.32, 0.22], 0.34], ['Denken · Stirnlappen', -0.3, [0.3, 0.3, 0.8], 0.38],
-    ['Bewegung · Scheitellappen', 0.75, [-0.4, 0.6, -0.05], 0.36], ['Gleichgewicht · Kleinhirn', 2.6, [-0.15, -0.72, -0.7], 0.34]];
+    ['Hören · Schläfenlappen', -1.15, [0.8, -0.32, 0.22], 0.34, 2, 1], ['Denken · Stirnlappen', -0.3, [0.3, 0.3, 0.8], 0.38, 0, 1], // dazu: Hirnlappen (Kennung in figur.js) und Seite
+    ['Bewegung · Zentralregion', 0.75, [-0.4, 0.6, -0.05], 0.36, 1, 0], ['Gleichgewicht · Kleinhirn', 2.6, [-0.15, -0.72, -0.7], 0.34, 5, 0]];
   let HB = null; // Maße des Gehirns (nach dem Laden): Mitte, halbe Ausdehnung, Areale in Körpermaßen // j (Kai 25.11. 11:17): Übersicht nur feines Relief, Röntgenblick mit Innenleben erst beim Heranzoomen an die Station // i (Kai 25.11.: „H und E kombinieren“): feines Relief als halb durchsichtige Hülle über dem Innenleben
   // h (Kai: „auch das Äußere dürfte anatomischer sein“): feines Raster schon in der Übersicht + kräftiges Licht von vorn links (Relief)
-  const VAR = { quiet: START ? 1 : 0, light: 'hijkl'.includes(START) && START ? 0.9 : START ? 0.5 : 0, dense: 'hijkl'.includes(START) && START ? 1 : 0, glass: START === 'i' ? 0.62 : START === 'j' || START === 'l' ? 0.82 : 0.9, zoomIn: START === 'j' || START === 'k' || START === 'l', shell: START === 'l' ? 1 : 0, ground: START && START !== 'b' ? 1 : 0, turn: START && START !== 'b' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0,
+  const VAR = { quiet: START ? 1 : 0, light: 'hijkl'.includes(START) && START ? 0.9 : START ? 0.5 : 0, dense: 'hijkl'.includes(START) && START ? 1 : 0, glass: START === 'i' ? 0.62 : START === 'j' ? 0.82 : START === 'l' ? 0.7 : 0.9, zoomIn: START === 'j' || START === 'k' || START === 'l', shell: START === 'l' ? 1 : 0, ground: START && START !== 'b' ? 1 : 0, turn: START && START !== 'b' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0,
     inner: START === 'e' || START === 'f' || START === 'i' ? 1 : 0, half: START === 'f' ? 1 : 0, cycle: START === 'g', lens: INNEN ? 1 : 0, lift: INNEN ? 78 : 0 };
   if (START) document.documentElement.dataset.start = START;
   if (Q.has('start')) { // Umschalter für den Vergleich: bleibt unten im Bild, solange man mit ?start= auf der Seite ist
@@ -182,7 +182,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       V[i] = { fx: St.c[0] - BODY_W / 2, fy: BODY_H / 2 - St.c[1], s: sRef * St.zoom[desk ? 1 : 0], ax: desk ? W * 0.23 : W / 2, ay: desk ? H * 0.5 : stAy };
     });
     if (HIRN && HB) { // Blick je Areal: Gehirn füllt die Bühne, das Areal steht in der Bildmitte
-      const sB = Math.min((desk ? W * 0.34 : W * 0.74) / (2 * Math.max(HB.h[0], HB.h[2])), (desk ? H * 0.6 : (TXT.txt - TXT.head || H * 0.5) * 0.74) / (2 * HB.h[1]));
+      const sB = Math.min((desk ? W * 0.41 : W * 0.86) / (2 * Math.max(HB.h[0], HB.h[2])), (desk ? H * 0.74 : (TXT.txt - TXT.head || H * 0.5) * 0.8) / (2 * HB.h[1])); // 25.11. mittags (Kai: „noch viel Platz“): größer
       HB.ar.forEach((A, i) => { const cw = Math.cos(A.yaw), sw = Math.sin(A.yaw), k = 0.12; // Areal nur halb zur Mitte gerückt: das ganze Gehirn bleibt im Bild
         V[i] = { fx: cw * (HB.c[0] + (A.p[0] - HB.c[0]) * k) + sw * (HB.c[2] + (A.p[2] - HB.c[2]) * k), fy: HB.c[1] + (A.p[1] - HB.c[1]) * k - HB.c[2] * TILT, s: sB, ax: V[i].ax, ay: V[i].ay, yaw: A.yaw }; });
       V.A.yaw = VAR.turn; V.S.yaw = 0; V.E.yaw = 0;
@@ -202,6 +202,14 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   document.fonts?.ready.then(() => { H = 0; });
   const mixView = (a, b, t, dip = 0) => {
     const s = Math.exp(lerp(Math.log(a.s), Math.log(b.s), t)) * (1 - dip * Math.sin(Math.PI * t));
+    // Fahrt mit starkem Zoom (Fassungen j, k, l – Kai 25.11.: „am PC abgeschnitten“): das Ziel bleibt während der ganzen Fahrt im Bild –
+    // sein Ort am Bildschirm wandert gerade von dort, wo es im weiten Blick liegt, zum Anker des nahen Blicks
+    if (VAR.zoomIn && Math.abs(Math.log(b.s / a.s)) > 0.5) {
+      const near = b.s > a.s ? b : a, far = b.s > a.s ? a : b, k = b.s > a.s ? t : 1 - t;
+      const x0 = far.ax + (near.fx - far.fx) * far.s, y0 = far.ay - (near.fy - far.fy) * far.s;
+      const ax = lerp(a.ax, b.ax, t), ay = lerp(a.ay, b.ay, t), px = lerp(x0, near.ax, k), py = lerp(y0, near.ay, k);
+      return { fx: near.fx - (px - ax) / s, fy: near.fy + (py - ay) / s, s, ax, ay, yaw: lerp(a.yaw || 0, b.yaw || 0, t) };
+    }
     return { fx: lerp(a.fx, b.fx, t), fy: lerp(a.fy, b.fy, t), s, ax: lerp(a.ax, b.ax, t), ay: lerp(a.ay, b.ay, t), yaw: lerp(a.yaw || 0, b.yaw || 0, t) };
   };
   function plan(u) {
@@ -246,7 +254,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
         pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense, hirn: HIRN, shell: !!VAR.shell });
         if (HIRN && pts.brain && pts.brain[0][0] < 1e8) {
           const B = pts.brain, c = B.map((r) => (r[0] + r[1]) / 2), h = B.map((r) => (r[1] - r[0]) / 2);
-          HB = { c, h, ar: AREALE.map(([name, yaw, q, r]) => ({ name, yaw, p: q.map((v, k) => c[k] + v * h[k]), r: r * 2 * h[0] })) };
+          HB = { c, h, ar: AREALE.map(([name, yaw, q, r, lobe, side]) => { const L = pts.lobes && pts.lobes[lobe] && pts.lobes[lobe][side]; return { name, yaw, lobe: L ? lobe : -1, p: L && (L[0] || L[1] || L[2]) ? L.slice() : q.map((v, k) => c[k] + v * h[k]), r: r * 2 * h[0] * (L ? 0.5 : 1) }; }) };
           arts.forEach((a, i) => { const k = $('.kicker', a); if (k && HB.ar[i]) k.innerHTML = `<i>0${i + 1}</i> ${HB.ar[i].name}`; });
           H = 0; // Blicke neu rechnen
         }
@@ -489,7 +497,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     hk = smooth(U_LEN - 0.35, U_LEN - 0.05, u);
     const lineK = handover ? 1 - smooth(U_LEN - 0.55, U_LEN - 0.22, u) : 1;
     // Wiegen + Atem (wie Puls), gleiche Werte für Partikel und SVG
-    const sway = (sl ? 0 : Math.sin(S.time * 0.25) * (HIRN ? 0.07 : 0.12)) + (HIRN && HB ? (v.yaw || 0) : VAR.turn * (1 - smooth(0.02, 0.5, u))); S.sway = sway; // ?start=c|d: am Start leicht gedreht, dreht sich mit dem ersten Scrollen nach vorn
+    const sway = (sl ? 0 : Math.sin(S.time * 0.25) * (HIRN ? 0.07 + 0.11 * smooth(1.6, 3, v.s / V.A.s) : 0.12)) + (HIRN && HB ? (v.yaw || 0) : VAR.turn * (1 - smooth(0.02, 0.5, u))); S.sway = sway; // ?start=c|d: am Start leicht gedreht, dreht sich mit dem ersten Scrollen nach vorn
     const br = Math.sin(S.breath) * (1 + S.calm * 1.3), kx = 1 + br * 0.007, ky = 1 + br * 0.004, cx = kx * Math.cos(sway);
     const M = [v.s * cx, v.s * ky, v.ax - (BODY_W / 2 * cx + v.fx) * v.s, v.ay - (BODY_H / 2 * ky - v.fy) * v.s]; // Grundriss → Bildschirm
     const toS = (bx, by) => [M[0] * bx + M[2], M[1] * by + M[3]];
@@ -516,7 +524,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       const common = { W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
       if (mixK > 0) st.draw({ ...common, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC, quiet: VAR.quiet, light: VAR.light, ground: VAR.ground, scanIn: VAR.scanIn, half: VAR.half, lens: VAR.lens, dense: VAR.dense, glass: VAR.glass, shell: VAR.shell,
         inner: VAR.cycle ? (sl ? 0.6 : (() => { const ph = (S.time % 11) / 11; return smooth(0.18, 0.4, ph) - smooth(0.68, 0.9, ph); })()) : VAR.zoomIn ? smooth(1.12, 1.6, v.s / V.A.s) : VAR.inner,
-        ...(HIRN && HB && cur >= 0 ? { area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) } : HIRN && HB ? { area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) } : {}) });
+        ...(HIRN && HB && cur >= 0 ? { lobe: HB.ar[cur].lobe, area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) } : HIRN && HB ? { area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) } : {}) });
       if (stOld && mixK < 1) stOld.draw({ ...common, intro: 1 });
       relaxDirty = false;
     }
@@ -590,7 +598,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       const show = cur >= 0 && u > ARR[cur] - 0.05 && S.idle > 3;
       nextBtn.classList.toggle('on', show);
       // Handy: unter dem Ring, höchstens bis kurz über den Text; ohne Fahrt (ganze Figur) direkt über dem Text
-      if (!desk && cur >= 0) { const tTop = (topMode ? TXT.txt : arts[cur].offsetTop || H) - 58, top = sl ? tTop : Math.min(ringPx[cur][1] + ringPx[cur][2] + 14, tTop); nextBtn.style.top = `${fmt(Math.max(80, top))}px`; } else nextBtn.style.top = '';
+      if (!desk && cur >= 0) { const tTop = (topMode ? TXT.txt : arts[cur].offsetTop || H) - 58, top = sl || HIRN ? tTop : Math.min(ringPx[cur][1] + ringPx[cur][2] + 14, tTop); nextBtn.style.top = `${fmt(Math.max(80, top))}px`; } else nextBtn.style.top = '';
     }
     // Verbindungslinie (PC): vom Ring zur Eck-Klammer des Textes
     if (desk && cur >= 0) {

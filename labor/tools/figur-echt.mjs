@@ -341,7 +341,11 @@ const PARTS = [
   ['gehirn/kleinhirn', 'brain', ['cerebellum'], 3000],
   ['gehirn/stamm', 'brain', ['midbrain', 'pons', 'medulla oblongata'], 1400],
   // Fassung K (25.11.2026, Kai: „Gehirn noch besser als im Video“): dieselben Teile mit viel mehr Dreiecken – nur für den Blick ins Gehirn
-  ['hirnfein/grosshirn', 'brain2', ['angular gyrus', 'inferior frontal gyrus', 'inferior temporal gyrus', 'middle frontal gyrus', 'middle temporal gyrus', 'occipital lobe', 'postcentral gyrus', 'precentral gyrus', 'superior frontal gyrus', 'superior parietal lobule', 'supramarginal gyrus'].flatMap(LR), 70000],
+  ['hirnfein/stirn', 'brain2', ['superior frontal gyrus', 'middle frontal gyrus', 'inferior frontal gyrus'].flatMap(LR), 30000],
+  ['hirnfein/zentral', 'brain2', ['precentral gyrus', 'postcentral gyrus'].flatMap(LR), 16000],
+  ['hirnfein/schlaefe', 'brain2', ['middle temporal gyrus', 'inferior temporal gyrus'].flatMap(LR), 16000],
+  ['hirnfein/scheitel', 'brain2', ['angular gyrus', 'supramarginal gyrus', 'superior parietal lobule'].flatMap(LR), 16000],
+  ['hirnfein/hinterhaupt', 'brain2', LR('occipital lobe'), 12000],
   ['hirnfein/kleinhirn', 'brain2', ['cerebellum'], 14000],
   ['hirnfein/stamm', 'brain2', ['midbrain', 'pons', 'medulla oblongata'], 3600],
   ['muskel/nacken', 'muscle', [...LR('levator scapulae'), 'descending part of left trapezius', 'descending part of right trapezius'], 3600, 1],

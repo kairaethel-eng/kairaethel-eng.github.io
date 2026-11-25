@@ -49,6 +49,13 @@ Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abs
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
 
+## ▶ 25.11.2026 13 Uhr – Kai: „Gehirn als eigenständige Animation, preisverdächtig, gerne mit Farbe“ · „am PC abgeschnitten“ · „L gefällt mir sehr, noch optimieren“ → in der Vorschau
+- **Gehirn (K):** Werkzeug teilt das feine Gehirn in sieben Teile `hirnfein/stirn|zentral|schlaefe|scheitel|hinterhaupt|kleinhirn|stamm`. `figur.js` gibt je Punkt die Lappen-Kennung (`ctr.x`) und die Mitte je Lappen und Seite (`pts.lobes`) zurück. `gl.js` Block „Fassung K“: Farbe je Lappen, aktives Areal (`uLobe`) heller mit Wellen, einzelne Punkte „feuern“, Signal im Hirnstamm, Aufbau aus Staub bei der Ankunft, Zeiger am gedrehten Ort. `kapitel.js`: Areale hängen am Lappen (Bewegung jetzt „Zentralregion“ statt Scheitellappen), Gehirn größer, Wiegen weiter, Knopf „Weiter scrollen“ am Handy unter dem Gehirn.
+- **Fahrt (j, k, l):** `mixView` hält bei starkem Zoom das Ziel im Bild (vorher wanderte der Kopf am PC oben hinaus).
+- **Muskelfigur (L):** Haut ohne Muskel darunter im feinen Raster (ein Material), Glanz und Tiefe im Relief, Spannung der Station sitzt in der Muskel-Hülle und zeigt sich erst an der aktiven Stelle, Glas an den Stationen 0,7.
+- **Geprüft:** K alle vier Areale und drei Zwischenbilder der Fahrt (PC 2000 × 1020), L Start und Stationen, je iPhone-Fenster und PC; `sizes.cjs`. Voller Prüfstand steht aus, bis eine Fassung gewählt ist. Tempo [O].
+- **Rückweg:** Commit davor.
+
 ## ▶ 25.11.2026 mittags – Kai: „Gehirn noch besser als im Video?“ → Fassung K mit feinem Gehirn in der Vorschau
 - **Geändert:** `tools/figur-echt.mjs`: drei zusätzliche Teile `hirnfein/…` (Art `brain2`, Großhirn 70 000 statt 13 000 Dreiecke, Kleinhirn 14 000, Stamm 3 600). `figur.js`: mit `hirn` nimmt das Gehirn die feinen Netze (Abstand 0,42) und je Punkt die Tiefe unter der Hüllfläche (`nfo.z`: 0 Windung … 1 Furche). `gl.js`: im Gehirn-Blick (`uHirn`) eigenes Licht (Führung + Aufhellung, Furchen dunkel, Lichtkante), Areal in Bernstein, Nerven, Schädel und Haut treten fast ganz zurück.
 - **Geprüft:** K am iPhone-Fenster und PC in allen vier Arealen angesehen; `sizes.cjs` „alles ok“. Die Figur ohne Schalter nutzt weiter die alten Teile (Punkte und Reihenfolge gleich).

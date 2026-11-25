@@ -142,16 +142,18 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   rows(skin, sp, (x, y, z, nx, ny, nz, coarse) => {
     if (nz < -0.42) return;
     const by = BODY_H / 2 - y, head = by < 64 && Math.abs(x) < 34 ? 1 : 0;
-    put(x, y, z, nx, ny, nz, 0, head, coarse ? 1 : 0, (fein(x, by) ? 2 : 0) + covered(x, y, z), skinHeat(x, y));
+    const cv = covered(x, y, z);
+    put(x, y, z, nx, ny, nz, 0, head, coarse ? 1 : 0, (fein(x, by) || (shell && !cv) ? 2 : 0) + cv, skinHeat(x, y));
   });
   // Hände und Füße feiner (Fassung J, 25.11.2026, Kai: „Füße, Hände … detaillierter“): ein zweites, engeres Raster nur dort (Kennung 1);
   // die Punkte des normalen Rasters in diesen Bereichen tragen Kennung 2 und treten zurück, sobald das feine gezeigt wird (uDense)
   if (detail) rows(skin, sp * 0.56, (x, y, z, nx, ny, nz) => {
     if (nz < -0.42) return;
-    if (!fein(x, BODY_H / 2 - y)) return;
-    put(x, y, z, nx, ny, nz, 0, 0, 0, 1 + covered(x, y, z), skinHeat(x, y));
+    const cv = covered(x, y, z), by = BODY_H / 2 - y;
+    if (!fein(x, by) && !(shell && !cv)) return; // Fassung L: alles, was nicht unter Muskel liegt (Kopf, Knie, Hände, Füße), im feinen Raster – ein Material
+    put(x, y, z, nx, ny, nz, 0, by < 64 && Math.abs(x) < 34 ? 1 : 0, 0, 1 + cv, skinHeat(x, y));
   });
-  for (const q of SH) put(q[0], q[1], q[2], q[3], q[4], q[5], 8, 0, 0, 0);
+  for (const q of SH) put(q[0], q[1], q[2], q[3], q[4], q[5], 8, 0, 0, 0, skinHeat(q[0], q[1])); // Spannung der Station sitzt in L sichtbar im Muskel-Relief
   const nBody = St.length;
   // A3 Knochen: etwas weiter als die Haut, Rückseiten weg (wie die Haut)
   const spB = clamp(sp * 0.95, 1.1, 2.4);
@@ -163,37 +165,51 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   // (Innenwände an der Mittelspalte entfallen – sie lägen von vorn gesehen als helle Naht über der Mitte)
   const spBr = hirn ? 0.42 : clamp(sp * 0.42, 0.62, 0.95);
   const BB = [[1e9, -1e9], [1e9, -1e9], [1e9, -1e9]];
-  // Fassung K: feine Netze (Art brain2), falls in der Datei; dazu je Punkt die Tiefe unter der Hüllfläche (Furchen dunkel, Windungen hell)
+  // Fassung K: feine Netze (Art brain2), nach Hirnlappen getrennt (Kennung je Punkt in ctr.x: 0 Stirn · 1 Zentralregion · 2 Schläfe ·
+  // 3 Scheitel · 4 Hinterhaupt · 5 Kleinhirn · 6 Stamm); dazu je Punkt die Tiefe unter der Hüllfläche (nfo.z: Furchen dunkel, Windungen hell)
   const fine = hirn && data.parts.some((q) => q.kind === 'brain2');
-  for (const p of data.parts.filter((q) => q.kind === (fine ? 'brain2' : 'brain'))) {
+  const LOBE = { stirn: 0, zentral: 1, schlaefe: 2, scheitel: 3, hinterhaupt: 4, kleinhirn: 5, stamm: 6 }, lobes = [];
+  if (!fine) for (const p of data.parts.filter((q) => q.kind === 'brain')) {
     const gross = p.id.endsWith('grosshirn');
     const w = gross ? 0.7 : p.id.endsWith('kleinhirn') ? 0.55 : 0.45;
-    const tmp = [];
     rows(p, spBr, (x, y, z, nx, ny, nz) => {
       if (nz < -0.2 && !hirn) return;
       [x, y, z].forEach((c, k) => { if (c < BB[k][0]) BB[k][0] = c; if (c > BB[k][1]) BB[k][1] = c; });
       if (gross && Math.abs(x) < 4.5 && Math.abs(nx) > 0.6) return;
-      tmp.push([x, y, z, nx, ny, nz, 0]);
+      const by = BODY_H / 2 - y; put(x, y, z, nx, ny, nz, 2, CROWN + (by - CROWN) * 0.72, 0, w);
     });
-    if (fine && tmp.length) {
-      // Hüllfläche: größter Abstand von der Mitte (je Hirnhälfte) in jeder Richtung (Raster 4°, Nachbarn mitgenommen)
-      for (const side of gross ? [-1, 1] : [0]) {
-        const L = tmp.filter((q) => side === 0 || (q[0] > 0) === (side > 0)); if (!L.length) continue;
-        const c = [0, 1, 2].map((k) => L.reduce((a, q) => a + q[k], 0) / L.length);
-        const NA = 90, NB = 45, mx = new Float32Array(NA * NB), cell = [];
-        for (const q of L) {
-          const dx = q[0] - c[0], dy = q[1] - c[1], dz = q[2] - c[2], r = Math.hypot(dx, dy, dz) || 1;
-          const ia = Math.min(NA - 1, Math.floor((Math.atan2(dz, dx) / (2 * Math.PI) + 0.5) * NA)), ib = Math.min(NB - 1, Math.floor(Math.acos(clamp(dy / r, -1, 1)) / Math.PI * NB));
-          const i = ib * NA + ia; if (r > mx[i]) mx[i] = r; cell.push([i, ia, ib, r]);
-        }
-        L.forEach((q, n) => {
-          const [, ia, ib, r] = cell[n]; let m = 0;
-          for (let b = Math.max(0, ib - 2); b <= Math.min(NB - 1, ib + 2); b++) for (let a = -2; a <= 2; a++) { const v = mx[b * NA + (ia + a + NA) % NA]; if (v > m) m = v; }
-          q[6] = clamp((m - r) / 2.2); // 0 = auf der Hüllfläche (Windung), 1 = rund 9 mm tief (Furche)
-        });
-      }
+  } else {
+    const all = [];
+    for (const p of data.parts.filter((q) => q.kind === 'brain2')) {
+      const lb = LOBE[p.id.split('/')[1]] ?? 0, gross = lb < 5;
+      rows(p, spBr, (x, y, z, nx, ny, nz) => {
+        [x, y, z].forEach((c, k) => { if (c < BB[k][0]) BB[k][0] = c; if (c > BB[k][1]) BB[k][1] = c; });
+        if (gross && Math.abs(x) < 4.5 && Math.abs(nx) > 0.6) return;
+        all.push([x, y, z, nx, ny, nz, 0, lb]);
+      });
     }
-    for (const [x, y, z, nx, ny, nz, ao] of tmp) { const by = BODY_H / 2 - y; put(x, y, z, nx, ny, nz, 2, CROWN + (by - CROWN) * 0.72, fine ? ao : 0, w); }
+    // Hüllfläche: größter Abstand von der Mitte in jeder Richtung (Raster 4°, Nachbarn mitgenommen) – Großhirn je Hälfte, Kleinhirn, Stamm
+    for (const sel of [(q) => q[7] < 5 && q[0] <= 0, (q) => q[7] < 5 && q[0] > 0, (q) => q[7] === 5, (q) => q[7] === 6]) {
+      const L = all.filter(sel); if (!L.length) continue;
+      const c = [0, 1, 2].map((k) => L.reduce((a, q) => a + q[k], 0) / L.length);
+      const NA = 90, NB = 45, mx = new Float32Array(NA * NB), cell = [];
+      for (const q of L) {
+        const dx = q[0] - c[0], dy = q[1] - c[1], dz = q[2] - c[2], r = Math.hypot(dx, dy, dz) || 1;
+        const ia = Math.min(NA - 1, Math.floor((Math.atan2(dz, dx) / (2 * Math.PI) + 0.5) * NA)), ib = Math.min(NB - 1, Math.floor(Math.acos(clamp(dy / r, -1, 1)) / Math.PI * NB));
+        const i = ib * NA + ia; if (r > mx[i]) mx[i] = r; cell.push([ia, ib, r]);
+      }
+      L.forEach((q, n) => {
+        const [ia, ib, r] = cell[n]; let m = 0;
+        for (let b = Math.max(0, ib - 2); b <= Math.min(NB - 1, ib + 2); b++) for (let a = -2; a <= 2; a++) { const v = mx[b * NA + (ia + a + NA) % NA]; if (v > m) m = v; }
+        q[6] = clamp((m - r) / 2.2); // 0 = auf der Hüllfläche (Windung), 1 = rund 9 mm tief (Furche)
+      });
+    }
+    // Mitte je Lappen und Seite (außen liegende Punkte) – dorthin zeigt der Blick des Areals
+    for (let lb = 0; lb < 7; lb++) lobes[lb] = [-1, 1].map((sd) => {
+      const L = all.filter((q) => q[7] === lb && (lb >= 5 || (q[0] > 0) === (sd > 0)) && q[6] < 0.3); if (!L.length) return [0, 0, 0];
+      return [0, 1, 2].map((k) => L.reduce((a, q) => a + q[k], 0) / L.length);
+    });
+    for (const [x, y, z, nx, ny, nz, ao, lb] of all) { const by = BODY_H / 2 - y; put(x, y, z, nx, ny, nz, 2, CROWN + (by - CROWN) * 0.72, ao, 0.6, { st: -1, h: 0, cx: lb, cy: 0 }); }
   }
   // A4 Muskeln der Stationen: Spannung sitzt im Muskel (Nacken: Trapezius absteigend + Levator scapulae; Hüfte: Gluteus medius, Piriformis, Psoas)
   const spM = clamp(sp * 0.8, 0.9, 2);
@@ -246,5 +262,5 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   const count = St.length, rnd = new Float32Array(count * 4), rr = rng(77);
   for (let k = 0; k < rnd.length; k++) rnd[k] = rr();
   const split = data.head.split;
-  return { pos: new Float32Array(Pp), nrm: new Float32Array(Nn), st: new Float32Array(St), heat: new Float32Array(Ht), ctr: new Float32Array(Ct), rnd, nfo: new Float32Array(Nf), count, nBody, spB, lines: linesOf(nerves, split), split, brain: BB };
+  return { pos: new Float32Array(Pp), nrm: new Float32Array(Nn), st: new Float32Array(St), heat: new Float32Array(Ht), ctr: new Float32Array(Ct), rnd, nfo: new Float32Array(Nf), count, nBody, spB, lines: linesOf(nerves, split), split, brain: BB, lobes };
 }
