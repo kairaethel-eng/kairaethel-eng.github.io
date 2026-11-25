@@ -44,6 +44,38 @@ export function figureForm(N, cloud, scale, pos, f0, heat) {
   }
 }
 
+// Form 0 als Nervensystem (25.11.2026 abends, Kai: „das Nervensystem bildet den Übergang zu ‚Der Körper heilt sich‘ … dann bilden sich
+// die Wellen aus Kapitel 2“; Fassungen K und M): dieselben Punkte wie im Schlussbild von Kapitel 01 – Nervenbahnen (Art 3), Rückenmark
+// und Gehirn (Art 2, ausgedünnt) und der Umriss des Körpers als leise Lichtkante. Diese Form löst sich wie jede andere als feiner Staub
+// und sammelt sich zu den Perlenbändern von Kapitel 02.
+// f0.y trägt hier die Farbe: 0…1 Randnähe (Körper), 2 = Nerv (Bernstein), 3 + Hirnlappen = Farbe des Lappens (wie figur-echt/gl.js)
+export function nervForm(N, cloud, scale, pos, f0, heat) {
+  const { pts, sp, tilt } = cloud, list = [], rand = [];
+  const H = pts.hirn, vorn = [];
+  if (H) for (let i = H.b0; i < H.b1; i++) if (pts.nrm[i * 3 + 2] > 0.2 && pts.nfo[i * 4 + 2] < 0.5) vorn.push(i); // Gehirn, Rückenmark: nur die Seite zum Betrachter
+  const jede = Math.max(1, Math.round(vorn.length / 1500));
+  vorn.forEach((i, n) => { if (n % jede === 0) list.push([i, 0.72, 3 + pts.ctr[i * 2], 0.9]); });
+  for (let i = 0; i < pts.count; i++) {
+    const k = pts.nfo[i * 4];
+    if (k > 2.5 && k < 3.5) list.push([i, Math.min(1, (0.6 + 0.2 * pts.nfo[i * 4 + 3]) * 1.5), 2, 0.34 + 0.1 * pts.nfo[i * 4 + 3]]); // Nerv
+    else if (k < 0.5 || (k > 7.5 && k < 8.5)) { // Haut und Muskel-Hülle: nur die Lichtkante am Umriss (wie im Schlussbild: Körper als Glas)
+      const w = pts.nfo[i * 4 + 3] % 4; if (k < 0.5 && w > 1.5) continue; // vom feinen Raster ersetzte Haut-Punkte
+      const rim = 1 - Math.min(1, Math.max(0, pts.nrm[i * 3 + 2] + pts.nrm[i * 3 + 1] * tilt)), t = Math.min(1, Math.max(0, (rim - 0.6) / 0.36)), e = t * t * (3 - 2 * t);
+      if (e > 0.12) rand.push([i, (0.07 + 0.5 * e) * (k > 7.5 ? 0.5 : 0.45), Math.pow(rim, 1.5), sp * (k > 7.5 ? 0.38 : 0.37), e]);
+    }
+  }
+  // Umriss: die deutlichsten Punkte zuerst, so viele wie Platz ist (Handy hat weniger Punkte in der Wolke)
+  rand.sort((a, b) => b[4] - a[4]);
+  for (const q of rand) { if (list.length >= N) break; list.push(q); }
+  const S = slots(N, 101), M = Math.min(list.length, N), r = rng(7);
+  for (let n = 0; n < N; n++) {
+    const hidden = n >= M, q = list[hidden ? (r() * M) | 0 : n], i = q[0], o = S[n];
+    pos[o * 3] = pts.pos[i * 3] * scale; pos[o * 3 + 1] = pts.pos[i * 3 + 1] * scale; pos[o * 3 + 2] = pts.pos[i * 3 + 2] * scale;
+    f0[o * 3] = hidden ? 0 : q[1]; f0[o * 3 + 1] = q[2]; f0[o * 3 + 2] = q[3];
+    heat[o] = 0;
+  }
+}
+
 // Form 3: Dachlinie, Giebel x −1…1, First bei y = 1 (Höhe per uRoofH). kind 0 = Linie, 1 = Begleitlinie; w = Sichtbarkeit
 export function roofForm(N, desk) {
   const pos = new Float32Array(N * 3), kind = new Float32Array(N), w = new Float32Array(N);

@@ -8,7 +8,7 @@
 import * as THREE from 'three';
 import Lenis from 'lenis';
 import { spinePointsGen, spineStippleGen, ZONES, CURVE_W, BODY_W, BODY_H, BODY_SCALE, HOTSPOTS } from './shapes.js';
-import { figureForm, roofForm, logoForm } from './ordnung.js';
+import { figureForm, nervForm, roofForm, logoForm } from './ordnung.js';
 import { pointer, PTR_GLSL } from '../shared/zeiger.js';
 import { initAGen as initManuGen, MODES as MANU_MODES } from '../manu/ideaA.js';
 import { initServicesGen, motifStageGen } from './services.js';
@@ -264,8 +264,12 @@ const vert = /* glsl */`
       p = position * vec3(1. + breath*.007, 1. + breath*.004, 1.);
       p.y -= p.z * uTilt;
       p = rotY(p, uBodyRot);
-      col = mix(cDeep, cBone0, .2 + .8*aF0.y);
+      col = mix(cDeep, cBone0, .2 + .8*min(aF0.y, 1.));
       col = mix(col, cCalm, aHeat * .8);
+      // Form 0 als Nervensystem (Fassungen K, M – ordnung.js nervForm): aF0.y 2 = Nerv (Bernstein), ab 3 = Farbe des Hirnlappens
+      if (aF0.y > 1.5) { float lb = aF0.y - 3.;
+        col = lb < -.5 ? vec3(.94, .68, .31) : lb < .5 ? vec3(.36, .66, .93) : lb < 1.5 ? vec3(.62, .84, .42) : lb < 2.5 ? vec3(.96, .68, .28) : lb < 3.5 ? vec3(.32, .74, .78) : lb < 4.5 ? vec3(.93, .86, .7) : lb < 5.5 ? vec3(.5, .62, .95) : lb < 6.5 ? vec3(.9, .88, .82) : vec3(.55, .7, .8);
+        col = pow(col, vec3(2.2)); } // die Werte sind Bildschirmfarben (wie in Kapitel 01), die Hauptbühne rechnet linear
       al = mix(aF0.x, max(aF0.x, .62 * step(.01, aF0.x)), aHeat);
       dw = aF0.z * uBodyWH.x / 200. * uXf[0].w;
       // Ausatmen: eine helle Welle läuft einmal vom Kopf bis zu den Füßen (uv.y 1 = Kopf)
@@ -1116,9 +1120,9 @@ function updateCalloutsMob(zoneKey, on, prog, opt = null) {
 // Körper-Silhouette (zarte Partikel), an die Kamera gehängt, rechts im Bild; das Versorgungsgebiet glüht
 // (seit 17.11.: die sichtbaren Punkte der Figur aus Kapitel 01 – grobes Raster, Kontur, Körperlinien; gefüllt am Dateiende, silFill)
 const silGeo = new THREE.BufferGeometry(); silGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3));
-function silFill() {
+function silFill(b = body) {
   const a = [];
-  for (let i = 0; i < N; i++) if (body.f0[i * 3] > 0) a.push(body.pos[i * 3], body.pos[i * 3 + 1], body.pos[i * 3 + 2] * 0.4);
+  for (let i = 0; i < N; i++) if (b.f0[i * 3] > 0) a.push(b.pos[i * 3], b.pos[i * 3 + 1], b.pos[i * 3 + 2] * 0.4);
   silGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(a), 3));
 }
 const silU = { uOn: { value: 0 }, uTgt: { value: new V3() }, uTime: uniforms.uTime, uPix: uniforms.uPix, cBone: uniforms.cBone, cBlue: uniforms.cBlue, cPetrol: uniforms.cPetrol };
@@ -2514,10 +2518,14 @@ window.__kf = kf; // Prüfhilfe: __kf.state(), __kf.go(u)
 // seit 23.11. erst, wenn die Bühne steht (Daten der echten Figur geladen oder Rückfall auf die Figur von heute)
 kf.onReady(() => { const cl = kf.cloud();
   if (cl && renderer) {
-    figureForm(N, cl, BODY_SCALE, body.pos, body.f0, body.heat);
+    if (cl.nerv) { // Fassungen K, M: Form 0 ist das Nervensystem aus dem Schlussbild; der Umriss für Kapitel 03 (silFill) bleibt der Körper
+      const b = { pos: new Float32Array(N * 3), f0: new Float32Array(N * 3), heat: new Float32Array(N) };
+      figureForm(N, cl, BODY_SCALE, b.pos, b.f0, b.heat); silFill(b);
+      nervForm(N, cl, BODY_SCALE, body.pos, body.f0, body.heat);
+    } else figureForm(N, cl, BODY_SCALE, body.pos, body.f0, body.heat);
     uniforms.uTilt.value = cl.tilt;
     ['position', 'aF0', 'aHeat'].forEach((k) => { geo.attributes[k].needsUpdate = true; });
-    silFill();
+    if (!cl.nerv) silFill();
     if (!morphSet) { geo.attributes.pos2.array.set(body.pos); geo.attributes.pos2.needsUpdate = true; } // bis die Wirbelsäule gerechnet ist
   } });
 frameFns.push((now) => kf.update(now));

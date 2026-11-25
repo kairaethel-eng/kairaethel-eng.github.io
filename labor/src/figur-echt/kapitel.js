@@ -55,7 +55,7 @@ function arcD(r, k) {
 const CREEP = [8, 8, 6, 4];
 // Seit 18.11.2026 (Kai: „weniger scrollen oder wischen“) rund ein Drittel kürzer: Halt je Station 0,42 statt 0,75 Bildschirmhöhen,
 // Fahrt dazwischen 0,5–0,58 statt 0,75–0,95, Schluss 0,74 statt 0,85 (vorher: U_LEN 8,2, --len 9,2).
-export const KEYS = [
+export let KEYS = [
   [0.05, CROWN, 'A'],
   [0.55, STATIONS[0].tip, 0], [0.97, STATIONS[0].tip + CREEP[0], 0],
   [1.49, STATIONS[1].tip, 1], [1.91, STATIONS[1].tip + CREEP[1], 1],
@@ -63,12 +63,27 @@ export const KEYS = [
   [3.49, STATIONS[3].tip, 3], [3.91, STATIONS[3].tip + CREEP[3], 3],
   [4.41, SOLE, 'E'],
 ];
-export const U_LEN = 5.15; // Ende der Bühne (Länge der Strecke = U_LEN + 1 Bildschirmhöhe, CSS .kf --len 6.15 in fein.css)
-const ARR = STATIONS.map((_, i) => KEYS[1 + 2 * i][0]), LEAVE = STATIONS.map((_, i) => KEYS[2 + 2 * i][0]);
-const stOn = (i, u) => u > ARR[i] - 0.3 && u < LEAVE[i] + 0.12;
+export let U_LEN = 5.15; // Ende der Bühne (Länge der Strecke = U_LEN + 1 Bildschirmhöhe, CSS .kf --len 6.15 in fein.css)
+let ARR = STATIONS.map((_, i) => KEYS[1 + 2 * i][0]), LEAVE = STATIONS.map((_, i) => KEYS[2 + 2 * i][0]);
+// Fahrplan „ins Gehirn“ (Fassungen K und M, 25.11.2026 abends – Kai: „viele Scrolls mit wenig sichtbarem Effekt“): rund ein Viertel kürzer,
+// und kein Halt steht mehr still – im Halt (Blick i → 'h' + i) dreht sich das Gehirn schon ein Stück zum nächsten Areal und kommt etwas
+// näher, jeder Wischer bewegt also sichtbar etwas. Die Lichtspitze bleibt unter dem Hirnstamm stehen und läuft erst am Schluss,
+// wenn der Blick zurückfährt, durch den ganzen Körper: das Nervensystem wächst vom Gehirn bis in die Füße (Schlussbild).
+const TIP_H = 52;
+const KEYS_HIRN = [
+  [0.04, CROWN, 'A'],
+  [0.46, TIP_H, 0], [0.80, TIP_H, 'h0'],
+  [1.16, TIP_H, 1], [1.50, TIP_H, 'h1'],
+  [1.86, TIP_H, 2], [2.20, TIP_H, 'h2'],
+  [2.56, TIP_H, 3], [2.90, TIP_H, 'h3'],
+  [3.44, 290, 'E'], [3.64, SOLE, 'E'], // der Blick steht – die Nerven wachsen noch bis in die Füße
+];
+const U_LEN_HIRN = 4.05; // CSS --len setzt initKopfFuss selbst (U_LEN + 1)
+let ON_VOR = 0.3; // so früh vor der Ankunft gilt die Station als aktiv (ins Gehirn: 0,22 – die Fahrten sind kürzer)
+const stOn = (i, u) => u > ARR[i] - ON_VOR && u < LEAVE[i] + 0.12;
 // Text der Station (18.11., Go Kai „3“): erst, wenn die Fahrt fast angekommen ist – vorher stand er über der Figur, während sie noch fuhr
 const txtOn = (i, u) => u > ARR[i] - 0.06 && u < LEAVE[i] + 0.12;
-const U_END = KEYS[KEYS.length - 1][0];
+let U_END = KEYS[KEYS.length - 1][0];
 
 // old = { points, stage } (nur die Studienseite: Figur plus für den Umschalter „bisher“; Puls gibt nichts mit → kein Umschalter),
 // handover = true (Puls): am Schluss ziehen sich Gehirn und Nerven zurück, die Figur steht wieder als ruhiges Raster da und
@@ -91,25 +106,29 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // 25.11. morgens (Kai: „C wegen Drehung gut … innere Strukturen zu wenig sichtbar, am Handy liegt der Finger auf der Lupe“):
   // e Glaskörper (Innenleben dauerhaft) · f halb Haut, halb Innenleben · g Haut und Innenleben im ruhigen Wechsel – alle auf Basis von C,
   // Lupe auch hier, am Handy steht sie über dem Finger
-  const START = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l'].includes(Q.get('start')) ? Q.get('start') : '';
-  const INNEN = 'efgijkl'.includes(START) && START !== '';
+  const START = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm'].includes(Q.get('start')) ? Q.get('start') : '';
+  const INNEN = 'efgijklm'.includes(START) && START !== '';
   // k (Kai 25.11. 11:21, mit Film eines Punkte-Gehirns): Start wie J; beim ersten Scrollen fährt der Blick ins Gehirn, die vier Texte
   // gehören dort zu vier Arealen (das Gehirn dreht sich von einem zum nächsten) – keine Fahrt den Körper hinunter
-  const HIRN = START === 'k';
+  // m (Kai 25.11. abends: „die Hauptfigur darf gerne L sein … danach sollte es in das nun gebaute Gehirn K übergehen“): Muskelfigur außen,
+  // Fahrt ins Gehirn wie K; am Schluss fährt der Blick zurück und zeigt das ganze Nervensystem (Übergang zu Kapitel 02)
+  const HIRN = START === 'k' || START === 'm';
+  if (HIRN) { KEYS = KEYS_HIRN; U_LEN = U_LEN_HIRN; ARR = STATIONS.map((_, i) => KEYS[1 + 2 * i][0]); LEAVE = STATIONS.map((_, i) => KEYS[2 + 2 * i][0]); U_END = KEYS[KEYS.length - 1][0]; ON_VOR = 0.22; root.style.setProperty('--len', (U_LEN + 1).toFixed(2)); }
   const AREALE = [ // Name, Blickrichtung (Drehung um die Hochachse), Mitte im Gehirn (−1…1: rechts, oben, vorn), Radius (Anteil der Breite)
     ['Hören · Schläfenlappen', -1.15, [0.8, -0.32, 0.22], 0.34, 2, 1], ['Denken · Stirnlappen', -0.3, [0.3, 0.3, 0.8], 0.38, 0, 1], // dazu: Hirnlappen (Kennung in figur.js) und Seite
     ['Bewegung · Zentralregion', 0.75, [-0.4, 0.6, -0.05], 0.36, 1, 0], ['Gleichgewicht · Kleinhirn', 2.6, [-0.15, -0.72, -0.7], 0.34, 5, 0]];
   let HB = null; // Maße des Gehirns (nach dem Laden): Mitte, halbe Ausdehnung, Areale in Körpermaßen // j (Kai 25.11. 11:17): Übersicht nur feines Relief, Röntgenblick mit Innenleben erst beim Heranzoomen an die Station // i (Kai 25.11.: „H und E kombinieren“): feines Relief als halb durchsichtige Hülle über dem Innenleben
   // h (Kai: „auch das Äußere dürfte anatomischer sein“): feines Raster schon in der Übersicht + kräftiges Licht von vorn links (Relief)
-  const VAR = { quiet: START ? 1 : 0, light: 'hijkl'.includes(START) && START ? 0.9 : START ? 0.5 : 0, dense: 'hijkl'.includes(START) && START ? 1 : 0, glass: START === 'i' ? 0.62 : START === 'j' ? 0.82 : START === 'l' ? 0.7 : 0.9, zoomIn: START === 'j' || START === 'k' || START === 'l', shell: START === 'l' ? 1 : 0, ground: START && START !== 'b' ? 1 : 0, turn: START && START !== 'b' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0,
+  const VAR = { quiet: START ? 1 : 0, light: 'hijklm'.includes(START) && START ? 0.9 : START ? 0.5 : 0, dense: 'hijklm'.includes(START) && START ? 1 : 0, glass: START === 'i' ? 0.62 : START === 'j' ? 0.82 : START === 'l' || START === 'm' ? 0.7 : 0.9, zoomIn: 'jklm'.includes(START) && START !== '', shell: START === 'l' || START === 'm' ? 1 : 0, ground: START && START !== 'b' ? 1 : 0, turn: START && START !== 'b' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0,
     inner: START === 'e' || START === 'f' || START === 'i' ? 1 : 0, half: START === 'f' ? 1 : 0, cycle: START === 'g', lens: INNEN ? 1 : 0, lift: INNEN ? 78 : 0 };
   if (START) document.documentElement.dataset.start = START;
   if (Q.has('start')) { // Umschalter für den Vergleich: bleibt unten im Bild, solange man mit ?start= auf der Seite ist
     const nav = document.createElement('nav'); nav.setAttribute('aria-label', 'Startfigur vergleichen');
-    nav.style.cssText = 'position:fixed;z-index:60;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + .75rem);transform:translateX(-50%);display:flex;gap:.25rem;padding:.25rem;border-radius:2rem;background:rgba(10,22,27,.92);border:1px solid rgba(255,255,255,.18);font:600 .8125rem/1 system-ui,sans-serif';
-    const NAMEN = { a: 'heute', b: 'ruhig', c: 'Boden, gedreht', d: 'Auftritt', e: 'Glaskörper', f: 'halb und halb', g: 'im Wechsel', h: 'feines Relief', i: 'Relief + innen', j: 'Relief, Röntgen nah', k: 'ins Gehirn', l: 'Muskelfigur' };
-    [['a', 'A'], ['b', 'B'], ['c', 'C'], ['d', 'D'], ['e', 'E'], ['f', 'F'], ['g', 'G'], ['h', 'H'], ['i', 'I'], ['j', 'J'], ['k', 'K'], ['l', 'L']].forEach(([k, t]) => { const l = document.createElement('a'); l.href = `?start=${k}`; const on = (START || 'a') === k; l.textContent = on ? `${t} ${NAMEN[k]}` : t; l.style.cssText = `padding:.625rem .44rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
+    nav.style.cssText = 'position:fixed;z-index:60;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + .75rem);transform:translateX(-50%);display:flex;gap:.25rem;padding:.25rem;border-radius:2rem;background:rgba(10,22,27,.92);border:1px solid rgba(255,255,255,.18);font:600 .8125rem/1 system-ui,sans-serif;max-width:calc(100vw - 1rem);overflow-x:auto;scrollbar-width:none';
+    const NAMEN = { a: 'heute', b: 'ruhig', c: 'Boden, gedreht', d: 'Auftritt', e: 'Glaskörper', f: 'halb und halb', g: 'im Wechsel', h: 'feines Relief', i: 'Relief + innen', j: 'Relief, Röntgen nah', k: 'ins Gehirn', l: 'Muskelfigur', m: 'Muskeln + Gehirn' };
+    [['a', 'A'], ['b', 'B'], ['c', 'C'], ['d', 'D'], ['e', 'E'], ['f', 'F'], ['g', 'G'], ['h', 'H'], ['i', 'I'], ['j', 'J'], ['k', 'K'], ['l', 'L'], ['m', 'M']].forEach(([k, t]) => { const l = document.createElement('a'); l.href = `?start=${k}`; const on = (START || 'a') === k; l.textContent = on ? `${t} ${NAMEN[k]}` : t; l.style.cssText = `padding:.625rem .44rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
     document.body.appendChild(nav);
+    nav.scrollLeft = nav.scrollWidth; // die neuesten Fassungen stehen rechts
   }
   const shade = $('.kf-shade'), bodyG = $('.kf-bodyg'), heroEl = $('.kf-hero'), endEl = $('.kf-end'), wire = $('.kf-wire'), hand = $('.kf-hand');
   const lineEls = [0, 1, 2].map((i) => [$(`.kf-l${i}`), $(`.kf-l${i}g`)]);
@@ -138,7 +157,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     return { hot, cool };
   }));
   const HINT = finePointer ? 'Fahren Sie mit der Maus über die Stelle – oder scrollen Sie einfach weiter.' : 'Tippen oder streichen Sie über die Stelle – oder scrollen Sie einfach weiter.';
-  dos.forEach((d) => { d.textContent = HINT; });
+  dos.forEach((d) => { d.textContent = HIRN ? '' : HINT; }); // ins Gehirn: keine Spannungs-Stellen, also auch kein Hinweis zum Lösen
 
   // ---------- Maße und Blicke ----------
   let W = 0, H = 0, desk = true, dpr = 1;
@@ -183,8 +202,11 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     });
     if (HIRN && HB) { // Blick je Areal: Gehirn füllt die Bühne, das Areal steht in der Bildmitte
       const sB = Math.min((desk ? W * 0.41 : W * 0.86) / (2 * Math.max(HB.h[0], HB.h[2])), (desk ? H * 0.74 : (TXT.txt - TXT.head || H * 0.5) * 0.8) / (2 * HB.h[1])); // 25.11. mittags (Kai: „noch viel Platz“): größer
-      HB.ar.forEach((A, i) => { const cw = Math.cos(A.yaw), sw = Math.sin(A.yaw), k = 0.12; // Areal nur halb zur Mitte gerückt: das ganze Gehirn bleibt im Bild
-        V[i] = { fx: cw * (HB.c[0] + (A.p[0] - HB.c[0]) * k) + sw * (HB.c[2] + (A.p[2] - HB.c[2]) * k), fy: HB.c[1] + (A.p[1] - HB.c[1]) * k - HB.c[2] * TILT, s: sB, ax: V[i].ax, ay: V[i].ay, yaw: A.yaw }; });
+      const blick = (A, yaw, s, o) => { const cw = Math.cos(yaw), sw = Math.sin(yaw), k = 0.12; // Areal nur ein Stück zur Mitte gerückt: das ganze Gehirn bleibt im Bild
+        return { fx: cw * (HB.c[0] + (A.p[0] - HB.c[0]) * k) + sw * (HB.c[2] + (A.p[2] - HB.c[2]) * k), fy: HB.c[1] + (A.p[1] - HB.c[1]) * k - HB.c[2] * TILT, s, ax: o.ax, ay: o.ay, yaw }; };
+      HB.ar.forEach((A, i) => { const o = V[i], nx = HB.ar[i + 1] ? HB.ar[i + 1].yaw : A.yaw + 1.4;
+        V[i] = blick(A, A.yaw, sB, o);
+        V['h' + i] = blick(A, A.yaw + (nx - A.yaw) * 0.22, sB * 1.05, o); }); // Ende des Halts: schon ein Stück weitergedreht, etwas näher
       V.A.yaw = VAR.turn; V.S.yaw = 0; V.E.yaw = 0;
     }
     dpr = Math.min(devicePixelRatio || 1, 2);
@@ -230,6 +252,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       if (u > b[0]) continue;
       const t = (u - a[0]) / (b[0] - a[0]), e = easeIO(t);
       const hold = a[2] === b[2], travel = typeof a[2] === 'number' && typeof b[2] === 'number' && !hold;
+      if (HIRN && V['h0']) { const drift = b[2] === 'h' + a[2], dreh = typeof b[2] === 'number' && String(a[2])[0] === 'h'; // Halt mit Bewegung · Drehung zum nächsten Areal
+        return { tip: lerp(a[1], b[1], e), view: drift ? mixView(V[a[2]], V[b[2]], t) : mixView(V[a[2]], V[b[2]], e, dreh ? 0.05 : 0) }; }
       return { tip: lerp(a[1], b[1], hold ? t : e), view: hold ? V[a[2]] : mixView(V[a[2]], V[b[2]], e, travel ? 0.14 : 0) };
     }
     const L = KEYS[KEYS.length - 1];
@@ -256,12 +280,13 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const t0 = performance.now();
     if (gl) try {
       if (d) { // echte Figur
-        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense, hirn: HIRN, shell: !!VAR.shell, hirnSp: big ? 0.3 : 0.38, areale: AREALE.map((a) => [a[4], a[5]]) });
+        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense, hirn: HIRN, shell: !!VAR.shell, hirnSp: big ? 0.3 : 0.38, areale: AREALE.map((a) => [a[4], a[5]]), ruhig: HIRN });
         if (HIRN && d.parts.some((q) => q.kind === 'brain2')) document.querySelectorAll('[data-quelle-hirn]').forEach((e) => { e.hidden = false; }); // Namensnennung der Gehirn-Quelle (CC BY-SA 3.0) – nur, wenn sie gezeigt wird
         if (HIRN && pts.brain && pts.brain[0][0] < 1e8) {
           const B = pts.brain, c = B.map((r) => (r[0] + r[1]) / 2), h = B.map((r) => (r[1] - r[0]) / 2);
           HB = { c, h, ar: AREALE.map(([name, yaw, q, r, lobe, side]) => { const L = pts.lobes && pts.lobes[lobe] && pts.lobes[lobe][side]; return { name, yaw, lobe: L ? lobe : -1, p: L && (L[0] || L[1] || L[2]) ? L.slice() : q.map((v, k) => c[k] + v * h[k]), r: r * 2 * h[0] * (L ? 0.5 : 1) }; }) };
-          arts.forEach((a, i) => { const k = $('.kicker', a); if (k && HB.ar[i]) k.innerHTML = `<i>0${i + 1}</i> ${HB.ar[i].name}`; });
+          arts.forEach((a, i) => { const k = $('.kicker', a); if (k && HB.ar[i]) k.innerHTML = `<i>0${i + 1}</i> ${HB.ar[i].name}`; if (progBtns[i] && HB.ar[i]) progBtns[i].setAttribute('aria-label', `0${i + 1} ${HB.ar[i].name.replace(' · ', ', ')}`); });
+          if (progEl) progEl.setAttribute('aria-label', 'Vier Areale im Gehirn');
           H = 0; // Blicke neu rechnen
         }
         st = createStage(gl, pts, relaxCv, document.documentElement.dataset.deep || '#3F86B5');
@@ -380,7 +405,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // Maus: Überfahren löst (wie Puls), Hand-Kreis „lösen“ nur über der Stelle
   stage.addEventListener('pointermove', (e) => {
     if (e.pointerType !== 'mouse') return;
-    const [x, y] = local(e), i = ringAt(x, y);
+    const [x, y] = local(e), i = HIRN ? -1 : ringAt(x, y);
     point(x, y);
     hand.classList.toggle('on', i >= 0 && finePointer);
     if (i < 0) { lastPaint = null; return; }
@@ -501,7 +526,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     // Am Ende der Strecke blendet die eigene Bühne aus (handK); das Nervensystem bleibt bis dahin stehen
     // (im Baustein zieht sich die Lichtlinie vorher zurück – für die Übergabe an Puls; hier gibt es keine Übergabe)
     hk = smooth(U_LEN - 0.35, U_LEN - 0.05, u);
-    const lineK = handover ? 1 - smooth(U_LEN - 0.55, U_LEN - 0.22, u) : 1;
+    const lineK = handover && !(HIRN && HB) ? 1 - smooth(U_LEN - 0.55, U_LEN - 0.22, u) : 1; // ins Gehirn: das Nervensystem bleibt stehen und wird übergeben
+    const nsK = HIRN && HB ? smooth(LEAVE[3] + 0.02, LEAVE[3] + 0.2, u) : 0; // Schlussbild „Nervensystem“
     // Wiegen + Atem (wie Puls), gleiche Werte für Partikel und SVG
     const sway = (sl ? 0 : Math.sin(S.time * 0.25) * (HIRN ? 0.07 + 0.11 * smooth(1.6, 3, v.s / V.A.s) : 0.12)) + (HIRN && HB ? (v.yaw || 0) : VAR.turn * (1 - smooth(0.02, 0.5, u))); S.sway = sway; // ?start=c|d: am Start leicht gedreht, dreht sich mit dem ersten Scrollen nach vorn
     const br = Math.sin(S.breath) * (1 + S.calm * 1.3), kx = 1 + br * 0.007, ky = 1 + br * 0.004, cx = kx * Math.cos(sway);
@@ -530,7 +556,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       const common = { W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
       if (mixK > 0) st.draw({ ...common, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC, quiet: VAR.quiet, light: VAR.light, ground: VAR.ground, scanIn: VAR.scanIn, half: VAR.half, lens: VAR.lens, dense: VAR.dense, glass: VAR.glass, shell: VAR.shell,
         inner: VAR.cycle ? (sl ? 0.6 : (() => { const ph = (S.time % 11) / 11; return smooth(0.18, 0.4, ph) - smooth(0.68, 0.9, ph); })()) : VAR.zoomIn ? smooth(1.12, 1.6, v.s / V.A.s) : VAR.inner,
-        ...(HIRN && HB && cur >= 0 ? { solid: 1, areaI: cur, lobe: HB.ar[cur].lobe, area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) } : HIRN && HB ? { solid: 1, area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) } : {}) });
+        ...(HIRN && HB && cur >= 0 ? { solid: 1, ns: nsK, areaI: cur, lobe: HB.ar[cur].lobe, area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) } : HIRN && HB ? { solid: 1, ns: nsK, area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) } : {}) });
       if (stOld && mixK < 1) stOld.draw({ ...common, intro: 1 });
       relaxDirty = false;
     }
@@ -593,7 +619,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
         const on = stOn(i, u);
         [rings[i].ring, rings[i].halo, rings[i].prog].forEach((e) => { e.classList.toggle('on', on); e.classList.toggle('ok', S.ok[i]); });
         arts[i].classList.toggle('on', on && (sl || txtOn(i, u)));
-        spots[i].classList.toggle('on', on && !S.done[i]); spots[i].tabIndex = on && !S.done[i] ? 0 : -1;
+        spots[i].classList.toggle('on', on && !S.done[i] && !HIRN); spots[i].tabIndex = on && !S.done[i] && !HIRN ? 0 : -1;
         progBtns[i].classList.toggle('on', i === cur); progBtns[i].classList.toggle('ok', S.ok[i]);
         if (on) progBtns[i].setAttribute('aria-current', 'step'); else progBtns[i].removeAttribute('aria-current');
       });
@@ -617,11 +643,11 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       wire.setAttribute('opacity', fmt(sl ? (vis > 0.5 ? 1 : 0) : vis));
     } else wire.setAttribute('opacity', '0');
     // Verlauf hinter dem Text (Handy): nur während der Stationen – Start und Schluss zeigen die ganze Figur über dem Text
-    shade.classList.toggle('on', !sl && u > ARR[0] - 0.3 && u < LEAVE[3] + 0.3);
+    shade.classList.toggle('on', !sl && u > ARR[0] - ON_VOR && u < LEAVE[3] + 0.3);
     // Start- und Schlusstext
     const heroA = sl ? (u < 0.15 ? 1 : 0) : 1 - smooth(0.03, 0.22, u); // fertig ausgeblendet, bevor der Text der ersten Station kommt (ab ARR − 0,3)
     heroEl.style.opacity = fmt(heroA); heroEl.style.visibility = heroA < 0.01 ? 'hidden' : '';
-    endEl.classList.toggle('on', u > U_END - 0.3);
+    endEl.classList.toggle('on', u > (HIRN ? KEYS[KEYS.length - 2][0] - 0.14 : U_END - 0.3));
   }
   addEventListener('resize', () => { H = 0; });
 
@@ -629,7 +655,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     update,
     setStyle, style: () => mode, echt: () => echt,
     onReady: (f) => (ready ? f() : readyFns.push(f)), // Bühne steht (Daten geladen oder Rückfall) – Puls füllt dann Form 0
-    cloud: () => (st ? { pts, sp: SP, tilt: TILT } : null), // für Form 0 der Hauptbühne (Puls): dieselben Punkte, derselbe Abstand
+    cloud: () => (st ? { pts, sp: SP, tilt: TILT, nerv: HIRN && !!HB } : null), // nerv: Form 0 der Hauptbühne ist das Nervensystem (Schlussbild der Fassungen K, M) // für Form 0 der Hauptbühne (Puls): dieselben Punkte, derselbe Abstand
     pointer: () => PT, // Zeiger (Bildpunkte der Bühne, Stärke k) – Puls führt damit seine eigenen Bühnen
     state: () => ({ stil: mode, mix: +mixK.toFixed(2), kino: +kinoK.toFixed(2), echt, buildMs, sp: +SP.toFixed(2), ptr: +PT.k.toFixed(2), u: +S.u.toFixed(3), us: +S.us.toFixed(3), tip: +S.tip.toFixed(1), cur: S.cur, idle: +S.idle.toFixed(1), act: S.act.map((x) => +x.toFixed(2)), auto: S.auto.map((x) => +x.toFixed(2)), sol: S.sol.map((x) => +x.toFixed(2)), rest: S.rest.map((x) => +x.toFixed(2)), done: S.done.slice(), gl: !!st, n: pts.count, still: still(), handK: +hk.toFixed(2), view: S.view && { s: +S.view.s.toFixed(2), ax: Math.round(S.view.ax), ay: Math.round(S.view.ay) } }),
     go: (u) => scrollTo(trackTop() + u * H, false),

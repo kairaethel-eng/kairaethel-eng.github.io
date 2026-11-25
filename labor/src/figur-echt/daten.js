@@ -23,11 +23,11 @@ export function decode(gz) {
 }
 
 // Laden (Labor: assets/…, Live: neben der Seite – HOP_ASSETS setzt build.mjs)
-// Fassung K (?start=k): das feine Gehirn liegt in einer eigenen Datei (hirn-echt.bin, „Brain for Blender“ von Anderson M. Winkler,
+// Fassungen K und M (?start=k|m): das feine Gehirn liegt in einer eigenen Datei (hirn-echt.bin, „Brain for Blender“ von Anderson M. Winkler,
 // brainder.org, CC BY-SA 3.0 – verändert) und wird nur dort geladen; seine Teile (Art brain2) kommen zu den übrigen dazu.
 const get = (f) => fetch(HOP_ASSETS + f).then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }).then(decode);
 export const loadEcht = () => {
-  const hirn = new URLSearchParams(location.search).get('start') === 'k';
+  const hirn = ['k', 'm'].includes(new URLSearchParams(location.search).get('start'));
   return Promise.all([get('figur-echt.bin'), hirn ? get('hirn-echt.bin').catch(() => null) : null])
     .then(([d, h]) => { if (h) d.parts.push(...h.parts); return d; });
 };

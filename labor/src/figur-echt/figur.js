@@ -4,7 +4,8 @@
 //   jeder vierte Punkt gehört zum groben Raster (Übersicht), je Punkt die Normale für das Kantenlicht. Kein Zufall in der Lage.
 // Arten je Punkt (nfo.x): 0 Haut (nfo.y = im Kopf, nfo.z = grobes Raster) · 2 Gehirn (nfo.y = Spitzenhöhe, ab der es erscheint, nfo.w = Helligkeit) ·
 //   3 Nerv (nfo.y = Spitzenhöhe, nfo.z = Weg vom Gehirn, nfo.w = Dicke) · 4 Raum · 5 Knochen (nfo.z = grobes Raster, nfo.w = Teil: 1 Rippen/Hände dezenter, 2 Schädel – tritt hinter das Gehirn zurück) ·
-//   6 Muskel (Spannung der Station; nfo.y = Station) · 7 Boden · 8 Muskel-Hülle (Fassung L: alle oberflächlichen Muskeln als Relief)
+//   6 Muskel (Spannung der Station; nfo.y = Station) · 7 Boden · 8 Muskel-Hülle (Fassung L: alle oberflächlichen Muskeln als Relief;
+//   nfo.z = Rinne zwischen den Muskeln 0 frei … 1 tief, aus der Datei)
 //   Haut: nfo.w + 4, wenn darunter Muskel-Hülle liegt (tritt in Fassung L zurück)
 // Koordinaten: Grundriss 200 × 430, Lage je Punkt um die Körpermitte, y nach oben, z zum Betrachter (wie ../feinschliff/figur.js).
 import { STATIONS, stationHeat, BODY_W, BODY_H, CROWN, SOLE } from '../figur-plus/figur.js';
@@ -108,7 +109,7 @@ export function linesOf(nerves, split) {
 }
 
 // sp = Abstand der Haut-Punkte (Grundriss-Einheiten), dust = Zahl der großen unscharfen Punkte im Raum, data = decode(…)
-export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = false, shell = false, hirnSp = 0.42, areale = [] }) { // hirnSp: Punktabstand im feinen Gehirn · areale: [Hirnlappen, Seite] je Station (Signal-Bögen) // hirn (Fassung K): Gehirn rundum und dichter, Maße in .brain
+export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = false, shell = false, hirnSp = 0.42, areale = [], ruhig = false }) { // ruhig (Fassung M): keine Spannungs-Stellen am Körper (die vier Texte gehören zu Arealen im Gehirn) // hirnSp: Punktabstand im feinen Gehirn · areale: [Hirnlappen, Seite] je Station (Signal-Bögen) // hirn (Fassung K): Gehirn rundum und dichter, Maße in .brain
   const Pp = [], Nn = [], St = [], Ht = [], Ct = [], Nf = [];
   const put = (x, y, z, nx, ny, nz, kind, a, b, c, heat = null) => {
     Pp.push(x, y, z); Nn.push(nx, ny, nz); Nf.push(kind, a, b, c);
@@ -116,6 +117,7 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   };
   const part = (id) => data.parts.find((p) => p.id === id);
   const skinHeat = (x, y) => {
+    if (ruhig) return null;
     const h = stationHeat(x + BODY_W / 2, BODY_H / 2 - y); if (h.st < 0) return null;
     // Nacken und Hüfte: die Spannung sitzt im echten Muskel (Art 6), die Haut glimmt nur mit
     const k = h.st === 1 || h.st === 2 ? 0.32 : 1;
@@ -128,37 +130,57 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   const SH = [], shG = new Map(), CG = 5, gk = (x, y, z) => (Math.floor(x / CG) + 512) + (Math.floor(y / CG) + 512) * 1024 + (Math.floor(z / CG) + 512) * 1048576;
   if (shell) {
     const raw = [];
-    for (const p of data.parts.filter((q) => q.kind === 'shell')) rows(p, clamp(sp * 0.62, 0.7, 1.2), (x, y, z, nx, ny, nz) => {
+    for (const p of data.parts.filter((q) => q.kind === 'shell')) rows(p, clamp(sp * 0.62, 0.7, 1.2), (x, y, z, nx, ny, nz, coarse, wert) => {
       if (nz < -0.42) return;
       const by = BODY_H / 2 - y; if (by < 66 && Math.abs(x) < 36) return; // Kopf und Gesicht bleiben Haut (Kai 25.11.: keine dunklen Stellen wie an den Augen)
-      raw.push([x, y, z, nx, ny, nz]);
+      raw.push([x, y, z, nx, ny, nz, (wert || 0) / 255]); // Rinne zwischen den Muskeln (tools/figur-echt.mjs, verdecke) → Kontur im Licht
     });
     for (const q of raw) { SH.push(q); const k = gk(q[0], q[1], q[2]), l = shG.get(k); if (l) l.push(SH.length - 1); else shG.set(k, [SH.length - 1]); }
-  }
-  const covered = (x, y, z) => {
-    if (!SH.length) return 0;
-    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
-      const l = shG.get(gk(x + a * CG, y + b * CG, z + c * CG)); if (!l) continue;
-      for (const i of l) { const q = SH[i]; if ((q[0] - x) ** 2 + (q[1] - y) ** 2 + (q[2] - z) ** 2 < 7) return 4; }
+    // Verdeckte Lagen (25.11.2026 abends, Kai: „dunkle Stellen noch mehr verbessern“): die Punkte leuchten additiv, also war jede Stelle
+    // mit mehreren Muskel-Lagen hintereinander (Brust, Arme, Beine) heller als eine mit nur einer (Bauch) – der Bauch stand als dunkles Feld.
+    // Von vorn gemessen: liegt vor einem Punkt eine andere, uns zugewandte Lage, tritt er zurück (q[7] 0 … 1; ganz verdeckte entfallen).
+    // Die Figur dreht sich höchstens ±7°, eine eigene schräge Fläche gilt nicht als verdeckt (Toleranz wächst mit der Neigung).
+    const ZC = 1.2, zk = (x, y) => (Math.floor(x / ZC) + 512) + (Math.floor(y / ZC) + 512) * 1024, zF = new Map();
+    for (const q of SH) { if (q[5] < 0.3) continue; const k = zk(q[0], q[1]), v = zF.get(k); if (v === undefined || q[2] > v) zF.set(k, q[2]); }
+    for (const q of SH) {
+      let zm = -1e9; for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const v = zF.get(zk(q[0] + a * ZC, q[1] + b * ZC)); if (v !== undefined && v > zm) zm = v; }
+      const nz = Math.max(0.3, q[5]), tol = 2.2 + 3.4 * Math.sqrt(Math.max(0, 1 - nz * nz)) / nz;
+      q[7] = clamp((zm - q[2] - tol) / 3, 0, 1);
     }
-    return 0;
+  }
+  // Liegt unter diesem Haut-Punkt Muskel? Seit 25.11.2026 abends (Kai: „dunkle Stellen noch mehr verbessern“) entlang der Normalen nach
+  // innen gemessen (bis 9 Einheiten tief, höchstens 1,15 seitlich) statt im Umkreis: in echten Lücken der Muskel-Hülle (Grube über dem
+  // Schlüsselbein, Achsel, Leiste) galt die Haut sonst als bedeckt, trat zurück – und es blieb ein dunkles Loch. Gesucht wird um den
+  // Punkt und um eine zweite Stelle 4,5 Einheiten tiefer (das Raster reicht nur eine Zelle weit).
+  // Kennung: 4 = Muskel liegt dicht unter der Haut (bis NAH tief) → die Haut tritt zurück · 8 = Muskel erst in der Tiefe (Leiste, Grube am
+  // Hals, Achsel: eine Lücke zwischen den Muskeln) → die Haut füllt die Lücke leise, statt dass ein dunkler Streifen bleibt.
+  const NAH = 6.5; // gemessen: bis 6,5 Einheiten (26 mm) ist es die normale Schicht über dem Muskel, darüber bleiben genau die Lücken (Leiste, Schambein, Knie, Schienbein)
+  const unter = (x, y, z, nx, ny, nz, tief) => {
+    for (let s = 0; s < 2; s++) { const px = x - nx * 4.5 * s, py = y - ny * 4.5 * s, pz = z - nz * 4.5 * s;
+      for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
+        const l = shG.get(gk(px + a * CG, py + b * CG, pz + c * CG)); if (!l) continue;
+        for (const i of l) { const q = SH[i], dx = q[0] - x, dy = q[1] - y, dz = q[2] - z, t = -(dx * nx + dy * ny + dz * nz);
+          if (t > -0.7 && t < tief && dx * dx + dy * dy + dz * dz - t * t < 1.32) return true; }
+      } }
+    return false;
   };
+  const covered = (x, y, z, nx, ny, nz) => (!SH.length ? 0 : unter(x, y, z, nx, ny, nz, NAH) ? 4 : unter(x, y, z, nx, ny, nz, 9) ? 8 : 0);
   const fein = (x, by) => by > 390 || (Math.abs(x) > 47 && by > 196);
   rows(skin, sp, (x, y, z, nx, ny, nz, coarse) => {
     if (nz < -0.42) return;
     const by = BODY_H / 2 - y, head = by < 64 && Math.abs(x) < 34 ? 1 : 0;
-    const cv = covered(x, y, z);
+    const cv = covered(x, y, z, nx, ny, nz);
     put(x, y, z, nx, ny, nz, 0, head, coarse ? 1 : 0, (fein(x, by) || (shell && !cv) ? 2 : 0) + cv, skinHeat(x, y));
   });
   // Hände und Füße feiner (Fassung J, 25.11.2026, Kai: „Füße, Hände … detaillierter“): ein zweites, engeres Raster nur dort (Kennung 1);
   // die Punkte des normalen Rasters in diesen Bereichen tragen Kennung 2 und treten zurück, sobald das feine gezeigt wird (uDense)
   if (detail) rows(skin, sp * 0.56, (x, y, z, nx, ny, nz) => {
     if (nz < -0.42) return;
-    const cv = covered(x, y, z), by = BODY_H / 2 - y;
+    const cv = covered(x, y, z, nx, ny, nz), by = BODY_H / 2 - y;
     if (!fein(x, by) && !(shell && !cv)) return; // Fassung L: alles, was nicht unter Muskel liegt (Kopf, Knie, Hände, Füße), im feinen Raster – ein Material
     put(x, y, z, nx, ny, nz, 0, by < 64 && Math.abs(x) < 34 ? 1 : 0, 0, 1 + cv, skinHeat(x, y));
   });
-  for (const q of SH) put(q[0], q[1], q[2], q[3], q[4], q[5], 8, 0, 0, 0, skinHeat(q[0], q[1])); // Spannung der Station sitzt in L sichtbar im Muskel-Relief
+  for (const q of SH) if (q[7] < 0.999) put(q[0], q[1], q[2], q[3], q[4], q[5], 8, q[7], q[6], 0, skinHeat(q[0], q[1])); // Spannung der Station sitzt in L sichtbar im Muskel-Relief
   const nBody = St.length;
   // A3 Knochen: etwas weiter als die Haut, Rückseiten weg (wie die Haut)
   const spB = clamp(sp * 0.95, 1.1, 2.4);
@@ -175,6 +197,10 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   const fine = hirn && data.parts.some((q) => q.kind === 'brain2');
   const LOBE = { stirn: 0, zentral: 1, schlaefe: 2, scheitel: 3, hinterhaupt: 4, kleinhirn: 5, stamm: 6, innen: 7 }, lobes = []; // 7 = Innenfläche (Gürtelwindung, Insel, Schnittfläche)
   const b0 = St.length; let b1 = b0, hirnInfo = null;
+  // Versatz der Nervenbahnen zum feinen Hirnstamm (nur Fassungen mit feinem Gehirn; VS wird beim Rückenmark gesetzt): Rückenmark und
+  // Wurzeln sitzen damit genau unter dem Stamm und laufen weiter unten in die unveränderten Bahnen
+  let VS = null;
+  const versatz = (y) => (VS ? VS(y) : [0, 0]);
   if (!fine) for (const p of data.parts.filter((q) => q.kind === 'brain')) {
     const gross = p.id.endsWith('grosshirn');
     const w = gross ? 0.7 : p.id.endsWith('kleinhirn') ? 0.55 : 0.45;
@@ -198,7 +224,63 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
       const L = all.filter((q) => q[7] === lb && (lb === 5 || lb === 6 || (q[0] > 0) === (sd > 0)) && q[6] < 0.3); if (!L.length) return [0, 0, 0];
       return [0, 1, 2].map((k) => L.reduce((a, q) => a + q[k], 0) / L.length);
     });
-    for (const [x, y, z, nx, ny, nz, ao, lb] of all) { if (ao > 0.9) continue; const by = BODY_H / 2 - y; put(x, y, z, nx, ny, nz, 2, CROWN + (by - CROWN) * 0.72, ao, 0.6, { st: -1, h: 0, cx: lb, cy: 0 }); }
+    const cord = data.head.nerves[0], stem = all.filter((q) => q[7] === 6), mitMark = !!(cord && cord.pts.length > 2 && stem.length);
+    let lo = 1e9; for (const q of stem) if (q[1] < lo) lo = q[1];
+    // (der ausgefranste untere Rand des Stamms entfällt – dort sitzt das Rückenmark)
+    for (const [x, y, z, nx, ny, nz, ao, lb] of all) { if (ao > 0.9 || (mitMark && lb === 6 && y < lo + 1.4)) continue; const by = BODY_H / 2 - y; put(x, y, z, nx, ny, nz, 2, CROWN + (by - CROWN) * 0.72, ao, 0.6, { st: -1, h: 0, cx: lb, cy: 0 }); }
+    // Rückenmark als Körper (25.11.2026 abends, Kai: „Nervensystem/Rückenmark gerne bis unten an die Bildschirmkante“): ein Schlauch entlang
+    // der Bahn „Rückenmark“ (data.head.nerves[0], an echten Landmarken gerechnet). Er setzt am unteren Ende des feinen Hirnstamms an (Mitte
+    // und Radius aus dessen Punkten), läuft auf Lage und Radius der Bahn zu und endet im Kegel. Ordnung wie überall: Zeilen quer in gleichem
+    // Abstand, jede zweite versetzt, Normale je Punkt. Gehört zum deckenden Teil (b0…b1), aber nicht zu den Maßen des Gehirns (BB).
+    if (mitMark) {
+      // Achse und Dicke des Stamms über seinem unteren Ende: Scheiben von 1 Einheit Höhe (Mitte, größte Breite und Tiefe – der Stamm ist
+      // breiter als tief), als Gerade ausgeglichen.
+      // Das Ende des Stamms ist schräg und offen – der Schlauch beginnt deshalb 6 Einheiten darüber im Inneren des Stamms
+      // und umschließt dessen Ende als Manschette; so entsteht keine Naht.
+      const sl = [];
+      for (let y = lo + 2; y < lo + 9; y += 1) { const L = stem.filter((q) => Math.abs(q[1] - y) < 0.5); if (L.length < 8) continue;
+        const cx = L.reduce((a, q) => a + q[0], 0) / L.length, cz = L.reduce((a, q) => a + q[2], 0) / L.length;
+        sl.push([y, cx, cz, Math.max(...L.map((q) => Math.abs(q[0] - cx))), Math.max(...L.map((q) => Math.abs(q[2] - cz)))]); }
+      const fit = (k) => { const n = sl.length, my = sl.reduce((a, q) => a + q[0], 0) / n, mv = sl.reduce((a, q) => a + q[k], 0) / n;
+        const b = sl.reduce((a, q) => a + (q[0] - my) * (q[k] - mv), 0) / Math.max(1e-9, sl.reduce((a, q) => a + (q[0] - my) ** 2, 0)); return (y) => mv + b * (y - my); };
+      const ax = fit(1), az = fit(2), arx = fit(3), arz = fit(4);
+      // Die Bahn springt kurz unter dem Stamm waagrecht um 2 Einheiten nach vorn (vom Stamm in den Wirbelkanal) – für den Schlauch geglättet:
+      // nur Punkte, die tiefer liegen als der vorige, Lage quer und in der Tiefe über ±4 Einheiten Höhe gemittelt
+      const Pm = []; for (const q of cord.pts) if (!Pm.length || q[1] < Pm[Pm.length - 1][1] - 0.25) Pm.push(q);
+      const P = Pm.map((q) => { let sx = 0, sz = 0, sw = 0; for (const o of Pm) { const w = Math.max(0, 1 - Math.abs(o[1] - q[1]) / 4); sx += o[0] * w; sz += o[2] * w; sw += w; } return [sx / sw, q[1], sz / sw]; });
+      const Lc = [0]; for (let i = 1; i < P.length; i++) Lc.push(Lc[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1], P[i][2] - P[i - 1][2]));
+      const total = Lc[Lc.length - 1], sm = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+      // Lage der Bahn in der Höhe y (sie läuft von oben nach unten) – für den Versatz: oben folgt alles der verlängerten Achse des
+      // Stamms, nach WEG Einheiten abwärts der Bahn; der Übergang hat keinen Knick (Lage und Richtung stimmen am Ansatz überein)
+      const WEG = 20, y0 = P[0][1];
+      const pfad = (y) => { let k = 1; while (k < P.length - 1 && P[k][1] > y) k++; const A = P[k - 1], B = P[k], f = clamp((A[1] - y) / Math.max(1e-9, A[1] - B[1]), -2, 1); return [A[0] + (B[0] - A[0]) * f, A[2] + (B[2] - A[2]) * f]; };
+      VS = (y) => { const w = 1 - sm(0, WEG, y0 - y); if (w <= 0) return [0, 0]; const q = pfad(y); return [(ax(y) - q[0]) * w, (az(y) - q[1]) * w]; };
+      const OBEN = 6, schraeg = 1 / Math.hypot(ax(y0 + 1) - ax(y0), 1, az(y0 + 1) - az(y0));
+      const mitte = (sC) => { // Mittellinie: sC < 0 entlang der Achse des Stamms (Manschette), sonst die Bahn mit Versatz
+        if (sC < 0) { const y = y0 - sC * schraeg; return [ax(y), y, az(y)]; }
+        let k = 1; while (k < Lc.length - 1 && Lc[k] < sC) k++;
+        const A = P[k - 1], B = P[k], f = (sC - Lc[k - 1]) / Math.max(1e-9, Lc[k] - Lc[k - 1]), y = A[1] + (B[1] - A[1]) * f, v = VS(y);
+        return [A[0] + (B[0] - A[0]) * f + v[0], y, A[2] + (B[2] - A[2]) * f + v[1]];
+      };
+      const FEIN = 56, dyC = spBr * 0.866; // so weit reicht der Blick im Gehirn nach unten (Handy); darunter genügt das halbe Raster
+      let row = 0;
+      for (let sC = -OBEN; sC < total - 0.2; sC += sC < FEIN ? dyC : dyC * 2, row++) {
+        const c = mitte(sC), ca0 = mitte(sC - 0.4), cb0 = mitte(Math.min(total, sC + 0.4));
+        let T = [cb0[0] - ca0[0], cb0[1] - ca0[1], cb0[2] - ca0[2]]; const tl = Math.hypot(T[0], T[1], T[2]) || 1; T = T.map((v) => v / tl);
+        // Dicke: oben steckt der Schlauch im Stamm, 3 Einheiten über dessen Ende umschließt er ihn, darunter läuft er auf die Dicke der Bahn zu
+        const kS = sC < 0 ? 0.8 + 0.28 * sm(-OBEN, -2.2, sC) : 1.08, kB = sm(0, 10, sC), kE = 1 - 0.7 * clamp((sC / total - 0.88) / 0.12);
+        const yS = Math.max(c[1], y0), rx = (arx(yS) * kS * (1 - kB) + cord.r * 1.12 * kB) * kE, rz = (arz(yS) * kS * (1 - kB) + cord.r * 0.9 * kB) * kE, rad = (rx + rz) / 2; // quer breiter als tief (wie das echte Rückenmark)
+        let e1 = [1 - T[0] * T[0], -T[0] * T[1], -T[0] * T[2]]; const el = Math.hypot(e1[0], e1[1], e1[2]) || 1; e1 = e1.map((v) => v / el);
+        const e2 = [T[1] * e1[2] - T[2] * e1[1], T[2] * e1[0] - T[0] * e1[2], T[0] * e1[1] - T[1] * e1[0]];
+        const n = Math.max(6, Math.round(2 * Math.PI * rad / (sC < FEIN ? spBr : spBr * 2))), by = BODY_H / 2 - c[1];
+        for (let k = 0; k < n; k++) {
+          const a = (k + (row & 1 ? 0.5 : 0)) / n * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
+          const px = ca * rx, pz = sa * rz, qx = ca / rx, qz = sa / rz, ql = Math.hypot(qx, qz) || 1; // Ellipse: e1 quer, e2 in die Tiefe; Normale senkrecht zur Ellipse
+          const nx = (qx * e1[0] + qz * e2[0]) / ql, ny = (qx * e1[1] + qz * e2[1]) / ql, nz = (qx * e1[2] + qz * e2[2]) / ql;
+          put(c[0] + px * e1[0] + pz * e2[0], c[1] + px * e1[1] + pz * e2[1], c[2] + px * e1[2] + pz * e2[2], nx, ny, nz, 2, by, 0, 0.6, { st: -1, h: 0, cx: 6, cy: 0 });
+        }
+      }
+    }
     b1 = St.length;
     // --- Gehirn-Bühne (Fassung K, 25.11.2026: „Gehirn der Extraklasse“): Leuchten, Signal-Bögen, Lichthof – alles geordnet, kein Zufall in der Lage
     const C = BB.map((r) => (r[0] + r[1]) / 2), R = Math.max(...BB.map((r) => (r[1] - r[0]) / 2));
@@ -230,7 +312,7 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   }
   // A4 Muskeln der Stationen: Spannung sitzt im Muskel (Nacken: Trapezius absteigend + Levator scapulae; Hüfte: Gluteus medius, Piriformis, Psoas)
   const spM = clamp(sp * 0.8, 0.9, 2);
-  for (const p of data.parts.filter((q) => q.kind === 'muscle')) {
+  for (const p of data.parts.filter((q) => q.kind === 'muscle' && !ruhig)) {
     const S = STATIONS[p.st], mid = [[], []];
     const tmp = [];
     rows(p, spM, (x, y, z, nx, ny, nz) => { tmp.push([x, y, z, nx, ny, nz]); mid[x > 0 ? 1 : 0].push([x, y]); });
@@ -247,6 +329,7 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   const nerves = nerveList(data.head.nerves);
   const NS = 0.62, GAP = 0.52;
   for (const N of nerves) {
+    if (VS && N === nerves[0]) continue; // Rückenmark steht als Körper (Schlauch) da
     const K = Math.max(1, Math.round(2 * N.r / GAP));
     for (let k = 0; k < K; k++) {
       const o = (k - (K - 1) / 2) * GAP, n = Math.max(1, Math.round(N.total / NS)), d = N.total / n;
@@ -261,7 +344,8 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
         const rr = N.main && N.r > 1.2 ? N.r * (1 - 0.7 * clamp((s / N.total - 0.88) / 0.12)) : N.r;
         if (K > 1 && Math.abs(o) > rr - 0.1) continue;
         const by = BODY_H / 2 - y;
-        put(x - ty / tl * o, y + tx / tl * o, z, 0, 0, 0, 3, N.main ? by : N.ry0 + s * N.rate, N.d0 + s, N.w);
+        const [vx, vz] = versatz(y);
+        put(x - ty / tl * o + vx, y + tx / tl * o, z + vz, 0, 0, 0, 3, N.main ? by : N.ry0 + s * N.rate, N.d0 + s, N.w);
       }
     }
   }

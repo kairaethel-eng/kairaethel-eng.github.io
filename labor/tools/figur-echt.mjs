@@ -355,10 +355,13 @@ for (const [id, kind, names, target, st = -1] of PARTS) {
 }
 
 // ---------- Muskel-Hülle (25.11.2026, Kai: „auch das Äußere dürfte anatomischer sein … gerne Neubearbeitung“) ----------
-// Alle Muskeln („muscle organ“, 323 Netze); behalten wird nur, was dicht unter der Haut liegt und nach außen zeigt – die Fläche,
+// Alle Muskeln („muscle organ“ samt Köpfen und Zonen, rund 400 Netze); behalten wird nur, was dicht unter der Haut liegt und nach außen zeigt – die Fläche,
 // die man an einer Muskelfigur von außen sieht. Tiefe Muskeln und Innenseiten entfallen (sonst läge alles übereinander).
 {
-  const files = filesOf(['muscle organ']);
+  // 25.11.2026 abends: BodyParts3D führt große Muskeln nicht als Ganzes, sondern in Teilen – Köpfe („head of muscle organ“: Bizeps, Trizeps,
+  // Wadenmuskel, Beinbeuger …) und Zonen („zone of muscle organ“: Deltamuskel, großer Brustmuskel, Trapezius, Oberschenkelstrecker …).
+  // Mit „muscle organ“ allein fehlten sie in der Hülle (an der Brust lagen Rippenmuskeln frei, Schulter und Oberschenkel blieben Haut).
+  const files = filesOf(['muscle organ', 'head of muscle organ', 'zone of muscle organ']);
   const m0 = load(files), nT = m0.idx.length / 3;
   // Haut-Dreiecke in ein Raster legen (Zelle 24 mm), Abstand Punkt–Dreieck
   const CELL = 24, grid = new Map(), sp = skin.pos, si = skin.idx;
@@ -401,6 +404,7 @@ for (const [id, kind, names, target, st = -1] of PARTS) {
   }
   const shell = simplify(reorder({ pos: m0.pos, idx: keep }), 46000, 0.012);
   out.push({ id: 'muskel/huelle', kind: 'shell', st: -1, mesh: Tm(shell) });
+  verdecke([out[out.length - 1]], 2.2, 0.9, 'Muskel-Hülle'); // 25.11. abends (Kai: „Konturen noch deutlicher“): Rinnen zwischen den Muskeln dunkel
   console.log(`muskel/huelle      ${String(files.length).padStart(3)} Dateien ${String(nT).padStart(7)} → außen ${keep.length / 3} → ${shell.idx.length / 3} Dreiecke`);
   if (preview) writeObj(join(preview, 'muskel-huelle.obj'), shell);
 }
@@ -603,6 +607,43 @@ function pack(head, out, file) {
 pack(head, out, OUT);
 console.log(`${nerveOut.length} Nervenbahnen, Teilung bei Grundriss-Höhe ${head.split}`);
 
+// Verdeckung je Ecke (Furchen dunkel, Kuppen hell): wie viel Fläche liegt im Umkreis von RR Einheiten (1 Einheit ≈ 4 mm) oberhalb der
+// Tangentialebene der Ecke? Auf einer Kuppe fast nichts, an einer Furchenwand die Gegenwand. Gewichtet mit der Fläche je Ecke.
+// Der Wert beim Anteil `quant` aller Ecken gilt als ganz dunkel (255). Ergebnis je Teil in `.ao` (Uint8Array, eine Zahl je Ecke).
+function verdecke(list, RR, quant, name) {
+  const V = [];
+  for (const o of list) {
+    const { pos, idx } = o.mesh, nv = pos.length / 3, N = new Float64Array(nv * 3), Ar = new Float64Array(nv);
+    for (let t = 0; t < idx.length; t += 3) {
+      const a = idx[t] * 3, b = idx[t + 1] * 3, c = idx[t + 2] * 3;
+      const ux = pos[b] - pos[a], uy = pos[b + 1] - pos[a + 1], uz = pos[b + 2] - pos[a + 2], vx = pos[c] - pos[a], vy = pos[c + 1] - pos[a + 1], vz = pos[c + 2] - pos[a + 2];
+      const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, ar = Math.hypot(nx, ny, nz) / 6;
+      for (const i of [a, b, c]) { N[i] += nx; N[i + 1] += ny; N[i + 2] += nz; Ar[i / 3] += ar; }
+    }
+    o.v0 = V.length;
+    for (let i = 0; i < nv; i++) { const l = Math.hypot(N[i * 3], N[i * 3 + 1], N[i * 3 + 2]) || 1; V.push([pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2], N[i * 3] / l, N[i * 3 + 1] / l, N[i * 3 + 2] / l, Ar[i]]); }
+  }
+  const G = new Map(), gk = (x, y, z) => `${Math.floor(x / RR)},${Math.floor(y / RR)},${Math.floor(z / RR)}`;
+  V.forEach((v, i) => { const k = gk(v[0], v[1], v[2]); let l = G.get(k); if (!l) G.set(k, l = []); l.push(i); });
+  const occ = new Float64Array(V.length);
+  V.forEach((v, i) => {
+    let s = 0;
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
+      const l = G.get(gk(v[0] + a * RR, v[1] + b * RR, v[2] + c * RR)); if (!l) continue;
+      for (const j of l) {
+        const w = V[j], dx = w[0] - v[0], dy = w[1] - v[1], dz = w[2] - v[2], d = Math.hypot(dx, dy, dz);
+        if (d > RR || d < 0.15) continue;
+        const h = (dx * v[3] + dy * v[4] + dz * v[5]) / d; if (h < 0.12) continue;
+        s += w[6] * (h - 0.12) * (1 - d / RR);
+      }
+    }
+    occ[i] = s;
+  });
+  const sorted = Array.from(occ).sort((a, b) => a - b), q = (f) => sorted[Math.floor(f * (sorted.length - 1))], norm = q(quant) || 1;
+  console.log(`Verdeckung ${name}: Median ${q(0.5).toFixed(2)}, ${Math.round(quant * 100)} % ${norm.toFixed(2)}, 95 % ${q(0.95).toFixed(2)} → ${Math.round(quant * 100)} % = ganz dunkel`);
+  for (const o of list) { const nv = o.mesh.pos.length / 3; o.ao = new Uint8Array(nv); for (let i = 0; i < nv; i++) o.ao[i] = Math.round(255 * Math.min(1, occ[o.v0 + i] / norm)); }
+}
+
 // =====================================================================================================
 // 6  Feines Gehirn für den Blick ins Gehirn (Fassung K, 25.11.2026, Kai: „ein Gehirn der Extraklasse“) → assets/hirn-echt.bin
 // =====================================================================================================
@@ -677,41 +718,7 @@ if (hirnDir) {
     outH.push({ id: `hirnfein/${id}`, kind: 'brain2', st: -1, mesh: Tm(m) });
     console.log(`hirnfein/${id.padEnd(12)} ${String(t0).padStart(7)} → ${String(m.idx.length / 3).padStart(6)} Dreiecke`);
   }
-  // Verdeckung je Ecke (Furchen dunkel, Windungen hell): wie viel Fläche liegt im Umkreis von 3 Einheiten (12 mm) oberhalb der
-  // Tangentialebene der Ecke? Auf einer Windung fast nichts, an einer Furchenwand die Gegenwand. Gewichtet mit der Fläche je Ecke.
-  {
-    const V = [];
-    for (const o of outH) {
-      const { pos, idx } = o.mesh, nv = pos.length / 3, N = new Float64Array(nv * 3), Ar = new Float64Array(nv);
-      for (let t = 0; t < idx.length; t += 3) {
-        const a = idx[t] * 3, b = idx[t + 1] * 3, c = idx[t + 2] * 3;
-        const ux = pos[b] - pos[a], uy = pos[b + 1] - pos[a + 1], uz = pos[b + 2] - pos[a + 2], vx = pos[c] - pos[a], vy = pos[c + 1] - pos[a + 1], vz = pos[c + 2] - pos[a + 2];
-        const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, ar = Math.hypot(nx, ny, nz) / 6;
-        for (const i of [a, b, c]) { N[i] += nx; N[i + 1] += ny; N[i + 2] += nz; Ar[i / 3] += ar; }
-      }
-      o.v0 = V.length;
-      for (let i = 0; i < nv; i++) { const l = Math.hypot(N[i * 3], N[i * 3 + 1], N[i * 3 + 2]) || 1; V.push([pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2], N[i * 3] / l, N[i * 3 + 1] / l, N[i * 3 + 2] / l, Ar[i]]); }
-    }
-    const RR = 3, G = new Map(), gk = (x, y, z) => `${Math.floor(x / RR)},${Math.floor(y / RR)},${Math.floor(z / RR)}`;
-    V.forEach((v, i) => { const k = gk(v[0], v[1], v[2]); let l = G.get(k); if (!l) G.set(k, l = []); l.push(i); });
-    const occ = new Float64Array(V.length);
-    V.forEach((v, i) => {
-      let s = 0;
-      for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
-        const l = G.get(gk(v[0] + a * RR, v[1] + b * RR, v[2] + c * RR)); if (!l) continue;
-        for (const j of l) {
-          const w = V[j], dx = w[0] - v[0], dy = w[1] - v[1], dz = w[2] - v[2], d = Math.hypot(dx, dy, dz);
-          if (d > RR || d < 0.15) continue;
-          const h = (dx * v[3] + dy * v[4] + dz * v[5]) / d; if (h < 0.12) continue;
-          s += w[6] * (h - 0.12) * (1 - d / RR);
-        }
-      }
-      occ[i] = s;
-    });
-    const sorted = Array.from(occ).sort((a, b) => a - b), q = (f) => sorted[Math.floor(f * (sorted.length - 1))], norm = q(0.8);
-    console.log(`Verdeckung: Median ${q(0.5).toFixed(2)}, 80 % ${norm.toFixed(2)}, 95 % ${q(0.95).toFixed(2)} → 80 % = ganz dunkel`);
-    for (const o of outH) { const nv = o.mesh.pos.length / 3; o.ao = new Uint8Array(nv); for (let i = 0; i < nv; i++) o.ao[i] = Math.round(255 * Math.min(1, occ[o.v0 + i] / norm)); }
-  }
+  verdecke(outH, 3, 0.8, 'Gehirn'); // Furchen dunkel, Windungen hell
   console.log(`Gehirn: Maßstab ${k.toFixed(3)} (Kasten Quelle ${sl.map((v, c) => (sh[c] - v).toFixed(0)).join(' × ')} mm → Figur ${tl.map((v, c) => (th[c] - v).toFixed(0)).join(' × ')} mm)`);
   pack({ quelle: 'Großhirn: Brain for Blender, © Anderson M. Winkler (brainder.org), licensed under CC Attribution-ShareAlike 3.0 Unported · Kleinhirn und Hirnstamm: BodyParts3D, © The Database Center for Life Science, licensed under CC Attribution 4.0 International', bearbeitung: 'Areale zu Hirnlappen zusammengefasst, Netze vereinfacht, Schnittflächen entfernt, Kleinhirn und Stamm an das Großhirn angepasst (Lage, Größe), Verdeckung je Ecke berechnet, in den Grundriss von Kapitel 01 umgerechnet', lizenz: 'CC BY-SA 3.0 (diese Datei als Ganzes; Weitergabe unter gleichen Bedingungen)', parts: [] }, outH, join(root, 'assets', 'hirn-echt.bin'));
 }

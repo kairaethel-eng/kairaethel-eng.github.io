@@ -4,6 +4,14 @@ Stand: 25.11.2026 · Arbeitsstand ist **Puls · Scan** (`test-4-puls-scan.html`,
 Neueste Entscheidung oben. Überholte ganze Abschnitte (Figur plus, Tür-Entwurf A/C, Willkommenszeile, Porträt-Entwürfe, Zuhause, Hausbesuch, alte Offen-Listen) liegen in `archiv/ENTSCHEIDUNGEN-ueberholt.md`.
 **Achtung bei Abschnitten vor dem 22.11.:** Dort stehen gültige Merkregeln neben Überholtem. Überholt sind insbesondere: Tür C und Tür-Bühne „Hineingehen“ (ersetzt durch den Raum, 23.11.), „Figur plus“ und die gezeichnete Figur (ersetzt durch die echte Figur, 23.11.), „Grün nur im Logo“ (seit 22.11. auch Raumfarbe), „kein Rot an der Manuthera“ (seit 23.11. Verlauf Bernstein → Rot-Orange), Logo nach dem Original / groß am Start (Logo A bleibt), Partikel-Haus, Röntgenblick, Ego-Rundgang, Kapitel 05 „Licht“. Was `CLAUDE.md` sagt, hat Vorrang.
 
+## 25.11.2026 spätabends – Weg M: Muskelfigur → Gehirn → Nervensystem → Wellen (Kai)
+- Kai: „Die Hauptfigur darf gerne L sein“, danach „in das Gehirn K“, das Nervensystem bildet den Übergang zu „Der Körper heilt sich selbst, nicht ich.“ und löst sich in die Wellen von Kapitel 02. Gebaut als eigener Weg `?start=m`; **Standard wird er erst nach Kais Blick am iPhone und seinem Go.**
+- Gehirn: ruhig. Kein Pulsieren, kein Feuern, keine Wellen – Form kommt aus Licht, Furchen und Glanz; das Areal zum Text steht still im Licht.
+- Das Rückenmark läuft als geschlossene Röhre aus dem Hirnstamm bis zum Ende und im Gehirn-Blick bis an die untere Bildkante.
+- Scrollen: jeder Abschnitt des Wegs zeigt Bewegung. Auch an einem Halt dreht sich das Bild weiter; der Weg ist kürzer (rund vier statt gut fünf Bildschirmhöhen).
+- Muskelfigur: „dunkle Stelle“ heißt bei additiven Punkten meist zu wenig Punkte je Bildfläche, nicht zu wenig Licht. Erst Daten prüfen (fehlen Teile? liegen Lagen hintereinander?), dann Dichte und Punktgröße ausgleichen, zuletzt das Licht. Konturen kommen aus den Rinnen der Daten und der Lichtkante am Umriss, nicht aus Schatten.
+- BodyParts3D: Muskeln immer mit ihren Köpfen und Zonen sammeln („head of muscle organ“, „zone of muscle organ“), sonst fehlen die großen.
+
 ## 25.11.2026 abends – Farbkonzept steht im ersten Bild (Kai: „fix übernehmen/etablieren“)
 - Raumlicht „Kräftig“ gilt fest. Alles, was das erste Bild bestimmt (Grundton, Licht, Logo-Farben), steht im CSS oder im kleinen Skript im Kopf – nie erst im großen Skript.
 - Eine Zeichenfläche (WebGL) wird sofort nach dem Bemessen im Seitengrund gefüllt, solange ihr Inhalt noch lädt.
