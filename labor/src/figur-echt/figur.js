@@ -161,16 +161,39 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   }
   // A2 Gehirn: Großhirn mit echten Windungen, Kleinhirn, Hirnstamm – erscheint mit der Lichtspitze von oben nach unten
   // (Innenwände an der Mittelspalte entfallen – sie lägen von vorn gesehen als helle Naht über der Mitte)
-  const spBr = hirn ? 0.5 : clamp(sp * 0.42, 0.62, 0.95);
+  const spBr = hirn ? 0.42 : clamp(sp * 0.42, 0.62, 0.95);
   const BB = [[1e9, -1e9], [1e9, -1e9], [1e9, -1e9]];
-  for (const p of data.parts.filter((q) => q.kind === 'brain')) {
-    const w = p.id === 'gehirn/grosshirn' ? 0.7 : p.id === 'gehirn/kleinhirn' ? 0.55 : 0.45;
+  // Fassung K: feine Netze (Art brain2), falls in der Datei; dazu je Punkt die Tiefe unter der Hüllfläche (Furchen dunkel, Windungen hell)
+  const fine = hirn && data.parts.some((q) => q.kind === 'brain2');
+  for (const p of data.parts.filter((q) => q.kind === (fine ? 'brain2' : 'brain'))) {
+    const gross = p.id.endsWith('grosshirn');
+    const w = gross ? 0.7 : p.id.endsWith('kleinhirn') ? 0.55 : 0.45;
+    const tmp = [];
     rows(p, spBr, (x, y, z, nx, ny, nz) => {
       if (nz < -0.2 && !hirn) return;
       [x, y, z].forEach((c, k) => { if (c < BB[k][0]) BB[k][0] = c; if (c > BB[k][1]) BB[k][1] = c; });
-      if (p.id === 'gehirn/grosshirn' && Math.abs(x) < 4.5 && Math.abs(nx) > 0.6) return;
-      const by = BODY_H / 2 - y; put(x, y, z, nx, ny, nz, 2, CROWN + (by - CROWN) * 0.72, 0, w);
+      if (gross && Math.abs(x) < 4.5 && Math.abs(nx) > 0.6) return;
+      tmp.push([x, y, z, nx, ny, nz, 0]);
     });
+    if (fine && tmp.length) {
+      // Hüllfläche: größter Abstand von der Mitte (je Hirnhälfte) in jeder Richtung (Raster 4°, Nachbarn mitgenommen)
+      for (const side of gross ? [-1, 1] : [0]) {
+        const L = tmp.filter((q) => side === 0 || (q[0] > 0) === (side > 0)); if (!L.length) continue;
+        const c = [0, 1, 2].map((k) => L.reduce((a, q) => a + q[k], 0) / L.length);
+        const NA = 90, NB = 45, mx = new Float32Array(NA * NB), cell = [];
+        for (const q of L) {
+          const dx = q[0] - c[0], dy = q[1] - c[1], dz = q[2] - c[2], r = Math.hypot(dx, dy, dz) || 1;
+          const ia = Math.min(NA - 1, Math.floor((Math.atan2(dz, dx) / (2 * Math.PI) + 0.5) * NA)), ib = Math.min(NB - 1, Math.floor(Math.acos(clamp(dy / r, -1, 1)) / Math.PI * NB));
+          const i = ib * NA + ia; if (r > mx[i]) mx[i] = r; cell.push([i, ia, ib, r]);
+        }
+        L.forEach((q, n) => {
+          const [, ia, ib, r] = cell[n]; let m = 0;
+          for (let b = Math.max(0, ib - 2); b <= Math.min(NB - 1, ib + 2); b++) for (let a = -2; a <= 2; a++) { const v = mx[b * NA + (ia + a + NA) % NA]; if (v > m) m = v; }
+          q[6] = clamp((m - r) / 2.2); // 0 = auf der Hüllfläche (Windung), 1 = rund 9 mm tief (Furche)
+        });
+      }
+    }
+    for (const [x, y, z, nx, ny, nz, ao] of tmp) { const by = BODY_H / 2 - y; put(x, y, z, nx, ny, nz, 2, CROWN + (by - CROWN) * 0.72, fine ? ao : 0, w); }
   }
   // A4 Muskeln der Stationen: Spannung sitzt im Muskel (Nacken: Trapezius absteigend + Levator scapulae; Hüfte: Gluteus medius, Piriformis, Psoas)
   const spM = clamp(sp * 0.8, 0.9, 2);

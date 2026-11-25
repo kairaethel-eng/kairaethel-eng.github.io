@@ -340,6 +340,10 @@ const PARTS = [
   ['gehirn/grosshirn', 'brain', ['angular gyrus', 'inferior frontal gyrus', 'inferior temporal gyrus', 'middle frontal gyrus', 'middle temporal gyrus', 'occipital lobe', 'postcentral gyrus', 'precentral gyrus', 'superior frontal gyrus', 'superior parietal lobule', 'supramarginal gyrus'].flatMap(LR), 13000],
   ['gehirn/kleinhirn', 'brain', ['cerebellum'], 3000],
   ['gehirn/stamm', 'brain', ['midbrain', 'pons', 'medulla oblongata'], 1400],
+  // Fassung K (25.11.2026, Kai: „Gehirn noch besser als im Video“): dieselben Teile mit viel mehr Dreiecken – nur für den Blick ins Gehirn
+  ['hirnfein/grosshirn', 'brain2', ['angular gyrus', 'inferior frontal gyrus', 'inferior temporal gyrus', 'middle frontal gyrus', 'middle temporal gyrus', 'occipital lobe', 'postcentral gyrus', 'precentral gyrus', 'superior frontal gyrus', 'superior parietal lobule', 'supramarginal gyrus'].flatMap(LR), 70000],
+  ['hirnfein/kleinhirn', 'brain2', ['cerebellum'], 14000],
+  ['hirnfein/stamm', 'brain2', ['midbrain', 'pons', 'medulla oblongata'], 3600],
   ['muskel/nacken', 'muscle', [...LR('levator scapulae'), 'descending part of left trapezius', 'descending part of right trapezius'], 3600, 1],
   ['muskel/huefte', 'muscle', [...LR('gluteus medius'), ...LR('piriformis'), ...LR('psoas major')], 4200, 2],
 ];
@@ -349,7 +353,7 @@ const out = []; // { id, kind, st, mesh (Grundriss) }
 out.push({ id: 'haut/koerper', kind: 'skin', st: -1, mesh: Tm(skin) });
 for (const [id, kind, names, target, st = -1] of PARTS) {
   const files = filesOf(names); if (!files.length) { console.warn(`⚠ ${id}: keine Dateien`); continue; }
-  const m0 = load(files), t0 = m0.idx.length / 3, m = simplify(m0, target, kind === 'brain' ? 0.01 : 0.02);
+  const m0 = load(files), t0 = m0.idx.length / 3, m = simplify(m0, target, kind.startsWith('brain') ? 0.01 : 0.02);
   out.push({ id, kind, st, mesh: Tm(m) });
   console.log(`${id.padEnd(18)} ${String(files.length).padStart(3)} Dateien ${String(t0).padStart(7)} → ${String(m.idx.length / 3).padStart(5)} Dreiecke`);
 }

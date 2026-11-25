@@ -135,7 +135,7 @@ void main(){
   col = mix(col, cBone, uCalm * .12 * (1. - on));
   // Haut: Glas (verspannte Stellen bleiben sichtbar), Kopf frei für das Gehirn (nur der Umriss bleibt), Lupe
   float hide = isSkin * max(max(glass * (1. - tenK*.6*(1. - im*.75)) * (1. - rim*.85), aN.y * brainK * (1. - smoothstep(.5, .95, rim) * (1. - im*.7))), lens * (1. - rim*.55));
-  a *= (1. - hide) * (1. - .88 * uHirn * isSkin);
+  a *= (1. - hide) * (1. - .97 * uHirn * isSkin);
   a *= 1. - uShell * cov * (1. - .55 * smoothstep(.55, .95, rim)); // L: über den Muskeln bleibt von der Haut nur der Umriss // Fassung K: im Gehirn tritt die Haut fast ganz zurück
   // B1 Scan-Ring: wo die Linie die Haut schneidet (nur während die Linie durch den Körper läuft)
   float band = exp(-pow((by - uTip) / 1.15, 2.)) * uKino * isSkin * step(14., uTip) * (1. - step(418., uTip)) * uNerve;
@@ -156,7 +156,7 @@ void main(){
   // Schädel tritt zurück, solange das Gehirn zu sehen ist (Station Kopf), Rippen und Hände etwas leiser
   float soft = aN.w > 1.5 ? 1. - .78 * brainK * (1. - smoothstep(60., 120., uTip)) * (1. - uEnd * .4) : mix(1., .62, aN.w);
   a = mix(a, mix(.34 + .52*rim, .5 + .5*rim + .25*key, im) * boneShow * mix(soft, max(soft, .8), im * step(aN.w, 1.5)) * mix(coarse, 1., max(fineK, im)), isBone);
-  a *= 1. - .7 * uHirn * isBone;
+  a *= 1. - .94 * uHirn * isBone;
   d = mix(d, uSpB * .46 * mix(1., mix(1.5, 1., fineK), coarse), isBone);
 
   // ---------- Muskeln (A4): zeigen sich mit ihrer Spannung (Bernstein) bzw. gelöst (Blau), sonst nur unter der Lupe ----------
@@ -187,12 +187,21 @@ void main(){
   col = mix(col, cbr, isBrain);
   // Gehirn: die Ränder der Windungen tragen das Bild (Kantenlicht), die Flächen bleiben leise – sonst wird es ein weißer Fleck
   a = mix(a, rev * (.09 + .14*im + (.55 + .4*im)*pow(rim, 1.4 - .35*im) + .1*aN.w + wave*.3) * (1. - .25*smoothstep(70., 210., uTip)) * uNerve, isBrain);
-  a = mix(a, min(1., a * mix(1., .42, uHirn) * (1. + ar * 2.2) + ar * .3), isBrain); // dichtes Gehirn (K): leiser, sonst wird es weiß; das Areal trägt
+  { // Fassung K: das Gehirn als Körper im Licht – Windungen hell, Furchen dunkel (aN.z = Tiefe), hinten leiser, feine Lichtkante
+    float ao = 1. - aN.z, hk = uHirn * isBrain;
+    float fill = max(0., dot(nv, normalize(vec3(.6, .25, .76)))) * hasN;
+    float lit = (.1 + .74 * key + .3 * fill + .26 * rim) * mix(.2, 1., ao * ao) + .3 * back * ao;
+    vec3 ch = mix(cDeep * 1.15, mix(cBone, cWarm, .45), clamp(.3 + .8 * (key + .4 * fill) * ao, 0., 1.)) + cRim * back * .45;
+    ch = mix(ch, mix(cAmber, cWarm, .3 + .25*sin(uTime*1.6 - length(aPos - uArea.xyz)*.8)), clamp(ar * 1.25, 0., 1.) * (.5 + .5 * ao));
+    ch = mix(ch, vec3(1., .97, .9), wave * .35 * ao);
+    col = mix(col, ch, hk);
+    a = mix(a, min(1., a * (1. + ar * 2.2) + ar * .3), isBrain * (1. - uHirn));
+    a = mix(a, min(1., lit * (1. + ar * 1.1) + ar * .3 * (.3 + .7 * ao)) * rev * uNerve, hk); }
   d = mix(d, (.34 + .08*im) * (1. + ar * .3) * mix(1., .78, step(.001, uArea.w)), isBrain);
   float ph = fract(aN.z/170. - uTime*.16);
   float pulse = pow(ph, 9.) * uPulse;
   col = mix(col, mix(cLine, cWarm, clamp(front2*.8 + pulse, 0., 1.)), isNerve);
-  a = mix(a, rev * (.6 + .2*aN.w) * (1. + pulse*.8 + front2*.5) * uNerve * (1. + lens*.5), isNerve);
+  a = mix(a, rev * (.6 + .2*aN.w) * (1. + pulse*.8 + front2*.5) * uNerve * (1. + lens*.5) * (1. - .8 * uHirn), isNerve);
   d = mix(d, (.34 + .1*aN.w) * (1. + pulse*.45 + front2*.3), isNerve);
 
   // Zeiger: Stufe 1 wie heute (größer, warmweiß); in Stufe 2 übernimmt die Lupe – dort nur die inneren Schichten heller

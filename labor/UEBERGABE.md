@@ -49,6 +49,12 @@ Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abs
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
 
+## ▶ 25.11.2026 mittags – Kai: „Gehirn noch besser als im Video?“ → Fassung K mit feinem Gehirn in der Vorschau
+- **Geändert:** `tools/figur-echt.mjs`: drei zusätzliche Teile `hirnfein/…` (Art `brain2`, Großhirn 70 000 statt 13 000 Dreiecke, Kleinhirn 14 000, Stamm 3 600). `figur.js`: mit `hirn` nimmt das Gehirn die feinen Netze (Abstand 0,42) und je Punkt die Tiefe unter der Hüllfläche (`nfo.z`: 0 Windung … 1 Furche). `gl.js`: im Gehirn-Blick (`uHirn`) eigenes Licht (Führung + Aufhellung, Furchen dunkel, Lichtkante), Areal in Bernstein, Nerven, Schädel und Haut treten fast ganz zurück.
+- **Geprüft:** K am iPhone-Fenster und PC in allen vier Arealen angesehen; `sizes.cjs` „alles ok“. Die Figur ohne Schalter nutzt weiter die alten Teile (Punkte und Reihenfolge gleich).
+- **Offen:** `figur-echt.bin` ist jetzt 1,3 MB (vorher 0,6). Sobald Kai die Fassung wählt: feines Gehirn und Muskel-Hülle in eigene Dateien legen, die nur bei Bedarf laden, oder das Ungenutzte entfernen. Am Handy berührt „Weiter scrollen“ das Gehirn weiterhin. Tempo [O].
+- **Rückweg:** Commit davor.
+
 ## ▶ 25.11.2026 vormittags – Kai: „Gerne auch Neubearbeitung … du darfst gern umbauen“ → Fassung L „Muskelfigur“ in der Vorschau
 - **Auftrag:** Figur auch außen anatomischer; Freigabe, die Anatomie-Daten neu aufzubereiten.
 - **Geändert:** `tools/figur-echt.mjs` baut ein 18. Teil `muskel/huelle` (Art `shell`): alle 323 Muskel-Dateien aus BodyParts3D, nur Dreiecke bis 32 mm unter der Haut und nach außen gewandt, vereinfacht auf rund 46 000 Dreiecke (Aufruf mit `TIEF=32`, Standard im Werkzeug 15). `assets/figur-echt.bin` 609 → 869 KB. `figur.js`: Punkte Art 8 nur mit `shell: true`; Haut über Muskel trägt `nfo.w + 4`. `gl.js`: `uShell`, `isShell`, Boden und Muskeln auf ihre Art eingegrenzt. `kapitel.js`: `?start=l` (Grundlage J). `figur-wahl.html`: Eintrag L.
