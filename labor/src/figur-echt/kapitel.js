@@ -86,6 +86,17 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   const TILT = Q.has('neigung') ? clamp(+Q.get('neigung') || 0, 0, 0.4) : 0.16; // Zeilen leicht von oben gesehen (Bögen)
   const RING = Q.get('zeichen') === 'ring' ? 1 : 0;
   const TEXT_FEIN = Q.get('text') !== 'bisher';
+  // Vergleich Startfigur (25.11.2026, Kai: „irgendwas passt noch nicht“; Seite figur-wahl.html): ?start=b aufgeräumt (Muskel-Schimmer nur
+  // an der aktiven Stelle, Tiefe im Rumpf, kleiner Startpunkt) · c dazu Boden und leicht gedreht · d dazu Auftritt mit Scan-Linie
+  const START = ['b', 'c', 'd'].includes(Q.get('start')) ? Q.get('start') : '';
+  const VAR = { quiet: START ? 1 : 0, light: START ? 0.5 : 0, ground: START === 'c' || START === 'd' ? 1 : 0, turn: START === 'c' || START === 'd' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0 };
+  if (START) document.documentElement.dataset.start = START;
+  if (Q.has('start')) { // Umschalter für den Vergleich: bleibt unten im Bild, solange man mit ?start= auf der Seite ist
+    const nav = document.createElement('nav'); nav.setAttribute('aria-label', 'Startfigur vergleichen');
+    nav.style.cssText = 'position:fixed;z-index:60;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + .75rem);transform:translateX(-50%);display:flex;gap:.25rem;padding:.25rem;border-radius:2rem;background:rgba(10,22,27,.92);border:1px solid rgba(255,255,255,.18);font:600 .8125rem/1 system-ui,sans-serif';
+    [['a', 'A heute'], ['b', 'B ruhig'], ['c', 'C Boden'], ['d', 'D Auftritt']].forEach(([k, t]) => { const l = document.createElement('a'); l.href = `?start=${k}`; l.textContent = t; const on = (START || 'a') === k; l.style.cssText = `padding:.625rem .75rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
+    document.body.appendChild(nav);
+  }
   const shade = $('.kf-shade'), bodyG = $('.kf-bodyg'), heroEl = $('.kf-hero'), endEl = $('.kf-end'), wire = $('.kf-wire'), hand = $('.kf-hand');
   const lineEls = [0, 1, 2].map((i) => [$(`.kf-l${i}`), $(`.kf-l${i}g`)]);
   const lineG = $('.kf-lines');
@@ -103,7 +114,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const halo = mk('circle', 'kf-ring-halo', g), ring = mk('path', 'kf-ring', g), prog = mk('path', 'kf-ring-prog', g);
     return { g, ring, halo, prog };
   });
-  const tips = [0, 1].map(() => { const g = mk('g', '', $('.kf-tips')); const glow = mk('circle', 'kf-tip-glow', g), halo = mk('circle', 'kf-tip-halo', g), dot = mk('circle', 'kf-tip', g); glow.setAttribute('r', 9); halo.setAttribute('r', 6); dot.setAttribute('r', 3.25); return g; });
+  const tips = [0, 1].map(() => { const g = mk('g', '', $('.kf-tips')); const glow = mk('circle', 'kf-tip-glow', g), halo = mk('circle', 'kf-tip-halo', g), dot = mk('circle', 'kf-tip', g); glow.setAttribute('r', START ? 0 : 9); halo.setAttribute('r', START ? 4.5 : 6); dot.setAttribute('r', 3.25); return g; });
   // ohne WebGL: Spannung als Leuchten (Bernstein) bzw. gelöst (Grün) über dem Punkt-Umriss
   const glows = STATIONS.map((St) => St.spots.map((sp) => {
     const g = $('.kf-glow');
@@ -396,7 +407,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     if (!echt) mode = 'heute';
     kinoK = mode === 'kino' ? 1 : 0;
     if (mode === 'heute' && echt) { if (ensureOld()) mixK = 0; else { mode = 'kino'; kinoK = 1; } }
-    if (st && !still()) introTo(0, 3200); else S.intro = 1;
+    if (st && !still()) introTo(0, VAR.scanIn ? 4600 : 3200); else S.intro = 1;
     dirty = true; relaxDirty = true; H = 0; ready = true;
     readyFns.splice(0).forEach((f) => f());
   };
@@ -452,7 +463,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     hk = smooth(U_LEN - 0.35, U_LEN - 0.05, u);
     const lineK = handover ? 1 - smooth(U_LEN - 0.55, U_LEN - 0.22, u) : 1;
     // Wiegen + Atem (wie Puls), gleiche Werte für Partikel und SVG
-    const sway = sl ? 0 : Math.sin(S.time * 0.25) * 0.12; S.sway = sway;
+    const sway = (sl ? 0 : Math.sin(S.time * 0.25) * 0.12) + VAR.turn * (1 - smooth(0.02, 0.5, u)); S.sway = sway; // ?start=c|d: am Start leicht gedreht, dreht sich mit dem ersten Scrollen nach vorn
     const br = Math.sin(S.breath) * (1 + S.calm * 1.3), kx = 1 + br * 0.007, ky = 1 + br * 0.004, cx = kx * Math.cos(sway);
     const M = [v.s * cx, v.s * ky, v.ax - (BODY_W / 2 * cx + v.fx) * v.s, v.ay - (BODY_H / 2 * ky - v.fy) * v.s]; // Grundriss → Bildschirm
     const toS = (bx, by) => [M[0] * bx + M[2], M[1] * by + M[3]];
@@ -477,7 +488,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     if (st && hk < 1 && (dirty || !paused || Math.abs(S.us - prevUs) > 1e-5 || mixWas !== mixK || kinoWas !== kinoK)) {
       if (relaxDirty) { st.upload(); if (stOld) stOld.upload(); }
       const common = { W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
-      if (mixK > 0) st.draw({ ...common, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC });
+      if (mixK > 0) st.draw({ ...common, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC, quiet: VAR.quiet, light: VAR.light, ground: VAR.ground, scanIn: VAR.scanIn });
       if (stOld && mixK < 1) stOld.draw({ ...common, intro: 1 });
       relaxDirty = false;
     }

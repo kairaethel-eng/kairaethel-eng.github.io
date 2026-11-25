@@ -186,6 +186,13 @@ export function echtPoints({ sp = 1.6, dust = 26, data }) {
   const rd = rng(424242);
   for (let k = 0; k < dust; k++) { Pp.push(rd(), rd(), 0); Nn.push(0, 0, 1); Nf.push(4, 0.25 + rd() * 0.75, rd(), 0.35 + rd() * 0.65); St.push(-1); Ht.push(0); Ct.push(0, 0); }
 
+  // Boden (Vergleich Startfigur 25.11.2026, sichtbar nur mit ?start=c|d): geordnete Ringe in der Ebene der Sohlen, nach außen leiser
+  { const gy = BODY_H / 2 - 419, R0 = 96, dg = sp * 1.9;
+    for (let j = 0; (j + 0.5) * dg < R0; j++) {
+      const r = (j + 0.5) * dg, n = Math.max(6, Math.round(2 * Math.PI * r / dg)), fade = Math.pow(1 - r / R0, 1.2) * 0.95;
+      for (let k = 0; k < n; k++) { const a = (k + (j & 1 ? 0.5 : 0)) / n * Math.PI * 2; Pp.push(Math.cos(a) * r, gy, Math.sin(a) * r); Nn.push(0, 0, 0); Nf.push(7, fade, j % 4 === 0 ? 1 : 0, 0); St.push(-1); Ht.push(0); Ct.push(0, 0); }
+    }
+  }
   const count = St.length, rnd = new Float32Array(count * 4), rr = rng(77);
   for (let k = 0; k < rnd.length; k++) rnd[k] = rr();
   const split = data.head.split;

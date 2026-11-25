@@ -235,7 +235,7 @@ const uniforms = {
   cDeep: { value: C('#44788E') }, cCalm: { value: C('#86BEE6') }, cBone0: { value: C('#E4E3D8') },
   cLane: { value: C('#4E7F93').multiplyScalar(1.4) }, // Band 2 der Perlenbänder (bis 22.11. fest cPetrol·1,4; Farbstufe setzt es, farbe.js)
   uTilt: { value: 0.16 }, uProj: { value: 1000 }, uPr: { value: 1 }, uRib: { value: new THREE.Vector2(DESK0 ? 9 : 6, DESK0 ? 300 : 257) },
-  uDr4: { value: logo.dr }, uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 },
+  uDr4: { value: logo.dr }, uLp4: { value: logo.lp }, uPtr: { value: new THREE.Vector4(0, 0, 0.1, 0) }, uAsp: { value: 1 },
   uRibA: { value: DESK0 ? 0.62 : 1.25 }, // PC seit 20.11. leiser (Kai: „am PC sehr unübersichtlich und die Punkte zu deutlich“) // Handy (18.11.): die Bänder laufen jetzt hinter dem Text von Kapitel 02 → gedämpft (vorher 1,75: nur im Vorübergehen zu sehen)
 };
 // Raumlicht + Logo-Farben (Go Kai 22.11.2026: „Kräftig“; Stufen heute/leise/mittel über ?farbe=, Vergleich farbstudie.html).
@@ -248,7 +248,7 @@ const vert = /* glsl */`
   uniform float uSpread, uFadeMid, uVeil, uDust, uKeep;
   uniform float uBreath, uCalm, uWave, uBodyRot;
   uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uRoofH, uRoofA, uLogo;
-  uniform float uTilt, uProj, uPr, uDr4, uAsp, uRibA; uniform vec2 uRib; uniform vec4 uPtr;
+  uniform float uTilt, uProj, uPr, uDr4, uLp4, uAsp, uRibA; uniform vec2 uRib; uniform vec4 uPtr;
   uniform sampler2D uRelax; uniform vec2 uBodyWH; uniform vec4 uXf[5];
   uniform vec3 cPetrol, cBone, cAmber, cBlue, cGreen, cLogoP, cGrey, cDeep, cCalm, cBone0, cLg0, cLg1, cLg2, cLane;
   varying vec3 vCol; varying float vA; varying float vSize;
@@ -305,7 +305,7 @@ const vert = /* glsl */`
       // weiße Buchstaben, feiner heller Rand – aufgehellt, weil die Punkte mit Lücken stehen (sonst wirkt die Fläche dunkler als das Logo)
       // 22.11. (Kai: „heller“): kräftiger und etwas zum Hellen hin, Punkte etwas größer (mehr Fläche gedeckt)
       col = kind4 < .5 ? mix(cLg0 * 2.35, vec3(1.), .1) : kind4 < 1.5 ? mix(cLg1 * 2.9, vec3(1.), .12) : kind4 < 2.5 ? mix(cLg2 * 2.3, vec3(1.), .1) : kind4 < 3.5 ? vec3(1.1) : vec3(1.25);
-      al = aW.y; dw = uDr4 * (kind4 > 3.5 ? .64 : kind4 > 2.5 ? .4 : .7) * uXf[4].w;
+      al = aW.y; dw = (kind4 > 3.5 ? uLp4 : uDr4 * (kind4 > 2.5 ? .4 : .7)) * uXf[4].w;
     }
     p = p * uXf[i].w + uXf[i].xyz;
     if(i==2){
@@ -364,6 +364,9 @@ const vert = /* glsl */`
       // (etwas blasser) – am hohen Tablet stehen Kapitel 02 und die Hausordnung zugleich im Bild, die Streifen hätten sonst keine Zeit
       float stay = uKeep * (1. - step(.01, aL));
       float tl = tl0 * (1. - stay);
+      // 25.11. (Kai: „Pixelfehler“): Streifen-Punkte, die hinter den Kreisen durchlaufen, dort ausblenden (Kreisabstand R·142/66)
+      { vec2 q = (p.xy - uXf[4].xy) / uXf[4].w - vec2(0., .2); q.x = abs(q.x); if(q.x > 1.2694) q.x -= 2.5388;
+        a *= mix(1., smoothstep(1.24, 1.6, length(q)), stay * tl0); }
       p = mix(p, pL, tl) + n * sin(tl*3.14159) * (1.2 + aRand.w*1.6) * mix(ws, uXf[4].w, tl) * uSpread;
       dw = mix(dw, sL, tl); col = mix(col, cL, tl);
       a = mix(a, .85 * aL, tl) * (1. - uFadeMid*sin(tl*3.14159)) * (1. - .4 * stay * tl0);
@@ -2043,7 +2046,7 @@ new IntersectionObserver((es, ob) => es.forEach((e) => { if (e.isIntersecting) {
 // Blöcke untereinander. Prüfhilfe: window.__door (open, reset, inside, go(k)).
 let praxisOffen = false; // aus der Öffnungszeiten-Anzeige (weiter unten), für das „Geöffnet“-Schild im Raum
 const doorStage = (() => {
-  const doorGate = riegel(3.6); // Staub sammelt sich zur Tür: Auslöser beim Hereinkommen, Ablauf über die Zeit
+  const doorGate = riegel(4.8); // 25.11.: länger – Staub → Dach (steht kurz) → Tür // Staub sammelt sich zur Tür: Auslöser beim Hereinkommen, Ablauf über die Zeit
   const cv = $('#cStage'), glowEl = $('#cGlow'), track = $('#doorTrack'), raumEl = $('#raum');
   if (!cv || !track || !raumEl) return null;
   const sticky = $('.door-sticky', track), cue = $('.door-cue', track), topEl = $('.door-top', track), hit = $('#doorHit'), nav = $('#top'), bar = $('.raum-bar', raumEl);
@@ -2054,7 +2057,7 @@ const doorStage = (() => {
   let st = null, failed = false, last = performance.now(), on = false, walk = null, opened = false, doorP = 0, rIn = 0, roomOn = false, lastCue = -1, lastTop = -1;
   let cur = 0, yawFrom = 0, yawTo = 0, yawT = 1, drag = 0, hot = -1, lay = null, hh = 0, mm = 0;
   const yawBase = () => yawFrom + (yawTo - yawFrom) * ease(yawT);
-  const resetBoards = () => { [...panels, ...hits].forEach((el) => { el.style.transform = ''; el.style.opacity = ''; el.style.visibility = ''; el.style.width = ''; }); lay = null; boardKey.fill(''); hitKey.fill(''); };
+  const resetBoards = () => { [...panels, ...hits].forEach((el) => { el.style.transform = ''; el.style.opacity = ''; el.style.visibility = ''; el.style.width = ''; }); lay = null; boardKey.fill(''); hitKey.fill(''); if (schild) { schild.style.transform = ''; schild.style.opacity = ''; schild.style.visibility = ''; } schildKey = ''; };
   const setWalk = (v) => { if (v === walk) return; walk = v; H.classList.toggle('door-walk', v); if (!v) { H.classList.remove('raum-on'); roomOn = false; resetBoards(); } chapDirty(); };
   const off = () => { if (!on) return; on = false; cv.classList.remove('on'); glowEl.classList.remove('on'); if (st) st.clear(); };
   const open = (now) => { if (!opened) { opened = true; if (hit) hit.hidden = true; } if (now) { doorP = 1; rIn = 1; } };
@@ -2087,7 +2090,7 @@ const doorStage = (() => {
   // Schrift im Raum: Lage der Wandschrift je Richtung, Brennweite und Ausschnitt (Handy: über den Dingen, PC: daneben)
   const YB = [0.12, 0.5, -0.1, 0.44], OBJ_LOW = -0.95, OBJ_HALF = 0.85, D_OBJ = GEO.R, D_WALL = GEO.WALL, EYE = GEO.EYE_UP;
   const HITQ = [[-0.25, -0.22, 0.37, 0.05, 0.04], null, [-0.42, -0.46, 0.03, -0.25, 0.0], [-0.62, -0.44, 0.62, 0.36, GEO.WALL - GEO.R]];
-  const boardKey = panels.map(() => ''), hitKey = hits.map(() => '');
+  const boardKey = panels.map(() => ''), hitKey = hits.map(() => ''), schild = $('.raum-schild', raumEl); let schildKey = '';
   function layout(w, h, desk) {
     const rem = parseFloat(getComputedStyle(H).fontSize) || 16, key = `${w}|${h}|${desk}|${rem}`;
     if (lay && lay.key === key) return lay;
@@ -2141,6 +2144,16 @@ const doorStage = (() => {
       if (key === boardKey[k]) return; boardKey[k] = key;
       p.style.transform = tf; p.style.opacity = tf ? op.toFixed(3) : '0'; p.style.visibility = tf && op > 0.02 ? 'visible' : 'hidden';
     });
+    if (schild) { // „Geöffnet“-Schild unter der Uhr: echte Schrift auf der Schildfläche (25.11.2026)
+      const S = GEO.SCHILD, op = roomOn ? (1 - smooth(0.1, 0.5, angTo(cam.yaw, 1))) * smooth(0.35, 0.9, rIn) : 0;
+      let tf = '';
+      if (op > 0.005) {
+        const q = []; for (const c of [[S[0], S[3]], [S[2], S[3]], [S[2], S[1]], [S[0], S[1]]]) { const r = st.project(1, c[0], c[1], S[4], cam); if (!r) { q.length = 0; break; } q.push(r[0], r[1]); }
+        if (q.length === 8) tf = quadMatrix(260, 80, q) || '';
+      }
+      const key = `${op.toFixed(3)}|${tf}|${praxisOffen}`;
+      if (key !== schildKey) { schildKey = key; schild.style.transform = tf; schild.style.opacity = tf ? op.toFixed(3) : '0'; schild.style.visibility = tf && op > 0.02 ? 'visible' : 'hidden'; schild.classList.toggle('is-now', praxisOffen); schild.textContent = praxisOffen ? 'Geöffnet' : 'Geschlossen'; }
+    }
     hits.forEach((el, i) => {
       const k = +el.dataset.k, hq = HITQ[k], act = roomOn && rIn > 0.9 && yawT >= 1 && !drag && angTo(cam.yaw, k) < 0.12;
       let tf = '';
@@ -2192,7 +2205,7 @@ const doorStage = (() => {
     // (Höhe prüfen: ist der Inhalt ausgeblendet – Messbilder des Prüfstands –, hat die Bühne keine Höhe)
     if (!opened && r.height > vh * 0.5 && r.bottom < vh * 0.3) open(true); // ohne Antippen vorbeigescrollt: beim Zurückkommen offen
     if (r.top > vh * 1.5 || r.bottom < -vh * 0.3) { off(); return; } // weit weg: Zeichenfläche aus, nichts messen
-    if (!st) { st = initStage({ cv, glow: glowEl, isStill: still, soft: true }); if (!st) { failed = true; return; } }
+    if (!st) { st = initStage({ cv, glow: glowEl, isStill: still, soft: true, roomOpts: { schildHtml: true } }); if (!st) { failed = true; return; } }
     if (st.dead) { failed = true; return; }
     if (!on) { on = true; cv.classList.add('on'); glowEl.classList.add('on'); }
     const S = sticky.getBoundingClientRect(), w = sticky.clientWidth, h = sticky.clientHeight, desk = isDesktop();

@@ -1158,3 +1158,9 @@ html:not(.fx-aus){--mute:#A3B5BB}
 /* 24.11.2026: Richtungs-Zeile im Raum heller (niedrige Laptop-Fenster: sie steht mitten im Bernsteinlicht) */
 html.door-walk .rp-dir{color:#DDE3E4}
 html.door-walk .rp-dir i{color:#F6C36F}
+
+/* 25.11.2026 (Kai: „Schild ist nicht lesbar“): „Geöffnet“-Schild im Raum als echte Schrift; main.js legt es mit derselben Kamera auf die Schildfläche */
+.raum-schild{display:none}
+html.door-walk .raum-schild{display:flex;align-items:center;justify-content:center;position:absolute;z-index:2;left:0;top:0;width:260px;height:80px;transform-origin:0 0;visibility:hidden;pointer-events:none;font:600 26px/1 var(--sans);letter-spacing:.12em;text-indent:.12em;text-transform:uppercase;white-space:nowrap;color:#8E9A9C}
+html.door-walk .raum-schild.is-now{color:#A9D474;text-shadow:0 0 14px rgba(159,203,107,.45)}
+@media print{.raum-schild{display:none!important}}

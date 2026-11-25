@@ -81,7 +81,7 @@ export function logoForm(N, desk) {
     if (x >= sx && x <= bx && (Math.abs(y - yt) <= T || Math.abs(y - yb) <= T)) return true;
     return x >= bx && Math.abs(Math.hypot(x - bx, y - by) - br) <= T;
   };
-  const gap = dr * 0.55 / R, ls = dr * (desk ? 0.62 : 0.55);
+  const gap = dr * 0.55 / R, LN = desk ? 5 : 3, lw = 2 * t / LN; // lw = Bahnabstand der Buchstaben-Punkte, in Kreis-Radien
   for (let d = 0; d < 3; d++) {
     // Kreisfläche in Ringen von der Mitte nach außen, flache Farbe (Art 0, 1, 2), Platz für den Buchstaben
     for (let j = 0; (j + 0.5) * dr < R; j++) {
@@ -92,11 +92,26 @@ export function logoForm(N, desk) {
         list.push([cx[d] + Math.cos(a) * rr, Math.sin(a) * rr + 0.2, Math.sqrt(Math.max(0, 1 - u * u)) * 0.3, d, 1]);
       }
     }
-    // Buchstabe: weiße Punkte auf eigenem Raster (Art 4)
-    const lim = Math.ceil(0.55 * R / ls);
-    for (let gy = -lim; gy <= lim; gy++) for (let gx = -lim; gx <= lim; gx++) {
-      const x = (gx + (gy & 1 ? 0.5 : 0)) * ls, y = gy * ls * 0.866;
-      if (inLetter(d, x / R, y / R)) list.push([cx[d] + x, y + 0.2, 0.34, 4, 1]);
+    // Buchstabe: weiße Punkte in Bahnen entlang der Striche (Art 4). 25.11.2026 (Kai: „Pixelfehler“): vorher ein eigenes dichtes
+    // Raster – die Punkte waren größer als ihr Abstand, überlagerten sich (die Wolke mischt additiv) zu hellen Streifen, die Kanten
+    // waren treppig. Jetzt folgen die Punkte der Kontur: LN Bahnen quer über die Strichstärke, Abstand entlang der Bahn = Bahnabstand.
+    const put = (x, y) => { for (let k = seen.length - 1; k >= 0; k--) { const q = seen[k]; if (Math.hypot(q[0] - x, q[1] - y) < lw * 0.72) return; } seen.push([x, y]); list.push([cx[d] + x * R, y * R + 0.2, 0.34, 4, 1]); };
+    const seen = [];
+    const line = (x0, y0, x1, y1) => { const L = Math.hypot(x1 - x0, y1 - y0), n = Math.max(1, Math.round(L / lw)); for (let k = 0; k <= n; k++) put(x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n); };
+    for (let l = 0; l < LN; l++) {
+      const o = -t + lw * (l + 0.5); // Versatz der Bahn quer zum Strich
+      if (d === 0) { line(-21.5 / 66 + o, -31 / 66, -21.5 / 66 + o, 31 / 66); line(21.5 / 66 + o, -31 / 66, 21.5 / 66 + o, 31 / 66); }
+      else if (d === 1) { const rx = 25.5 / 66 + o, ry = 23.25 / 66 + o, n = Math.round(Math.PI * (rx + ry) / lw); for (let k = 0; k < n; k++) { const a = (k + (l & 1 ? 0.5 : 0)) / n * Math.PI * 2; put(Math.cos(a) * rx, Math.sin(a) * ry); } }
+      else line(-18.5 / 66 + o, -31 / 66, -18.5 / 66 + o, 31 / 66);
+    }
+    for (let l = 0; l < LN; l++) {
+      const o = -t + lw * (l + 0.5);
+      if (d === 0) line(-21.5 / 66 + t, o, 21.5 / 66 - t, o); // Querstrich zwischen den Stämmen
+      else if (d === 2) { // Arme und Bogen des P als eine Bahn: außen = oben, rechts, unten
+        const sx = -18.5 / 66 + t, bx = 5 / 66, by = 7.5 / 66, br = 15.75 / 66 + o;
+        line(sx, by + br, bx, by + br); line(sx, by - br, bx, by - br);
+        const n = Math.max(2, Math.round(Math.PI * br / lw)); for (let k = 1; k < n; k++) { const a = Math.PI / 2 - k / n * Math.PI; put(bx + Math.cos(a) * br, by + Math.sin(a) * br); }
+      }
     }
     // feiner heller Rand wie im Logo (Art 3)
     const rr = R + dr * 0.3, n = Math.round(2 * Math.PI * rr / (dr * 0.7));
@@ -110,5 +125,5 @@ export function logoForm(N, desk) {
     pos[o * 3] = q[0]; pos[o * 3 + 1] = q[1]; pos[o * 3 + 2] = q[2];
     kind[o] = q[3]; w[o] = hidden ? 0 : q[4];
   }
-  return { pos, kind, w, dr };
+  return { pos, kind, w, dr, lp: lw * R * 0.8 }; // lp = Durchmesser der Buchstaben-Punkte
 }

@@ -13,6 +13,7 @@ in vec3 aPos; in vec3 aNrm; in vec4 aRand; in float aSt; in float aHeat; in vec2
 uniform vec2 uRes, uAnchor;
 uniform vec4 uView;   // Blickpunkt x, y (Grundriss, Körpermitte = 0, y oben), Maßstab px/Einheit, Drehung (Wiegen)
 uniform float uTime, uBreath, uCalm, uIntro, uUnit, uSp, uSpB, uDpr, uZoom, uTip, uPulse, uNerve, uTilt, uScroll, uKino, uEnd;
+uniform float uQuiet, uLight, uGround, uScanIn; // Vergleich Startfigur (25.11.2026, ?start=b|c|d): Muskeln nur an der aktiven Stelle · Tiefe im Rumpf · Boden · Scan-Linie beim Auftritt
 uniform vec4 uRel, uAct;
 uniform vec4 uPtr;
 uniform vec3 uStC[4];  // Stationen: Mitte x, y (Körpermitte = 0, y oben), Radius
@@ -34,6 +35,18 @@ void main(){
     gl_PointSize = size; vSize = size; vSoft = 1.;
     vCol = mix(cBone, mix(cAmber, cRim, uKino * .6), step(.72, aN.z) * .7);
     vA = (.022 + .05 * (1. - dep)) * uIntro * (.7 + .3 * sin(uTime * .21 + aRand.z * 6.283));
+    return;
+  }
+  if (kind > 6.5) { // Boden (nur ?start=c|d): geordnete Ringe unter den Füßen, drehen und neigen sich mit der Figur
+    float cg = cos(uView.w), sg = sin(uView.w);
+    vec2 g = vec2(cg*aPos.x + sg*aPos.z, aPos.y - (-sg*aPos.x + cg*aPos.z) * max(uTilt, .16));
+    vec2 sG = uAnchor + vec2(g.x - uView.x, -(g.y - uView.y)) * uView.z;
+    gl_Position = vec4(sG.x/uRes.x*2. - 1., 1. - sG.y/uRes.y*2., 0., 1.);
+    float wantG = uSp * .5 * uUnit, sizeG = max(1.6 * uDpr, wantG), thinG = wantG / sizeG;
+    gl_PointSize = sizeG; vSize = sizeG;
+    vCol = mix(cDeep, cBone, .45 + .35 * aN.z);
+    vA = uGround * aN.y * thinG * thinG * smoothstep(.72, 1., uIntro) * (1. - smoothstep(1.25, 1.9, uZoom));
+    if (vA < .004) gl_Position = vec4(2., 2., 2., 1.);
     return;
   }
   vec3 p = aPos;
@@ -103,7 +116,7 @@ void main(){
   float a = .44 + .56*rim;
   vec3 film = cDeep * (.42 + .62*key) + cKey * pow(key, 3.) * .5 + cRim * back * 1.05 + cWarm * pool * key * .2;
   float filmA = .26 + .5*key + .62*back + pool * .08;
-  col = mix(col, film, uKino); a = mix(a, filmA, uKino);
+  { float lk = max(uKino, uLight); col = mix(col, film, lk); a = mix(a, filmA, lk); }
   float fineK = max(smoothstep(1.2, 1.9, uZoom), smoothstep(.08, .6, pk)), coarse = mix(1., aN.z, isSkin + isBone);
   a *= mix(coarse, 1., fineK);
   float d = uSp * .5 * mix(1., mix(1.85, 1., fineK), coarse * isSkin);
@@ -123,6 +136,10 @@ void main(){
   a = max(a, band * .95);
   d *= 1. + band * .35;
 
+  // Auftritt mit Scan-Linie (nur ?start=d): eine feine Bernstein-Linie läuft beim Aufbau von Kopf bis Fuß
+  { float hf = (uIntro * 1.7 - .5) / .7, b2 = exp(-pow((hgt - hf) / .011, 2.)) * uScanIn * isSkin * step(uIntro, .995);
+    col = mix(col, mix(cLine, cWarm, .35), b2 * .9); a = max(a, b2); d *= 1. + b2 * .35; }
+
   // ---------- Knochen (A3, B1) ----------
   float boneShow = mix(stK * .8, scanned * mix(.62, .34, uEnd) + stK * .3, uKino);
   boneShow = max(boneShow, lens * .95) * uNerve;
@@ -135,7 +152,7 @@ void main(){
   d = mix(d, uSpB * .46 * mix(1., mix(1.5, 1., fineK), coarse), isBone);
 
   // ---------- Muskeln (A4): zeigen sich mit ihrer Spannung (Bernstein) bzw. gelöst (Blau), sonst nur unter der Lupe ----------
-  float musShow = max(smoothstep(.04, .4, tension + relaxed*.7) * (.38 + .62*act), lens * .55) * uNerve;
+  float musShow = max(smoothstep(.04, .4, tension + relaxed*.7) * (.38 + .62*act) * mix(1., act, uQuiet), lens * .55) * uNerve;
   vec3 cm = mix(cDeep * 1.2, cAmber, tenK * (.72 + .28*throb));
   cm = mix(cm, cCalm, relaxed * .85);
   col = mix(col, cm, isMus);
@@ -230,6 +247,7 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
       gl.uniform1f(U.uTip, u.tip); gl.uniform1f(U.uPulse, u.pulse); gl.uniform1f(U.uNerve, u.nerve);
       gl.uniform1f(U.uTilt, u.tilt); gl.uniform1f(U.uScroll, u.scroll);
       gl.uniform1f(U.uKino, u.kino); gl.uniform1f(U.uEnd, u.end);
+      gl.uniform1f(U.uQuiet, u.quiet || 0); gl.uniform1f(U.uLight, u.light || 0); gl.uniform1f(U.uGround, u.ground || 0); gl.uniform1f(U.uScanIn, u.scanIn || 0);
       gl.uniform3fv(U.uStC, u.stc);
       gl.uniform4f(U.uPtr, u.ptr[0], u.ptr[1], u.ptr[2], u.ptr[3]);
       gl.drawArrays(gl.POINTS, 0, count);

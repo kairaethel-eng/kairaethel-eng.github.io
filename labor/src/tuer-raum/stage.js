@@ -29,11 +29,14 @@ export function initStage({ cv, glow, isStill, soft, roomOpts }) {
     F = px * D0;
     const R = rng(11), gs = () => (R() + R() + R() - 1.5) / 1.5;
     const P = [], T = [], L = DH + DW / 2;
+    // 25.11.2026 (Kai: „Tür aus freien Partikeln, anfangs kurz das Dach, daraus die Tür“): das Dach (Giebel) steht dort, wo später die
+    // Türoberkante ist, und passt am Handy ins Bild (halbe Breite hwR); First bei 2,0
+    const hwR = desk ? 1.02 : 0.7, yEave = 2.0 - 0.49 * hwR;
     const side = (sg, off, n, b, s) => {
       for (let i = 0; i < n; i++) {
         const t = (i + R()) / n, sl = t * L, halo = R() < 0.2, jt = halo ? 0.035 : 0.006;
         const dx = sl < DH ? sg * (0.5 + off) : sg * (0.5 - (sl - DH)), dy = sl < DH ? sl : DH + off;
-        P.push(sg * (1 - t) * 1.02 + gs() * jt, 1.9 + 0.5 * t + off * 0.6 + gs() * jt, dx + gs() * jt, dy + gs() * jt, 1 - t, b * (halo ? 0.4 : 0.75 + 0.25 * R()), s * (halo ? 0.8 : 1), R(), R());
+        P.push(sg * (1 - t) * hwR + gs() * jt, yEave + (2.0 - yEave) * t + off * 0.6 + gs() * jt, dx + gs() * jt, dy + gs() * jt, 1 - t, b * (halo ? 0.4 : 0.75 + 0.25 * R()), s * (halo ? 0.8 : 1), R(), R());
         T.push(sg, off > 0 ? 1 : 0, (i + 0.5) / n); // Ziel am Bildschirmrand: Seite, Linie (außen/innen), geordnete Lage
       }
     };
@@ -84,18 +87,21 @@ export function initStage({ cv, glow, isStill, soft, roomOpts }) {
     const proj = (x, y, z) => { const dp = z - zc; if (dp < 0.12) return 0; const q = F / dp; PX = cx + x * q; PY = cy - (y - EYE) * q; PS = Math.min(1.5, Math.max(0.55, q / px)); return smooth(0.3, 2.8, dp); };
     batch.begin(VW, VH, dpr, fadeY, o.room ? o.room.rect : null);
     // Rahmen
-    const gth = smooth(0, 0.38, f), mor = clamp01((f - 0.35) / 0.65);
+    // Ablauf in drei Schritten (25.11.2026): freie Punkte sammeln sich (bis 0,32) · das Dach steht kurz (bis 0,46) · die Schrägen
+    // klappen herunter und werden zu den Türpfosten (bis 1). Unterwegs feiner Staub: sichtbar, aber höchstens 60 % deckend.
+    const gth = smooth(0, 0.32, f), mor = clamp01((f - 0.46) / 0.54);
     for (let i = 0, j = 0; i < frame.length; i += FR_N, j += 3) {
       const sg = ftg[j], row = ftg[j + 1], [tx, ty] = onBorder(sg, row, ftg[j + 2], bd);
       const ta = row ? 0.16 : 0.42, ts = row ? 0.8 : 0.95;
       if (bm >= 0.999) { batch.put(tx, ty, ts, ta, 21); continue; }
       const q = frame[i + 4], r1 = frame[i + 7], r2 = frame[i + 8];
       const m = easeInOut(clamp01(mor * 1.4 - q * 0.4)), g1 = smooth(r1 * 0.5, 0.5 + r1 * 0.5, gth), sc = (1 - g1) * (1 - g1);
-      const x = frame[i] + (frame[i + 2] - frame[i]) * m + (r1 - 0.5) * 1.6 * sc;
-      const y = frame[i + 1] + (frame[i + 3] - frame[i + 1]) * m + (r2 - 0.5) * 1.1 * sc - 0.12 * Math.sin(m * Math.PI) * q;
+      const x = frame[i] + (frame[i + 2] - frame[i]) * m + (r1 - 0.5) * 2.2 * sc;
+      const y = frame[i + 1] + (frame[i + 3] - frame[i + 1]) * m + (r2 - 0.5) * 1.7 * sc - 0.12 * Math.sin(m * Math.PI) * q;
       const nf = proj(x, y, (r2 - 0.5) * 2.4 * sc);
       if (!nf) { if (bm > 0.01) batch.put(tx, ty, ts, ta * bm, 21); continue; }
-      const a0 = frame[i + 5] * g1 * nf * G * 0.95;
+      const ga = smooth(r1 * 0.3, r1 * 0.3 + 0.3, gth) * (0.6 + 0.4 * g1); // freie Punkte sind schon zu sehen (Staub), voll erst im Dach
+      const a0 = frame[i + 5] * ga * nf * G * 0.95;
       if (bm <= 0.001) { batch.put(PX, PY, frame[i + 6] * PS, a0, 1); continue; }
       const cxp = Math.min(VW + 40, Math.max(-40, PX)), cyp = Math.min(VH + 40, Math.max(-40, PY));
       batch.put(cxp + (tx - cxp) * bm, cyp + (ty - cyp) * bm, frame[i + 6] * PS + (ts - frame[i + 6] * PS) * bm, a0 + (ta - a0) * bm, bm > 0.5 ? 21 : 1);
@@ -110,7 +116,7 @@ export function initStage({ cv, glow, isStill, soft, roomOpts }) {
       }
     }
     if (zc < 0.2) {
-      const la = smooth(0.55, 1, f);
+      const la = smooth(0.7, 1, f);
       if (la > 0.01) {
         const shade = (1 - 0.3 * k) * 0.82 * la * G * (1 - 0.65 * bm), lw = 0.976, lh = DH - 0.02;
         for (let i = 0; i < leaf.length; i += LEAF_N) {
@@ -119,7 +125,7 @@ export function initStage({ cv, glow, isStill, soft, roomOpts }) {
           if (nf) batch.put(PX, PY, leaf[i + 3] * PS, leaf[i + 2] * shade * nf, leaf[i + 4]);
         }
       }
-      const sl = smooth(0.75, 1, f) * (1 - k) * G * (0.75 + 0.25 * Math.sin(clock * 1.05));
+      const sl = smooth(0.82, 1, f) * (1 - k) * G * (0.75 + 0.25 * Math.sin(clock * 1.05));
       if (sl > 0.01) for (let i = 0; i < sill.length; i += 3) { const nf = proj(sill[i], 0.004, sill[i + 1]); if (nf) batch.put(PX, PY, 1.05 * PS, sill[i + 2] * sl * nf, 2); }
     }
     if (k > 0.01 && gone > 0.01) {

@@ -11,7 +11,7 @@
 import { surf, disc, torus, tube, line, seg } from '../shared/raster.js';
 
 export const STATIONS = 4;
-export const GEO = { R: 2.4, WALL: 3.2, EYE_UP: 0.35, FLOOR: -1.2 }; // für main.js (Schrift an der Wand, Ausschnitt)
+export const GEO = { R: 2.4, WALL: 3.2, EYE_UP: 0.35, FLOOR: -1.2, SCHILD: [-0.52, -0.62, 0.52, -0.3, 3.2 - 2.4 - 0.03] }; // SCHILD: Fläche des „Geöffnet“-Schilds (x0, y0, x1, y1, z) in Richtung 1 // für main.js (Schrift an der Wand, Ausschnitt)
 const R = 2.4, FLOOR = -1.2, ST = 9, WALL = 3.2, CEIL = 1.45; // Raum: Wände im Abstand WALL vom Standort, Ecken bis CEIL (keine Deckenfuge: sie lief hinter der Wandschrift)
 const WZ = WALL - R, CLY = 0.1; // WZ: Wand in lokalen Maßen (z) – Dinge an der Wand stehen knapp davor · CLY: Höhe der Uhrmitte
 // Punkt: x y z · nx ny nz · w · Farbe · Art (0 Fläche/Linie · 1 draußen, nur im Fenster · 2 Leuchtpunkt · 3 „Geöffnet“ · 4 antippbares Ding)
@@ -120,10 +120,12 @@ export function makeRoom(opt = {}) { // opt.logoY: Höhe der HOP-Kreise auf der 
     add(1, torus(CL, 0.34, 0.025, sp * 0.8, { axis: 'z' }), 0, 1);
     add(1, disc([CL[0], CL[1], CL[2] + 0.02], 0.31, sp * 1.7, { axis: 'z', flip: true }), 0, 0.5);
     for (let h = 0; h < 12; h++) { const a = (h / 12) * 2 * Math.PI, r0 = h % 3 ? 0.26 : 0.22, s = Math.sin(a), c = Math.cos(a); add(1, seg([CL[0] + s * r0, CL[1] + c * r0, CL[2] - 0.004], [CL[0] + s * 0.29, CL[1] + c * 0.29, CL[2] - 0.004], sp * 0.5), 0, h % 3 ? 0.7 : 1, 0, true); }
-    { const z = WZ - 0.03, y0 = -0.53, y1 = -0.31;
-      poly(1, [[-0.4, y0, z], [0.4, y0, z], [0.4, y1, z], [-0.4, y1, z], [-0.4, y0, z]], sp * 0.6, 0, 0.5);
+    // 25.11.2026 (Kai: „Schild ist nicht lesbar“): mit opt.schildHtml trägt das Schild echte Schrift (main.js legt ein HTML-Element
+    // auf GEO.SCHILD, wie die Wandschrift) – dann größerer Rahmen und keine Punkt-Buchstaben (4–5 Punkte je Buchstabe waren unlesbar)
+    { const z = WZ - 0.03, hx = opt.schildHtml ? GEO.SCHILD[2] : 0.4, y0 = opt.schildHtml ? GEO.SCHILD[1] : -0.53, y1 = opt.schildHtml ? GEO.SCHILD[3] : -0.31;
+      poly(1, [[-hx, y0, z], [hx, y0, z], [hx, y1, z], [-hx, y1, z], [-hx, y0, z]], sp * 0.6, 0, 0.5);
       add(1, seg([-0.3, y1, z], [0, CLY - 0.36, z], sp * 0.7), 0, 0.3); add(1, seg([0.3, y1, z], [0, CLY - 0.36, z], sp * 0.7), 0, 0.3);
-      glyphPts('GEÖFFNET', 0.12, sp * 0.62).forEach(([x, y]) => pt(1, x * 0.92, (y0 + y1) / 2 + y, z - 0.004, 5, 1, 3)); }
+      if (!opt.schildHtml) glyphPts('GEÖFFNET', 0.12, sp * 0.62).forEach(([x, y]) => pt(1, x * 0.92, (y0 + y1) / 2 + y, z - 0.004, 5, 1, 3)); }
     outl(1, [0, -0.7, 0.38], [1.3, 0.05, 0.42], { ft: 0.28 });
     for (const x of [-0.56, 0.56]) for (const z of [0.22, 0.54]) add(1, seg([x, -0.73, z], [x, FLOOR, z], sp * 0.9), 0, 0.6);
     add(1, seg([-0.56, -0.98, 0.22], [0.56, -0.98, 0.22], sp * 0.9), 0, 0.4); // Querstrebe
