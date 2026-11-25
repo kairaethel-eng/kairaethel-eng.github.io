@@ -15,7 +15,7 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 
 **Claude wartet auf Go**
 - Entwurf „Weltklasse-Prüfung“ (Branch `claude/project-thread-6psvm8`, PR) wartet auf Kais Durchsicht und Go zum Veröffentlichen von `labor/` – Abschnitt ▶ 24.11. unten. Mit dem Nerven-Fix neu ansehen: „Rückenmark schimmert am iPhone durch den Knochen“ (Frage vom 14.11.).
-- Runde vom 25.11. nachts (Logo, Schild, Tür über das Dach, Etikett) wartet auf Kais Durchsicht. **Startfigur:** Kai wählt auf `figur-wahl.html` zwischen A–D (oder sagt, was fehlt) – erst danach wird die Figur fest umgebaut.
+- Runde vom 25.11. nachts (Logo, Schild, Tür über das Dach, Etikett) wartet auf Kais Durchsicht. **Startfigur:** Kai wählt auf `figur-wahl.html` zwischen A–H (C gefällt wegen der Drehung; offen: wie viel Innenleben, Muskelfigur ja/nein) (oder sagt, was fehlt) – erst danach wird die Figur fest umgebaut.
 - Runde 2 der Weltklasse-Prüfung (Branch/PR, Abschnitt ▶ 24.11. nachts) wartet auf Kais Durchsicht: gedämpftes Licht hinter der Figur, hellere Kleintexte, neue Leistungs-Etiketten, Block „Ihr erster Besuch“.
 - Offen aus der Liste vom 24.11.: Bedien-Grammatik (Entscheidung Kai), Aufräumen/WebGL-Kontexte freigeben (ohne Grafikchip nicht prüfbar – mit Kais Messanzeige `?takt=1`), Standbilder neu rendern, Unterseiten und Ladegewicht nach dem Livegang.
 - Echte Figur, Runde 2 (B3 Kamera je Station, B5 Raum mit Boden und Dunst, B6 Auftritt) – nur auf dem Entwurf `figur-echt.html`.
@@ -48,6 +48,12 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abschnitt vor dem 22.11. meinen, zeigen jetzt ins Archiv.
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
+
+## ▶ 25.11.2026 morgens – Kai: „C wegen Drehung gut, Innenleben zu wenig sichtbar, auch außen anatomischer; Tür ohne Dach“ → in der Vorschau
+- **Tür:** Giebel entfernt (Kai hatte es anders gemeint). `stage.js`: jeder Rahmenpunkt schwebt frei um seinen Platz und findet ruhig dorthin, von der Schwelle nach oben (`w0`), unterwegs kleiner und höchstens ~60 % deckend; Türblatt ab 0,62; `doorGate` 4,4 s.
+- **Startfigur, neue Fassungen (nur über `?start=`, Seite sonst unverändert; alle auf Basis von C):** e Glaskörper (`uInner` 1: Haut zu Glas, Skelett/Gehirn/Nerven dauerhaft) · f halb und halb (`uHalf`) · g im Wechsel (11-s-Takt) · h feines Relief (`uDense`: feines Hautraster schon in der Übersicht, Licht 0,9). In e–g Lupe auch ohne Filmlicht (`uLens`), am Handy 78 px über dem Finger (`VAR.lift`), heller Ring am Lupenrand.
+- **Grenze:** Muskeln gibt es in `figur-echt.bin` nur an den Stationen (Nacken, Hüfte). Eine Muskelfigur für den ganzen Körper braucht die Rohdaten (BodyParts3D isa-Paket, ~200 MB, nicht im Repo) und einen neuen Lauf von `tools/figur-echt.mjs` – als nächster Schritt angeboten.
+- **Geprüft:** alle Fassungen und der Tür-Ablauf an iPhone 390×692 und PC angesehen, `sizes.cjs` alles ok; voller Prüfstand nach dieser Runde nicht gelaufen (Prüflücke).
 
 ## ▶ 25.11.2026 nachts – Kais Rückmeldung zur Vorschau (Go Kai „Go“) → in der Vorschau
 - **Atlas und Axis:** „Kopfgelenke“ → „Atlas und Axis“ (Karte C1–C2 in Kap. 03, Platzhalter-Fakt CMD); Etikett der Atlas-Axis-Therapie = „Nacken · Kopf“ (sonst doppelt).

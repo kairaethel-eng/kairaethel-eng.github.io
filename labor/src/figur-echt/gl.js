@@ -13,7 +13,7 @@ in vec3 aPos; in vec3 aNrm; in vec4 aRand; in float aSt; in float aHeat; in vec2
 uniform vec2 uRes, uAnchor;
 uniform vec4 uView;   // Blickpunkt x, y (Grundriss, Körpermitte = 0, y oben), Maßstab px/Einheit, Drehung (Wiegen)
 uniform float uTime, uBreath, uCalm, uIntro, uUnit, uSp, uSpB, uDpr, uZoom, uTip, uPulse, uNerve, uTilt, uScroll, uKino, uEnd;
-uniform float uQuiet, uLight, uGround, uScanIn; // Vergleich Startfigur (25.11.2026, ?start=b|c|d): Muskeln nur an der aktiven Stelle · Tiefe im Rumpf · Boden · Scan-Linie beim Auftritt
+uniform float uQuiet, uLight, uGround, uScanIn, uInner, uHalf, uLens, uDense; // e–g (25.11. morgens, Kai: „innere Strukturen zu wenig sichtbar“): Innenleben dauerhaft (ganz / halbe Seite), Lupe auch ohne Filmlicht // Vergleich Startfigur (25.11.2026, ?start=b|c|d): Muskeln nur an der aktiven Stelle · Tiefe im Rumpf · Boden · Scan-Linie beim Auftritt
 uniform vec4 uRel, uAct;
 uniform vec4 uPtr;
 uniform vec3 uStC[4];  // Stationen: Mitte x, y (Körpermitte = 0, y oben), Radius
@@ -107,9 +107,10 @@ void main(){
   float scanned = 1. - smoothstep(uTip - 7., uTip + .5, by);
   float glass1 = smoothstep(40., 230., uTip) * .5;
   float glass2 = scanned * mix(.84, .46, uEnd);
-  float glass = mix(glass1, glass2, uKino) * uNerve;
-  float lens = pk * uKino;                         // B4 Röntgen-Lupe
-  float brainK = smoothstep(12., 30., uTip) * uNerve;
+  float im = uInner * mix(1., smoothstep(-2.5, 2.5, aPos.x), uHalf); // Innenleben: ganzer Körper oder (uHalf) nur die vom Betrachter rechte Seite
+  float glass = max(mix(glass1, glass2, uKino), im * .9) * uNerve;
+  float lens = pk * max(uKino, uLens);                         // B4 Röntgen-Lupe
+  float brainK = max(smoothstep(12., 30., uTip), im) * uNerve;
 
   // ---------- Haut (und Grundwerte) ----------
   vec3 col = mix(cDeep, cBone, .2 + .8*rim);
@@ -117,7 +118,7 @@ void main(){
   vec3 film = cDeep * (.42 + .62*key) + cKey * pow(key, 3.) * .5 + cRim * back * 1.05 + cWarm * pool * key * .2;
   float filmA = .26 + .5*key + .62*back + pool * .08;
   { float lk = max(uKino, uLight); col = mix(col, film, lk); a = mix(a, filmA, lk); }
-  float fineK = max(smoothstep(1.2, 1.9, uZoom), smoothstep(.08, .6, pk)), coarse = mix(1., aN.z, isSkin + isBone);
+  float fineK = max(max(smoothstep(1.2, 1.9, uZoom), smoothstep(.08, .6, pk)), uDense), coarse = mix(1., aN.z, isSkin + isBone);
   a *= mix(coarse, 1., fineK);
   float d = uSp * .5 * mix(1., mix(1.85, 1., fineK), coarse * isSkin);
   float tenK = smoothstep(.06, .62, tension);
@@ -142,13 +143,13 @@ void main(){
 
   // ---------- Knochen (A3, B1) ----------
   float boneShow = mix(stK * .8, scanned * mix(.62, .34, uEnd) + stK * .3, uKino);
-  boneShow = max(boneShow, lens * .95) * uNerve;
+  boneShow = max(max(boneShow, im * .8), lens * .95) * uNerve;
   vec3 cb = mix(cBone * .5, cBone, .25 + .75*rim);
   cb = mix(cb, cBone * (.4 + .5*key) + cKey * pow(key, 3.) * .35 + cRim * back * .8, uKino);
   col = mix(col, cb, isBone);
   // Schädel tritt zurück, solange das Gehirn zu sehen ist (Station Kopf), Rippen und Hände etwas leiser
   float soft = aN.w > 1.5 ? 1. - .78 * brainK * (1. - smoothstep(60., 120., uTip)) * (1. - uEnd * .4) : mix(1., .62, aN.w);
-  a = mix(a, (.34 + .52*rim) * boneShow * soft * mix(coarse, 1., fineK), isBone);
+  a = mix(a, mix(.34 + .52*rim, .5 + .5*rim + .25*key, im) * boneShow * mix(soft, max(soft, .8), im) * mix(coarse, 1., max(fineK, im)), isBone);
   d = mix(d, uSpB * .46 * mix(1., mix(1.5, 1., fineK), coarse), isBone);
 
   // ---------- Muskeln (A4): zeigen sich mit ihrer Spannung (Bernstein) bzw. gelöst (Blau), sonst nur unter der Lupe ----------
@@ -160,7 +161,7 @@ void main(){
   d = mix(d, uSp * .42 * (1. + tension*.3*throb), isMus);
 
   // ---------- Gehirn und Nerven: erscheinen mit der Lichtspitze, vorn an der Spitze heller ----------
-  float rev = smoothstep(aN.y - 1.2, aN.y + 1.2, uTip);
+  float rev = max(smoothstep(aN.y - 1.2, aN.y + 1.2, uTip), im);
   float front2 = rev * (1. - smoothstep(2., 18., uTip - aN.y));
   float wave = pow(.5 + .5*sin(uTime*.7 + aPos.x*.42 - aPos.y*.3 + sin(aPos.y*.9)*1.3), 8.) * uPulse;
   vec3 cbr = mix(cLine, cWarm, .35 + .5*rim);
@@ -181,6 +182,9 @@ void main(){
   col = mix(col, vec3(1., .95, .86), pv * .7);
   a = a + (1. - a) * pv * .6 * (1. - isMus);
   d *= 1. + pv * .5;
+  // Rand der Lupe (e–g): feiner heller Ring auf der Haut, damit man am Handy sieht, wo sie steht (über dem Finger)
+  { float lr = exp(-pow((length(dp) - uPtr.z * 1.25) / (uPtr.z * .09), 2.)) * uPtr.w * uLens * isSkin;
+    col = mix(col, cWarm, lr * .8); a = max(a, lr * .8); }
   a *= front;
   float want = d * uUnit, size = max(1.6 * uDpr, want), thin = want / size;
   gl_PointSize = size; vSize = size;
@@ -247,7 +251,7 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
       gl.uniform1f(U.uTip, u.tip); gl.uniform1f(U.uPulse, u.pulse); gl.uniform1f(U.uNerve, u.nerve);
       gl.uniform1f(U.uTilt, u.tilt); gl.uniform1f(U.uScroll, u.scroll);
       gl.uniform1f(U.uKino, u.kino); gl.uniform1f(U.uEnd, u.end);
-      gl.uniform1f(U.uQuiet, u.quiet || 0); gl.uniform1f(U.uLight, u.light || 0); gl.uniform1f(U.uGround, u.ground || 0); gl.uniform1f(U.uScanIn, u.scanIn || 0);
+      gl.uniform1f(U.uQuiet, u.quiet || 0); gl.uniform1f(U.uLight, u.light || 0); gl.uniform1f(U.uGround, u.ground || 0); gl.uniform1f(U.uScanIn, u.scanIn || 0); gl.uniform1f(U.uInner, u.inner || 0); gl.uniform1f(U.uHalf, u.half || 0); gl.uniform1f(U.uLens, u.lens || 0); gl.uniform1f(U.uDense, u.dense || 0);
       gl.uniform3fv(U.uStC, u.stc);
       gl.uniform4f(U.uPtr, u.ptr[0], u.ptr[1], u.ptr[2], u.ptr[3]);
       gl.drawArrays(gl.POINTS, 0, count);

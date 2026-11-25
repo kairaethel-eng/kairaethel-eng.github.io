@@ -8,7 +8,8 @@ Neueste Entscheidung oben. Überholte ganze Abschnitte (Figur plus, Tür-Entwurf
 - Punkt-Schrift, die gelesen werden soll, wird echte Schrift (HTML im Raum), keine Buchstaben aus wenigen Punkten.
 - Punkte einer Fläche dürfen sich nicht überlagern (die Wolke mischt additiv): Punktgröße höchstens 0,8 des Abstands.
 - Fachbegriff: „Atlas und Axis“ statt „Kopfgelenke“ (Kai).
-- Die Tür entsteht aus freiem Staub über das Dach (Giebel steht kurz, Schrägen werden Pfosten).
+- Die Tür entsteht ruhig aus freien Punkten im Raum, ohne Zwischenform (Kai 25.11. morgens: kein Dach).
+- Startfigur: leichte Drehung am Start gefällt (Fassung C); Innenleben soll deutlicher, die Außenform anatomischer werden. Am Handy darf nichts Wichtiges unter dem Finger liegen (Lupe darüber).
 
 ## Runde 2 der Weltklasse-Prüfung (Go Kai 24.11.2026 nachts: „alles, was du für sinnvoll hältst“)
 - **Merkregeln:** Raumlicht nie stärker als rund 0,2 direkt hinter einer Hauptgrafik (sonst meldet der Prüfstand „verdeckt“ und die Punkte wirken verwaschen). Kleine graue Texte im Raumlicht über `--mute` (heller Wert unter `html:not(.fx-aus)`). Leistungs-Etiketten nennen Körperregion oder Thema, nie „hilft bei“. Textvorschläge von Claude, die Kai noch nicht bestätigt hat, tragen `data-platzhalter`.

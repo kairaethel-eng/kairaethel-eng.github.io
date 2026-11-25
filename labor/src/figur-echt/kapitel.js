@@ -88,13 +88,20 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   const TEXT_FEIN = Q.get('text') !== 'bisher';
   // Vergleich Startfigur (25.11.2026, Kai: „irgendwas passt noch nicht“; Seite figur-wahl.html): ?start=b aufgeräumt (Muskel-Schimmer nur
   // an der aktiven Stelle, Tiefe im Rumpf, kleiner Startpunkt) · c dazu Boden und leicht gedreht · d dazu Auftritt mit Scan-Linie
-  const START = ['b', 'c', 'd'].includes(Q.get('start')) ? Q.get('start') : '';
-  const VAR = { quiet: START ? 1 : 0, light: START ? 0.5 : 0, ground: START === 'c' || START === 'd' ? 1 : 0, turn: START === 'c' || START === 'd' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0 };
+  // 25.11. morgens (Kai: „C wegen Drehung gut … innere Strukturen zu wenig sichtbar, am Handy liegt der Finger auf der Lupe“):
+  // e Glaskörper (Innenleben dauerhaft) · f halb Haut, halb Innenleben · g Haut und Innenleben im ruhigen Wechsel – alle auf Basis von C,
+  // Lupe auch hier, am Handy steht sie über dem Finger
+  const START = ['b', 'c', 'd', 'e', 'f', 'g', 'h'].includes(Q.get('start')) ? Q.get('start') : '';
+  const INNEN = 'efg'.includes(START) && START !== '';
+  // h (Kai: „auch das Äußere dürfte anatomischer sein“): feines Raster schon in der Übersicht + kräftiges Licht von vorn links (Relief)
+  const VAR = { quiet: START ? 1 : 0, light: START === 'h' ? 0.9 : START ? 0.5 : 0, dense: START === 'h' ? 1 : 0, ground: START && START !== 'b' ? 1 : 0, turn: START && START !== 'b' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0,
+    inner: START === 'e' || START === 'f' ? 1 : 0, half: START === 'f' ? 1 : 0, cycle: START === 'g', lens: INNEN ? 1 : 0, lift: INNEN ? 78 : 0 };
   if (START) document.documentElement.dataset.start = START;
   if (Q.has('start')) { // Umschalter für den Vergleich: bleibt unten im Bild, solange man mit ?start= auf der Seite ist
     const nav = document.createElement('nav'); nav.setAttribute('aria-label', 'Startfigur vergleichen');
     nav.style.cssText = 'position:fixed;z-index:60;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + .75rem);transform:translateX(-50%);display:flex;gap:.25rem;padding:.25rem;border-radius:2rem;background:rgba(10,22,27,.92);border:1px solid rgba(255,255,255,.18);font:600 .8125rem/1 system-ui,sans-serif';
-    [['a', 'A heute'], ['b', 'B ruhig'], ['c', 'C Boden'], ['d', 'D Auftritt']].forEach(([k, t]) => { const l = document.createElement('a'); l.href = `?start=${k}`; l.textContent = t; const on = (START || 'a') === k; l.style.cssText = `padding:.625rem .75rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
+    const NAMEN = { a: 'heute', b: 'ruhig', c: 'Boden, gedreht', d: 'Auftritt', e: 'Glaskörper', f: 'halb und halb', g: 'im Wechsel', h: 'feines Relief' };
+    [['a', 'A'], ['b', 'B'], ['c', 'C'], ['d', 'D'], ['e', 'E'], ['f', 'F'], ['g', 'G'], ['h', 'H']].forEach(([k, t]) => { const l = document.createElement('a'); l.href = `?start=${k}`; const on = (START || 'a') === k; l.textContent = on ? `${t} ${NAMEN[k]}` : t; l.style.cssText = `padding:.625rem .7rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
     document.body.appendChild(nav);
   }
   const shade = $('.kf-shade'), bodyG = $('.kf-bodyg'), heroEl = $('.kf-hero'), endEl = $('.kf-end'), wire = $('.kf-wire'), hand = $('.kf-hand');
@@ -349,7 +356,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   });
   stage.addEventListener('pointerleave', () => { hand.classList.remove('on'); lastPaint = null; PT.want = 0; });
   // Finger: die Punkte unter dem Finger antworten – auch beim Scrollen (nur zuhören, nichts aufhalten)
-  const fingerAt = (e) => { if (e.touches.length) { const [x, y] = local(e.touches[0]); point(x, y); } };
+  const fingerAt = (e) => { if (e.touches.length) { const [x, y] = local(e.touches[0]); point(x, y - VAR.lift); } }; // e–g: Lupe steht über dem Finger
   stage.addEventListener('touchstart', fingerAt, { passive: true });
   stage.addEventListener('touchmove', fingerAt, { passive: true });
   const fingerOff = () => { PT.want = 0; };
@@ -488,7 +495,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     if (st && hk < 1 && (dirty || !paused || Math.abs(S.us - prevUs) > 1e-5 || mixWas !== mixK || kinoWas !== kinoK)) {
       if (relaxDirty) { st.upload(); if (stOld) stOld.upload(); }
       const common = { W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
-      if (mixK > 0) st.draw({ ...common, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC, quiet: VAR.quiet, light: VAR.light, ground: VAR.ground, scanIn: VAR.scanIn });
+      if (mixK > 0) st.draw({ ...common, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC, quiet: VAR.quiet, light: VAR.light, ground: VAR.ground, scanIn: VAR.scanIn, half: VAR.half, lens: VAR.lens, dense: VAR.dense,
+        inner: VAR.cycle ? (sl ? 0.6 : (() => { const ph = (S.time % 11) / 11; return smooth(0.18, 0.4, ph) - smooth(0.68, 0.9, ph); })()) : VAR.inner });
       if (stOld && mixK < 1) stOld.draw({ ...common, intro: 1 });
       relaxDirty = false;
     }

@@ -2046,7 +2046,7 @@ new IntersectionObserver((es, ob) => es.forEach((e) => { if (e.isIntersecting) {
 // Blöcke untereinander. Prüfhilfe: window.__door (open, reset, inside, go(k)).
 let praxisOffen = false; // aus der Öffnungszeiten-Anzeige (weiter unten), für das „Geöffnet“-Schild im Raum
 const doorStage = (() => {
-  const doorGate = riegel(4.8); // 25.11.: länger – Staub → Dach (steht kurz) → Tür // Staub sammelt sich zur Tür: Auslöser beim Hereinkommen, Ablauf über die Zeit
+  const doorGate = riegel(4.4); // 25.11.: freie Punkte sammeln sich ruhig zur Tür (kein Dach mehr) // Staub sammelt sich zur Tür: Auslöser beim Hereinkommen, Ablauf über die Zeit
   const cv = $('#cStage'), glowEl = $('#cGlow'), track = $('#doorTrack'), raumEl = $('#raum');
   if (!cv || !track || !raumEl) return null;
   const sticky = $('.door-sticky', track), cue = $('.door-cue', track), topEl = $('.door-top', track), hit = $('#doorHit'), nav = $('#top'), bar = $('.raum-bar', raumEl);
