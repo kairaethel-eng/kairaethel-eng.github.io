@@ -4,7 +4,8 @@
 //   jeder vierte Punkt gehört zum groben Raster (Übersicht), je Punkt die Normale für das Kantenlicht. Kein Zufall in der Lage.
 // Arten je Punkt (nfo.x): 0 Haut (nfo.y = im Kopf, nfo.z = grobes Raster) · 2 Gehirn (nfo.y = Spitzenhöhe, ab der es erscheint, nfo.w = Helligkeit) ·
 //   3 Nerv (nfo.y = Spitzenhöhe, nfo.z = Weg vom Gehirn, nfo.w = Dicke) · 4 Raum · 5 Knochen (nfo.z = grobes Raster, nfo.w = Teil: 1 Rippen/Hände dezenter, 2 Schädel – tritt hinter das Gehirn zurück) ·
-//   6 Muskel (Spannung der Station; nfo.y = Station)
+//   6 Muskel (Spannung der Station; nfo.y = Station) · 7 Boden · 8 Muskel-Hülle (Fassung L: alle oberflächlichen Muskeln als Relief)
+//   Haut: nfo.w + 4, wenn darunter Muskel-Hülle liegt (tritt in Fassung L zurück)
 // Koordinaten: Grundriss 200 × 430, Lage je Punkt um die Körpermitte, y nach oben, z zum Betrachter (wie ../feinschliff/figur.js).
 import { STATIONS, stationHeat, BODY_W, BODY_H, CROWN, SOLE } from '../figur-plus/figur.js';
 
@@ -107,7 +108,7 @@ export function linesOf(nerves, split) {
 }
 
 // sp = Abstand der Haut-Punkte (Grundriss-Einheiten), dust = Zahl der großen unscharfen Punkte im Raum, data = decode(…)
-export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = false }) { // hirn (Fassung K): Gehirn rundum und dichter, Maße in .brain
+export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = false, shell = false }) { // hirn (Fassung K): Gehirn rundum und dichter, Maße in .brain
   const Pp = [], Nn = [], St = [], Ht = [], Ct = [], Nf = [];
   const put = (x, y, z, nx, ny, nz, kind, a, b, c, heat = null) => {
     Pp.push(x, y, z); Nn.push(nx, ny, nz); Nf.push(kind, a, b, c);
@@ -122,19 +123,35 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   };
   // A1 Haut: nur die vordere und seitliche Fläche (die Figur dreht sich höchstens ±7°), Kopf markiert (dort zeigt sich das Gehirn)
   const skin = part('haut/koerper');
+  // Fassung L (25.11.2026, Kai: „auch das Äußere … anatomischer“, „gerne auch Neubearbeitung“): Hülle aller oberflächlichen Muskeln.
+  // Zuerst ihre Punkte sammeln (Gitter), damit die Haut weiß, wo Muskel unter ihr liegt (dort tritt sie zurück, sonst bleibt sie).
+  const SH = [], shG = new Map(), CG = 5, gk = (x, y, z) => (Math.floor(x / CG) + 512) + (Math.floor(y / CG) + 512) * 1024 + (Math.floor(z / CG) + 512) * 1048576;
+  if (shell) for (const p of data.parts.filter((q) => q.kind === 'shell')) rows(p, clamp(sp * 0.62, 0.7, 1.2), (x, y, z, nx, ny, nz) => {
+    if (nz < -0.42) return;
+    SH.push([x, y, z, nx, ny, nz]); const k = gk(x, y, z), l = shG.get(k); if (l) l.push(SH.length - 1); else shG.set(k, [SH.length - 1]);
+  });
+  const covered = (x, y, z) => {
+    if (!SH.length) return 0;
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
+      const l = shG.get(gk(x + a * CG, y + b * CG, z + c * CG)); if (!l) continue;
+      for (const i of l) { const q = SH[i]; if ((q[0] - x) ** 2 + (q[1] - y) ** 2 + (q[2] - z) ** 2 < 20) return 4; }
+    }
+    return 0;
+  };
   const fein = (x, by) => by > 390 || (Math.abs(x) > 47 && by > 196);
   rows(skin, sp, (x, y, z, nx, ny, nz, coarse) => {
     if (nz < -0.42) return;
     const by = BODY_H / 2 - y, head = by < 64 && Math.abs(x) < 34 ? 1 : 0;
-    put(x, y, z, nx, ny, nz, 0, head, coarse ? 1 : 0, fein(x, by) ? 2 : 0, skinHeat(x, y));
+    put(x, y, z, nx, ny, nz, 0, head, coarse ? 1 : 0, (fein(x, by) ? 2 : 0) + covered(x, y, z), skinHeat(x, y));
   });
   // Hände und Füße feiner (Fassung J, 25.11.2026, Kai: „Füße, Hände … detaillierter“): ein zweites, engeres Raster nur dort (Kennung 1);
   // die Punkte des normalen Rasters in diesen Bereichen tragen Kennung 2 und treten zurück, sobald das feine gezeigt wird (uDense)
   if (detail) rows(skin, sp * 0.56, (x, y, z, nx, ny, nz) => {
     if (nz < -0.42) return;
     if (!fein(x, BODY_H / 2 - y)) return;
-    put(x, y, z, nx, ny, nz, 0, 0, 0, 1, skinHeat(x, y));
+    put(x, y, z, nx, ny, nz, 0, 0, 0, 1 + covered(x, y, z), skinHeat(x, y));
   });
+  for (const q of SH) put(q[0], q[1], q[2], q[3], q[4], q[5], 8, 0, 0, 0);
   const nBody = St.length;
   // A3 Knochen: etwas weiter als die Haut, Rückseiten weg (wie die Haut)
   const spB = clamp(sp * 0.95, 1.1, 2.4);

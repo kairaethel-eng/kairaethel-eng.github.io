@@ -49,6 +49,13 @@ Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abs
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
 
+## ▶ 25.11.2026 vormittags – Kai: „Gerne auch Neubearbeitung … du darfst gern umbauen“ → Fassung L „Muskelfigur“ in der Vorschau
+- **Auftrag:** Figur auch außen anatomischer; Freigabe, die Anatomie-Daten neu aufzubereiten.
+- **Geändert:** `tools/figur-echt.mjs` baut ein 18. Teil `muskel/huelle` (Art `shell`): alle 323 Muskel-Dateien aus BodyParts3D, nur Dreiecke bis 32 mm unter der Haut und nach außen gewandt, vereinfacht auf rund 46 000 Dreiecke (Aufruf mit `TIEF=32`, Standard im Werkzeug 15). `assets/figur-echt.bin` 609 → 869 KB. `figur.js`: Punkte Art 8 nur mit `shell: true`; Haut über Muskel trägt `nfo.w + 4`. `gl.js`: `uShell`, `isShell`, Boden und Muskeln auf ihre Art eingegrenzt. `kapitel.js`: `?start=l` (Grundlage J). `figur-wahl.html`: Eintrag L.
+- **Geprüft:** Die 17 bisherigen Teile und die Nervenbahnen sind in der neuen Datei wertgleich mit der alten (Vergleich Teil für Teil), ohne `?start=l` entstehen keine neuen Punkte. L am iPhone-Fenster und PC angesehen (Start und vier Stationen). `sizes.cjs` „alles ok“. Voller Prüfstand steht weiter aus, bis eine Fassung gewählt ist.
+- **Offen:** Die Datei ist für alle Fassungen 260 KB größer; wird L nicht gewählt, Hülle wieder aus der Datei nehmen (Werkzeug-Block „Muskel-Hülle“ auslassen). Tempo am echten Gerät [O].
+- **Rückweg:** Commit davor; alte Datei entsteht mit dem Werkzeug ohne den Block „Muskel-Hülle“.
+
 ## ▶ 25.11.2026 morgens – Kai: „C wegen Drehung gut, Innenleben zu wenig sichtbar, auch außen anatomischer; Tür ohne Dach“ → in der Vorschau
 - **Tür:** Giebel entfernt (Kai hatte es anders gemeint). `stage.js`: jeder Rahmenpunkt schwebt frei um seinen Platz und findet ruhig dorthin, von der Schwelle nach oben (`w0`), unterwegs kleiner und höchstens ~60 % deckend; Türblatt ab 0,62; `doorGate` 4,4 s.
 - **Startfigur, neue Fassungen (nur über `?start=`, Seite sonst unverändert; alle auf Basis von C):** e Glaskörper (`uInner` 1: Haut zu Glas, Skelett/Gehirn/Nerven dauerhaft) · f halb und halb (`uHalf`) · g im Wechsel (11-s-Takt) · h feines Relief (`uDense`: feines Hautraster schon in der Übersicht, Licht 0,9). In e–g Lupe auch ohne Filmlicht (`uLens`), am Handy 78 px über dem Finger (`VAR.lift`), heller Ring am Lupenrand.

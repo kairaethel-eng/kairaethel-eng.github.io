@@ -354,6 +354,57 @@ for (const [id, kind, names, target, st = -1] of PARTS) {
   console.log(`${id.padEnd(18)} ${String(files.length).padStart(3)} Dateien ${String(t0).padStart(7)} → ${String(m.idx.length / 3).padStart(5)} Dreiecke`);
 }
 
+// ---------- Muskel-Hülle (25.11.2026, Kai: „auch das Äußere dürfte anatomischer sein … gerne Neubearbeitung“) ----------
+// Alle Muskeln („muscle organ“, 323 Netze); behalten wird nur, was dicht unter der Haut liegt und nach außen zeigt – die Fläche,
+// die man an einer Muskelfigur von außen sieht. Tiefe Muskeln und Innenseiten entfallen (sonst läge alles übereinander).
+{
+  const files = filesOf(['muscle organ']);
+  const m0 = load(files), nT = m0.idx.length / 3;
+  // Haut-Dreiecke in ein Raster legen (Zelle 24 mm), Abstand Punkt–Dreieck
+  const CELL = 24, grid = new Map(), sp = skin.pos, si = skin.idx;
+  const ck = (x, y, z) => `${x},${y},${z}`;
+  for (let t = 0; t < si.length; t += 3) {
+    const lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
+    for (let e = 0; e < 3; e++) for (let c = 0; c < 3; c++) { const v = sp[si[t + e] * 3 + c]; if (v < lo[c]) lo[c] = v; if (v > hi[c]) hi[c] = v; }
+    for (let x = Math.floor(lo[0] / CELL); x <= Math.floor(hi[0] / CELL); x++) for (let y = Math.floor(lo[1] / CELL); y <= Math.floor(hi[1] / CELL); y++) for (let z = Math.floor(lo[2] / CELL); z <= Math.floor(hi[2] / CELL); z++) {
+      const k = ck(x, y, z); let l = grid.get(k); if (!l) grid.set(k, l = []); l.push(t);
+    }
+  }
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  function closest(p, a, b, c) { // nächster Punkt auf dem Dreieck (Ericson)
+    const ab = sub(b, a), ac = sub(c, a), ap = sub(p, a), d1 = dot(ab, ap), d2 = dot(ac, ap);
+    if (d1 <= 0 && d2 <= 0) return a;
+    const bp = sub(p, b), d3 = dot(ab, bp), d4 = dot(ac, bp); if (d3 >= 0 && d4 <= d3) return b;
+    const vc = d1 * d4 - d3 * d2; if (vc <= 0 && d1 >= 0 && d3 <= 0) { const v = d1 / (d1 - d3); return [a[0] + ab[0] * v, a[1] + ab[1] * v, a[2] + ab[2] * v]; }
+    const cp = sub(p, c), d5 = dot(ab, cp), d6 = dot(ac, cp); if (d6 >= 0 && d5 <= d6) return c;
+    const vb = d5 * d2 - d1 * d6; if (vb <= 0 && d2 >= 0 && d6 <= 0) { const w = d2 / (d2 - d6); return [a[0] + ac[0] * w, a[1] + ac[1] * w, a[2] + ac[2] * w]; }
+    const va = d3 * d6 - d5 * d4; if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0) { const w = (d4 - d3) / (d4 - d3 + d5 - d6); return [b[0] + (c[0] - b[0]) * w, b[1] + (c[1] - b[1]) * w, b[2] + (c[2] - b[2]) * w]; }
+    const dn = 1 / (va + vb + vc), v = vb * dn, w = vc * dn; return [a[0] + ab[0] * v + ac[0] * w, a[1] + ab[1] * v + ac[1] * w, a[2] + ab[2] * v + ac[2] * w];
+  }
+  const V = (arr, i) => [arr[i * 3], arr[i * 3 + 1], arr[i * 3 + 2]];
+  const TIEF = +(process.env.TIEF || 15); // mm unter der Haut
+  const keep = [];
+  for (let t = 0; t < m0.idx.length; t += 3) {
+    const A = V(m0.pos, m0.idx[t]), B = V(m0.pos, m0.idx[t + 1]), C = V(m0.pos, m0.idx[t + 2]);
+    const c = [(A[0] + B[0] + C[0]) / 3, (A[1] + B[1] + C[1]) / 3, (A[2] + B[2] + C[2]) / 3];
+    const gx = Math.floor(c[0] / CELL), gy = Math.floor(c[1] / CELL), gz = Math.floor(c[2] / CELL);
+    let best = TIEF * TIEF, bq = null;
+    for (let x = gx - 1; x <= gx + 1; x++) for (let y = gy - 1; y <= gy + 1; y++) for (let z = gz - 1; z <= gz + 1; z++) {
+      const l = grid.get(ck(x, y, z)); if (!l) continue;
+      for (const s of l) { const q = closest(c, V(sp, si[s]), V(sp, si[s + 1]), V(sp, si[s + 2])), d = sub(q, c), d2 = dot(d, d); if (d2 < best) { best = d2; bq = q; } }
+    }
+    if (!bq) continue;
+    const ab = sub(B, A), ac = sub(C, A), n = [ab[1] * ac[2] - ab[2] * ac[1], ab[2] * ac[0] - ab[0] * ac[2], ab[0] * ac[1] - ab[1] * ac[0]], out = sub(bq, c);
+    const nl = Math.hypot(n[0], n[1], n[2]) || 1, ol = Math.hypot(out[0], out[1], out[2]);
+    if (ol > 1.5 && dot(n, out) / (nl * ol) < 0.1) continue; // zeigt nicht nach außen
+    keep.push(m0.idx[t], m0.idx[t + 1], m0.idx[t + 2]);
+  }
+  const shell = simplify(reorder({ pos: m0.pos, idx: keep }), 46000, 0.012);
+  out.push({ id: 'muskel/huelle', kind: 'shell', st: -1, mesh: Tm(shell) });
+  console.log(`muskel/huelle      ${String(files.length).padStart(3)} Dateien ${String(nT).padStart(7)} → außen ${keep.length / 3} → ${shell.idx.length / 3} Dreiecke`);
+  if (preview) writeObj(join(preview, 'muskel-huelle.obj'), shell);
+}
+
 // =====================================================================================================
 // 4  Landmarken aus den echten Knochen (BodyParts3D-Koordinaten, mm) und Nervenbahnen
 // =====================================================================================================
