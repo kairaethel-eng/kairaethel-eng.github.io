@@ -140,7 +140,7 @@ void main(){
   // Haut: Glas (verspannte Stellen bleiben sichtbar), Kopf frei für das Gehirn (nur der Umriss bleibt), Lupe
   float hide = isSkin * max(max(glass * (1. - tenK*.6*(1. - im*.75)) * (1. - rim*.85), aN.y * brainK * (1. - smoothstep(.5, .95, rim) * (1. - im*.7))), lens * (1. - rim*.55));
   a *= (1. - hide) * (1. - .97 * uHirn * isSkin);
-  a *= 1. - uShell * cov * (1. - .55 * smoothstep(.55, .95, rim)); // L: über den Muskeln bleibt von der Haut nur der Umriss // Fassung K: im Gehirn tritt die Haut fast ganz zurück
+  a *= 1. - uShell * cov * (.78 - .4 * smoothstep(.55, .95, rim)); // L: über den Muskeln tritt die Haut zurück, füllt aber weiter leise (keine dunklen Löcher) // L: über den Muskeln bleibt von der Haut nur der Umriss // Fassung K: im Gehirn tritt die Haut fast ganz zurück
   // B1 Scan-Ring: wo die Linie die Haut schneidet (nur während die Linie durch den Körper läuft)
   float band = exp(-pow((by - uTip) / 1.15, 2.)) * uKino * isSkin * step(14., uTip) * (1. - step(418., uTip)) * uNerve;
   col = mix(col, mix(cLine, cWarm, .35), band * .9);
@@ -177,11 +177,12 @@ void main(){
     vec3 Hh = normalize(L + vec3(0., 0., 1.));
     float spec = pow(max(0., dot(nv, Hh)), 22.) * hasN;                      // feiner Glanz auf den Muskelbäuchen
     float dpt = clamp(.5 + p.z / 60., 0., 1.);                               // vorn heller, hinten leiser → Körper
-    vec3 cs = mix(cDeep, cBone, .16) * (.34 + .78*key) + cKey * (pow(key, 3.) * .5 + spec * .6) + cRim * back * .95;
+    vec3 cs = mix(cDeep, cBone, .16) * (.5 + .66*key) + cKey * (pow(key, 3.) * .5 + spec * .6) + cRim * back * .95;
     cs = mix(cs, cAmber, tenK * (.72 + .28*throb));
     cs = mix(cs, cCalm, relaxed * .8);
     col = mix(col, cs, isShell);
-    float aS = (.05 + .8 * pow(key, 1.35) + .35 * spec + .62 * back) * mix(.62, 1., dpt);
+    float fl = max(0., dot(nv, normalize(vec3(.62, .2, .76)))) * hasN;        // Aufhellung von rechts vorn: keine dunklen Stellen (Kai 25.11.)
+    float aS = (.24 + .6 * pow(key, 1.2) + .3 * fl + .35 * spec + .55 * back) * mix(.72, 1., dpt);
     aS = mix(aS, .55 + .45*throb, tenK * .8); aS = mix(aS, max(aS, .6), relaxed);
     a = mix(a, uShell * aS * (1. - hS), isShell);
     d = mix(d, uSp * .31 * (1. + tension * tenK * .3 * throb), isShell); }

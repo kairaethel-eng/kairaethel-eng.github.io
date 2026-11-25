@@ -126,15 +126,20 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   // Fassung L (25.11.2026, Kai: „auch das Äußere … anatomischer“, „gerne auch Neubearbeitung“): Hülle aller oberflächlichen Muskeln.
   // Zuerst ihre Punkte sammeln (Gitter), damit die Haut weiß, wo Muskel unter ihr liegt (dort tritt sie zurück, sonst bleibt sie).
   const SH = [], shG = new Map(), CG = 5, gk = (x, y, z) => (Math.floor(x / CG) + 512) + (Math.floor(y / CG) + 512) * 1024 + (Math.floor(z / CG) + 512) * 1048576;
-  if (shell) for (const p of data.parts.filter((q) => q.kind === 'shell')) rows(p, clamp(sp * 0.62, 0.7, 1.2), (x, y, z, nx, ny, nz) => {
-    if (nz < -0.42) return;
-    SH.push([x, y, z, nx, ny, nz]); const k = gk(x, y, z), l = shG.get(k); if (l) l.push(SH.length - 1); else shG.set(k, [SH.length - 1]);
-  });
+  if (shell) {
+    const raw = [];
+    for (const p of data.parts.filter((q) => q.kind === 'shell')) rows(p, clamp(sp * 0.62, 0.7, 1.2), (x, y, z, nx, ny, nz) => {
+      if (nz < -0.42) return;
+      const by = BODY_H / 2 - y; if (by < 66 && Math.abs(x) < 36) return; // Kopf und Gesicht bleiben Haut (Kai 25.11.: keine dunklen Stellen wie an den Augen)
+      raw.push([x, y, z, nx, ny, nz]);
+    });
+    for (const q of raw) { SH.push(q); const k = gk(q[0], q[1], q[2]), l = shG.get(k); if (l) l.push(SH.length - 1); else shG.set(k, [SH.length - 1]); }
+  }
   const covered = (x, y, z) => {
     if (!SH.length) return 0;
     for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
       const l = shG.get(gk(x + a * CG, y + b * CG, z + c * CG)); if (!l) continue;
-      for (const i of l) { const q = SH[i]; if ((q[0] - x) ** 2 + (q[1] - y) ** 2 + (q[2] - z) ** 2 < 20) return 4; }
+      for (const i of l) { const q = SH[i]; if ((q[0] - x) ** 2 + (q[1] - y) ** 2 + (q[2] - z) ** 2 < 7) return 4; }
     }
     return 0;
   };
