@@ -91,17 +91,17 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // 25.11. morgens (Kai: „C wegen Drehung gut … innere Strukturen zu wenig sichtbar, am Handy liegt der Finger auf der Lupe“):
   // e Glaskörper (Innenleben dauerhaft) · f halb Haut, halb Innenleben · g Haut und Innenleben im ruhigen Wechsel – alle auf Basis von C,
   // Lupe auch hier, am Handy steht sie über dem Finger
-  const START = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'].includes(Q.get('start')) ? Q.get('start') : '';
-  const INNEN = 'efgi'.includes(START) && START !== ''; // i (Kai 25.11.: „H und E kombinieren“): feines Relief als halb durchsichtige Hülle über dem Innenleben
+  const START = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'].includes(Q.get('start')) ? Q.get('start') : '';
+  const INNEN = 'efgij'.includes(START) && START !== ''; // j (Kai 25.11. 11:17): Übersicht nur feines Relief, Röntgenblick mit Innenleben erst beim Heranzoomen an die Station // i (Kai 25.11.: „H und E kombinieren“): feines Relief als halb durchsichtige Hülle über dem Innenleben
   // h (Kai: „auch das Äußere dürfte anatomischer sein“): feines Raster schon in der Übersicht + kräftiges Licht von vorn links (Relief)
-  const VAR = { quiet: START ? 1 : 0, light: START === 'h' || START === 'i' ? 0.9 : START ? 0.5 : 0, dense: START === 'h' || START === 'i' ? 1 : 0, glass: START === 'i' ? 0.62 : 0.9, ground: START && START !== 'b' ? 1 : 0, turn: START && START !== 'b' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0,
+  const VAR = { quiet: START ? 1 : 0, light: 'hij'.includes(START) && START ? 0.9 : START ? 0.5 : 0, dense: 'hij'.includes(START) && START ? 1 : 0, glass: START === 'i' ? 0.62 : START === 'j' ? 0.82 : 0.9, zoomIn: START === 'j', ground: START && START !== 'b' ? 1 : 0, turn: START && START !== 'b' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0,
     inner: START === 'e' || START === 'f' || START === 'i' ? 1 : 0, half: START === 'f' ? 1 : 0, cycle: START === 'g', lens: INNEN ? 1 : 0, lift: INNEN ? 78 : 0 };
   if (START) document.documentElement.dataset.start = START;
   if (Q.has('start')) { // Umschalter für den Vergleich: bleibt unten im Bild, solange man mit ?start= auf der Seite ist
     const nav = document.createElement('nav'); nav.setAttribute('aria-label', 'Startfigur vergleichen');
     nav.style.cssText = 'position:fixed;z-index:60;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + .75rem);transform:translateX(-50%);display:flex;gap:.25rem;padding:.25rem;border-radius:2rem;background:rgba(10,22,27,.92);border:1px solid rgba(255,255,255,.18);font:600 .8125rem/1 system-ui,sans-serif';
-    const NAMEN = { a: 'heute', b: 'ruhig', c: 'Boden, gedreht', d: 'Auftritt', e: 'Glaskörper', f: 'halb und halb', g: 'im Wechsel', h: 'feines Relief', i: 'Relief + innen' };
-    [['a', 'A'], ['b', 'B'], ['c', 'C'], ['d', 'D'], ['e', 'E'], ['f', 'F'], ['g', 'G'], ['h', 'H'], ['i', 'I']].forEach(([k, t]) => { const l = document.createElement('a'); l.href = `?start=${k}`; const on = (START || 'a') === k; l.textContent = on ? `${t} ${NAMEN[k]}` : t; l.style.cssText = `padding:.625rem .6rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
+    const NAMEN = { a: 'heute', b: 'ruhig', c: 'Boden, gedreht', d: 'Auftritt', e: 'Glaskörper', f: 'halb und halb', g: 'im Wechsel', h: 'feines Relief', i: 'Relief + innen', j: 'Relief, Röntgen nah' };
+    [['a', 'A'], ['b', 'B'], ['c', 'C'], ['d', 'D'], ['e', 'E'], ['f', 'F'], ['g', 'G'], ['h', 'H'], ['i', 'I'], ['j', 'J']].forEach(([k, t]) => { const l = document.createElement('a'); l.href = `?start=${k}`; const on = (START || 'a') === k; l.textContent = on ? `${t} ${NAMEN[k]}` : t; l.style.cssText = `padding:.625rem .5rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
     document.body.appendChild(nav);
   }
   const shade = $('.kf-shade'), bodyG = $('.kf-bodyg'), heroEl = $('.kf-hero'), endEl = $('.kf-end'), wire = $('.kf-wire'), hand = $('.kf-hand');
@@ -230,7 +230,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const t0 = performance.now();
     if (gl) try {
       if (d) { // echte Figur
-        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d });
+        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense });
         st = createStage(gl, pts, relaxCv, document.documentElement.dataset.deep || '#3F86B5');
         echt = true; GEO.echt = { LINES: pts.lines, SPLIT: pts.split };
       } else { // Daten fehlen (oder ?figur=heute in Puls): die Figur von heute
@@ -496,7 +496,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       if (relaxDirty) { st.upload(); if (stOld) stOld.upload(); }
       const common = { W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
       if (mixK > 0) st.draw({ ...common, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC, quiet: VAR.quiet, light: VAR.light, ground: VAR.ground, scanIn: VAR.scanIn, half: VAR.half, lens: VAR.lens, dense: VAR.dense, glass: VAR.glass,
-        inner: VAR.cycle ? (sl ? 0.6 : (() => { const ph = (S.time % 11) / 11; return smooth(0.18, 0.4, ph) - smooth(0.68, 0.9, ph); })()) : VAR.inner });
+        inner: VAR.cycle ? (sl ? 0.6 : (() => { const ph = (S.time % 11) / 11; return smooth(0.18, 0.4, ph) - smooth(0.68, 0.9, ph); })()) : VAR.zoomIn ? smooth(1.12, 1.6, v.s / V.A.s) : VAR.inner });
       if (stOld && mixK < 1) stOld.draw({ ...common, intro: 1 });
       relaxDirty = false;
     }

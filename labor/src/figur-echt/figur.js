@@ -107,7 +107,7 @@ export function linesOf(nerves, split) {
 }
 
 // sp = Abstand der Haut-Punkte (Grundriss-Einheiten), dust = Zahl der großen unscharfen Punkte im Raum, data = decode(…)
-export function echtPoints({ sp = 1.6, dust = 26, data }) {
+export function echtPoints({ sp = 1.6, dust = 26, data, detail = false }) {
   const Pp = [], Nn = [], St = [], Ht = [], Ct = [], Nf = [];
   const put = (x, y, z, nx, ny, nz, kind, a, b, c, heat = null) => {
     Pp.push(x, y, z); Nn.push(nx, ny, nz); Nf.push(kind, a, b, c);
@@ -122,10 +122,18 @@ export function echtPoints({ sp = 1.6, dust = 26, data }) {
   };
   // A1 Haut: nur die vordere und seitliche Fläche (die Figur dreht sich höchstens ±7°), Kopf markiert (dort zeigt sich das Gehirn)
   const skin = part('haut/koerper');
+  const fein = (x, by) => by > 390 || (Math.abs(x) > 47 && by > 196);
   rows(skin, sp, (x, y, z, nx, ny, nz, coarse) => {
     if (nz < -0.42) return;
     const by = BODY_H / 2 - y, head = by < 64 && Math.abs(x) < 34 ? 1 : 0;
-    put(x, y, z, nx, ny, nz, 0, head, coarse ? 1 : 0, 0, skinHeat(x, y));
+    put(x, y, z, nx, ny, nz, 0, head, coarse ? 1 : 0, fein(x, by) ? 2 : 0, skinHeat(x, y));
+  });
+  // Hände und Füße feiner (Fassung J, 25.11.2026, Kai: „Füße, Hände … detaillierter“): ein zweites, engeres Raster nur dort (Kennung 1);
+  // die Punkte des normalen Rasters in diesen Bereichen tragen Kennung 2 und treten zurück, sobald das feine gezeigt wird (uDense)
+  if (detail) rows(skin, sp * 0.56, (x, y, z, nx, ny, nz) => {
+    if (nz < -0.42) return;
+    if (!fein(x, BODY_H / 2 - y)) return;
+    put(x, y, z, nx, ny, nz, 0, 0, 0, 1, skinHeat(x, y));
   });
   const nBody = St.length;
   // A3 Knochen: etwas weiter als die Haut, Rückseiten weg (wie die Haut)

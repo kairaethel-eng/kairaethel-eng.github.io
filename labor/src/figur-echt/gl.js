@@ -117,10 +117,13 @@ void main(){
   float a = .44 + .56*rim;
   vec3 film = cDeep * (.42 + .62*key) + cKey * pow(key, 3.) * .5 + cRim * back * 1.05 + cWarm * pool * key * .2;
   float filmA = .26 + .5*key + .62*back + pool * .08;
+  filmA = mix(filmA, .1 + .78 * pow(key, 1.3) + .7 * back + pool * .08, uDense); // feines Relief: mehr Gefälle zwischen Licht und Schatten → Form lesbar
   { float lk = max(uKino, uLight); col = mix(col, film, lk); a = mix(a, filmA, lk); }
   float fineK = max(max(smoothstep(1.2, 1.9, uZoom), smoothstep(.08, .6, pk)), uDense), coarse = mix(1., aN.z, isSkin + isBone);
   a *= mix(coarse, 1., fineK);
-  float d = uSp * .5 * mix(1., mix(1.85, 1., fineK), coarse * isSkin);
+  float isDet = isSkin * step(.5, aN.w) * (1. - step(1.5, aN.w)), isRep = isSkin * step(1.5, aN.w); // Hände/Füße: feines Raster (nur mit uDense) ersetzt dort das normale
+  a *= mix(1., uDense, isDet) * mix(1., 1. - uDense, isRep);
+  float d = uSp * .5 * mix(1., mix(1.85, 1., fineK), coarse * isSkin) * mix(1., .74, isDet);
   float tenK = smoothstep(.06, .62, tension);
   col = mix(col, cAmber, tenK * (.72 + .28*throb));
   a = mix(a, .55 + .45*throb, tenK * .8);
@@ -129,7 +132,7 @@ void main(){
   a = mix(a, max(a, .62), relaxed);
   col = mix(col, cBone, uCalm * .12 * (1. - on));
   // Haut: Glas (verspannte Stellen bleiben sichtbar), Kopf frei für das Gehirn (nur der Umriss bleibt), Lupe
-  float hide = isSkin * max(max(glass * (1. - tenK*.6) * (1. - rim*.85), aN.y * brainK * (1. - smoothstep(.5, .95, rim))), lens * (1. - rim*.55));
+  float hide = isSkin * max(max(glass * (1. - tenK*.6*(1. - im*.75)) * (1. - rim*.85), aN.y * brainK * (1. - smoothstep(.5, .95, rim) * (1. - im*.7))), lens * (1. - rim*.55));
   a *= 1. - hide;
   // B1 Scan-Ring: wo die Linie die Haut schneidet (nur während die Linie durch den Körper läuft)
   float band = exp(-pow((by - uTip) / 1.15, 2.)) * uKino * isSkin * step(14., uTip) * (1. - step(418., uTip)) * uNerve;
@@ -149,7 +152,7 @@ void main(){
   col = mix(col, cb, isBone);
   // Schädel tritt zurück, solange das Gehirn zu sehen ist (Station Kopf), Rippen und Hände etwas leiser
   float soft = aN.w > 1.5 ? 1. - .78 * brainK * (1. - smoothstep(60., 120., uTip)) * (1. - uEnd * .4) : mix(1., .62, aN.w);
-  a = mix(a, mix(.34 + .52*rim, .5 + .5*rim + .25*key, im) * boneShow * mix(soft, max(soft, .8), im) * mix(coarse, 1., max(fineK, im)), isBone);
+  a = mix(a, mix(.34 + .52*rim, .5 + .5*rim + .25*key, im) * boneShow * mix(soft, max(soft, .8), im * step(aN.w, 1.5)) * mix(coarse, 1., max(fineK, im)), isBone);
   d = mix(d, uSpB * .46 * mix(1., mix(1.5, 1., fineK), coarse), isBone);
 
   // ---------- Muskeln (A4): zeigen sich mit ihrer Spannung (Bernstein) bzw. gelöst (Blau), sonst nur unter der Lupe ----------
@@ -169,8 +172,8 @@ void main(){
   cbr = mix(cbr, cbr * (.55 + .6*key) + cRim * back * .5, uKino * .7);
   col = mix(col, cbr, isBrain);
   // Gehirn: die Ränder der Windungen tragen das Bild (Kantenlicht), die Flächen bleiben leise – sonst wird es ein weißer Fleck
-  a = mix(a, rev * (.09 + .55*pow(rim, 1.4) + .1*aN.w + wave*.3) * (1. - .25*smoothstep(70., 210., uTip)) * uNerve, isBrain);
-  d = mix(d, .34, isBrain);
+  a = mix(a, rev * (.09 + .14*im + (.55 + .4*im)*pow(rim, 1.4 - .35*im) + .1*aN.w + wave*.3) * (1. - .25*smoothstep(70., 210., uTip)) * uNerve, isBrain);
+  d = mix(d, .34 + .08*im, isBrain);
   float ph = fract(aN.z/170. - uTime*.16);
   float pulse = pow(ph, 9.) * uPulse;
   col = mix(col, mix(cLine, cWarm, clamp(front2*.8 + pulse, 0., 1.)), isNerve);
