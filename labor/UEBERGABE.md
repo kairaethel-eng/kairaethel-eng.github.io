@@ -50,6 +50,12 @@ Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abs
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
 
+## ▶ 25.11.2026 spät nachts – Weg M, Runde 4: Körper bei der Fahrt deutlich durchsichtiger (`?start=m`, K ebenso)
+- **Kai (23:28):** „gefällt mir sehr gut. bitte den Körper dann beim runterscrollen deutlich transparenter machen“.
+- **Geändert:** `gl.js`, Glas-Zeile im Blick „Nervensystem“ (ab Verlassen des Gehirns, also die ganze Fahrt am Rückenmark und das Schlussbild): Haut und Muskelhülle von `0,07 + 0,5·Kante` auf `0,018 + 0,085·Kante` Deckkraft – innen rund ein Viertel, der Umriss rund ein Sechstel von vorher. Der Umriss bleibt als Hauch lesbar, Rückenmark und Nerven tragen das Bild. Zwischenstufe `0,025 + 0,2·Kante` war am Umriss noch zu hell (dichte Kantenpunkte addieren sich).
+- **Geprüft:** Standbilder PC und Handy auf der Fahrt (M), K auf der Fahrt, keine Skriptfehler (Standard, M, K, M ohne Grafikchip), Standardseite im Bildvergleich unter dem Unterschied zweier Läufe, `sizes.cjs` „alles ok“. Der Abendlauf (Runde 3) lief während des Umbaus weiter; die Änderung wirkt nur bei `uNs` > 0 (K, M), die Standardseite misst er unverändert.
+- **Nicht geprüft:** Wirkung in Bewegung [O] – Kai am Gerät. Rückweg: Commit davor.
+
 ## ▶ 25.11.2026 spät nachts – Weg M, Runde 3: Impulse auf den Nerven, Gehirn feiner (`?start=m`, K ebenso)
 - **Kais Rückmeldung (23:07):** „super Idee, gefällt mir sehr gut, ich denke wir sind fast am Ziel“ · Nerven ab Rückenmark „dezent“ lebendig machen, „pulsierend zum Beispiel oder eine tolle andere Idee“ · Partikel vom Gehirn „noch etwas feiner“, Frage: wird die Seite dann zu groß (MB)?
 - **Befund:** Das Signal aus Runde 2 war da, aber kaum zu sehen – die Nerven standen im Blick „Nervensystem“ schon an der vollen Deckkraft, mehr Helligkeit ging nicht.

@@ -4,6 +4,10 @@ Stand: 25.11.2026 · Arbeitsstand ist **Puls · Scan** (`test-4-puls-scan.html`,
 Neueste Entscheidung oben. Überholte ganze Abschnitte (Figur plus, Tür-Entwurf A/C, Willkommenszeile, Porträt-Entwürfe, Zuhause, Hausbesuch, alte Offen-Listen) liegen in `archiv/ENTSCHEIDUNGEN-ueberholt.md`.
 **Achtung bei Abschnitten vor dem 22.11.:** Dort stehen gültige Merkregeln neben Überholtem. Überholt sind insbesondere: Tür C und Tür-Bühne „Hineingehen“ (ersetzt durch den Raum, 23.11.), „Figur plus“ und die gezeichnete Figur (ersetzt durch die echte Figur, 23.11.), „Grün nur im Logo“ (seit 22.11. auch Raumfarbe), „kein Rot an der Manuthera“ (seit 23.11. Verlauf Bernstein → Rot-Orange), Logo nach dem Original / groß am Start (Logo A bleibt), Partikel-Haus, Röntgenblick, Ego-Rundgang, Kapitel 05 „Licht“. Was `CLAUDE.md` sagt, hat Vorrang.
 
+## 25.11.2026 spät nachts – Weg M, Runde 4: Körper als Hauch (Kai)
+- Kai: Körper beim Runterscrollen „deutlich transparenter“. Ab dem Blick „Nervensystem“ ist der Körper nur noch Hauch (innen etwa 2 %, Umriss etwa 10 % Deckkraft) – die Hauptsache ist das Nervensystem.
+- **Merkregel:** Ein Umriss aus dichten Kantenpunkten wirkt heller, als seine Deckkraft sagt (die Punkte überlagern sich). Beim Zurücknehmen den Kantenanteil stärker senken als die Fläche.
+
 ## 25.11.2026 spät nachts – Weg M, Runde 3: Impulse, feineres Gehirn (Kai)
 - Kai: Nerven ab Rückenmark „dezent lebendig … pulsierend zum Beispiel“. Umgesetzt als Impulse, die dem echten Weg folgen (Gehirn → Rückenmark → Wurzel → Ast, leiser zurück). Das Gehirn selbst bleibt ruhig (Kais Wunsch vom 25.11. abends gilt weiter).
 - **Merkregel:** Soll etwas aufleuchten, braucht es Spielraum. Steht eine Fläche schon an der vollen Deckkraft, ist ein Signal darauf unsichtbar – Grundhelligkeit zurücknehmen und das Signal über Farbe und Größe führen.

@@ -321,7 +321,7 @@ void main(){
     a *= mix(1., mix(.22, 1., smoothstep(.15, .62, sqrt(max(0., 1. - tz*tz)))), step(.01, dot(tn, tn))); }
 
   // Schlussbild „Nervensystem“ (K, M): Haut und Muskeln werden zu Glas – es bleibt der Umriss als Lichtkante
-  a *= mix(1., (.07 + .5 * edge) * (1. - .45 * smoothstep(0., .6, uTxt)), uNs * (isSkin + isShell)); // die Nerven haben den Körper verlassen: der Umriss bleibt leise stehen
+  a *= mix(1., (.018 + .085 * edge) * (1. - .45 * smoothstep(0., .6, uTxt)), uNs * (isSkin + isShell)); // die Nerven haben den Körper verlassen: der Umriss bleibt nur noch als Hauch stehen (Kai 25.11.: „deutlich transparenter“)
   // Zeiger: Stufe 1 wie heute (größer, warmweiß); in Stufe 2 übernimmt die Lupe – dort nur die inneren Schichten heller
   float pv = pk * (1. - hide) * mix(1., rev, isBrain + isNerve) * mix(1., isBone + isNerve + isBrain + isMus, uKino);
   col = mix(col, vec3(1., .95, .86), pv * .7);

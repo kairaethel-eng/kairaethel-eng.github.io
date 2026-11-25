@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="hop-build" content="6af90ca7fb">
+<meta name="hop-build" content="cc457dd3ea">
 <meta name="color-scheme" content="dark">
 <title>HOP Puls Scan</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -7710,7 +7710,7 @@ void main(){
     a *= mix(1., mix(.22, 1., smoothstep(.15, .62, sqrt(max(0., 1. - tz*tz)))), step(.01, dot(tn, tn))); }
 
   // Schlussbild \u201ENervensystem\u201C (K, M): Haut und Muskeln werden zu Glas \u2013 es bleibt der Umriss als Lichtkante
-  a *= mix(1., (.07 + .5 * edge) * (1. - .45 * smoothstep(0., .6, uTxt)), uNs * (isSkin + isShell)); // die Nerven haben den K\xF6rper verlassen: der Umriss bleibt leise stehen
+  a *= mix(1., (.018 + .085 * edge) * (1. - .45 * smoothstep(0., .6, uTxt)), uNs * (isSkin + isShell)); // die Nerven haben den K\xF6rper verlassen: der Umriss bleibt nur noch als Hauch stehen (Kai 25.11.: \u201Edeutlich transparenter\u201C)
   // Zeiger: Stufe 1 wie heute (gr\xF6\xDFer, warmwei\xDF); in Stufe 2 \xFCbernimmt die Lupe \u2013 dort nur die inneren Schichten heller
   float pv = pk * (1. - hide) * mix(1., rev, isBrain + isNerve) * mix(1., isBone + isNerve + isBrain + isMus, uKino);
   col = mix(col, vec3(1., .95, .86), pv * .7);
