@@ -325,6 +325,9 @@ const vert = /* glsl */`
     float m = clamp(uMorph, 0., 4.);
     int i0 = int(floor(m)); int i1 = min(i0+1, 4);
     float f = m - float(i0);
+    // 26.11.2026 (Kai: „Haus vor, Haltung nach hinten“): uMorph zählt in Seitenfolge – 0 Figur · 1 Linien · 2 Dach · 3 Wirbelsäule.
+    // shape() behält seine Nummern (2 = Wirbelsäule, 3 = Dachlinie), darum hier tauschen.
+    i0 = i0 == 2 ? 3 : i0 == 3 ? 2 : i0; i1 = i1 == 2 ? 3 : i1 == 3 ? 2 : i1;
     float st = aRand.w*.4;
     float t = smoothstep(st, st+.6, f);
     vec3 pA, pB, cA, cB; float sA, sB, aA, aB;
@@ -1270,13 +1273,14 @@ segBtns.forEach((b) => b.addEventListener('click', () => {
 // sobald die Kamera steht, und lebt nur im unteren Bildteil → beim Weiterscrollen bleibt der Abschnitt über
 // der Kartenoberkante → Karte blendet oben aus. Nach der letzten Karte: ganze Wirbelsäule groß in der Mitte,
 // stehen lassen, dann löst sie sich nach oben auf und das Haus entsteht in der Bildmitte.
-const axisNote = $('#achse .note'), dachSec = $('#dach'), dTitleEl = $('#d-title');
+const axisNote = $('#achse .note');
 // ---------- Kapitel-Auftakt (18.11.2026, Studie A/B → Kai: „A“) ----------
 // Vor jedem der Kapitel 02–05 steht ein eigener ruhiger Abschnitt: große kursive Ziffer, Name, Untertitel wie in der Kopfleiste, eine
 // Linie zieht sich quer. Dahinter läuft der Formwechsel der Punkte (der Staub sammelt sich zur neuen Form) – der Übergang zeigt
 // den Kapitelwechsel. Der kleine Kicker im Kapitel entfällt dafür (CSS html.auftakt). Ohne JavaScript gibt es keinen Auftakt,
 // die Kicker bleiben. Kapitelanfang für Formwechsel, Kopfleiste und Kapitel-Links ist die Oberkante des Auftakts (auTop).
-const AU_INFO = { bewegung: ['02', 'Bewegung', 'Über HOP'], achse: ['03', 'Achse', 'Wirbelsäule'], dach: ['04', 'Dach', 'Praxis &amp; Leistungen'], tuer: ['05', 'Tür', 'Kontakt &amp; Termin'] };
+// 26.11.2026 (Kai: „Haus vor, Haltung nach hinten“): 02 Haus (Satz + Linienhaus + Leistungen) · 03 Achse · 04 Haltung (Hausordnung + Über mich) · 05 Tür
+const AU_INFO = { bewegung: ['02', 'Haus', 'Praxis &amp; Leistungen'], achse: ['03', 'Achse', 'Wirbelsäule'], hausordnung: ['04', 'Haltung', 'Hausordnung &amp; Über mich'], tuer: ['05', 'Tür', 'Kontakt &amp; Termin'] };
 const auftakt = {};
 {
   const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.3 });
@@ -1728,7 +1732,7 @@ function updateAxis(dt) {
   // Handy-Scanner (18.11., „1a“): die Wirbelsäule hängt am Kapitel, nicht mehr am Formwechsel der Punktwolke – sie bleibt, bis ihr
   // Kapitel aus dem Bild ist (weiche Unterkante), und ist beim Zurückscrollen sofort wieder da (vorher: erst nach dem Formwechsel)
   // 21.11.: Schwelle 1,3 statt 1,6 – bei 3,6 s je Formwechsel blieb die Bühne sonst gut zwei Sekunden leer, bevor die Abtastlinie begann
-  const inSec = r.top < VH && r.bottom > 0 && morphNow > 1.3 && (morphNow < 2.4 || (desk ? pcScan() : scanOn()));
+  const inSec = r.top < VH && r.bottom > 0 && morphNow > 2.3; // seit 26.11. Form 3 (vom Dach her; vorher > 1,3 von den Linien und < 2,4 zum Dach)
   // noch nicht fertig gerechnet: grobe Partikel bleiben, danach fahren Scan und Kamera sanft nach
   spineK = bones ? ramp(spineK, dt) : 0;
   if (desk ? pcScan() : scanOn()) { updateScan(dt, r, inSec); return; } // Handy: Scanner (6.11.), PC: Hybrid-Scanner (7.11.)
@@ -1746,7 +1750,7 @@ function updateAxis(dt) {
       bigK: smooth(vh * 1.75, vh * 1.35, c0), // Überschrift geht: ganze Wirbelsäule groß und mittig (bleibt groß)
       wIn: smooth(vh * 1.15, vh * 0.98, c0),  // Kamerafahrt zum ersten Abschnitt (Karte noch unsichtbar)
       endK: smooth(vh * 0.45, vh * 0.2, nt),  // nach letzter Karte + Hinweis: zurück zur ganzen Wirbelsäule
-      outK: smooth(vh * 1.45, vh * 0.6, dachSec.getBoundingClientRect().top), // auflösen (nach oben; 16.11. länger)
+      outK: smooth(vh * 1.45, vh * 0.6, (auftakt.hausordnung || rules).getBoundingClientRect().top), // auflösen (nach oben; 16.11. länger) – seit 26.11. folgt Kapitel 04 „Haltung“
     };
     // ganze Wirbelsäule (Kopf bis Kreuzbein) groß und mittig im sichtbaren Bereich unter der Punkte-Leiste
     // (Bruchteile der Szenenhöhe GLH; Abschnitts-Posen rechnen relativ dazu, die Nahansichten bleiben gleich)
@@ -1825,7 +1829,7 @@ $$('.index li').forEach((li) => {
 });
 
 // ---------- Hausordnung ----------
-const rules = $('#hausordnung'), laws = $$('#laws li'), door = $('#tuer');
+const rules = $('#hausordnung'), laws = $$('#laws li'), door = $('#tuer'), ueberSec = $('#ueber');
 let lawOn = 0;
 // Hausordnung am Handy (Kai 7.11.): die Paragraphen wechseln von selbst, solange der Abschnitt im Bild steht – kein
 // langer Scrollweg mehr. Lesezeit nach Textlänge (~5 s), Leiste wie ein Puls (füllt sich), antippen = dorthin bzw. weiter;
@@ -1899,6 +1903,8 @@ if (licht) {
 // ---------- Kapitel → Formen ----------
 const chapters = $$('.chapter');
 const navLinks = $$('#chapters a'), chapNow = $('#chapNow');
+// Menüeintrag je Kapitel-Abschnitt: eigener Eintrag, sonst der des Abschnitts davor (26.11.: #dach gehört zu 02 „Haus“)
+const navOf = []; chapters.forEach((c, i) => { const k = navLinks.findIndex((a) => a.hash === '#' + c.id); navOf.push(k >= 0 ? k : i ? navOf[i - 1] : 0); });
 // Handy/Tablet: Kapitelanzeige aufklappen → Kapitel wählen
 const topNav = $('#top');
 function setMenu(open) {
@@ -1924,7 +1930,7 @@ function targetMorph() {
   let m = 0;
   // mit Auftakt: der Formwechsel läuft hinter dem Auftakt. Ausnahme Kapitel 03: dort entsteht die Wirbelsäule mit ihrer Bühne
   // (Abtastlinie von oben) – finge der Formwechsel schon am Auftakt an, stünde am PC lange eine helle Säule aus groben Punkten
-  // hinter „03“, bevor der Knochen sie ablöst. Hinter „03“ lösen sich stattdessen die HOP-Kreise auf (logoGeo.axis).
+  // hinter „03“, bevor der Knochen sie ablöst. Hinter „03“ lösen sich stattdessen die HOP-Kreise auf (logoGeo.axis) – bis 25.11.; seit 26.11. kommt 03 vom Dach.
   if (!chapTop) chapTop = chapters.map((c) => (c === axis ? c.getBoundingClientRect().top : auTop(c)) + scrollY);
   const sy = scrollY;
   // Hausordnung (seit 14.11. nachts nach Kapitel 02): Ende des Textes von Kapitel 02 + Kicker der Hausordnung (absolut, gemerkt)
@@ -1942,10 +1948,10 @@ function targetMorph() {
     // Fassungen K, M: der Leitsatz löst sich schon am Ende von Kapitel 01 in die Linien (solange er noch im Bild steht), nicht erst mit Kapitel 02
     if (prev === 0 && s === 1 && kf) { const lo = kf.los(); if (lo >= 0) t = lo; }
     // Handy: Wirbelsäule → Haus kürzer, damit das Haus fertig in der Bildmitte steht, bevor der Text von Kapitel 04 kommt
-    if (!isDesktop() && prev === 2 && s === 3) t = smooth(vh * 1.15, vh * 0.25, r.top); // 16.11. (Kai: Tempo wie beim Start): 0,9 statt 0,65 Bildschirmhöhen
+    if (!isDesktop() && prev === 1 && s === 2) t = smooth(vh * 1.15, vh * 0.25, r.top); // 16.11. (Kai: Tempo wie beim Start): 0,9 statt 0,65 Bildschirmhöhen; seit 26.11. Linien → Dach
     // Handy: Bewegungslinien → Wirbelsäule früher fertig, damit der Scan schon mit der Überschrift entsteht;
     // seit 14.11. nachts etwas später begonnen, damit die Wirbelsäule nicht über dem letzten Paragraphen der Hausordnung entsteht
-    if (!isDesktop() && prev === 1 && s === 2) t = smooth(vh * 1.1, vh * 0.25, r.top); // 16.11.: 0,85 statt 0,48 (Beginn liegt unter den HOP-Kreisen)
+    if (!isDesktop() && prev === 2 && s === 3) t = smooth(vh * 1.1, vh * 0.25, r.top); // 16.11.: 0,85 statt 0,48; seit 26.11. Dach → Wirbelsäule
     morphGate[i](t, 0);
     if (morphGate[i].want()) m = s; // Auslöser: das Kapitel ist da → Ziel ist seine Form; der Weg dorthin läuft über die Zeit (tick)
   }
@@ -1964,7 +1970,9 @@ function targetLogo(dt = 0) {
   // Kicker „Die Hausordnung“ gemessen: die Kreise bilden sich, während er von unten bis zur Bildmitte steigt. Die übrigen Punkte
   // laufen als Streifen weiter (Shader uKeep) – am Tablet stehen Kapitel 02 und die Hausordnung fast gleichzeitig im Bild.
   const kIn = d ? smooth(vh * 1.0, vh * 0.1, logoGeo.rules - sy) : smooth(vh * 0.95, vh * 0.5, logoGeo.kick - sy);
-  const kOut = d ? smooth(vh * 1.0, vh * 0.1, logoGeo.axis - sy) : smooth(vh * 1.2, vh * 0.35, logoGeo.axis - sy);
+  // seit 26.11. (Kapitelfolge „Haus vor, Haltung nach hinten“): die Kreise entstehen aus der Wirbelsäule und lösen sich nicht mehr auf –
+  // sie verglimmen mit allen Punkten, bevor „Über mich“ kommt (Abdunkeln an #ueber im Bildtakt). Zurück nach 03: sie werden wieder Wirbelsäule.
+  const kOut = 0;
   // 20.11.: Auslöser statt Scrollweg – die Kreise sammeln sich und lösen sich über die Zeit
   return weich(logoIn(kIn, dt)) * (1 - weich(logoOut(kOut, dt)));
 }
@@ -1985,7 +1993,7 @@ function logoPlace() {
 // Entfallen: praxis.js-Punktwolke, Röntgenblick, Raum-Schilder, Klick-Rundgang in 3D, Partikel-Augenhöhe (src/ego).
 const lh = initHouse({
   root: $('#lhRoot'), isPaused: () => paused, headLine: false,
-  canDraw: () => !renderer || reduced || morphNow > 2.86, // erst zeichnen, wenn die Partikel an der Dachlinie angekommen sind
+  canDraw: () => !renderer || reduced || morphNow > 1.86, // erst zeichnen, wenn die Partikel an der Dachlinie angekommen sind (seit 26.11. Form 2, von den Linien her)
   onDialog: (open) => { if (open) lenis?.stop(); else lenis?.start(); },
   goto: (h) => { const t = $(h); if (t) scrollToY((auftakt[t.id] || t).getBoundingClientRect().top + scrollY); },
 });
@@ -1996,7 +2004,7 @@ window.__staub = hausStaub;
 const tourWant = null; // die Kamera der Partikel-Szene fährt in Kapitel 04 nicht mehr
 // Form 3 auf das SVG-Dach legen: Bildschirm-Pixel → Welt (Ebene z = 0, Übersichtskamera wie logoPlace)
 function roofPlace() {
-  if (morphNow < 2.02 || morphNow > 3.98) return;
+  if (morphNow < 1.02 || morphNow > 2.98) return; // seit 26.11.: Dachlinie = Form 2 (Linien → Dach → Wirbelsäule)
   const g = lh.roofScreen(); if (!g) return;
   const hh = 13 * Math.tan(THREE.MathUtils.degToRad(17.5)), wpp = 2 * hh / GLH, half = Math.max(1, (g.r - g.l) / 2);
   uniforms.uXf.value[3].set(((g.l + g.r) / 2 - VW / 2) * wpp, (GLH / 2 - g.bot) * wpp, 0, half * wpp);
@@ -2411,10 +2419,11 @@ function tick() {
   else { const d = tm - morphNow, st = dt / FORM_SEK * Math.max(1, Math.abs(d)); morphNow = Math.abs(d) <= st ? tm : morphNow + Math.sign(d) * st; }
   uniforms.uMorph.value = morphNow;
   uniforms.uVeil.value = morphNow > 2.02 && morphNow < 3 && (isDesktop() ? pcScan() : scanOn()) ? 1 : 0; // Scanner (Handy und PC): Weg Wirbelsäule <-> Dach unsichtbar („1a“)
-  uniforms.uKeep.value = isDesktop() ? 0 : 1; // Handy/Tablet: Streifen laufen hinter den HOP-Kreisen weiter
+  uniforms.uKeep.value = 0; // seit 26.11.: die HOP-Kreise entstehen aus der Wirbelsäule – nichts bleibt als Streifen stehen (bis dahin Handy/Tablet 1)
   // 20.11.: der Staub läuft jetzt über die Zeit – wer schnell weiterwischt, hat die Überschrift von Kapitel 04 schon im Lesebereich,
   // während er noch unterwegs ist. Dann wird er dünner und verschwindet (nur die Menge hängt am Scrollen, nicht der Ablauf).
-  const dustFree = 1 - smooth(VH * 0.82, VH * 0.5, dTitleEl.getBoundingClientRect().top);
+  // seit 26.11.: vorwärts geht es vom Dach zur Wirbelsäule – gemessen an der Überschrift von Kapitel 03
+  const dustFree = 1 - smooth(VH * 0.82, VH * 0.5, aTitle.getBoundingClientRect().top);
   uniforms.uDust.value = (isDesktop() ? 0.45 : 1) * (morphNow > 2.02 && morphNow < 2.98 ? Math.max(0.011, dustFree) : 1); // feiner Staub statt unsichtbarer Wanderung (Kai 18.11.: „verstreute Übergänge wieder“; PC: kleinerer Anteil, dort sind es mehr Punkte)
   logoNow = targetLogo(dt);
   uniforms.uLogo.value = logoNow < 0.002 ? 0 : logoNow;
@@ -2432,6 +2441,11 @@ function tick() {
   const vh = VH;
   const doorTop = door.getBoundingClientRect().top;
   let dim = isDesktop() ? smooth(vh * 0.95, vh * 0.1, doorTop) : smooth(vh * 1.6, vh * 0.7, doorTop); // 16.11.: Ausblenden zur Tür langsamer
+  // 26.11.: „Über mich“ (Zitat, Porträt, Fakten) steht auf ruhigem Grund – die HOP-Kreise der Hausordnung verglimmen davor
+  { const ut = ueberSec.getBoundingClientRect().top; dim = Math.max(dim, isDesktop() ? smooth(vh * 0.95, vh * 0.3, ut) : smooth(vh * 1.2, vh * 0.55, ut)); }
+  // 26.11. (Prüfstand-Film „03-C1-nach-04“): ist die Wirbelsäule aus dem Bild, stünde ihre grobe Punktform (Form 3) groß hinter „04 Haltung“ –
+  // sie bleibt aus, bis sich die HOP-Kreise bilden; die Punkte erscheinen erst als Staub auf dem Weg zu den Kreisen
+  { const ht = (auftakt.hausordnung || rules).getBoundingClientRect().top; dim = Math.max(dim, smooth(vh * 1.45, vh * 0.6, ht) * (1 - smooth(0.3, 0.8, logoNow))); }
   const dimMax = 1; // Kontakt: Partikel blenden ganz aus (Handy und PC)
   if (!isDesktop()) {
     if (morphNow > 0.3 && morphNow < 1.6) dim = Math.max(dim, 0.55 * (1 - logoNow)); // Bewegungslinien leise hinter Text, die HOP-Kreise zur Hausordnung in voller Helligkeit
@@ -2479,8 +2493,9 @@ function tick() {
   // Navigation
   top.classList.toggle('scrolled', scrollY > 30);
   // Leiste (14.11. nachts): Einträge = Kapitel in Seitenreihenfolge (01, 02, §, 03, 04, 05); aktiv ist das Kapitel, das die Bildmitte erreicht hat
-  let navIdx = 0;
-  for (let i = 1; i < chapTop.length; i++) if (chapTop[i] - scrollY < VH * 0.5) navIdx = i;
+  let ci = 0;
+  for (let i = 1; i < chapTop.length; i++) if (chapTop[i] - scrollY < VH * 0.5) ci = i;
+  const navIdx = navOf[ci]; // seit 26.11.: Kapitel 02 hat zwei Abschnitte (Satz, Dach) und einen Menüeintrag
   if (navIdx !== chapShown) {
     chapShown = navIdx;
     navLinks.forEach((a, k) => a.classList.toggle('on', k === navIdx));
@@ -2491,7 +2506,7 @@ function tick() {
   // 13.11. (T1): ausgeblendete Partikel nicht mehr zeichnen; ist gar nichts zu sehen, ruht die Hauptbühne nach einem leeren Bild
   points.visible = uniforms.uAlpha.value > 0.004;
   // 14.11. (N1): Kap. 04 – steht die Form „Dachlinie“ und ist sie nach dem Zeichnen des Linienhauses vergangen, gibt es nichts zu sehen
-  if (Math.abs(morphNow - 3) < 0.02 && uniforms.uRoofA.value < 0.004) points.visible = false;
+  if (Math.abs(morphNow - 2) < 0.02 && uniforms.uRoofA.value < 0.004) points.visible = false; // seit 26.11. Form 2
   if (FX.cover) { points.visible = false; spineGroup.visible = false; sil.visible = false; } // der Film deckt alles: noch ein leeres Bild, dann ruht die Bühne
   const anyVis = points.visible || spineGroup.visible || sil.visible || !!(dust && dust.visible);
   if (renderer && !document.hidden && (anyVis || glDirty)) { renderer.render(scene, camera); glDirty = anyVis; }

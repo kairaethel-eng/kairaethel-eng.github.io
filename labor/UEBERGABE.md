@@ -1,4 +1,4 @@
-# Übergabe – Stand 25.11.2026
+# Übergabe – Stand 26.11.2026
 
 Arbeitsstand ist **Puls · Scan** (`src/test-4` → `test-4-puls-scan.html`, „Stand jetzt“ = https://kairaethel-eng.github.io/labor/live/). Was heute gilt, steht in `CLAUDE.md` („Stand in Kürze“).
 Diese Datei: oben die Liste **Offen**, darunter die Runden seit 22.11.2026. Alles Ältere liegt in `archiv/UEBERGABE-bis-2026-11-21.md` – dort gezielt suchen, nicht ganz lesen.
@@ -8,12 +8,13 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 
 **Kai am Zug**
 - Textvorschlag „Ihr erster Besuch“ (Kap. 05, drei Fragen) bestätigen oder korrigieren – ist als Platzhalter markiert. Neue Leistungs-Etiketten (Körperregion statt Eigenschaft) ansehen.
-- Daten für die Platzhalter (`data-platzhalter`): Porträt (Hochformat 4:5), drei Fakten in Kap. 02 (Jahr „Physiotherapeut seit“, Details Manuelle Therapie, Details CMD); Impressum Behörde + Berufshaftpflicht. Der Wurzel-Bau bricht ab, solange Platzhalter da sind.
+- Daten für die Platzhalter (`data-platzhalter`): Porträt (Hochformat 4:5), drei Fakten (seit 26.11. in Kap. 04 „Über mich“; Jahr „Physiotherapeut seit“, Details Manuelle Therapie, Details CMD); Impressum Behörde + Berufshaftpflicht. Der Wurzel-Bau bricht ab, solange Platzhalter da sind.
 - Sichtprüfungen: alle in der **Sichtprüf-Liste** im Arbeitsblatt (Link oben). Stand 24.11.: mehr als fünf offen → vor neuem Bauen erst darauf hinweisen (`CLAUDE.md` „Doku kurz halten“).
 - Entscheiden und liefern: Abschnitt „Kai entscheidet oder liefert“ im Arbeitsblatt; alles zum Livegang (Porträt, Raumfotos, FAQ, Impressum, Anwalt, Anrufbeantworter, Zwei-Faktor) in `LIVEGANG.md`.
 - Kapitel 05, Feinschliff (Tischflächen, Punkt-Schriften „GEÖFFNET“ und HOP am Tresen): Befund im Abschnitt „Kai 24.11.2026“ unten, Start-Prompt `PROMPT-Feinschliff-Kapitel-05.md` – läuft in einem eigenen Chat.
 
 **Claude wartet auf Go**
+- Neue Kapitelfolge (02 Haus · 03 Achse · 04 Haltung, Abschnitt ▶ 26.11., 03:00) liegt als Branch/PR `claude/project-thread-y42tvw` vor – wartet auf Kais Blick am iPhone und PC (Übergänge Linien → Dach, Dach → Wirbelsäule, Wirbelsäule → HOP-Kreise) und sein Go zum Veröffentlichen.
 - Entwurf „Weltklasse-Prüfung“ (Branch `claude/project-thread-6psvm8`, PR) wartet auf Kais Durchsicht und Go zum Veröffentlichen von `labor/` – Abschnitt ▶ 24.11. unten. Mit dem Nerven-Fix neu ansehen: „Rückenmark schimmert am iPhone durch den Knochen“ (Frage vom 14.11.).
 - Runde vom 25.11. nachts (Logo, Schild, Tür über das Dach, Etikett) wartet auf Kais Durchsicht. **Startfigur:** Weg M ist seit 26.11. Standard (Abschnitt ▶ 26.11.). Offen: Kais Blick am Gerät (Tempo, Flüssigkeit, Satz-Flug, Impulse, iPhone mit 220 000 Punkten), seine „kleinen Verbesserungen“, seine Entscheidung zur Fassung „Lichtimpuls schreibt den Satz“; Aufräumen der Fassungen A–L samt Umschalter nur mit eigenem Go; vor dem Livegang die Lizenz der Gehirn-Rinde klären (CC BY-SA 3.0) oder ersetzen.
 - Runde 2 der Weltklasse-Prüfung (Branch/PR, Abschnitt ▶ 24.11. nachts) wartet auf Kais Durchsicht: gedämpftes Licht hinter der Figur, hellere Kleintexte, neue Leistungs-Etiketten, Block „Ihr erster Besuch“.
@@ -49,6 +50,15 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abschnitt vor dem 22.11. meinen, zeigen jetzt ins Archiv.
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
+
+## ▶ 26.11.2026, 03:00 – Neue Kapitelfolge „Haus vor, Haltung nach hinten“ (Branch `claude/project-thread-y42tvw`, PR)
+- **Kai:** „das Thema Physiotherapie und für was das Haus steht mehr in den Vordergrund … Philosophie-Themen erst danach“. Vorschlag (Neupatienten fragen zuerst „Bin ich hier richtig?“, dann „Kann ich vertrauen?“, dann „Wie komme ich rein?“), Kai hat auf der Karte „Haus vor, Haltung nach hinten“ gewählt.
+- **Neue Folge:** 01 Ankommen (Weg M) → **02 Haus** (Satz „Ein Zuhause für Ihren Körper“ mit den Perlenbändern als Übergabe aus M → Linienhaus → Alle Leistungen → Manuthera → Stoßwelle) → **03 Achse** → **04 Haltung** (§ Hausordnung, danach Zitat, Porträt, Fakten in neuem Abschnitt `#ueber`) → 05 Tür. Start: Kennzeile „Physiotherapie in Schorndorf · Kasse & privat“, zweiter Knopf „Leistungen ansehen“ (→ `#dach`) statt „Zur Wirbelsäule“.
+- **Technik:** `uMorph` zählt in Seitenfolge (0 Figur, 1 Linien, 2 Dach, 3 Wirbelsäule); der Shader tauscht 2/3 vor `shape()`, `shape()` und `uXf` behalten ihre Nummern. `data-stage`: bewegung 1, dach 2, achse/hausordnung/tuer 3. Alle `morphNow`-Schwellen umgerechnet (Dach zeichnet ab 1,86, `roofPlace` 1…3, Achse `inSec` ab 2,3, Dachlinie aus bei 2). Staub-Menge Dach → Wirbelsäule misst jetzt an „Jedes Segment …“ (`aTitle`). Handy-Auflösen der Wirbelsäule (`outK`) misst am Auftakt „04“. HOP-Kreise entstehen aus der Wirbelsäule (`uKeep` 0, kein Auflösen mehr), alle Punkte verglimmen vor `#ueber` (Abdunkeln wie zur Tür). Menü: 5 Einträge, `navOf` ordnet `#dach` dem Eintrag 02 zu. Raumlicht: `ORDER` in Seitenfolge, jeder Raum behält sein Licht. Prüfstand/`gaps.cjs` auf die neue Folge umgestellt (neue Filme `satz-nach-dach`, `stosswelle-nach-03`, `03-zurueck-nach-02`, `hausordnung-nach-ueber`, `ueber-nach-05`).
+- **Fund und behoben:** Im Film „03-C1-nach-04“ stand nach dem Scanner die grobe Punkt-Wirbelsäule groß hinter „04 Haltung“ (Handy Sprung 6,8, am PC gut sichtbar). Jetzt bleibt die Hauptbühne zwischen Achse und Hausordnung aus (`dim` am Auftakt „04“), bis die HOP-Kreise zu 30–80 % gebildet sind – die Punkte erscheinen nur als Staub auf dem Weg zu den Kreisen.
+- **Geprüft:** Bauen ok; keine Skriptfehler (Handy 390×692, PC 1440×900); Menü und Kennzeile folgen den Abschnitten (#dach → 02); `sizes.cjs` „alles ok“; `gaps.cjs` d/m ohne Meldungen (Achse → Hausordnung 1144 px PC / 233 px Handy, wie vorher Achse → Dach 1162/250); `heads.cjs` d/m/s unverändert; `audit.cjs` d/m nur die bekannten Satz-Kontraste (Wort für Wort). **Prüfstand nur Filme:** Handy alle neuen Übergänge ok (`satz-nach-dach`, `stosswelle-nach-03`, `03-zurueck-nach-02`, `03-S1/C1-nach-04`, `hausordnung-nach-ueber`, `ueber-nach-05`), PC die sechs neuen Übergänge ok; FEHLER nur `kf-wisch` (Sprung 5,1, Weg M, gewollt, Startfigur-Faden). Streifen angesehen.
+- **Nicht geprüft:** voller Prüfstand mit Zuständen (Verdeckung/Text) – Abendlauf ab 20 Uhr; Tablet. Tempo und Wirkung der Übergänge nur am Gerät [O].
+- **Rückweg:** Commit davor (`3a83327`).
 
 ## ▶ 26.11.2026, 02:30 – Weg M ist Standard der Vorschau
 - **Kai:** „Also auf die Website kommt M definitiv, vielleicht später mit kleinen Verbesserungen.“ Auf der Karte „Soll M jetzt schon die normale Startfigur in der Vorschau werden?“ gewählt: „Ja, jetzt zum Standard machen“ (alte Fassungen bleiben vorerst als Schalter).

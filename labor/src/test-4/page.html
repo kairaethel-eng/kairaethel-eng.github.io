@@ -20,10 +20,9 @@
   </a>
   <ol class="chapters" id="chapters" aria-label="Kapitel">
     <li><a href="#start"><i>01</i><span class="ct">Ankommen<small>Von Kopf bis Fuß</small></span></a></li>
-    <li><a href="#bewegung"><i>02</i><span class="ct">Bewegung<small>Über HOP</small></span></a></li>
-    <li><a href="#hausordnung"><i>§</i><span class="ct">Hausordnung</span></a></li>
+    <li><a href="#bewegung"><i>02</i><span class="ct">Haus<small>Praxis &amp; Leistungen</small></span></a></li>
     <li><a href="#achse"><i>03</i><span class="ct">Achse<small>Wirbelsäule</small></span></a></li>
-    <li><a href="#dach"><i>04</i><span class="ct">Dach<small>Praxis &amp; Leistungen</small></span></a></li>
+    <li><a href="#hausordnung"><i>04</i><span class="ct">Haltung<small>Hausordnung &amp; Über mich</small></span></a></li>
     <li><a href="#tuer"><i>05</i><span class="ct">Tür<small>Kontakt &amp; Termin</small></span></a></li>
   </ol>
   <button type="button" class="chap-now" id="chapNow" aria-expanded="false" aria-controls="chapters" aria-label="Kapitel wählen"></button>
@@ -35,122 +34,26 @@
   <!-- Kapitel 01 „Von Kopf bis Fuß“ (Auftrag K, Go Kai 16.11.2026): Baustein src/kopf-fuss (kapitel.html/.css/.js), ersetzt „Spannung lösen“ -->
   <section class="chapter kf" id="start" data-stage="0" aria-labelledby="kf-title">
 <!--@include ../feinschliff/kapitel.html-->
-<!--KF-ACTS--><a class="btn" href="#tuer" data-termin aria-haspopup="dialog">Termin buchen</a><a class="btn btn-ghost" href="#achse">Zur Wirbelsäule</a><!--/KF-ACTS-->
+<!--KF-ACTS--><a class="btn" href="#tuer" data-termin aria-haspopup="dialog">Termin buchen</a><a class="btn btn-ghost" href="#dach">Leistungen ansehen</a><!--/KF-ACTS-->
   </section>
 
+  <!-- 26.11.2026 (Kai, Wahl „Haus vor, Haltung nach hinten“): Kapitel 02 „Haus“ = dieser Satz mit den Perlenbändern (Übergabe aus Weg M) + Linienhaus, Leistungen, Manuthera, Stoßwelle.
+       Zitat, Porträt und Fakten stehen seitdem in Kapitel 04 „Haltung“ nach der Hausordnung (#ueber). -->
   <section class="chapter manifest" id="bewegung" data-stage="1" aria-labelledby="m-title">
     <div class="wrap">
-      <p class="kicker"><i>02</i> Bewegung</p>
+      <p class="kicker"><i>02</i> Haus</p>
       <h2 id="m-title" class="statement">Ein <em>Zuhause</em> für Ihren Körper.</h2>
       <p class="statement statement-sub">Ein Haus, in dem Sie ankommen, sich wohlfühlen und das ganze Spektrum der Physiotherapie unter einem Dach finden.</p>
-      <!-- 21.11.2026 (Kai: „Leitsatz besser, kreativer hervorheben“, Go 2a): eigener Block mit großem Anführungszeichen, Linie zeichnet sich beim Hereinscrollen unter „den ganzen Menschen“ -->
-      <figure class="sign"><span class="q-mark" aria-hidden="true">„</span><blockquote><p>Ich betrachte nicht nur das Symptom, sondern <span class="q-hl">den ganzen Menschen.</span></p></blockquote><figcaption><i class="q-rule" aria-hidden="true"></i>Kai Raethel</figcaption></figure>
-      <!-- 24.11.2026 (Befund Weltklasse-Prüfung B1, Go Kai „Entwurf, meine Daten folgen“): Platz für Porträt + drei Fakten.
-           data-platzhalter: alles mit diesem Merkmal ersetzt Kai mit echten Angaben; build.mjs verweigert die Wurzel, solange es da ist.
-           Porträt später: <img class="ueber-foto" src="portrait.webp" alt="Kai Raethel in der Praxis" width="480" height="600"> statt des Rahmens. -->
-      <div class="ueber">
-        <div class="ueber-bild" data-platzhalter="portrait" role="img" aria-label="Platzhalter: Porträt von Kai Raethel folgt"><span>Porträt folgt</span></div>
-        <ul class="ueber-fakten">
-          <li data-platzhalter="fakt-1"><b>Seit 20…</b><span>Physiotherapeut · Jahr folgt</span></li>
-          <li data-platzhalter="fakt-2"><b>Manuelle Therapie</b><span>Zertifikat · Details folgen</span></li>
-          <li data-platzhalter="fakt-3"><b>CMD</b><span>Kiefer, Atlas und Axis · Details folgen</span></li>
-        </ul>
-      </div>
     </div>
   </section>
 
-  <section class="chapter rules" id="hausordnung" data-stage="1" aria-labelledby="h-title">
-    <div class="rules-sticky">
-      <div class="wrap">
-        <p class="kicker"><i>§</i> Die Hausordnung</p>
-        <h2 id="h-title" class="sr-only">Die Hausordnung</h2>
-        <ol class="laws" id="laws">
-          <li class="is-on"><b>§1</b><span>Der Mensch zuerst.</span><small>Zuhören kommt vor Behandeln.</small></li>
-          <li><b>§2</b><span>Zeit statt Taktung.</span><small>Termine, in denen Sie wirklich ankommen dürfen.</small></li>
-          <li><b>§3</b><span>Alles unter einem Dach.</span><small>Viele Therapieformen, ein vertrauter Ansprechpartner.</small></li>
-          <li><b>§4</b><span>Ehrlichkeit.</span><small>Ich sage, was hilft und was nicht.</small></li>
-          <li><b>§5</b><span>Gast statt Fall.</span><small>Sie sollen gerne wiederkommen, nicht müssen.</small></li>
-        </ol>
-        <div class="law-prog" id="lawProg" role="group" aria-label="Paragraph wählen"><button type="button" aria-label="§1 anzeigen"><i></i></button><button type="button" aria-label="§2 anzeigen"><i></i></button><button type="button" aria-label="§3 anzeigen"><i></i></button><button type="button" aria-label="§4 anzeigen"><i></i></button><button type="button" aria-label="§5 anzeigen"><i></i></button></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="chapter axis" id="achse" data-stage="2" aria-labelledby="a-title">
-    <div class="axis-sticky">
-      <div class="still still-achse" aria-hidden="true"></div>
-      <div class="wrap axis-inner">
-        <div class="axis-head">
-          <p class="kicker"><i>03</i> Achse</p>
-          <h2 id="a-title">Jedes Segment<br>erzählt <em>etwas.</em></h2>
-          <p class="axis-hint"><span class="only-desk"><span class="tx-lang">Ziehen Sie den runden Knopf am rechten Rand<span class="only-fine">, drehen Sie dort das Mausrad</span> oder wählen Sie einen Abschnitt.</span><span class="tx-kurz">Wählen Sie einen Abschnitt oder ziehen Sie den Knopf rechts.</span></span><span class="only-mob">Scrollen Sie weiter: Jede Karte holt ihren Abschnitt heran.</span><span class="only-scan"><span class="tx-lang">Ziehen Sie den Knopf am rechten Rand auf und ab oder tippen Sie dort auf einen Abschnitt.</span><span class="tx-kurz">Ziehen Sie den Knopf rechts oder tippen Sie einen Abschnitt an.</span></span></p>
-        </div>
-        <div class="segnav" role="group" aria-label="Wirbelsäulen-Abschnitt wählen">
-          <button type="button" data-seg="0" class="is-on"><b>C1–C2</b><span>Kopf</span></button>
-          <button type="button" data-seg="1"><b>C5–C6</b><span>HWS</span></button>
-          <button type="button" data-seg="2"><b>Th1–6</b><span>BWS</span></button>
-          <button type="button" data-seg="3"><b>Th7–12</b><span>Rippen</span></button>
-          <button type="button" data-seg="4"><b>L4–L5</b><span>LWS</span></button>
-          <button type="button" data-seg="5"><b>S1</b><span>Becken</span></button>
-        </div>
-        <div class="seg-dots" role="group" aria-label="Abschnitt wählen"><span>C1</span><button type="button" data-seg="0" aria-label="Abschnitt C1–C2" class="is-on"></button><button type="button" data-seg="1" aria-label="Abschnitt C5–C6"></button><button type="button" data-seg="2" aria-label="Abschnitt Th1–Th6"></button><button type="button" data-seg="3" aria-label="Abschnitt Th7–Th12"></button><button type="button" data-seg="4" aria-label="Abschnitt L4–L5"></button><button type="button" data-seg="5" aria-label="Abschnitt S1 · ISG"></button><span>S1</span></div>
-        <div class="seg-cards" id="segCards" aria-live="polite">
-          <article class="seg-card is-on" data-seg="0">
-            <p class="seg-no">C1–C2</p>
-            <h3>Atlas und Axis</h3>
-            <dl><dt>Nerven</dt><dd>Nn. suboccipitales und N. occipitalis major versorgen Hinterkopf und tiefe Nackenmuskulatur.</dd><dt>Typisch</dt><dd>Vom Nacken aufsteigender Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen.</dd></dl>
-            <p class="seg-peri">Versorgung: Hinterkopf · Nacken</p>
-            <ul class="chips"><li>Atlas-Axis-Therapie</li><li>Manuelle Therapie</li><li>Fango</li></ul>
-          </article>
-          <article class="seg-card" data-seg="1">
-            <p class="seg-no">C5–C6</p>
-            <h3>Halswirbelsäule</h3>
-            <dl><dt>Nerven</dt><dd>Wurzeln u. a. für Bizeps und Schulterheber, Gefühl außen am Arm bis zum Daumen.</dd><dt>Typisch</dt><dd>Ausstrahlung über die Armaußenseite bis in den Daumen, Kribbeln, Schwächegefühl beim Beugen.</dd></dl>
-            <p class="seg-peri">Versorgung: Armaußenseite · Daumen</p>
-            <ul class="chips"><li>Manuelle Therapie</li><li>Schlingentisch</li><li>Krankengymnastik</li></ul>
-          </article>
-          <article class="seg-card" data-seg="2">
-            <p class="seg-no">Th1–Th6</p>
-            <h3>Brustwirbelsäule</h3>
-            <dl><dt>Nerven</dt><dd>Interkostalnerven der oberen Rippen versorgen Brustkorbwand und Zwischenrippenmuskeln.</dd><dt>Typisch</dt><dd>Blockaden mit atemabhängigem Stechen, Schmerz zwischen den Schulterblättern, „Rippenklemme“.</dd></dl>
-            <p class="seg-peri">Versorgung: Brustkorb · Zwischenrippen</p>
-            <ul class="chips"><li>Manuelle Therapie</li><li>Lojer Manuthera</li><li>Fango</li></ul>
-          </article>
-          <article class="seg-card" data-seg="3"><!-- Th7–Th12: Kai 7.11. (Handy, dann PC) -->
-            <p class="seg-no">Th7–Th12</p>
-            <h3>Untere Brustwirbelsäule</h3>
-            <dl><dt>Nerven</dt><dd>Untere Zwischenrippennerven und Nerven der Bauchwand. Th10 versorgt die Haut etwa auf Nabelhöhe.</dd><dt>Typisch</dt><dd>Gürtelförmig ausstrahlender Schmerz am Rippenbogen, Steifigkeit am Übergang zur Lendenwirbelsäule (Th12/L1).</dd></dl>
-            <p class="seg-peri">Versorgung: Rippenbogen · Bauchwand</p>
-            <ul class="chips"><li>Manuelle Therapie</li><li>Krankengymnastik</li><li>Fango</li></ul>
-          </article>
-          <article class="seg-card" data-seg="4">
-            <p class="seg-no">L4–L5</p>
-            <h3>Lendenwirbelsäule</h3>
-            <dl><dt>Nerven</dt><dd>Wurzeln Richtung N. ischiadicus. L5 hebt den Fuß, Gefühl am Schienbein bis zur Großzehe.</dd><dt>Typisch</dt><dd>Bandscheiben-Region: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche.</dd></dl>
-            <p class="seg-peri">Versorgung: Schienbein · Großzehe</p>
-            <ul class="chips"><li>Schlingentisch</li><li>Schmerztherapie</li><li>Krankengymnastik</li></ul>
-            <button type="button" class="vf-open" data-vorfall aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bandscheibenvorfall ansehen</span><small>Film · 37 s</small></button>
-          </article>
-          <article class="seg-card" data-seg="5">
-            <p class="seg-no">S1 · ISG</p>
-            <h3>Kreuzbein &amp; Becken</h3>
-            <dl><dt>Nerven</dt><dd>S1-Wurzel für Wade, Fußaußenrand und Achillessehnenreflex. Das Iliosakralgelenk verbindet Becken und Wirbelsäule.</dd><dt>Typisch</dt><dd>Ausstrahlung über die Beinrückseite bis zur Ferse, tiefsitzender einseitiger Kreuzschmerz.</dd></dl>
-            <p class="seg-peri">Versorgung: Wade · Ferse · Fußaußenrand</p>
-            <ul class="chips"><li>Manuelle Therapie / ISG</li><li>Sport-Physiotherapie</li><li>Stoßwelle</li></ul>
-          </article>
-        </div>
-        <p class="note">Vereinfachte Orientierung, ersetzt keine ärztliche Diagnose. Bitte lassen Sie Beschwerden immer zuerst ärztlich abklären – bei Taubheit oder Lähmungszeichen umgehend.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="chapter roof" id="dach" data-stage="3" aria-labelledby="d-title">
+  <section class="chapter roof" id="dach" data-stage="2" aria-labelledby="d-title">
     <!-- Kapitel 04 seit 14.11.2026 (Go Kai „2a“): Linienhaus „Licht im Fenster“ statt Partikel-Haus + Klick-Rundgang.
          Baustein src/haus-licht/house.js + house.css (gleich wie Entwurfsseite haus-licht.html), kein WebGL. -->
     <div class="lh" id="lhRoot">
     <div class="wrap roof-grid">
       <div class="roof-head">
-        <p class="kicker"><i>04</i> Dach</p>
+        <p class="kicker"><i>02</i> Praxis</p>
         <h2 id="d-title">Alles unter<br><em>einem</em> Dach.</h2>
         <p class="lead">Treten Sie ein: ein Rundgang durch die Praxis, bevor Sie zum ersten Mal da sind.</p>
         <p class="hint" id="lhHint"><span class="only-fine"><span class="tx-lang">Raum anklicken, mit ‹ › oder den Pfeiltasten weitergehen. Oder den Rundgang starten – auch aus Augenhöhe.</span><span class="tx-kurz">Klicken Sie einen Raum an oder starten Sie den Rundgang.</span></span><span class="only-touch">Wischen Sie von Raum zu Raum oder tippen Sie auf einen Raum.</span></p>
@@ -291,7 +194,7 @@
     </div>
     </div>
     <div class="wrap roof-list">
-      <p class="kicker" id="allTitle"><i>04</i> Alle Leistungen</p>
+      <p class="kicker" id="allTitle"><i>02</i> Alle Leistungen</p>
       <ol class="index" id="index">
         <li><button type="button" aria-expanded="false"><span class="ix-name">Manuelle Therapie</span><span class="ix-tag">Gelenke · Rücken</span></button><div class="ix-body"><p>Mit gezielten Handgriffen untersuche und behandle ich Gelenke, Muskeln und Nerven, dort, wo Bewegung blockiert ist. Nach gründlichem Befund kombiniere ich Mobilisation, Weichteiltechniken und aktives Üben.</p></div></li>
         <li><button type="button" aria-expanded="false"><span class="ix-name">Krankengymnastik</span><span class="ix-tag">Nach OP · Reha</span></button><div class="ix-body"><p>Aktiv statt passiv: Kraft, Beweglichkeit und Sicherheit wachsen Schritt für Schritt, nach Operationen, Verletzungen oder bei chronischen Beschwerden. Dazu ein kurzes Heimprogramm.</p></div></li>
@@ -448,6 +351,112 @@
     </div>
   </section>
 
+
+  <section class="chapter axis" id="achse" data-stage="3" aria-labelledby="a-title">
+    <div class="axis-sticky">
+      <div class="still still-achse" aria-hidden="true"></div>
+      <div class="wrap axis-inner">
+        <div class="axis-head">
+          <p class="kicker"><i>03</i> Achse</p>
+          <h2 id="a-title">Jedes Segment<br>erzählt <em>etwas.</em></h2>
+          <p class="axis-hint"><span class="only-desk"><span class="tx-lang">Ziehen Sie den runden Knopf am rechten Rand<span class="only-fine">, drehen Sie dort das Mausrad</span> oder wählen Sie einen Abschnitt.</span><span class="tx-kurz">Wählen Sie einen Abschnitt oder ziehen Sie den Knopf rechts.</span></span><span class="only-mob">Scrollen Sie weiter: Jede Karte holt ihren Abschnitt heran.</span><span class="only-scan"><span class="tx-lang">Ziehen Sie den Knopf am rechten Rand auf und ab oder tippen Sie dort auf einen Abschnitt.</span><span class="tx-kurz">Ziehen Sie den Knopf rechts oder tippen Sie einen Abschnitt an.</span></span></p>
+        </div>
+        <div class="segnav" role="group" aria-label="Wirbelsäulen-Abschnitt wählen">
+          <button type="button" data-seg="0" class="is-on"><b>C1–C2</b><span>Kopf</span></button>
+          <button type="button" data-seg="1"><b>C5–C6</b><span>HWS</span></button>
+          <button type="button" data-seg="2"><b>Th1–6</b><span>BWS</span></button>
+          <button type="button" data-seg="3"><b>Th7–12</b><span>Rippen</span></button>
+          <button type="button" data-seg="4"><b>L4–L5</b><span>LWS</span></button>
+          <button type="button" data-seg="5"><b>S1</b><span>Becken</span></button>
+        </div>
+        <div class="seg-dots" role="group" aria-label="Abschnitt wählen"><span>C1</span><button type="button" data-seg="0" aria-label="Abschnitt C1–C2" class="is-on"></button><button type="button" data-seg="1" aria-label="Abschnitt C5–C6"></button><button type="button" data-seg="2" aria-label="Abschnitt Th1–Th6"></button><button type="button" data-seg="3" aria-label="Abschnitt Th7–Th12"></button><button type="button" data-seg="4" aria-label="Abschnitt L4–L5"></button><button type="button" data-seg="5" aria-label="Abschnitt S1 · ISG"></button><span>S1</span></div>
+        <div class="seg-cards" id="segCards" aria-live="polite">
+          <article class="seg-card is-on" data-seg="0">
+            <p class="seg-no">C1–C2</p>
+            <h3>Atlas und Axis</h3>
+            <dl><dt>Nerven</dt><dd>Nn. suboccipitales und N. occipitalis major versorgen Hinterkopf und tiefe Nackenmuskulatur.</dd><dt>Typisch</dt><dd>Vom Nacken aufsteigender Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen.</dd></dl>
+            <p class="seg-peri">Versorgung: Hinterkopf · Nacken</p>
+            <ul class="chips"><li>Atlas-Axis-Therapie</li><li>Manuelle Therapie</li><li>Fango</li></ul>
+          </article>
+          <article class="seg-card" data-seg="1">
+            <p class="seg-no">C5–C6</p>
+            <h3>Halswirbelsäule</h3>
+            <dl><dt>Nerven</dt><dd>Wurzeln u. a. für Bizeps und Schulterheber, Gefühl außen am Arm bis zum Daumen.</dd><dt>Typisch</dt><dd>Ausstrahlung über die Armaußenseite bis in den Daumen, Kribbeln, Schwächegefühl beim Beugen.</dd></dl>
+            <p class="seg-peri">Versorgung: Armaußenseite · Daumen</p>
+            <ul class="chips"><li>Manuelle Therapie</li><li>Schlingentisch</li><li>Krankengymnastik</li></ul>
+          </article>
+          <article class="seg-card" data-seg="2">
+            <p class="seg-no">Th1–Th6</p>
+            <h3>Brustwirbelsäule</h3>
+            <dl><dt>Nerven</dt><dd>Interkostalnerven der oberen Rippen versorgen Brustkorbwand und Zwischenrippenmuskeln.</dd><dt>Typisch</dt><dd>Blockaden mit atemabhängigem Stechen, Schmerz zwischen den Schulterblättern, „Rippenklemme“.</dd></dl>
+            <p class="seg-peri">Versorgung: Brustkorb · Zwischenrippen</p>
+            <ul class="chips"><li>Manuelle Therapie</li><li>Lojer Manuthera</li><li>Fango</li></ul>
+          </article>
+          <article class="seg-card" data-seg="3"><!-- Th7–Th12: Kai 7.11. (Handy, dann PC) -->
+            <p class="seg-no">Th7–Th12</p>
+            <h3>Untere Brustwirbelsäule</h3>
+            <dl><dt>Nerven</dt><dd>Untere Zwischenrippennerven und Nerven der Bauchwand. Th10 versorgt die Haut etwa auf Nabelhöhe.</dd><dt>Typisch</dt><dd>Gürtelförmig ausstrahlender Schmerz am Rippenbogen, Steifigkeit am Übergang zur Lendenwirbelsäule (Th12/L1).</dd></dl>
+            <p class="seg-peri">Versorgung: Rippenbogen · Bauchwand</p>
+            <ul class="chips"><li>Manuelle Therapie</li><li>Krankengymnastik</li><li>Fango</li></ul>
+          </article>
+          <article class="seg-card" data-seg="4">
+            <p class="seg-no">L4–L5</p>
+            <h3>Lendenwirbelsäule</h3>
+            <dl><dt>Nerven</dt><dd>Wurzeln Richtung N. ischiadicus. L5 hebt den Fuß, Gefühl am Schienbein bis zur Großzehe.</dd><dt>Typisch</dt><dd>Bandscheiben-Region: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche.</dd></dl>
+            <p class="seg-peri">Versorgung: Schienbein · Großzehe</p>
+            <ul class="chips"><li>Schlingentisch</li><li>Schmerztherapie</li><li>Krankengymnastik</li></ul>
+            <button type="button" class="vf-open" data-vorfall aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg><span>Bandscheibenvorfall ansehen</span><small>Film · 37 s</small></button>
+          </article>
+          <article class="seg-card" data-seg="5">
+            <p class="seg-no">S1 · ISG</p>
+            <h3>Kreuzbein &amp; Becken</h3>
+            <dl><dt>Nerven</dt><dd>S1-Wurzel für Wade, Fußaußenrand und Achillessehnenreflex. Das Iliosakralgelenk verbindet Becken und Wirbelsäule.</dd><dt>Typisch</dt><dd>Ausstrahlung über die Beinrückseite bis zur Ferse, tiefsitzender einseitiger Kreuzschmerz.</dd></dl>
+            <p class="seg-peri">Versorgung: Wade · Ferse · Fußaußenrand</p>
+            <ul class="chips"><li>Manuelle Therapie / ISG</li><li>Sport-Physiotherapie</li><li>Stoßwelle</li></ul>
+          </article>
+        </div>
+        <p class="note">Vereinfachte Orientierung, ersetzt keine ärztliche Diagnose. Bitte lassen Sie Beschwerden immer zuerst ärztlich abklären – bei Taubheit oder Lähmungszeichen umgehend.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter rules" id="hausordnung" data-stage="3" aria-labelledby="h-title">
+    <div class="rules-sticky">
+      <div class="wrap">
+        <p class="kicker"><i>§</i> Die Hausordnung</p>
+        <h2 id="h-title" class="sr-only">Die Hausordnung</h2>
+        <ol class="laws" id="laws">
+          <li class="is-on"><b>§1</b><span>Der Mensch zuerst.</span><small>Zuhören kommt vor Behandeln.</small></li>
+          <li><b>§2</b><span>Zeit statt Taktung.</span><small>Termine, in denen Sie wirklich ankommen dürfen.</small></li>
+          <li><b>§3</b><span>Alles unter einem Dach.</span><small>Viele Therapieformen, ein vertrauter Ansprechpartner.</small></li>
+          <li><b>§4</b><span>Ehrlichkeit.</span><small>Ich sage, was hilft und was nicht.</small></li>
+          <li><b>§5</b><span>Gast statt Fall.</span><small>Sie sollen gerne wiederkommen, nicht müssen.</small></li>
+        </ol>
+        <div class="law-prog" id="lawProg" role="group" aria-label="Paragraph wählen"><button type="button" aria-label="§1 anzeigen"><i></i></button><button type="button" aria-label="§2 anzeigen"><i></i></button><button type="button" aria-label="§3 anzeigen"><i></i></button><button type="button" aria-label="§4 anzeigen"><i></i></button><button type="button" aria-label="§5 anzeigen"><i></i></button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 26.11.2026: Kapitel 04 „Haltung“, zweiter Teil – die Person hinter der Hausordnung (vorher in Kapitel 02). Kein eigenes .chapter
+       (keine eigene Form der Punkte, kein eigener Menüeintrag): die HOP-Kreise verglimmen, bevor dieser Text kommt (main.js). -->
+  <section class="ueber-sec" id="ueber" aria-labelledby="u-title">
+    <div class="wrap">
+      <h2 id="u-title" class="sr-only">Über mich</h2>
+      <!-- 21.11.2026 (Kai: „Leitsatz besser, kreativer hervorheben“, Go 2a): eigener Block mit großem Anführungszeichen, Linie zeichnet sich beim Hereinscrollen unter „den ganzen Menschen“ -->
+      <figure class="sign"><span class="q-mark" aria-hidden="true">„</span><blockquote><p>Ich betrachte nicht nur das Symptom, sondern <span class="q-hl">den ganzen Menschen.</span></p></blockquote><figcaption><i class="q-rule" aria-hidden="true"></i>Kai Raethel</figcaption></figure>
+      <!-- 24.11.2026 (Befund Weltklasse-Prüfung B1, Go Kai „Entwurf, meine Daten folgen“): Platz für Porträt + drei Fakten.
+           data-platzhalter: alles mit diesem Merkmal ersetzt Kai mit echten Angaben; build.mjs verweigert die Wurzel, solange es da ist.
+           Porträt später: <img class="ueber-foto" src="portrait.webp" alt="Kai Raethel in der Praxis" width="480" height="600"> statt des Rahmens. -->
+      <div class="ueber">
+        <div class="ueber-bild" data-platzhalter="portrait" role="img" aria-label="Platzhalter: Porträt von Kai Raethel folgt"><span>Porträt folgt</span></div>
+        <ul class="ueber-fakten">
+          <li data-platzhalter="fakt-1"><b>Seit 20…</b><span>Physiotherapeut · Jahr folgt</span></li>
+          <li data-platzhalter="fakt-2"><b>Manuelle Therapie</b><span>Zertifikat · Details folgen</span></li>
+          <li data-platzhalter="fakt-3"><b>CMD</b><span>Kiefer, Atlas und Axis · Details folgen</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
   <section class="chapter door" id="tuer" data-stage="3" aria-labelledby="t-title">
     <!-- Tür · Raum (Go Kai 23.11.2026; Entwurf tuer-raum.html, von Kai abgenommen): Überschrift oben, darunter die Tür. Antippen → sie geht

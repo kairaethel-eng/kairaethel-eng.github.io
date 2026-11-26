@@ -1,8 +1,14 @@
 # Labor – Entscheidungen & Merkliste
 
-Stand: 25.11.2026 · Arbeitsstand ist **Puls · Scan** (`test-4-puls-scan.html`, Vorschau `live/`). Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
+Stand: 26.11.2026 · Arbeitsstand ist **Puls · Scan** (`test-4-puls-scan.html`, Vorschau `live/`). Regel: erst erörtern, Umsetzung nur nach Kais „Go“.
 Neueste Entscheidung oben. Überholte ganze Abschnitte (Figur plus, Tür-Entwurf A/C, Willkommenszeile, Porträt-Entwürfe, Zuhause, Hausbesuch, alte Offen-Listen) liegen in `archiv/ENTSCHEIDUNGEN-ueberholt.md`.
 **Achtung bei Abschnitten vor dem 22.11.:** Dort stehen gültige Merkregeln neben Überholtem. Überholt sind insbesondere: Tür C und Tür-Bühne „Hineingehen“ (ersetzt durch den Raum, 23.11.), „Figur plus“ und die gezeichnete Figur (ersetzt durch die echte Figur, 23.11.), „Grün nur im Logo“ (seit 22.11. auch Raumfarbe), „kein Rot an der Manuthera“ (seit 23.11. Verlauf Bernstein → Rot-Orange), Logo nach dem Original / groß am Start (Logo A bleibt), Partikel-Haus, Röntgenblick, Ego-Rundgang, Kapitel 05 „Licht“. Was `CLAUDE.md` sagt, hat Vorrang.
+
+## 26.11.2026, 02:30 – Kapitelfolge „Haus vor, Haltung nach hinten“ (Kai)
+- Kai: Physiotherapie und „wofür das Haus steht“ nach vorn, Philosophie danach. Gewählt auf der Karte: **01 Ankommen → 02 Haus (Satz + Linienhaus + Leistungen + Manuthera + Stoßwelle) → 03 Achse → 04 Haltung (Hausordnung, dann Über mich) → 05 Tür.** Ersetzt „Reihenfolge A“ vom 14.11. (dort gültig bleibt: HOP-Kreise als Überlagerung `uLogo`).
+- **Merkregel Reihenfolge:** erst „Bin ich hier richtig?“ (Leistungen, Ort, Kasse/privat), dann „Kann ich vertrauen?“ (Haltung, Person), dann „Wie komme ich rein?“ (Tür). Die Hausordnung ist Haltung, keine Information.
+- **Merkregel Technik:** `uMorph` zählt in Seitenfolge; wer Kapitel umstellt, ändert zusammen: `data-stage`, alle `morphNow`-Schwellen in `main.js`, den Tausch vor `shape()` im Shader, `AU_INFO`, Menü (`navOf`), `ORDER` in `farbe.js`, Prüfstand und `gaps.cjs`. Zwischen zwei Formen, die in `uMorph` nicht benachbart sind, würde die dazwischen sichtbar – darum Formen in Seitenfolge zählen, nicht springen.
+- Der Start nennt im ersten Bild Ort und Versicherung („Physiotherapie in Schorndorf · Kasse & privat“); der zweite Knopf führt zu den Leistungen.
 
 ## 26.11.2026, 02:28 – Weg M kommt auf die Website (Kai)
 - Kai: „Also auf die Website kommt M definitiv, vielleicht später mit kleinen Verbesserungen.“ Kai hat auf der Karte „Ja, jetzt zum Standard machen“ gewählt: M ist seit 26.11. die Startfigur der Vorschau, die alte Figur bleibt als `?start=a`, die Fassungen B–L bleiben vorerst als Schalter (Aufräumen nur mit eigenem Go).

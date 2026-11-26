@@ -1,6 +1,7 @@
 // Raumlicht + Logo-Farben (Farbstudie 22.11.2026, Go Kai: „Kräftig … übernehmen, alle anderen speichern“).
 // Jedes Kapitel ist ein Raum mit eigenem, weichem Licht aus der HOP-Palette, der Weg führt von kühl nach warm:
-// 01 Abendblau · 02 Grün · § Logo-Farben · 03 Röntgenblau · 04 Petrol + warmes Fensterlicht · 05 Bernstein (drinnen).
+// 01 Abendblau · 02 Grün, dann Petrol + warmes Fensterlicht (Dach) · 03 Röntgenblau · 04 Logo-Farben (Hausordnung) · 05 Bernstein (drinnen).
+// Seit 26.11.2026 neue Kapitelfolge: jeder Raum behält sein Licht, der Weg ist darum nicht mehr streng kühl → warm.
 // Technik: eine Lichtschicht html::before (position:fixed, mix-blend-mode:screen, über der Seite, unter Hinweisen/Dialogen; bis 25.11. #farblicht),
 // Hintergrund aus zwei bis drei weichen Ellipsen je Kapitel + Grundton; zwischen zwei Kapiteln wird überblendet.
 // Logo-Farben (Stufen mittel/kraeftig): html.fx-logo färbt Kapitel-Ziffern, Linien, Menü (style.css), Figur Kapitel 01 (html[data-deep],
@@ -28,8 +29,8 @@ const PAL = {
     d: [{ c: A, x: 50, y: 40, rx: 30, ry: 46, a: 0.24 }, { c: AD, x: 50, y: 100, rx: 65, ry: 32, a: 0.16 }],
     m: [{ c: A, x: 50, y: 38, rx: 80, ry: 45, a: 0.24 }, { c: AD, x: 50, y: 100, rx: 90, ry: 30, a: 0.16 }] },
 };
-const ORDER = ['start', 'bewegung', 'hausordnung', 'achse', 'dach', 'tuer'];
-const NOW = ['#5AA2D6', '#8DBF55', '#6FA8C0', '#5AA2D6', '#6FA8C0', '#E09A35']; // Kapitelfarbe für die Ziffer im Handy-Menü
+const ORDER = ['start', 'bewegung', 'dach', 'achse', 'hausordnung', 'tuer']; // Seitenfolge seit 26.11.2026 (Kai: „Haus vor, Haltung nach hinten“); jeder Raum behält sein Licht
+const NOW = ['#5AA2D6', '#8DBF55', '#8DBF55', '#5AA2D6', '#6FA8C0', '#E09A35']; // Kapitelfarbe für die Ziffer im Handy-Menü, in ORDER-Folge (Dach gehört zu 02 „Haus“)
 export const STUFEN = {
   heute: { light: 0, wash: 0, logo: false, name: 'Heute', t: 'So war die Seite bis 22.11.: ein Dunkel überall, Bernstein als einzige Farbe.' },
   leise: { light: 1, wash: 0.35, logo: false, name: 'Leise', t: 'Raumlicht: jedes Kapitel hat sein eigenes, weiches Licht. Die Grafiken bleiben, wie sie sind.' },

@@ -52,12 +52,15 @@ const STATES = [
   { id: 'kf-rueckenmark', go: kf(3.55) }, // M: Fahrt am Rückenmark im Profil (Figur bis 26.11.: zwischen Halt 4 und Schluss)
   { id: 'kf-schluss', go: kf(4.5), wait: 5500 }, // M: Leitsatz steht (Satz-Flug läuft über die Zeit)
   { id: 'auftakt-02', go: go('.auftakt-blk[data-for="bewegung"]', -0.3) }, // Kapitel-Auftakt (18.11.): große Ziffer, dahinter der Formwechsel
-  { id: 'bewegung', go: go('#bewegung', 0) }, { id: 'hausordnung', go: go('#hausordnung', 0.1) },
+  // seit 26.11.2026 Kapitelfolge „Haus vor, Haltung nach hinten“: 02 Haus (Satz, Dach, Leistungen, Manuthera, Stoßwelle) → 03 Achse → 04 Haltung (Hausordnung, Über mich) → 05 Tür
+  { id: 'bewegung', go: go('#bewegung', 0) },
+  { id: 'dach', go: go('#dach', 0) }, { id: 'leistungen', go: go('#allTitle', -0.1) }, { id: 'manuthera', go: go('#manuthera', 0), wait: 5000 },
+  { id: 'stosswelle', go: go('#stosswelle', 0), wait: 6000 },
   { id: 'auftakt-03', go: go('.auftakt-blk[data-for="achse"]', -0.3) },
   { id: 'achse', go: go('#achse', 0.3), key: 1, wait: 6000 },
   ...STOPS.map((n, i) => ({ id: 'achse-' + n, go: stop(i), key: 1, wait: 5000 })),
-  { id: 'auftakt-04', go: go('.auftakt-blk[data-for="dach"]', -0.3) }, { id: 'dach', go: go('#dach', 0) }, { id: 'leistungen', go: go('#allTitle', -0.1) }, { id: 'manuthera', go: go('#manuthera', 0), wait: 5000 },
-  { id: 'stosswelle', go: go('#stosswelle', 0), wait: 6000 }, { id: 'auftakt-05', go: go('.auftakt-blk[data-for="tuer"]', -0.3) }, { id: 'tuer', go: async (p) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#doorTrack', 0)(p); }, wait: 6500 }, // Tür-Bühne (19.11.): Tür geschlossen, Überschrift oben
+  { id: 'auftakt-04', go: go('.auftakt-blk[data-for="hausordnung"]', -0.3) }, { id: 'hausordnung', go: go('#hausordnung', 0.1) }, { id: 'ueber', go: go('#ueber', 0) },
+  { id: 'auftakt-05', go: go('.auftakt-blk[data-for="tuer"]', -0.3) }, { id: 'tuer', go: async (p) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#doorTrack', 0)(p); }, wait: 6500 }, // Tür-Bühne (19.11.): Tür geschlossen, Überschrift oben
   // seit 20.11.2026 geht die Tür auf Antippen auf und man geht über die Zeit hindurch (vorher am Scrollweg)
   // (der Prüfstand rollt beim Laden einmal durch die ganze Seite – dabei gilt die Tür als „vorbeigescrollt“ und steht offen; deshalb reset())
   { id: 'tuer-halb', go: async (p, settle) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#doorTrack', 0)(p); await settle(4000); await p.evaluate(() => window.__door && window.__door.open()); }, wait: 1900 }, { id: 'tuer-drin', go: go('#doorTrack', 0), wait: 6000 }, // halb hindurch · drinnen, Knöpfe da
@@ -69,13 +72,14 @@ const STATES = [
 const FILMS = [
   { id: 'kf-wisch', go: kf(0.1), k: 0.9 },
   { id: '01-nach-02', go: go('#bewegung', -0.7), k: 0.9 },
-  { id: '02-nach-hausordnung', go: go('#hausordnung', -0.7), k: 0.9 },
-  { id: 'hausordnung-nach-03', go: go('#achse', -0.7), k: 0.9 },
+  { id: 'satz-nach-dach', go: go('#dach', -0.7), k: 0.9 }, // 26.11.: Linien werden zur Dachlinie
+  { id: 'leistungen-nach-manuthera', go: go('#manuthera', -0.7), k: 0.9 },
+  { id: 'stosswelle-nach-03', go: go('.auftakt-blk[data-for="achse"]', -0.5), k: 0.9 }, // 26.11.: Dach → Wirbelsäule
+  { id: '03-zurueck-nach-02', go: go('#achse', 0.1), k: -0.9 },
   { id: '03-S1-nach-04', go: stop(5), k: 0.95, wait: 5000 },
   { id: '03-C1-nach-04', go: stop(0), k: 1.4, wait: 5000 },
-  { id: '04-zurueck-nach-03', go: go('#dach', 0.1), k: -0.9 },
-  { id: 'leistungen-nach-manuthera', go: go('#manuthera', -0.7), k: 0.9 },
-  { id: 'stosswelle-nach-05', go: async (p) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#tuer', -0.7)(p); }, k: 0.9 }, // erster Besuch: Tür zu (seit 23.11. Raum: ist er schon offen, zieht er beim Scrollen als Ganzes mit – wie ein Bild, gewollt)
+  { id: 'hausordnung-nach-ueber', go: go('#ueber', -0.7), k: 0.9 }, // 26.11.: HOP-Kreise verglimmen vor „Über mich“
+  { id: 'ueber-nach-05', go: async (p) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#tuer', -0.7)(p); }, k: 0.9 }, // erster Besuch: Tür zu (seit 23.11. Raum: ist er schon offen, zieht er beim Scrollen als Ganzes mit – wie ein Bild, gewollt)
   { id: 'raum-umsehen', go: async (p, settle) => { await go('#doorTrack', 0)(p); await p.evaluate(() => { if (window.__door) { window.__door.inside(); window.__door.go(0); } }); /* inside(): der Film davor schließt die Tür (erster Besuch) */ await settle(2600); await p.evaluate(() => window.__door && window.__door.go(1)); }, k: 0, wait: 100, jump: 8 }, // eine Drehung (2 s): Dinge ziehen seitlich vorbei (gewollt)
   { id: 'tuer-hindurch', go: async (p, settle) => { await p.evaluate(() => window.__door && window.__door.reset()); await go('#doorTrack', 0)(p); await settle(4500); await p.evaluate(() => window.__door && window.__door.open()); }, k: 0, wait: 100, jump: 8 }, // Tür antippen: der Rahmen zieht am Bild vorbei (gewollt) // ganzer Weg durch die Tür in einem Wisch: der Rahmen zieht am Bild vorbei (gewollt)
 ];
