@@ -4,6 +4,10 @@ Stand: 25.11.2026 · Arbeitsstand ist **Puls · Scan** (`test-4-puls-scan.html`,
 Neueste Entscheidung oben. Überholte ganze Abschnitte (Figur plus, Tür-Entwurf A/C, Willkommenszeile, Porträt-Entwürfe, Zuhause, Hausbesuch, alte Offen-Listen) liegen in `archiv/ENTSCHEIDUNGEN-ueberholt.md`.
 **Achtung bei Abschnitten vor dem 22.11.:** Dort stehen gültige Merkregeln neben Überholtem. Überholt sind insbesondere: Tür C und Tür-Bühne „Hineingehen“ (ersetzt durch den Raum, 23.11.), „Figur plus“ und die gezeichnete Figur (ersetzt durch die echte Figur, 23.11.), „Grün nur im Logo“ (seit 22.11. auch Raumfarbe), „kein Rot an der Manuthera“ (seit 23.11. Verlauf Bernstein → Rot-Orange), Logo nach dem Original / groß am Start (Logo A bleibt), Partikel-Haus, Röntgenblick, Ego-Rundgang, Kapitel 05 „Licht“. Was `CLAUDE.md` sagt, hat Vorrang.
 
+## 26.11.2026, 21:45 Uhr – Gehirn: Material und Verhalten statt Farbe (Kai)
+- Kai: Neon ist die beste Richtung, packt aber nicht. Sein Art-Director-Prompt als Methode: zwei fachfremde Welten, drei Eigenheiten, Funktion bleibt. **Merkregel:** „Packt mich nicht“ heißt: es fehlt Material (wie verhält sich das Licht auf der Fläche?) und Verhalten (was antwortet auf mich?). Farbe allein löst das nicht.
+- Gebaut als Schalter: Tiefsee (`?hirn=5`), Kintsugi (`?hirn=6`); Nordlicht im Glas nur als Konzept. Bewegung bleibt sparsam: eine Lichtwelle je Halt, sonst Ruhe.
+
 ## 26.11.2026, 21 Uhr – Gehirn: Art vor Helligkeit (Kai)
 - Kai gefiel keine der Fassungen A, B, C. **Merkregel:** Varianten zum Vergleichen müssen sich in der Art unterscheiden (was leuchtet, welche Farbwelt), nicht nur in Stufen derselben Idee. Vor dem Bauen nach einem Vorbild fragen – Kais Film vom 17.11. zeigte die Richtung sofort.
 - Vier Richtungen als Schalter (`?hirn=1…4`): Neon-Scan, Gold + Violett, warm glühend, fast echt. Standard bleibt A, bis Kai wählt.
