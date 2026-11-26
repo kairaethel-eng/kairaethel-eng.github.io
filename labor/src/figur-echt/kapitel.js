@@ -130,7 +130,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     inner: START === 'e' || START === 'f' || START === 'i' ? 1 : 0, half: START === 'f' ? 1 : 0, cycle: START === 'g', lens: INNEN ? 1 : 0, lift: INNEN ? 78 : 0 };
   // Stil des Gehirns (Kai 26.11.2026: „kräftiger, klarer, auffallender“): A hell auf dunkel ist Standard; ?hirn=alt|b|c zum Vergleich
   const HSTIL = HIRN ? ({ alt: 0, a: 1, b: 2, c: 3, 1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9 }[Q.get('hirn')] ?? 1) : 0, RAUM_H = [1, 0.38, 0.5, 0.38, 0.2, 0.08, 0.85, 0.5, 0.1, 0.06][HSTIL];
-  let welT0 = -99, welCur = -1; // Lichtwelle (Stil 8, 9): läuft einmal, wenn ein Areal aktiv wird // RAUM_H: so viel Raumlicht bleibt im Gehirn-Blick
+  let welT0 = -99, welCur = -1; const KERN = +Q.get('kern') || 0.8; // Lichtwelle (Stil 8, 9): läuft einmal, wenn ein Areal aktiv wird // RAUM_H: so viel Raumlicht bleibt im Gehirn-Blick
   let raumWar = 1;
   const raum = (k) => { k = Math.round(k * 50) / 50; if (k === raumWar) return; raumWar = k; if (k >= 1) document.documentElement.style.removeProperty('--fx-hirn'); else document.documentElement.style.setProperty('--fx-hirn', String(k)); };
   // C: weicher Lichtschein um das Gehirn – ein Ring in Gehirngröße über der Zeichenfläche (hellt nur auf), nur im Gehirn-Blick eingeschaltet
@@ -662,7 +662,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       if (cur !== welCur) { welCur = cur; if (cur >= 0) welT0 = S.time + 0.35; }
       if (mixK > 0) st.draw({ ...common, welle: sl || paused ? 99 : S.time - welT0, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC, quiet: VAR.quiet, light: VAR.light, ground: VAR.ground, scanIn: VAR.scanIn, half: VAR.half, lens: VAR.lens, dense: VAR.dense, glass: VAR.glass, shell: VAR.shell,
         inner: VAR.cycle ? (sl ? 0.6 : (() => { const ph = (S.time % 11) / 11; return smooth(0.18, 0.4, ph) - smooth(0.68, 0.9, ph); })()) : VAR.zoomIn ? smooth(1.12, 1.6, v.s / V.A.s) * (1 - fahrt) : VAR.inner,
-        ...(HIRN && HB && cur >= 0 ? { solid: 1, hstil: HSTIL, ns: nsK, areaI: cur, lobe: HB.ar[cur].lobe, area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt), txt: SATZ.n ? Math.min(1, S.txt / SATZ_FLUG) : 0 } : HIRN && HB ? { solid: 1, hstil: HSTIL, ns: nsK, area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt), txt: SATZ.n ? Math.min(1, S.txt / SATZ_FLUG) : 0 } : {}) });
+        ...(HIRN && HB && cur >= 0 ? { solid: 1, hstil: HSTIL, kern: KERN, ns: nsK, areaI: cur, lobe: HB.ar[cur].lobe, area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt), txt: SATZ.n ? Math.min(1, S.txt / SATZ_FLUG) : 0 } : HIRN && HB ? { solid: 1, hstil: HSTIL, kern: KERN, ns: nsK, area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt), txt: SATZ.n ? Math.min(1, S.txt / SATZ_FLUG) : 0 } : {}) });
       if (stOld && mixK < 1) stOld.draw({ ...common, intro: 1 });
       relaxDirty = false;
     }
