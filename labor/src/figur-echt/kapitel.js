@@ -36,6 +36,7 @@ import { finePoints } from '../feinschliff/figur.js';
 import { glContext, createStage as fineStage } from '../feinschliff/gl.js';
 import { echtPoints } from './figur.js';
 import { createStage, glContextTiefe } from './gl.js';
+import { startWahl } from './daten.js';
 
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
@@ -93,7 +94,7 @@ let U_END = KEYS[KEYS.length - 1][0];
 // old = { points, stage } (nur die Studienseite: Figur plus für den Umschalter „bisher“; Puls gibt nichts mit → kein Umschalter),
 // handover = true (Puls): am Schluss ziehen sich Gehirn und Nerven zurück, die Figur steht wieder als ruhiges Raster da und
 // wird an Form 0 der Hauptbühne übergeben (cloud() liefert dafür dieselben Punkte).
-export function initKopfFuss({ root, isPaused = () => false, reduced = false, data = null, stufe = null, handover = false, scrollTo = (y, smoothly) => window.scrollTo({ top: y, behavior: smoothly ? 'smooth' : 'auto' }) }) {
+export function initKopfFuss({ root, isPaused = () => false, reduced = false, data = null, stufe = null, handover = false, start = '', scrollTo = (y, smoothly) => window.scrollTo({ top: y, behavior: smoothly ? 'smooth' : 'auto' }) }) {
   const $ = (s, r = root) => r.querySelector(s);
   const $$ = (s, r = root) => [...r.querySelectorAll(s)];
   const finePointer = matchMedia('(pointer: fine)').matches;
@@ -111,7 +112,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // 25.11. morgens (Kai: „C wegen Drehung gut … innere Strukturen zu wenig sichtbar, am Handy liegt der Finger auf der Lupe“):
   // e Glaskörper (Innenleben dauerhaft) · f halb Haut, halb Innenleben · g Haut und Innenleben im ruhigen Wechsel – alle auf Basis von C,
   // Lupe auch hier, am Handy steht sie über dem Finger
-  const START = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm'].includes(Q.get('start')) ? Q.get('start') : '';
+  const START = startWahl(start); // Hauptseite seit 26.11.2026: M ohne Schalter (Kai), ?start=a zeigt die Figur bis dahin
   const INNEN = 'efgijklm'.includes(START) && START !== '';
   // k (Kai 25.11. 11:21, mit Film eines Punkte-Gehirns): Start wie J; beim ersten Scrollen fährt der Blick ins Gehirn, die vier Texte
   // gehören dort zu vier Arealen (das Gehirn dreht sich von einem zum nächsten) – keine Fahrt den Körper hinunter
@@ -131,7 +132,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   if (Q.has('start')) { // Umschalter für den Vergleich: bleibt unten im Bild, solange man mit ?start= auf der Seite ist
     const nav = document.createElement('nav'); nav.setAttribute('aria-label', 'Startfigur vergleichen');
     nav.style.cssText = 'position:fixed;z-index:60;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + .75rem);transform:translateX(-50%);display:flex;gap:.25rem;padding:.25rem;border-radius:2rem;background:rgba(10,22,27,.92);border:1px solid rgba(255,255,255,.18);font:600 .8125rem/1 system-ui,sans-serif;max-width:calc(100vw - 1rem);overflow-x:auto;scrollbar-width:none';
-    const NAMEN = { a: 'heute', b: 'ruhig', c: 'Boden, gedreht', d: 'Auftritt', e: 'Glaskörper', f: 'halb und halb', g: 'im Wechsel', h: 'feines Relief', i: 'Relief + innen', j: 'Relief, Röntgen nah', k: 'ins Gehirn', l: 'Muskelfigur', m: 'Muskeln + Gehirn' };
+    const NAMEN = { a: 'bis 26.11.', b: 'ruhig', c: 'Boden, gedreht', d: 'Auftritt', e: 'Glaskörper', f: 'halb und halb', g: 'im Wechsel', h: 'feines Relief', i: 'Relief + innen', j: 'Relief, Röntgen nah', k: 'ins Gehirn', l: 'Muskelfigur', m: 'Muskeln + Gehirn' };
     [['a', 'A'], ['b', 'B'], ['c', 'C'], ['d', 'D'], ['e', 'E'], ['f', 'F'], ['g', 'G'], ['h', 'H'], ['i', 'I'], ['j', 'J'], ['k', 'K'], ['l', 'L'], ['m', 'M']].forEach(([k, t]) => { const l = document.createElement('a'); l.href = `?start=${k}`; const on = (START || 'a') === k; l.textContent = on ? `${t} ${NAMEN[k]}` : t; l.style.cssText = `padding:.625rem .44rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
     document.body.appendChild(nav);
     nav.scrollLeft = nav.scrollWidth; // die neuesten Fassungen stehen rechts
@@ -745,6 +746,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     state: () => ({ stil: mode, mix: +mixK.toFixed(2), kino: +kinoK.toFixed(2), echt, buildMs, sp: +SP.toFixed(2), ptr: +PT.k.toFixed(2), u: +S.u.toFixed(3), us: +S.us.toFixed(3), tip: +S.tip.toFixed(1), cur: S.cur, idle: +S.idle.toFixed(1), act: S.act.map((x) => +x.toFixed(2)), auto: S.auto.map((x) => +x.toFixed(2)), sol: S.sol.map((x) => +x.toFixed(2)), rest: S.rest.map((x) => +x.toFixed(2)), done: S.done.slice(), gl: !!st, n: pts.count, still: still(), handK: +hk.toFixed(2), txt: +S.txt.toFixed(2), satz: SATZ.n, view: S.view && { s: +S.view.s.toFixed(2), ax: Math.round(S.view.ax), ay: Math.round(S.view.ay) } }),
     go: (u) => scrollTo(trackTop() + u * H, false),
     ring: (i) => ringPx[i].map((x) => Math.round(x)),
+    plan: () => ({ hirn: HIRN, arr: ARR.slice(), leave: LEAVE.slice(), end: U_END }), // für den Prüfstand: Halte je Fassung
     relax: () => relaxCv.toDataURL(), // Zeichenfläche „Entspannung“ als Bild (Prüfen)
     // Übergabe an Puls
     fitE: () => (V.E ? { ...V.E, ay: V.E.ay + stageTop, W, H } : null), // Schlussbild; wandert mit, wenn die Bühne am Ende wegscrollt

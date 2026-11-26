@@ -2511,7 +2511,7 @@ function tick() {
 // eigene Bühne (Baustein), läuft vor tick im selben Bildtakt; Sprünge (Striche rechts, Pille „Weiter“) gleiten über Lenis
 // Stufe 1 der echten Figur; die Daten lädt der Baustein nur mit WebGL (Funktion statt Promise); bis sie da sind, bleibt die Bühne leer
 const figurHeute = new URLSearchParams(location.search).get('figur') === 'heute';
-kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced, handover: true, stufe: 'echt', data: figurHeute ? null : () => loadEcht(),
+kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced, handover: true, stufe: 'echt', start: 'm', data: figurHeute ? null : () => loadEcht('m'),
   scrollTo: (y, sm) => (lenis ? lenis.scrollTo(y, sm ? { duration: 1.6 } : { immediate: true }) : window.scrollTo({ top: y, behavior: sm ? 'smooth' : 'auto' })) });
 window.__kf = kf; // Prüfhilfe: __kf.state(), __kf.go(u)
 // Form 0 der Hauptwolke = dieselben Punkte wie die Figur in Kapitel 01 (Übergabe deckungsgleich, gleicher Punktabstand) –

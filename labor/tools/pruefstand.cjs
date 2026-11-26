@@ -37,15 +37,20 @@ const KNOWN = ['.statement']; // bewusst so gestaltet: Manifest leuchtet Wort f�
 // ---------- Zustände und Wisch-Tests ----------
 const go = (sel, off = 0) => (p) => p.evaluate(([s, o]) => { const y = s === 'top' ? 0 : document.querySelector(s).getBoundingClientRect().top + scrollY + innerHeight * o; scrollTo(0, y); }, [sel, off]);
 const kf = (u) => (p) => p.evaluate((x) => window.__kf && window.__kf.go(x), u);
+// Halt i der Startfigur (seit 26.11.2026 ist M Standard: andere Halte als bis dahin) – Mitte zwischen Ankunft und Abfahrt laut __kf.plan();
+// alt = Stelle der Figur bis 26.11. (ohne plan); hirn = Stelle nur für M/K (Fahrt am Rückenmark R1/R2, Schlussbild mit Leitsatz)
+const kfHalt = (i, alt) => (p) => p.evaluate(([i, alt]) => { const k = window.__kf; if (!k) return; const P = k.plan && k.plan(); k.go(P ? (P.arr[i] + P.leave[i]) / 2 : alt); }, [i, alt]);
+const kfAuf = (i, d, alt) => (p) => p.evaluate(([i, d, alt]) => { const k = window.__kf; if (!k) return; const P = k.plan && k.plan(); k.go(P ? P.arr[i] + d : alt); }, [i, d, alt]);
 const stop = (i) => async (p, settle) => { await go('#achse', 0.3)(p); await settle(5000); await p.evaluate((k) => { const s = document.querySelectorAll('.scan-stop'); if (s[k]) s[k].click(); }, i); };
 const STOPS = ['C1', 'C5', 'Th1', 'Th7', 'L4', 'S1'];
 const STATES = [
   { id: 'start', go: go('top') },
   // Kapitel 01: Hauptgrafik ist die Stelle im Ring (ring = Station, Lage aus __kf.ring) – der Körper darunter liegt am Handy bewusst
   // unter dem Textverlauf und zählt nicht
-  { id: 'kf-01-ankunft', go: kf(0.55), key: 1, ring: 0, wait: 700 }, // kurz nach dem Wisch: Fahrt läuft noch
-  { id: 'kf-01', go: kf(0.76), key: 1, ring: 0 }, { id: 'kf-02', go: kf(1.7), key: 1, ring: 1 }, { id: 'kf-03', go: kf(2.7), key: 1, ring: 2 }, { id: 'kf-04', go: kf(3.7), key: 1, ring: 3 },
-  { id: 'kf-schluss', go: kf(4.5) },
+  { id: 'kf-01-ankunft', go: kfAuf(0, 0, 0.55), key: 1, ring: 0, wait: 700 }, // kurz nach dem Wisch: Fahrt läuft noch
+  { id: 'kf-01', go: kfHalt(0, 0.76), key: 1, ring: 0 }, { id: 'kf-02', go: kfHalt(1, 1.7), key: 1, ring: 1 }, { id: 'kf-03', go: kfHalt(2, 2.7), key: 1, ring: 2 }, { id: 'kf-04', go: kfHalt(3, 3.7), key: 1, ring: 3 },
+  { id: 'kf-rueckenmark', go: kf(3.55) }, // M: Fahrt am Rückenmark im Profil (Figur bis 26.11.: zwischen Halt 4 und Schluss)
+  { id: 'kf-schluss', go: kf(4.5), wait: 5500 }, // M: Leitsatz steht (Satz-Flug läuft über die Zeit)
   { id: 'auftakt-02', go: go('.auftakt-blk[data-for="bewegung"]', -0.3) }, // Kapitel-Auftakt (18.11.): große Ziffer, dahinter der Formwechsel
   { id: 'bewegung', go: go('#bewegung', 0) }, { id: 'hausordnung', go: go('#hausordnung', 0.1) },
   { id: 'auftakt-03', go: go('.auftakt-blk[data-for="achse"]', -0.3) },

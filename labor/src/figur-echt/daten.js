@@ -26,8 +26,15 @@ export function decode(gz) {
 // Fassungen K und M (?start=k|m): das feine Gehirn liegt in einer eigenen Datei (hirn-echt.bin, „Brain for Blender“ von Anderson M. Winkler,
 // brainder.org, CC BY-SA 3.0 – verändert) und wird nur dort geladen; seine Teile (Art brain2) kommen zu den übrigen dazu.
 const get = (f) => fetch(HOP_ASSETS + f).then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }).then(decode);
-export const loadEcht = () => {
-  const hirn = ['k', 'm'].includes(new URLSearchParams(location.search).get('start'));
+// Welche Startfigur? ?start=b…m wählt eine Fassung, ?start=a (oder ?figur=heute) die Figur bis 26.11.; ohne Schalter gilt std
+// (Hauptseite seit 26.11.2026: 'm' – Kai: „auf die Website kommt M definitiv“; Entwurfsseite figur-echt.html: wie bisher)
+export const startWahl = (std = '') => {
+  const q = new URLSearchParams(location.search), s = q.get('start');
+  if (q.has('start')) return ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm'].includes(s) ? s : '';
+  return q.get('figur') === 'heute' ? '' : std;
+};
+export const loadEcht = (std = '') => {
+  const hirn = ['k', 'm'].includes(startWahl(std));
   return Promise.all([get('figur-echt.bin'), hirn ? get('hirn-echt.bin').catch(() => null) : null])
     .then(([d, h]) => { if (h) d.parts.push(...h.parts); return d; });
 };
