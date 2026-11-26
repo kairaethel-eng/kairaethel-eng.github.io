@@ -285,7 +285,7 @@ void main(){
     float fill = max(0., dot(nv, normalize(vec3(.6, .25, .76)))) * hasN;
     float sp2 = pow(max(0., dot(nv, Hh)), 30.) * hasN * cav;
     float lit = ((.3 + .52 * key + .26 * fill + .22 * rim) * mix(.04, 1., cav) + .28 * back * ao) * fog * (1. - .5 * inn);
-    float L1 = clamp(.36 + .74 * (key + .4 * fill) * cav, 0., 1.);
+    float L1 = clamp(.36 + .74 * (key + .4 * fill) * cav, 0., 1.), gI = 0., sG = 0., sM = 0.;
     vec3 tint = mix(mix(cBone, cWarm, .3), lc, mix(.8, 1., on));
     vec3 ch = mix(mix(cDeep * 1.1, lc * .45, .55), tint, L1) + mix(cRim, lc, .6) * back * .4 + vec3(1., .97, .9) * sp2 * .5;
     ch = mix(ch, mix(lc, vec3(1., .97, .9), .45), on * .3 * cav);
@@ -299,7 +299,29 @@ void main(){
       // B: Lappenfarben heller und satter, kühle Lichtkante am Rand
       vec3 lB = min(vec3(1.), mix(lc, vec3(1.), .1) * 1.2);
       vec3 cB = mix(mix(cDeep * .9, lB * .4, .55), mix(vec3(1., .98, .94), lB, mix(.78, .96, on)), LA) + mix(cRim, lB, .5) * back * .5 + vec3(.72, .88, 1.) * pow(rim, 1.8) * .34 + vec3(1., .97, .9) * sp2 * .7;
-      ch = mix(ch, cA, sA); ch = mix(ch, cB, sB); }
+      ch = mix(ch, cA, sA); ch = mix(ch, cB, sB);
+      // Zweite Runde (Kai 26.11., 20:55: „keines geht in die Richtung“, dazu sein Film vom 17.11.: Gehirn aus Lichtpunkten in Gold und
+      // Violett auf fast schwarzem Grund): 4 Neon-Scan · 5 Gold und Violett wie im Film · 6 warm glühend · 7 fast echt.
+      // 4, 5 „Lichtpunkte“: die Flächen bleiben dunkel, es leuchten der Rand jeder Windung (rim), die Flanke der Furchen (band) und der Glanz
+      float s4 = step(3.5, uHStil) * (1. - step(4.5, uHStil)), s5 = step(4.5, uHStil) * (1. - step(5.5, uHStil)), s6 = step(5.5, uHStil) * (1. - step(6.5, uHStil)), s7 = step(6.5, uHStil);
+      float band = smoothstep(.14, .4, ao) * (1. - smoothstep(.48, .8, ao)), rimK = pow(rim, .9);
+      float gG = clamp((band * mix(.75, .4, s5) + rimK * 1.1 + mix(.14, .34, s5) * Lk * cav + sp2 * .7) * fog * (1. - .25 * isSt) * (1. - .5 * inn), 0., 1.);
+      gI = mix(gG, clamp(gG + (.14 + .26 * Lk) * cav, 0., 1.), on);
+      vec3 cN = mix(mix(vec3(.02, .28, .85), vec3(.15, .9, 1.), smoothstep(.05, .6, gI)), vec3(.82, 1., 1.), smoothstep(.78, 1., gI));
+      cN = mix(cN, mix(mix(vec3(.85, .3, .02), vec3(1., .62, .12), smoothstep(.1, .7, gI)), vec3(1., .86, .5), smoothstep(.82, 1., gI)), on);
+      vec3 cF = mix(mix(vec3(.5, .34, 1.), vec3(1., .78, .22), smoothstep(.16, .62, rimK)), vec3(1.), max(smoothstep(.82, 1., gI) * .55, min(1., sp2 * 1.5)));
+      cF = mix(cF, mix(vec3(1., .74, .2), vec3(1., .95, .8), smoothstep(.5, 1., Lk)), on);
+      // 6 warm glühend: Kupfer bis Gold, kühle Gegenlichtkante; aktives Areal weißglühend
+      vec3 tW = mix(mix(vec3(.42, .11, .02), vec3(.96, .42, .08), smoothstep(0., .55, Lk)), vec3(1., .74, .3), smoothstep(.55, 1., Lk));
+      tW = mix(tW, mix(vec3(1., .82, .45), vec3(1., .97, .85), smoothstep(.3, .95, Lk)), on);
+      vec3 cW = mix(vec3(.2, .05, .01), tW, LA) + vec3(.35, .65, 1.) * back * .4 * (1. - on) + vec3(1., .9, .7) * sp2 * .6;
+      // 7 fast echt: warmes Elfenbein mit Rosé in den Schatten, weiches Licht, feuchter Glanz; aktives Areal Bernstein
+      vec3 tE = mix(mix(vec3(.52, .24, .24), vec3(.93, .68, .62), smoothstep(0., .55, Lk)), vec3(1., .88, .82), smoothstep(.55, 1., Lk));
+      tE = mix(tE, mix(vec3(.76, .74, .7), vec3(.96, .93, .86), Lk), isSt);
+      tE = mix(tE, mix(vec3(.96, .56, .14), vec3(1., .84, .5), Lk), on * .72);
+      vec3 cE = mix(vec3(.24, .08, .09), tE, clamp(.55 + .6 * Lk * cav, 0., 1.)) + vec3(.6, .75, 1.) * back * .2 + vec3(1.) * sp2 * 1.1;
+      float mk = 1. - isSt * uNs; // auf der Fahrt am Rückenmark trägt das Mark das Bild: dort wieder hell wie bisher
+      ch = mix(ch, cN, s4 * mk); ch = mix(ch, cF, s5 * mk); ch = mix(ch, cW, s6); ch = mix(ch, cE, s7); sG = (s4 + s5) * mk; sM = s6 + s7; }
     { // Impulse (nur im Blick „Nervensystem“ – im Gehirn-Blick bleibt alles ruhig): Licht läuft das Rückenmark hinunter (warm) und leiser
       // wieder hinauf (kühl), im selben Takt wie auf den Nerven – dort tritt es an jeder Wurzel aus und kommt dort wieder an
       float wC = (uMarkY - aPos.y) * 1.03, kC = uPulse * uNs * isSt;
@@ -309,7 +331,8 @@ void main(){
       ch *= 1. - .18 * kC + .9 * sO + .6 * sI; }
     col = mix(col, ch, hk);
     a = mix(a, min(1., a * (1. + ar * 2.2) + ar * .3), isBrain * (1. - hv));
-    a = mix(a, min(1., (lit * (1. + .36 * sA + .28 * sB) + sp2 * mix(.3, .6, sC)) * mix(1., mix(.7, .9, sA + sB), uAreaK * (1. - on) * (1. - isSt)) * (1. + on * .22) * (1. + .45 * klein)) * rev * uNerve, hk); // aktiver Lappen: über die Farbe heller, nicht über die Deckkraft (sonst geht die Form verloren)
+    a = mix(a, min(1., (lit * (1. + .36 * sA + .28 * sB + .38 * sM) + sp2 * mix(.3, .6, sC)) * mix(1., mix(.7, .9, sA + sB + sM), uAreaK * (1. - on) * (1. - isSt)) * (1. + on * .22) * (1. + .45 * klein)) * rev * uNerve, hk);
+    a = mix(a, min(1., (gI * 1.2 + .04) * (1. + .45 * klein)) * rev * uNerve, hk * sG); // Lichtpunkte: die Helligkeit trägt die Zeichnung // aktiver Lappen: über die Farbe heller, nicht über die Deckkraft (sonst geht die Form verloren)
     { float as = smoothstep(.1, 1., hv); a *= mix(1., .12 + .88 * as * as, isBrain * kK); } // im Staub leise, sonst weißer Fleck
     ar = mix(ar, on * .5, hv); }
   d = mix(d, (.34 + .08*im) * (1. + ar * .3) * mix(1., .78, step(.001, uArea.w)), isBrain);

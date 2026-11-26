@@ -4,6 +4,10 @@ Stand: 25.11.2026 · Arbeitsstand ist **Puls · Scan** (`test-4-puls-scan.html`,
 Neueste Entscheidung oben. Überholte ganze Abschnitte (Figur plus, Tür-Entwurf A/C, Willkommenszeile, Porträt-Entwürfe, Zuhause, Hausbesuch, alte Offen-Listen) liegen in `archiv/ENTSCHEIDUNGEN-ueberholt.md`.
 **Achtung bei Abschnitten vor dem 22.11.:** Dort stehen gültige Merkregeln neben Überholtem. Überholt sind insbesondere: Tür C und Tür-Bühne „Hineingehen“ (ersetzt durch den Raum, 23.11.), „Figur plus“ und die gezeichnete Figur (ersetzt durch die echte Figur, 23.11.), „Grün nur im Logo“ (seit 22.11. auch Raumfarbe), „kein Rot an der Manuthera“ (seit 23.11. Verlauf Bernstein → Rot-Orange), Logo nach dem Original / groß am Start (Logo A bleibt), Partikel-Haus, Röntgenblick, Ego-Rundgang, Kapitel 05 „Licht“. Was `CLAUDE.md` sagt, hat Vorrang.
 
+## 26.11.2026, 21 Uhr – Gehirn: Art vor Helligkeit (Kai)
+- Kai gefiel keine der Fassungen A, B, C. **Merkregel:** Varianten zum Vergleichen müssen sich in der Art unterscheiden (was leuchtet, welche Farbwelt), nicht nur in Stufen derselben Idee. Vor dem Bauen nach einem Vorbild fragen – Kais Film vom 17.11. zeigte die Richtung sofort.
+- Vier Richtungen als Schalter (`?hirn=1…4`): Neon-Scan, Gold + Violett, warm glühend, fast echt. Standard bleibt A, bis Kai wählt.
+
 ## 26.11.2026 abends – Gehirn hell auf dunkel (Kai)
 - Kai: Gehirn „kräftiger, klarer, auffallender“, das Blau geht im blauen Hintergrund unter. Go für die Empfehlung: Stil A (Eisblau bis Knochenweiß, aktives Areal Bernstein, Grund dunkler). B und C bleiben als Schalter, „danach sehen wir weiter“.
 - **Merkregel:** Eine Grafik in der Farbe ihres Raumlichts geht unter. Die Hauptgrafik braucht Abstand zum Grund über Helligkeit, nicht über den Farbton. Wo sie das Bild trägt, darf das Raumlicht zurücktreten (`--fx-hirn`).

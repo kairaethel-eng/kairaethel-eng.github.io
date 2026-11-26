@@ -50,6 +50,13 @@ Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abs
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
 
+## ▶ 26.11.2026, 21 Uhr – Gehirn, zweite Runde: vier wirklich verschiedene Richtungen (`?hirn=1|2|3|4`)
+- **Kai (20:55):** „Leider geht keines in die Richtung, die mir gefällt“ – fragt nach weiteren Ideen; (20:57) „Los geht's“ auf den Vorschlag „alle drei zum Vergleichen“; dazu „Vielleicht auch ganz andere Farben mal probieren?!“ und sein Film vom 17.11. (Seite „Nously“: Gehirn aus Lichtpunkten, Gold am Rand, Violett dazwischen, weiße Lichter, fast schwarzer Grund).
+- **Befund:** A, B, C waren dasselbe matte, schattierte Punkt-Gehirn in drei Helligkeiten. Der Film zeigt die andere Art: dunkle Flächen, leuchtende Ränder, satte Farbe.
+- **Gebaut (`uHStil` 4–7, Umschalter unten, Standard bleibt A bis Kai wählt):** **1 Neon-Scan** – Flächen dunkel, es leuchten Rand und Furchenflanke jeder Windung in Cyan, aktives Areal Bernstein, Grund fast schwarz, feiner Cyan-Schein. **2 Gold + Violett** (nach dem Film) – Rand Gold, Flächen Violett, Glanz weiß, aktives Areal Gold, Grund schwarz. **3 Warm glühend** – Kupfer bis Gold, kühle Gegenlichtkante, das blaue Raumlicht bleibt (warm gegen kalt), aktives Areal hellgold. **4 Fast echt** – Elfenbein mit Rosé in den Schatten, feuchter Glanz, aktives Areal Bernstein. Auf der Fahrt am Rückenmark wird das Mark in 1 und 2 wieder hell wie bisher.
+- **Geprüft:** Standbilder Handy (drei Areale, Anflug, Fahrt) und PC (1, 2); keine Skriptfehler (Standard, `?hirn=1…4`, `alt`, `?start=a`, ohne Grafikchip); `sizes.cjs` „alles ok“. Kein Prüfstand je Stil (Vergleichsfassungen) – der gewählte Stil bekommt den vollen Lauf.
+- **Nicht geprüft:** Wirkung am iPhone [O] – Kai. Violett ist keine HOP-Farbe: falls 2 gewinnt, Farbregel in `CLAUDE.md` mit Kai klären (oder die Art von 2 in HOP-Farben). Rückweg: Commit davor.
+
 ## ▶ 26.11.2026 abends – Gehirn „hell auf dunkel“ (Stil A Standard, `?hirn=alt|b|c` zum Vergleich)
 - **Kai (20:06, zwei iPhone-Bilder):** „Gefällt mir bis jetzt alles sehr gut … langsam die finale Richtung.“ Das Gehirn „kräftiger, klarer, auffallender“ – „vor allem das Blaue, mit blauem Hintergrund“ geht unter. Auf den Vorschlag A/B/C (20:10): „go empfehlung danach sehen wir weiter“.
 - **Befund:** Lappenfarben mittelblau auf blauem Raumlicht (die Lichtschicht `html::before` liegt mit „screen“ auch über dem Gehirn und hellt den Grund auf rund 30/60/100 auf); am zweiten Halt war sogar das aktive Areal blau. Inaktive Lappen standen bei 70 % Deckkraft.
