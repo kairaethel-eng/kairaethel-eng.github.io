@@ -128,6 +128,19 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // h (Kai: „auch das Äußere dürfte anatomischer sein“): feines Raster schon in der Übersicht + kräftiges Licht von vorn links (Relief)
   const VAR = { quiet: START ? 1 : 0, light: 'hijklm'.includes(START) && START ? 0.9 : START ? 0.5 : 0, dense: 'hijklm'.includes(START) && START ? 1 : 0, glass: START === 'i' ? 0.62 : START === 'j' ? 0.82 : START === 'l' || START === 'm' ? 0.7 : 0.9, zoomIn: 'jklm'.includes(START) && START !== '', shell: START === 'l' || START === 'm' ? 1 : 0, ground: START && START !== 'b' ? 1 : 0, turn: START && START !== 'b' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0,
     inner: START === 'e' || START === 'f' || START === 'i' ? 1 : 0, half: START === 'f' ? 1 : 0, cycle: START === 'g', lens: INNEN ? 1 : 0, lift: INNEN ? 78 : 0 };
+  // Stil des Gehirns (Kai 26.11.2026: „kräftiger, klarer, auffallender“): A hell auf dunkel ist Standard; ?hirn=alt|b|c zum Vergleich
+  const HSTIL = HIRN ? ({ alt: 0, a: 1, b: 2, c: 3 }[Q.get('hirn')] ?? 1) : 0, RAUM_H = [1, 0.38, 0.5, 0.38][HSTIL]; // RAUM_H: so viel Raumlicht bleibt im Gehirn-Blick
+  let raumWar = 1;
+  const raum = (k) => { k = Math.round(k * 50) / 50; if (k === raumWar) return; raumWar = k; if (k >= 1) document.documentElement.style.removeProperty('--fx-hirn'); else document.documentElement.style.setProperty('--fx-hirn', String(k)); };
+  // C: weicher Lichtschein um das Gehirn – ein Ring in Gehirngröße über der Zeichenfläche (hellt nur auf), nur im Gehirn-Blick eingeschaltet
+  const schein = HSTIL === 3 ? document.createElement('div') : null; let scheinAn = false;
+  if (schein) { schein.setAttribute('aria-hidden', 'true'); schein.style.cssText = 'position:absolute;left:0;top:0;z-index:0;display:none;pointer-events:none;border-radius:50%;mix-blend-mode:screen;background:radial-gradient(closest-side,rgba(120,180,240,0) 40%,rgba(120,180,240,.1) 55%,rgba(120,180,240,.17) 66%,rgba(120,180,240,.1) 78%,rgba(120,180,240,.03) 90%,rgba(120,180,240,0))'; canvas.after(schein); }
+  if (Q.has('hirn') && HIRN) { // Umschalter Gehirn-Stil: nur solange ?hirn= in der Adresse steht
+    const nav = document.createElement('nav'); nav.setAttribute('aria-label', 'Gehirn vergleichen');
+    nav.style.cssText = 'position:fixed;z-index:60;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + .75rem);transform:translateX(-50%);display:flex;gap:.25rem;padding:.25rem;border-radius:2rem;background:rgba(10,22,27,.92);border:1px solid rgba(255,255,255,.18);font:600 .8125rem/1 system-ui,sans-serif;max-width:calc(100vw - 1rem);overflow-x:auto;scrollbar-width:none';
+    [['alt', 'Bisher'], ['a', 'A hell'], ['b', 'B Farbe'], ['c', 'C Glanz']].forEach(([k, t], i) => { const l = document.createElement('a'); const q = new URLSearchParams(location.search); q.set('hirn', k); l.href = '?' + q.toString(); const on = HSTIL === i; l.textContent = t; l.style.cssText = `padding:.625rem .7rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
+    document.body.appendChild(nav);
+  }
   if (START) document.documentElement.dataset.start = START;
   if (Q.has('start')) { // Umschalter für den Vergleich: bleibt unten im Bild, solange man mit ?start= auf der Seite ist
     const nav = document.createElement('nav'); nav.setAttribute('aria-label', 'Startfigur vergleichen');
@@ -559,7 +572,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const r = root.getBoundingClientRect();
     stageTop = r.top > 0 ? r.top : Math.min(0, r.bottom - (H || innerHeight)); // Lage der klebenden Bühne (für die Übergabe an Puls)
     if (r.bottom < -50 || r.top > innerHeight + 50) { // Bühne nicht im Bild: ruht
-      hand.classList.remove('on');
+      hand.classList.remove('on'); raum(1); if (scheinAn) { schein.style.display = 'none'; scheinAn = false; }
       // liegt die Bühne über dem Fenster, ist sie fertig übergeben (18.11.: seit dem Kapitel-Auftakt grenzt Kapitel 02 nicht mehr
       // direkt an – nach einem Sprung blieb hk sonst bei 0 stehen und die Punktwolke der Seite unsichtbar)
       if (r.bottom < -50) { hk = 1; S.u = S.us = U_LEN; S.txt = S.txtWant = 1; S.weg = 1; }
@@ -611,10 +624,18 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       if (was !== S.txt) dirty = true;
     }
     const nsK = HIRN && HB ? smooth(LEAVE[3] + 0.02, LEAVE[3] + 0.2, u) : 0; // Schlussbild „Nervensystem“
+    // Gehirn-Blick (A–C): das Raumlicht tritt zurück, damit das Gehirn hell auf dunklem Grund steht; auf der Fahrt hinunter kommt es wieder
+    if (HSTIL) raum(HB && gl ? 1 - (1 - RAUM_H) * smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt) * (1 - hk) : 1);
     // Wiegen + Atem (wie Puls), gleiche Werte für Partikel und SVG
     const sway = (sl ? 0 : Math.sin(S.time * 0.25) * (HIRN ? 0.07 + 0.11 * smooth(1.6, 3, v.s / V.A.s) : 0.12)) + (HIRN && HB ? (v.yaw || 0) : VAR.turn * (1 - smooth(0.02, 0.5, u))); S.sway = sway; // ?start=c|d: am Start leicht gedreht, dreht sich mit dem ersten Scrollen nach vorn
     const br = Math.sin(S.breath) * (1 + S.calm * 1.3), kx = 1 + br * 0.007, ky = 1 + br * 0.004, cx = kx * Math.cos(sway);
     const M = [v.s * cx, v.s * ky, v.ax - (BODY_W / 2 * cx + v.fx) * v.s, v.ay - (BODY_H / 2 * ky - v.fy) * v.s]; // Grundriss → Bildschirm
+    if (schein) { // Lage wie die Ringe der Areale: Mitte des Gehirns, Größe aus seiner Ausdehnung
+      const k = HB && gl ? smooth(2.2, 3, v.s / V.A.s) * (1 - fahrt) : 0;
+      if (k > 0.01) { const cw = Math.cos(sway), sw = Math.sin(sway), c = HB.c, h = HB.h, x = v.ax + (cw * c[0] + sw * c[2] - v.fx) * v.s, y = v.ay - (c[1] - c[2] * TILT - v.fy) * v.s, rx = Math.max(h[0], h[2]) * v.s * 2, ry = h[1] * v.s * 2.2;
+        const s = schein.style; s.width = `${fmt(rx * 2)}px`; s.height = `${fmt(ry * 2)}px`; s.transform = `translate(${fmt(x - rx)}px,${fmt(y - ry)}px)`; s.opacity = fmt(k); if (!scheinAn) { s.display = 'block'; scheinAn = true; }
+      } else if (scheinAn) { schein.style.display = 'none'; scheinAn = false; }
+    }
     const toS = (bx, by) => [M[0] * bx + M[2], M[1] * by + M[3]];
     // Partikel
     // Umschalter: die echte Figur liegt oben und blendet über „heute“ (beide deckend → echtes Überblenden); Stufe 1 ↔ 1+2 im Shader
@@ -639,7 +660,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       const common = { W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
       if (mixK > 0) st.draw({ ...common, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC, quiet: VAR.quiet, light: VAR.light, ground: VAR.ground, scanIn: VAR.scanIn, half: VAR.half, lens: VAR.lens, dense: VAR.dense, glass: VAR.glass, shell: VAR.shell,
         inner: VAR.cycle ? (sl ? 0.6 : (() => { const ph = (S.time % 11) / 11; return smooth(0.18, 0.4, ph) - smooth(0.68, 0.9, ph); })()) : VAR.zoomIn ? smooth(1.12, 1.6, v.s / V.A.s) * (1 - fahrt) : VAR.inner,
-        ...(HIRN && HB && cur >= 0 ? { solid: 1, ns: nsK, areaI: cur, lobe: HB.ar[cur].lobe, area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt), txt: SATZ.n ? Math.min(1, S.txt / SATZ_FLUG) : 0 } : HIRN && HB ? { solid: 1, ns: nsK, area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt), txt: SATZ.n ? Math.min(1, S.txt / SATZ_FLUG) : 0 } : {}) });
+        ...(HIRN && HB && cur >= 0 ? { solid: 1, hstil: HSTIL, ns: nsK, areaI: cur, lobe: HB.ar[cur].lobe, area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt), txt: SATZ.n ? Math.min(1, S.txt / SATZ_FLUG) : 0 } : HIRN && HB ? { solid: 1, hstil: HSTIL, ns: nsK, area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt), txt: SATZ.n ? Math.min(1, S.txt / SATZ_FLUG) : 0 } : {}) });
       if (stOld && mixK < 1) stOld.draw({ ...common, intro: 1 });
       relaxDirty = false;
     }
