@@ -2,7 +2,7 @@
 // Braucht einen Server: cd labor && python3 -m http.server 8765   · andere Seite: URL=http://127.0.0.1:8765/live/index.html
 // node gaps.cjs <d|m|xl> <out> [shots=1]
 const { chromium } = require('playwright');
-const BLOCKS = ['#start', '#bewegung', '#hausordnung', '#achse', '#dach', '.roof-list', '#manuthera', '#stosswelle', '#tuer', 'footer.foot'];
+const BLOCKS = ['#start', '#bewegung', '#dach', '.roof-list', '#manuthera', '#stosswelle', '#achse', '#hausordnung', '#ueber', '#tuer', 'footer.foot']; // Seitenfolge seit 26.11.2026
 (async () => {
   const [,, mode = 'd', out = '/tmp', shots = '1'] = process.argv;
   const b = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });

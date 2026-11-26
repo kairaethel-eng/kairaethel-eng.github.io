@@ -29,6 +29,9 @@ em{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--amber)
 .wrap{width:100%;max-width:90rem;margin:0 auto;padding-left:max(var(--gut),5vw);padding-right:max(var(--gut-r),5vw)}
 .kicker{display:flex;align-items:baseline;gap:.75rem;font:600 .75rem/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:1.625rem}
 .kicker .ks{white-space:nowrap}
+/* 26.11.2026 (Kai: Physiotherapie nach vorn): Klartext im ersten Bild – Ort und Versicherung; bricht am Handy sauber um */
+.kf-hero .kicker{flex-wrap:wrap;row-gap:.5rem}
+.kf-hero .kicker .ks-kasse::before{content:"·";margin-right:.75rem;color:var(--amber)}
 .kicker i{font:italic 400 1.25rem/1 var(--serif);letter-spacing:0;text-transform:none;color:var(--amber)}
 .lead{font-size:clamp(1.0625rem,1.35vw,1.25rem);color:var(--dim);max-width:44ch}
 .small{font-size:.875rem;color:var(--mute);max-width:52ch}
@@ -108,11 +111,12 @@ html.paused #t-title em{animation:none} /* „Bewegung anhalten“: Überschrift
 .ix-name.wave .lt{animation:wave .7s ease-out calc(var(--i) * 22ms)}
 @keyframes wave{0%,100%{transform:none;color:inherit}35%{transform:translateY(-.16em);color:var(--amber)}}
 /* dunkler Lichthof hinter Text: bleibt über den Partikeln lesbar */
-.manifest .wrap,.axis-head,.roof-head,.index,.laws,.door-inner{text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
+.manifest .wrap,.ueber-sec .wrap,.axis-head,.roof-head,.index,.laws,.door-inner{text-shadow:0 1px 2px rgba(10,22,27,.7),0 0 1.375rem rgba(10,22,27,.9)}
 .btn{text-shadow:none}
 .chapter{position:relative;min-height:100svh}
 /* Abstände zwischen Kapiteln (18.11.2026, Kai: „Abstände zu neuen Kapiteln sehr genau ansehen“): EIN Maß vor jedem nummerierten Kapitel
-   (--gap-chap, gemessen vom letzten Inhalt bis zur Kennzeile) und ein kleineres vor den Blöcken innerhalb von Kapitel 04 (--gap-sub).
+   (--gap-chap, gemessen vom letzten Inhalt bis zur Kennzeile) und ein kleineres vor den Blöcken innerhalb eines Kapitels (--gap-sub;
+   seit 26.11. Kapitel 02 „Haus“: Dach, Leistungen, Manuthera, Stoßwelle · Kapitel 04 „Haltung“: Über mich).
    Vorher lagen die Abstände am PC zwischen 135 und 365 px, am Handy zwischen 55 und 580 px. */
 :root{--gap-chap:clamp(11rem,27vh,16rem);--gap-sub:clamp(7rem,17vh,10.5rem)}
 @media (max-width:920px){:root{--gap-chap:9rem;--gap-sub:6.5rem}}
@@ -178,7 +182,7 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 .note{grid-column:1;grid-row:4;font-size:.75rem;color:var(--mute);margin-top:1rem;max-width:60ch}
 
 /* Dach / Index */
-.roof{padding-block:calc(var(--gap-chap) - 1.75rem) 0} /* 1,75rem = Fuß der Wirbelsäulen-Bühne unter dem Hinweis */
+.roof{padding-block:var(--gap-sub) 0} /* seit 26.11. zweiter Block von Kapitel 02 „Haus“ (nach dem Satz; vorher eigenes Kapitel 04 nach der Wirbelsäule) */
 .roof-head{margin-bottom:3.125rem}
 .index{list-style:none;margin:0;padding:0;max-width:min(53.75rem,54vw);border-top:1px solid var(--line);counter-reset:ix}
 .index li{border-bottom:1px solid var(--line)}
@@ -210,7 +214,7 @@ html.paused .fein{opacity:1;transform:none;transition:none}
   html.js .roof-grid .cards{order:4;margin-top:1.125rem}
   html.js .roof-grid .tour-ctrl{order:5;margin-top:1.5rem}
 }
-@media (max-width:920px){.roof{padding-top:calc(var(--gap-chap) - 1rem)}}
+@media (max-width:920px){.roof{padding-top:var(--gap-sub)}}
 
 @media (min-width:921px){
 }
@@ -245,7 +249,11 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 
 /* Hausordnung */
 .rules{height:auto;min-height:0} /* Kai 7.11.: kein Scrollweg mehr, die Paragraphen wechseln von selbst (main.js LAW) */
-.rules-sticky{position:relative;padding-block:var(--gap-chap) calc(var(--gap-chap) - 6.5rem)} /* 6,5rem = Kopf der Wirbelsäulen-Bühne über „03 Achse“ */
+.rules-sticky{position:relative;padding-block:var(--gap-chap) 0} /* seit 26.11. eröffnet die Hausordnung Kapitel 04 „Haltung“; danach folgt „Über mich“ (#ueber) */
+html.auftakt .rules-sticky{padding-top:clamp(3rem,8vh,5rem)}
+/* Über mich (26.11.: aus Kapitel 02 hierher, nach der Hausordnung) */
+.ueber-sec{position:relative;padding-top:var(--gap-sub)}
+.ueber-sec .sign{margin-top:0}
 .laws{list-style:none;margin:0;padding:0;position:relative;min-height:46vh}
 .laws li{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;opacity:0;transform:translateY(2.5rem);filter:blur(.625rem);transition:opacity .7s var(--ease),transform .9s var(--ease),filter .7s}
 .laws li.is-on{opacity:1;transform:none;filter:none}
@@ -279,7 +287,6 @@ html.paused .fein{opacity:1;transform:none;transition:none}
 .auftakt-blk.in .au-no,.auftakt-blk.in .au-txt{opacity:1;transform:none}
 .auftakt-blk.in .au-line{transform:none}
 html.auftakt .manifest{padding-block:clamp(3rem,8vh,5rem) 0}
-html.auftakt .roof{padding-top:clamp(4rem,10vh,6.5rem)}
 html.auftakt .door{padding-top:0}
 html.auftakt .manifest .wrap>.kicker,html.auftakt .axis-head .kicker,html.auftakt .roof-head .kicker,html.auftakt .door-top .kicker{display:none}
 /* 19.11.: bis 380 px Breite kleiner – „04 Dach / Praxis & Leistungen“ war bei 320 px 45 px breiter als das Fenster (die ganze Seite wurde dadurch verkleinert dargestellt) */
@@ -452,7 +459,7 @@ html:not(.js) button.ix-link{display:none}
   .serv-stage{order:2;align-self:stretch;position:sticky;top:calc(env(safe-area-inset-top,0px) + 4.25rem);z-index:3;height:30svh;margin:0 calc(-1 * max(var(--gut),5vw)) .5rem;background:linear-gradient(var(--ink) 90%,rgba(10,22,27,0))}
   .serv-name{bottom:12%;font-size:1.0625rem} /* im deckenden Teil des Verlaufs, sonst liegt der Name über den Leistungsnamen */
   .door{padding-top:var(--gap-chap)} /* 19.11.: keine eigene dunkle Fläche mehr – die Tür-Bühne steht hinter dem Text, die Punktwolke ist hier ausgeblendet */
-  .rules-sticky{padding-block:var(--gap-chap) calc(var(--gap-chap) - 6rem)}
+  .rules-sticky{padding-block:var(--gap-chap) 0} /* 26.11.: danach „Über mich“ statt der Wirbelsäulen-Bühne */
   .rules .kicker{margin-bottom:14rem} /* 18.11.: Platz für die HOP-Kreise UNTER „§ Die Hausordnung“ (vorher 19rem über dem Kicker) – Überschrift oben, Animation darunter */
   .law-prog{margin-top:1.5rem;max-width:16rem}
   .laws{min-height:40svh}
