@@ -15,7 +15,7 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 
 **Claude wartet auf Go**
 - Entwurf „Weltklasse-Prüfung“ (Branch `claude/project-thread-6psvm8`, PR) wartet auf Kais Durchsicht und Go zum Veröffentlichen von `labor/` – Abschnitt ▶ 24.11. unten. Mit dem Nerven-Fix neu ansehen: „Rückenmark schimmert am iPhone durch den Knochen“ (Frage vom 14.11.).
-- **Gehirn-Stil:** Entwurf „Aquarell“ (`?hirn=8`, Abschnitt ▶ 27.11., 3:15 Uhr) nach Kais Praxisbildern wartet auf seinen Blick am Gerät. Vorher zwölf Anläufe abgelehnt (auch Laterne `?hirn=7`; Schichtbild und Faserhirn ungesehen) – ohne Vorbild von Kai nicht weiter raten. Standard bleibt Stil A.
+- **Gehirn-Stil:** Kai 27.11., 04:07 zum Aquarell (`?hirn=8`): „Richtung besser, zu ungenau“ → Entwurf „Pigment fein“ (`?hirn=9`, Abschnitt ▶ 27.11., 4:30 Uhr) wartet auf seinen Blick; fünf Farb-Ideen liegen bei ihm zur Wahl. Vorher zwölf Anläufe abgelehnt (auch Laterne `?hirn=7`; Schichtbild und Faserhirn ungesehen) – ohne Vorbild von Kai nicht weiter raten. Standard bleibt Stil A.
 - Runde vom 25.11. nachts (Logo, Schild, Tür über das Dach, Etikett) wartet auf Kais Durchsicht. **Startfigur:** Weg M ist seit 26.11. Standard (Abschnitt ▶ 26.11.). Offen: Kais Blick am Gerät (Tempo, Flüssigkeit, Satz-Flug, Impulse, iPhone mit 220 000 Punkten), seine „kleinen Verbesserungen“, seine Entscheidung zur Fassung „Lichtimpuls schreibt den Satz“; Aufräumen der Fassungen A–L samt Umschalter nur mit eigenem Go; vor dem Livegang die Lizenz der Gehirn-Rinde klären (CC BY-SA 3.0) oder ersetzen.
 - Runde 2 der Weltklasse-Prüfung (Branch/PR, Abschnitt ▶ 24.11. nachts) wartet auf Kais Durchsicht: gedämpftes Licht hinter der Figur, hellere Kleintexte, neue Leistungs-Etiketten, Block „Ihr erster Besuch“.
 - Offen aus der Liste vom 24.11.: Bedien-Grammatik (Entscheidung Kai), Aufräumen/WebGL-Kontexte freigeben (ohne Grafikchip nicht prüfbar – mit Kais Messanzeige `?takt=1`), Standbilder neu rendern, Unterseiten und Ladegewicht nach dem Livegang.
@@ -50,6 +50,13 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abschnitt vor dem 22.11. meinen, zeigen jetzt ins Archiv.
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
+
+## ▶ 27.11.2026, 4:30 Uhr – „Pigment fein“ (`?hirn=9`): Aquarell-Farben als feine Partikel
+- **Auftrag (Kai, 04:07, mit Bildschirmfoto vom iPhone):** zum Aquarell „die Richtung finde ich besser. Mir ist es irgendwie zu ungenau. Würde das in Partikeln gehen? Gerne feiner Partikelstil. Vielleicht auch ein kombinierter Stil“; dazu Frage 2: welche Möglichkeiten es noch gibt, mit diesen Farben zu spielen.
+- **Ursache „ungenau“:** Im Aquarell überlappen die Farbtupfer (1,26 × Raster, ohne Rand) – in der Nähe verschwimmen Windungen zu Flecken.
+- **Gebaut (nur hinter `?hirn=9`, Standard bleibt A):** dieselben Pigmente als einzelne feine Punkte, am Handy feineres Raster (0,29 statt 0,33, rund 257 000 statt 225 000 Punkte). Zeichnung genau nach den Windungen: Furche Tusche, Flanke sattes dunkles Pigment, Kuppe helles Pigment, Scheitel im Licht Papierweiß. Spritzer kleiner. `?korn=` stellt das Raster um.
+- **Geprüft:** Bilder Handy und PC (Halt 1, 3, Fahrt, Schlussbild), keine Skriptfehler (`?hirn=9|8|7|5`, `?start=a|k`, ohne Grafikchip), `sizes` „alles ok“; Stil A und 8 im Bild unverändert. **[O] Kai am Gerät:** Flüssigkeit am iPhone mit mehr Punkten (`?takt=1`), Farbwirkung.
+- **Ideen an Kai geschickt (nicht gebaut):** Farbe mit Bedeutung je Hirnlappen · Farbe läuft beim Ankommen wie ein Tropfen aus · Farben durch die ganze Seite (Linien Kap. 02, Wirbelsäule Kap. 03) · Muskelfigur im selben Stil · Farbspritzer als Kapitel-Übergang. **Rückweg:** Commit davor („Gehirn als Aquarell“).
 
 ## ▶ 27.11.2026, 3:15 Uhr – Gehirn als „Aquarell“ (`?hirn=8`), nach Kais Praxisbildern
 - **Auftrag (Kai, 02:50, mit Foto):** „In meiner Praxis hängen schon diese Bilder, kannst du daraus was für unser Gehirn zaubern?“ – drei Anatomie-Drucke (Kopf, Rücken, Brustkorb): Tuschezeichnung mit Aquarell in Gelb, Orange, Karmin, Magenta, Türkis, Grün, weißes Papier, Farbspritzer. Erstes echtes Vorbild nach zwölf abgelehnten Anläufen.

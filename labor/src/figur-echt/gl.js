@@ -402,9 +402,19 @@ void main(){
         float ink = (1. - smoothstep(.15, .42, ao)) * (1. - klein * .7);
         cQ = mix(cQ, vec3(.05, .02, .05), ink * .94);
         cQ += vec3(1., .98, .94) * sp2 * .35;
+        // 12 „Pigment fein“ (Kai 27.11., 04:07 zum Aquarell: „Richtung besser … zu ungenau. Würde das in Partikeln gehen? Gerne feiner
+        // Partikelstil“): dieselben Pigmente, aber als feine, einzelne Punkte – die Zeichnung folgt genau den Windungen: Furche Tusche,
+        // Flanke sattes dunkles Pigment, Kuppe helles Pigment, nur auf dem Scheitel der Kuppe im Licht Papierweiß.
+        float sF = step(11.5, uHStil);
+        { float hl = .78 * smoothstep(.5, 1., Lk) * smoothstep(.62, .92, ao) * (1. - isSt);
+          vec3 cF = mix(pg * .52, mix(min(vec3(1.), pg * 1.3), vec3(1., .98, .94), hl), smoothstep(.14, .46, ao));
+          cF *= mix(.84, 1., smoothstep(0., .45, Lk)) * mix(.85, 1., fog) * mix(1., .84, uAreaK * (1. - on) * (1. - isSt));
+          cF = mix(cF, mix(pg, vec3(1., .98, .94), .2 + .5 * hl) * 1.1, on * smoothstep(.3, .7, ao));
+          cF = mix(cF, vec3(.05, .02, .05), (1. - smoothstep(.07, .2, ao)) * (1. - klein * .7) * .92);
+          cQ = mix(cQ, cF + vec3(1., .98, .94) * sp2 * .3, sF); }
         cQ = mix(cQ, pg * 1.04, aqS);                                                            // Spritzer: reines Pigment
-        ch = mix(ch, cQ, sQ); gI = mix(gI, .82, sQ); sG = mix(sG, 1., sQ); sM *= 1. - sQ; vCore = mix(vCore, 1.6, hk * sQ); // Kern über den Punkt hinaus: flache, deckende Farbtupfer ohne dunklen Rand
-        szL = mix(szL, mix(1.26, .9 + 3.6 * aRand.y * aRand.y * aRand.y, aqS), sQ); } }
+        ch = mix(ch, cQ, sQ); gI = mix(gI, .82, sQ); sG = mix(sG, 1., sQ); sM *= 1. - sQ; vCore = mix(vCore, mix(1.6, 1.22, sF), hk * sQ); // Aquarell: Kern über den Punkt hinaus – flache, deckende Farbtupfer ohne dunklen Rand; fein: einzelne Punkte
+        szL = mix(szL, mix(mix(1.26, 1., sF), mix(.9 + 3.6 * aRand.y * aRand.y * aRand.y, .8 + 2.2 * aRand.y * aRand.y * aRand.y, sF), aqS), sQ); } }
     { // Impulse (nur im Blick „Nervensystem“ – im Gehirn-Blick bleibt alles ruhig): Licht läuft das Rückenmark hinunter (warm) und leiser
       // wieder hinauf (kühl), im selben Takt wie auf den Nerven – dort tritt es an jeder Wurzel aus und kommt dort wieder an
       float wC = (uMarkY - aPos.y) * 1.03, kC = uPulse * uNs * isSt * (1. - step(9.5, uHStil) * (1. - step(10.5, uHStil)));
