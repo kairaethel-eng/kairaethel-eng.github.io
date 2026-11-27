@@ -345,7 +345,7 @@ void main(){
       c8 = mix(c8, mix(mix(vec3(.62, .12, .0), vec3(1., .58, .1), smoothstep(.2, .7, gE)), vec3(1., .94, .68), smoothstep(.72, .96, gE)), on);
       g8 = mix(g8, gE, on);
       // Rückenmark auf der Fahrt: ein leuchtender Strang im selben Licht – Körper halbhell, beide Kanten als helle Linie
-      { float gC = clamp(.2 + .34 * Lk + rl * .62 + sp2 * .5, 0., 1.);
+      { float gC = clamp(.3 + .4 * Lk + rl * .6 + sp2 * .5, 0., 1.);
         c8 = mix(c8, mix(mix(vec3(.02, .16, .4), ir, smoothstep(.08, .6, gC)), vec3(.92, 1., 1.), smoothstep(.78, 1., gC) * .85), mN);
         g8 = mix(g8, gC, mN); }
       float vein = smoothstep(.07, .24, ao) * mix(1. - smoothstep(.32, .56, ao), 1. - smoothstep(.55, .9, ao), on), sheen = pow(max(0., dot(nv, Hh)), 6.) * cav * hasN * (1. - .7 * on);
@@ -383,12 +383,24 @@ void main(){
   vec3 cn = mix(cLine, cWarm, clamp(front2*.8 + pulse, 0., 1.));
   cn = mix(cn, vec3(1., .92, .72), min(1., sigO)); cn = mix(cn, vec3(.72, .9, 1.), min(1., sigI * 1.4));
   cn *= 1. - .22 * nsk + 1. * sigO + .7 * sigI;
+  // Tiefsee (Stil 8, Kai 27.11.2026: „die fortlaufenden Nerven sollten auch in diesem Stil sein“): die Nerven leuchten im selben Licht wie
+  // das Gehirn – am Rückenmark Cyan, nach außen über Grün zu Violett; kräftige Stämme mit hellem Kern, feine Äste in reiner Farbe.
+  // Der Impuls hinaus bleibt warm (Bernstein = Nerven, Handlung), der zurück ist weiß.
+  float tsN = step(7.5, uHStil) * (1. - step(8.5, uHStil)) * kK;
+  { float farN = smoothstep(2., 46., length(vec2(aPos.x, (aPos.z + 9.) * .6))), tN = clamp(aN.z / 400. * .55 + .42 * farN, 0., 1.);
+    vec3 irN = mix(mix(vec3(.04, .7, 1.), vec3(.08, 1., .74), smoothstep(.12, .5, tN)), vec3(.56, .42, 1.), smoothstep(.56, .96, tN));
+    vec3 c8n = mix(irN, vec3(.94, 1., 1.), .12 + .5 * smoothstep(.3, .58, aN.w));
+    c8n = mix(c8n, vec3(1., .78, .36), min(1., sigO * 1.2)); c8n = mix(c8n, vec3(.95, 1., 1.), min(1., sigI * 1.4));
+    c8n *= 1. - .2 * nsk + 1. * sigO + .7 * sigI;
+    cn = mix(cn, c8n, tsN * smoothstep(0., .5, uNs)); }
   col = mix(col, cn, isNerve);
   // mit feinem Gehirn: die Nerven erscheinen zusammen mit Gehirn und Rückenmark und bleiben im Gehirn-Blick stehen (laufen unter dem Stamm weiter)
   a = mix(a, rev * (.6 + .2*aN.w) * (1. + pulse*.8*(1. - .7*hv) + front2*.5 + (sigO + sigI)*.7) * uNerve * (1. + lens*.5) * mix(1. - .97 * uHirn, smoothstep(.05, .8, hv), kK) * (1. + .5 * uNs), isNerve);
-  d = mix(d, (.34 + .1*aN.w) * (1. + pulse*.45*(1. - hv) + front2*.3 + sigO*.45 + sigI*.3) * mix(1., .8, uHirn * kK), isNerve); // im Gehirn-Blick feine Stränge
+  d = mix(d, mix(.34 + .1*aN.w, aN.w, kK) * (1. + pulse*.45*(1. - hv) + front2*.3 + sigO*.45 + sigI*.3) * mix(1., .8, uHirn * kK), isNerve); // im Gehirn-Blick feine Stränge
   // K, M im Profil: eine Bahn, die genau auf den Betrachter zuläuft (Ischias-Wurzel quer durchs Becken), stünde als heller Balken da –
   // ihre Perlen liegen dann alle hintereinander. Je steiler die Bahn zur Bildebene steht, desto leiser.
+  // K, M: Tiefe – was auf der abgewandten Körperseite liegt, tritt zurück (im Profil lägen sonst beide Seiten gleich hell übereinander)
+  a *= mix(1., mix(.4, 1., smoothstep(-22., 14., p.z)), isNerve * kK * uNs);
   { vec3 tn = aNrm * isNerve; float tz = -sw*tn.x + cw*tn.z + tn.y * uTilt;
     a *= mix(1., mix(.22, 1., smoothstep(.15, .62, sqrt(max(0., 1. - tz*tz)))), step(.01, dot(tn, tn))); }
 

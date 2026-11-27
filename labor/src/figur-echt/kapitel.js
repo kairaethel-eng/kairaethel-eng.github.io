@@ -130,7 +130,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     inner: START === 'e' || START === 'f' || START === 'i' ? 1 : 0, half: START === 'f' ? 1 : 0, cycle: START === 'g', lens: INNEN ? 1 : 0, lift: INNEN ? 78 : 0 };
   // Stil des Gehirns (Kai 26.11.2026: „kräftiger, klarer, auffallender“): A hell auf dunkel ist Standard; ?hirn=alt|b|c zum Vergleich
   const HSTIL = HIRN ? ({ alt: 0, a: 1, b: 2, c: 3, 1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9 }[Q.get('hirn')] ?? 1) : 0, RAUM_H = [1, 0.38, 0.5, 0.38, 0.2, 0.08, 0.85, 0.5, 0.1, 0.06][HSTIL];
-  let welT0 = -99, welCur = -1; const KERN = +Q.get('kern') || 0.8; // Lichtwelle (Stil 8, 9): läuft einmal, wenn ein Areal aktiv wird // RAUM_H: so viel Raumlicht bleibt im Gehirn-Blick
+  let welT0 = -99, welCur = -1; const KERN = +Q.get('kern') || 1; // Lichtwelle (Stil 8, 9): läuft einmal, wenn ein Areal aktiv wird // RAUM_H: so viel Raumlicht bleibt im Gehirn-Blick
   let raumWar = 1;
   const raum = (k) => { k = Math.round(k * 50) / 50; if (k === raumWar) return; raumWar = k; if (k >= 1) document.documentElement.style.removeProperty('--fx-hirn'); else document.documentElement.style.setProperty('--fx-hirn', String(k)); };
   // C: weicher Lichtschein um das Gehirn – ein Ring in Gehirngröße über der Zeichenfläche (hellt nur auf), nur im Gehirn-Blick eingeschaltet

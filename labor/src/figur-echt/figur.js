@@ -108,16 +108,24 @@ function nerveList(list) {
 // desto weiter – höchstens rund 4 Einheiten). Äste setzen danach wieder genau auf ihrer Stammbahn an. Rückenmark und Endfaden bleiben
 // (sie geben den Wirbelkanal wieder). Die Standardseite nutzt die Bahnen unverändert.
 function glatt(list) {
-  const out = list.map((n) => ({ ...n }));
+  const out = list.map((n) => ({ ...n })), N = out.length;
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
-  out.forEach((n, i) => {
-    if (i < 2 || n.pts.length < 4) return;
+  const cum = (Q) => { const L = [0]; for (let k = 1; k < Q.length; k++) L.push(L[k - 1] + dist(Q[k], Q[k - 1])); return L; };
+  // nächster Punkt auf einer Bahn: Abstand d, Punkt c, Weg bis dorthin s
+  const nah = (P, L, q) => { let bd = 1e9, bc = P[0], bs = 0;
+    for (let k = 1; k < P.length; k++) { const ab = sub(P[k], P[k - 1]), t = clamp(dot(sub(q, P[k - 1]), ab) / Math.max(1e-9, dot(ab, ab))), c = [0, 1, 2].map((j) => P[k - 1][j] + ab[j] * t), d = dist(c, q); if (d < bd) { bd = d; bc = c; bs = L[k - 1] + (L[k] - L[k - 1]) * t; } }
+    return { d: bd, c: bc, s: bs }; };
+  // Stück einer Bahn zwischen zwei Wegmarken, Punkte im Abstand von rund 1
+  const stueck = (P, L, a, b) => { const R = [], n = Math.max(1, Math.round(Math.abs(b - a))); let j = 1;
+    for (let k = 0; k <= n; k++) { const w = a + (b - a) * k / n; while (j < L.length - 1 && L[j] < w) j++; const f = clamp((w - L[j - 1]) / Math.max(1e-9, L[j] - L[j - 1])); R.push([0, 1, 2].map((c) => P[j - 1][c] + (P[j][c] - P[j - 1][c]) * f)); }
+    return R; };
+  const norm = (d) => { const l = Math.hypot(d[0], d[1], d[2]) || 1; return d.map((v) => v / l); };
+  const dirA = (Q) => { const L = cum(Q); let k = 1; while (k < Q.length - 1 && L[k] < 4) k++; return norm(sub(Q[k], Q[0])); };               // Richtung am Anfang (über 4 Einheiten)
+  const dirE = (Q) => { const L = cum(Q), T = L[L.length - 1]; let k = Q.length - 2; while (k > 0 && T - L[k] < 4) k--; return norm(sub(Q[Q.length - 1], Q[k])); }; // … und am Ende
+  // 1 · jede Bahn für sich bereinigen (Rückenmark und Endfaden bleiben, sie geben den Wirbelkanal wieder)
+  const Qs = out.map((n, i) => {
     let Q = n.pts.map((q) => q.slice());
-    if (n.parent >= 0) { // Ansatz: nächster Punkt auf der (schon geglätteten) Stammbahn
-      const P = out[n.parent].pts; let best = null, bd = 1e9;
-      for (let k = 1; k < P.length; k++) { const ab = sub(P[k], P[k - 1]), t = Math.min(1, Math.max(0, dot(sub(Q[0], P[k - 1]), ab) / Math.max(1e-9, dot(ab, ab)))), c = [0, 1, 2].map((j) => P[k - 1][j] + ab[j] * t), d = dist(c, Q[0]); if (d < bd) { bd = d; best = c; } }
-      if (best && bd < 2) Q[0] = best; // weiter entfernt beginnt die Bahn frei (Lendenwurzeln unter dem Ende des Rückenmarks)
-    }
+    if (i < 2 || Q.length < 2) return Q;
     // Ischias: in den Daten hängt er am Ende des Endfadens und läuft von dort auf einer Höhe nach vorn und zur Seite (23 Einheiten) – im
     // Profil stand das als heller Balken quer im Becken. Seine Wurzeln (L4–S3) sammeln sich in Wirklichkeit schräg abwärts zur Hüfte:
     // der Ansatz rückt am Endfaden 20 Einheiten höher, der waagrechte Anlauf entfällt.
@@ -126,21 +134,80 @@ function glatt(list) {
       if (k > 3) Q = [a.slice(), ...Q.slice(k)]; }
     // Zwischenrippennerven: die Bahn läuft von der Wirbelsäule um den Brustkorb nach vorn. An den kurzen unteren Rippen kehrt sie in den
     // Daten um und läuft zurück zur Wirbelsäule – sie endet deshalb dort, wo sie am weitesten vorn ist (Winkel um die Körperachse).
-    if (/^Zwischenrippennerv/.test(n.name)) { let top = -9, at = 0; Q.forEach((q, k) => { const w = Math.atan2(q[2], Math.abs(q[0])); if (w > top) { top = w; at = k; } }); if (at > 2) Q = Q.slice(0, at + 1); }
+    if (/^Zwischenrippennerv/.test(n.name)) { let top = -9, at = 0; Q.forEach((q, k) => { const w = Math.atan2(q[2], Math.abs(q[0])); if (w > top) { top = w; at = k; } }); if (at > 2) Q = Q.slice(0, at + 1);
+      // … und sie holt an den unteren Rippen erst weit nach hinten aus (bis 7 Einheiten hinter ihren Ansatz) – im Profil standen dort
+      // Schleifen neben dem Rückenmark. Der Bogen nach hinten bleibt, aber flacher (40 %).
+      const z0 = Q[0][2]; for (const q of Q) if (q[2] < z0) q[2] = z0 - (z0 - q[2]) * 0.4; }
     // Haarnadel: kommt die Bahn nach einem langen Umweg wieder dicht an sich selbst vorbei (näher als 9 Einheiten, Umweg mehr als das
     // 2,5-Fache und über 20 Einheiten) und läuft danach noch weiter, entfällt der Umweg (Oberschenkelnerv an der Leiste)
-    { const La = [0]; for (let k = 1; k < Q.length; k++) La.push(La[k - 1] + dist(Q[k], Q[k - 1]));
-      let bi = -1, bj = -1, bw = 0;
+    { const La = cum(Q); let bi = -1, bj = -1, bw = 0;
       for (let a = 0; a < Q.length; a++) for (let b = a + 2; b < Q.length; b++) { const d = dist(Q[a], Q[b]), w = La[b] - La[a]; if (d < 9 && w > 20 && w > 2.5 * d && w > bw && La[La.length - 1] - La[b] > 10) { bw = w; bi = a; bj = b; } }
       if (bi >= 0) Q = [...Q.slice(0, bi + 1), ...Q.slice(bj)]; }
-    const L = [0]; for (let k = 1; k < Q.length; k++) L.push(L[k - 1] + dist(Q[k], Q[k - 1]));
-    const total = L[L.length - 1], m = Math.max(6, Math.round(total)), ds = total / m;
-    let R = [], j = 1;
-    for (let k = 0; k <= m; k++) { const s = total * k / m; while (j < L.length - 1 && L[j] < s) j++; const f = (s - L[j - 1]) / Math.max(1e-9, L[j] - L[j - 1]), A = Q[j - 1], B = Q[j]; R.push([0, 1, 2].map((c) => A[c] + (B[c] - A[c]) * f)); }
-    const sig = Math.min(4.2, Math.max(0.8, total * 0.07)), pass = Math.max(1, Math.round(2 * sig * sig / (ds * ds)));
-    for (let p = 0; p < pass; p++) { const T = R.map((q) => q.slice()); for (let k = 1; k < m; k++) for (let c = 0; c < 3; c++) R[k][c] = (T[k - 1][c] + 2 * T[k][c] + T[k + 1][c]) / 4; }
-    n.pts = R;
+    return Q;
   });
+  // 2 · Zusammenhang (Kai 27.11.2026: „die fortlaufenden Nerven … deutlich natürlicher“). In den Daten treffen sich Bahnen in einem Punkt
+  // und gehen dort im Knick auseinander (Armgeflecht: fünf Wurzeln auf einen Punkt, drei Nerven von dort – ein Stern aus geraden Strichen).
+  // Ein Nerv verzweigt sich aber wie ein Ast: er läuft ein Stück mit und löst sich dann im flachen Winkel. Dafür:
+  //   Kette  – endet eine Bahn dort, wo eine andere beginnt, werden beide EINE Kurve (Wurzel → Zwischenrippennerv, Armgeflecht → Armnerv → Finger)
+  //   Abgang – wer an einer Bahn ansetzt (att), bekommt deren letztes Stück als Anlauf und verlässt sie ohne Knick
+  //   Einmündung – wer an einer anderen Bahn endet (mrg), läuft in deren Richtung in sie ein
+  const next = new Array(N).fill(-1), prev = new Array(N).fill(-1), att = new Array(N).fill(-1), mrg = new Array(N).fill(-1), kand = out.map(() => []);
+  const ende = (j) => Qs[j][Qs[j].length - 1];
+  for (let i = 2; i < N; i++) { if (Qs[i].length < 2) continue;
+    const p = out[i].parent; let bj = -1, bd = 2.5;
+    if (p >= 2 && Qs[p].length >= 2 && dist(ende(p), Qs[i][0]) < 2.5) bj = p;
+    else for (let j = 2; j < N; j++) { if (j === i || Qs[j].length < 2) continue; const d = dist(ende(j), Qs[i][0]); if (d < bd) { bd = d; bj = j; } }
+    if (bj >= 0) kand[bj].push(i); else att[i] = /^Ischias/.test(out[i].name) ? 1 : p; }
+  kand.forEach((K, j) => { if (!K.length) return; const e = dirE(Qs[j]); let b = K[0], ba = -9;
+    for (const i of K) { const a = dot(e, dirA(Qs[i])); if (a > ba) { ba = a; b = i; } }
+    next[j] = b; prev[b] = j; for (const i of K) if (i !== b) att[i] = j; });
+  const ketten = [], kette = new Array(N).fill(-1);
+  for (let i = 2; i < N; i++) if (prev[i] < 0 && Qs[i].length >= 2) { const C = [i]; while (next[C[C.length - 1]] >= 0) C.push(next[C[C.length - 1]]); C.forEach((c) => { kette[c] = ketten.length; }); ketten.push(C); }
+  for (const C of ketten) { const t = C[C.length - 1], E = ende(t), e = dirE(Qs[t]); let bc = -1, ba = 0.2;
+    for (let c = 2; c < N; c++) { if (kette[c] < 0 || kette[c] === kette[t] || att[C[0]] === c || kette[att[c]] === kette[t]) continue;
+      const L = cum(Qs[c]), h = nah(Qs[c], L, E), T = L[L.length - 1]; if (h.d > 2 || T - h.s < 4) continue;
+      const a = dot(e, norm(sub(stueck(Qs[c], L, h.s, Math.min(T, h.s + 3)).pop(), h.c))); if (a > ba) { ba = a; bc = c; } }
+    mrg[t] = bc; }
+  // 3 · Ketten glätten: gleichmäßig neu abtasten (1 Einheit), mitteln (1-2-1, Enden stehen; je länger, desto weiter – höchstens rund
+  // 4 Einheiten), Anlauf und Auslauf dort abschneiden, wo die Kurve ihre Nachbarbahn verlässt bzw. erreicht. Dicke: jede Kette läuft
+  // von ihrer kräftigsten Stelle zur Spitze hin fein aus (dA, dB je Bahn = Durchmesser der Perlen am Anfang und am Ende).
+  const done = new Array(N).fill(false); done[0] = done[1] = true;
+  const TIP = 0.2;
+  const bearbeite = (C) => {
+    const core = [], marks = [];
+    C.forEach((i, m) => { const Q = Qs[i]; if (m) marks.push(core.length - 1); core.push(...(m && dist(Q[0], core[core.length - 1]) < 0.5 ? Q.slice(1) : Q)); });
+    const total = cum(core).pop(), lauf = clamp(total * 0.25, 3, 9), a = att[C[0]], m = mrg[C[C.length - 1]];
+    let pre = [], post = [], Pa = null, La = null, Pm = null, Lm = null, dick = 9, hm = null; const dA = 0.35;
+    if (a >= 0 && done[a] && out[a].pts.length > 1) { Pa = out[a].pts; La = cum(Pa); const h = nah(Pa, La, core[0]);
+      if (h.d < 2 && h.s > 1) { pre = stueck(Pa, La, Math.max(0, h.s - lauf), h.s);
+        if (out[a].dA) dick = Math.max(0.26, (out[a].dA + (out[a].dB - out[a].dA) * h.s / La[La.length - 1]) * 0.85);
+        // am Rückenmark liegt der Anlauf auf dessen Oberfläche (nicht in der Mitte) – die Wurzel schält sich sichtbar ab
+        if (a === 0) { const o = sub(core[0], h.c); pre = pre.map((q) => [q[0] + o[0], q[1] + o[1], q[2] + o[2]]); Pa = pre; La = cum(pre); }
+      } else Pa = null; }
+    if (m >= 0 && done[m] && out[m].pts.length > 1) { Pm = out[m].pts; Lm = cum(Pm); hm = nah(Pm, Lm, core[core.length - 1]); const T = Lm[Lm.length - 1];
+      if (hm.d < 4 && T - hm.s > 3) post = stueck(Pm, Lm, hm.s, Math.min(T, hm.s + lauf)); else Pm = null; }
+    const all = [...pre, ...core, ...post], L = cum(all), tot = L[L.length - 1], n = Math.max(6, Math.round(tot)), ds = tot / n;
+    const R = []; let j = 1;
+    for (let k = 0; k <= n; k++) { const w = tot * k / n; while (j < L.length - 1 && L[j] < w) j++; const f = (w - L[j - 1]) / Math.max(1e-9, L[j] - L[j - 1]), A = all[j - 1], B = all[j]; R.push([0, 1, 2].map((c) => A[c] + (B[c] - A[c]) * f)); }
+    const sig = Math.min(4.2, Math.max(1.6, total * 0.12)), pass = Math.max(1, Math.round(2 * sig * sig / (ds * ds)));
+    for (let p = 0; p < pass; p++) { const T = R.map((q) => q.slice()); for (let k = 1; k < n; k++) for (let c = 0; c < 3; c++) R[k][c] = (T[k - 1][c] + 2 * T[k][c] + T[k + 1][c]) / 4; }
+    let k0 = 0, k1 = n;
+    if (Pa) { while (k0 < n - 2 && nah(Pa, La, R[k0 + 1]).d < dA) k0++; if (a > 0) R[k0] = nah(Pa, La, R[k0]).c; }
+    if (Pm) { while (k1 > k0 + 2 && nah(Pm, Lm, R[k1 - 1]).d < 0.35) k1--; R[k1] = nah(Pm, Lm, R[k1]).c; }
+    if (k1 - k0 < C.length) { k0 = 0; k1 = n; }
+    const cut = [k0, ...marks.map((ix) => Math.round(L[pre.length + ix] / ds)), k1];
+    for (let q = 1; q < cut.length; q++) cut[q] = Math.min(Math.max(cut[q], cut[q - 1] + 1), k1 - (cut.length - 1 - q));
+    const dMax = Math.min(dick, clamp(Math.max(...C.map((i) => out[i].r)), 0.3, 0.62));
+    const dEnd = Pm && out[m].dA ? Math.min(dMax, Math.max(TIP, (out[m].dA + (out[m].dB - out[m].dA) * hm.s / Lm[Lm.length - 1]) * 0.8)) : TIP;
+    const D = (k) => dEnd + (dMax - dEnd) * Math.pow(1 - (k - k0) / Math.max(1, k1 - k0), 0.85);
+    C.forEach((i, q) => { out[i].pts = R.slice(cut[q], cut[q + 1] + 1); out[i].dA = D(cut[q]); out[i].dB = D(cut[q + 1]); done[i] = true; });
+  };
+  const rest = ketten.slice();
+  while (rest.length) {
+    let k = rest.findIndex((C) => { const a = att[C[0]], m = mrg[C[C.length - 1]]; return (a < 0 || done[a]) && (m < 0 || done[m]); });
+    if (k < 0) k = 0;
+    bearbeite(rest.splice(k, 1)[0]);
+  }
   return out;
 }
 // Bahn des Leuchtpunkts (SVG) im Grundriss: Mitte (Scheitel → Teilung), dann je Bein die Hauptbahn – y steigt überall
@@ -379,6 +446,18 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   const NS = 0.62, GAP = 0.52, n0 = St.length;
   for (const N of nerves) {
     if (VS && N === nerves[0]) continue; // Rückenmark steht als Körper (Schlauch) da
+    // K, M (27.11.2026): EIN Strang je Bahn, die Perlen liegen dicht an dicht (Abstand = 0,92 ihres Durchmessers) und werden zur Spitze
+    // hin kleiner – ein Nerv liest sich als feine, auslaufende Linie statt als Punktreihe. nfo.w trägt hier den Durchmesser der Perle.
+    if (hirn) { const dA = N.dA || clamp(N.r, 0.3, 0.62), dB = N.dB || dA; let j = 1;
+      for (let s = 0; s <= N.total + 1e-6;) {
+        while (j < N.len.length - 1 && N.len[j] < s) j++;
+        const A = N.pts[j - 1], B = N.pts[j], f = (s - N.len[j - 1]) / Math.max(1e-9, N.len[j] - N.len[j - 1]), D = dA + (dB - dA) * s / Math.max(1e-9, N.total);
+        const x = A[0] + (B[0] - A[0]) * f, y = A[1] + (B[1] - A[1]) * f, z = A[2] + (B[2] - A[2]) * f, [vx, vz] = versatz(y);
+        const tx = B[0] - A[0], ty = B[1] - A[1], tz = B[2] - A[2], t3 = N.main ? 0 : Math.hypot(tx, ty, tz) || 1; // die Richtung der Bahn fährt im Normalen-Feld mit (der Shader dimmt Bahnen, die auf den Betrachter zulaufen)
+        put(x + vx, y, z + vz, t3 ? tx / t3 : 0, t3 ? ty / t3 : 0, t3 ? tz / t3 : 0, 3, N.main ? BODY_H / 2 - y : N.ry0 + s * N.rate, N.d0 + s, D);
+        s += D * 0.92;
+      }
+      continue; }
     const K = Math.max(1, Math.round(2 * N.r / GAP));
     for (let k = 0; k < K; k++) {
       const o = (k - (K - 1) / 2) * GAP, n = Math.max(1, Math.round(N.total / NS)), d = N.total / n;

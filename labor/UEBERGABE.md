@@ -1,4 +1,4 @@
-# Übergabe – Stand 25.11.2026
+# Übergabe – Stand 27.11.2026
 
 Arbeitsstand ist **Puls · Scan** (`src/test-4` → `test-4-puls-scan.html`, „Stand jetzt“ = https://kairaethel-eng.github.io/labor/live/). Was heute gilt, steht in `CLAUDE.md` („Stand in Kürze“).
 Diese Datei: oben die Liste **Offen**, darunter die Runden seit 22.11.2026. Alles Ältere liegt in `archiv/UEBERGABE-bis-2026-11-21.md` – dort gezielt suchen, nicht ganz lesen.
@@ -49,6 +49,14 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abschnitt vor dem 22.11. meinen, zeigen jetzt ins Archiv.
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
+
+## ▶ 27.11.2026, 2 Uhr – Tiefsee geschärft, Nervenbahnen natürlicher (Kai: „schärfer und klarer“, „die fortlaufenden Nerven auch in diesem Stil … deutlich natürlicher“)
+- **Gehirn, Stil 8 Tiefsee (`?hirn=5`):** Flickenmuster raus – die Farbe läuft jetzt in einem ruhigen Verlauf über das Bild (oben links Cyan, Mitte Grün, unten rechts Violett), das Gehirn dreht sich hindurch. Licht kommt aus den Furchen (Flanke = helle Linie, bis Weiß), Kuppen dunkel mit einem Hauch Volumen. Aktive Stelle: dunkle Glut, Linien in Gold. Schleier über der aktiven Stelle (Leuchtpunkte, Lichthof) fast aus. Erster Versuch „Linien dünner, Punkte mit Lücke“ wurde am Handy matter statt schärfer – verworfen (Lehre in `ENTSCHEIDUNGEN.md`).
+- **Nervenbahnen (K, M – alle Stile, auch Standard A):** `figur.js` `glatt()` neu: Bahnen, die aneinander anschließen, sind EINE Kurve (Wurzel → Zwischenrippennerv, Armgeflecht → Armnerv → Finger); Abgänge lösen sich im flachen Winkel, Einmündungen laufen in Richtung der Zielbahn ein (kein Stern mehr am Armgeflecht); untere Zwischenrippennerven holen flacher nach hinten aus (40 %). Perlen: ein Strang je Bahn, dicht an dicht, zur Spitze kleiner (0,62 → 0,2). Tiefe: abgewandte Körperseite auf 40 %.
+- **Tiefsee auf der Fahrt:** Rückenmark als leuchtender Strang (Körper halbhell, Kanten hell), Nerven Cyan → Grün → Violett, kräftige Stämme mit hellem Kern; Impuls hinaus Bernstein, zurück weiß. Andere Stile behalten Knochenweiß/Bernstein.
+- **Geprüft:** Bilder Handy und PC (vier Areale, Fahrt, Leitsatz-Flug), keine Skriptfehler (Standard, `?hirn=5|6|alt`, `?start=a|k`, ohne Grafikchip), `sizes` alles ok. Punkte: Handy 225 364 (vorher 220 215), PC 402 138. Kurzer Prüfstand (Rückenmark, Schluss, Wisch): Ergebnis siehe unten in diesem Abschnitt bzw. Meldung an Kai. **Nicht prüfbar hier:** Bewegung, Tempo am iPhone → Kai.
+- **Offen:** voller Prüfstand erst, wenn Kai den Stil gewählt hat (Abendlauf). `tools/kopf-fuss-check.cjs` weiter auf altem Stand. Waagrechter Strang am Armgeflecht (Wurzel Th1) ist Datenlage, jetzt mit weichen Enden.
+- **Rückweg:** Commit 9a67d93 (Stand davor).
 
 ## ▶ 26.11.2026, 21:45 Uhr – Gehirn, dritte Runde: „Tiefsee“ und „Kintsugi“ (`?hirn=5|6`)
 - **Kai (21:16/21:22):** „Neon finde ich bis jetzt am besten. Packt mich aber irgendwie noch lange nicht.“ Dazu sein Art-Director-Prompt (zwei fachfremde Welten verschmelzen, drei visuelle Eigenheiten, drei radikal verschiedene Entwürfe, den stärksten direkt als Vorlage bauen; Funktion bleibt).
