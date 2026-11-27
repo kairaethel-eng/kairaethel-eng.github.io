@@ -15,7 +15,7 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 
 **Claude wartet auf Go**
 - Entwurf „Weltklasse-Prüfung“ (Branch `claude/project-thread-6psvm8`, PR) wartet auf Kais Durchsicht und Go zum Veröffentlichen von `labor/` – Abschnitt ▶ 24.11. unten. Mit dem Nerven-Fix neu ansehen: „Rückenmark schimmert am iPhone durch den Knochen“ (Frage vom 14.11.).
-- **Gehirn-Stil: Bauen pausiert.** Kai 27.11., 02:45 zur Laterne (`?hirn=7`): „Ne das ist es auch nicht“, 02:46: „Faser und Schicht ist es aber auch nicht“. Zwölf Anläufe abgelehnt → nicht weiter raten. Gefragt (Karte im Chat): Vorbild schicken · plastisches Objekt statt Punkte · Gehirn als Motiv passt nicht · Pause. Erst nach Kais Antwort weiterbauen; Standard bleibt Stil A.
+- **Gehirn-Stil:** Entwurf „Aquarell“ (`?hirn=8`, Abschnitt ▶ 27.11., 3:15 Uhr) nach Kais Praxisbildern wartet auf seinen Blick am Gerät. Vorher zwölf Anläufe abgelehnt (auch Laterne `?hirn=7`; Schichtbild und Faserhirn ungesehen) – ohne Vorbild von Kai nicht weiter raten. Standard bleibt Stil A.
 - Runde vom 25.11. nachts (Logo, Schild, Tür über das Dach, Etikett) wartet auf Kais Durchsicht. **Startfigur:** Weg M ist seit 26.11. Standard (Abschnitt ▶ 26.11.). Offen: Kais Blick am Gerät (Tempo, Flüssigkeit, Satz-Flug, Impulse, iPhone mit 220 000 Punkten), seine „kleinen Verbesserungen“, seine Entscheidung zur Fassung „Lichtimpuls schreibt den Satz“; Aufräumen der Fassungen A–L samt Umschalter nur mit eigenem Go; vor dem Livegang die Lizenz der Gehirn-Rinde klären (CC BY-SA 3.0) oder ersetzen.
 - Runde 2 der Weltklasse-Prüfung (Branch/PR, Abschnitt ▶ 24.11. nachts) wartet auf Kais Durchsicht: gedämpftes Licht hinter der Figur, hellere Kleintexte, neue Leistungs-Etiketten, Block „Ihr erster Besuch“.
 - Offen aus der Liste vom 24.11.: Bedien-Grammatik (Entscheidung Kai), Aufräumen/WebGL-Kontexte freigeben (ohne Grafikchip nicht prüfbar – mit Kais Messanzeige `?takt=1`), Standbilder neu rendern, Unterseiten und Ladegewicht nach dem Livegang.
@@ -50,6 +50,12 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abschnitt vor dem 22.11. meinen, zeigen jetzt ins Archiv.
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
+
+## ▶ 27.11.2026, 3:15 Uhr – Gehirn als „Aquarell“ (`?hirn=8`), nach Kais Praxisbildern
+- **Auftrag (Kai, 02:50, mit Foto):** „In meiner Praxis hängen schon diese Bilder, kannst du daraus was für unser Gehirn zaubern?“ – drei Anatomie-Drucke (Kopf, Rücken, Brustkorb): Tuschezeichnung mit Aquarell in Gelb, Orange, Karmin, Magenta, Türkis, Grün, weißes Papier, Farbspritzer. Erstes echtes Vorbild nach zwölf abgelehnten Anläufen.
+- **Gebaut (nur hinter `?hirn=8`, Standard bleibt A):** Gehirn deckend gemalt – große Farbflächen laufen ineinander (Feld am Gehirn, dreht sich mit), an den Kuppen im Licht bleibt das Papier weiß, Furchen als Tuschelinien, rund 200 Farbspritzer um die Form (feste Lage). Aktiver Bereich satter, der Rest tritt zurück. Rückenmark und Nerven tragen dieselben Pigmente der Reihe nach, Impulse weiß. Übernommen ist die Machart, kein Motiv der Drucke.
+- **Geprüft:** Bilder Handy und PC an Halt 1–4, Fahrt, Schlussbild; keine Skriptfehler (`?hirn=8|7|6|5|alt`, `?start=a|k`, ohne Grafikchip); `sizes` „alles ok“; Stile A, 6, 7 im Bild unverändert. **Nicht geprüft:** voller Prüfstand (Abendlauf nach Kais Stilwahl). **[O] Kai am Gerät:** Wirkung der Farben am iPhone, Übergänge.
+- **Offen zu besprechen, falls Kai den Stil wählt:** Die Regenbogen-Palette bricht die Regel „Punkte Petrol → Knochenweiß, Bernstein = Handlung“ – dann Regel anpassen und entscheiden, ob Muskelfigur und weitere Kapitel mitziehen. **Rückweg:** Commit 7baa4d6.
 
 ## ▶ 27.11.2026, 2:30 Uhr – Gehirn als „Laterne“ (`?hirn=7`), Entwurf hinter Schalter
 - **Auftrag (Kai, 02:08 und 02:21):** Tiefsee „ist es auch nicht“; drei ganz neue Vorschläge, kleiner Umbau erlaubt, Opus und Sonnet als Zweitmeinung. Danach: „Ich kann mir noch nichts vorstellen. Fang mal an, dann sehen wir weiter.“

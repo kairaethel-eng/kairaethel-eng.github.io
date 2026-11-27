@@ -4,6 +4,10 @@ Stand: 27.11.2026 · Arbeitsstand ist **Puls · Scan** (`test-4-puls-scan.html`,
 Neueste Entscheidung oben. Überholte ganze Abschnitte (Figur plus, Tür-Entwurf A/C, Willkommenszeile, Porträt-Entwürfe, Zuhause, Hausbesuch, alte Offen-Listen) liegen in `archiv/ENTSCHEIDUNGEN-ueberholt.md`.
 **Achtung bei Abschnitten vor dem 22.11.:** Dort stehen gültige Merkregeln neben Überholtem. Überholt sind insbesondere: Tür C und Tür-Bühne „Hineingehen“ (ersetzt durch den Raum, 23.11.), „Figur plus“ und die gezeichnete Figur (ersetzt durch die echte Figur, 23.11.), „Grün nur im Logo“ (seit 22.11. auch Raumfarbe), „kein Rot an der Manuthera“ (seit 23.11. Verlauf Bernstein → Rot-Orange), Logo nach dem Original / groß am Start (Logo A bleibt), Partikel-Haus, Röntgenblick, Ego-Rundgang, Kapitel 05 „Licht“. Was `CLAUDE.md` sagt, hat Vorrang.
 
+## 27.11.2026, 3 Uhr – Vorbild aus der Praxis: Aquarell-Anatomie (Kai)
+- Kai schickt ein Foto der Bilder, die in der Praxis hängen (Anatomie als Tuschezeichnung mit Aquarell, kräftig bunt, Farbspritzer), und fragt, ob daraus etwas fürs Gehirn wird. **Merkregel:** Was in der Praxis hängt, ist Kais Geschmack und zugleich Wiedererkennung für Patienten – solche Vorbilder schlagen jede Stilidee von außen. Nur die Machart übernehmen (Farben, Tusche, Spritzer), nie ein Motiv der Drucke nachbauen.
+- Der Entwurf `?hirn=8` bricht bewusst die Farbregel der Punkte (Petrol → Knochenweiß, Bernstein = Handlung). Gilt nur hinter dem Schalter; wählt Kai den Stil, wird die Regel mit ihm neu gefasst.
+
 ## 27.11.2026, 2:30 Uhr – Darstellung statt Farbe (Kai: „irgendwie ist es das auch nicht“)
 - **Merkregel:** Gefällt ein Bild nach zwei Farbrunden nicht, liegt es an der Darstellung, nicht an der Farbe. Dann die Bauart wechseln: luftig statt deckend, wenige große Zeichen mit Rangfolge, und **ein** Licht, das auf den Besucher antwortet (Ankommen, Scrollen, Antippen – am iPhone gibt es keinen Zeiger). Der aktive Bereich ändert das Material oder das Licht, nicht nur den Farbton.
 - Kai kann sich Vorschläge in Worten schwer vorstellen: den empfohlenen Vorschlag gleich als Entwurf hinter einem Schalter bauen, die übrigen erst nach seinem Blick.

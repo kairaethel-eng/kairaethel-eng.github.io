@@ -24,6 +24,12 @@ uniform vec3 cDeep, cBone, cAmber, cCalm, cLine, cWarm, cRim, cKey;
 out vec3 vCol; out float vA; out float vSize; out float vSoft; out float vOp; out float vCore;
 float pick(vec4 v, float i){ return i < .5 ? v.x : i < 1.5 ? v.y : i < 2.5 ? v.z : v.w; }
 // Farbe je Hirnlappen (Fassung K): Stirn Blau · Zentralregion Grün · Schläfe Bernstein · Scheitel Türkis · Hinterhaupt Sand · Kleinhirn Violettblau · Stamm und Innenfläche hell
+// Aquarell (Stil 11, Kai 27.11.2026: die Anatomie-Bilder in seiner Praxis): sechs Pigmente im Kreis – Gelb, Orange, Karmin, Magenta, Türkis, Grün.
+// Jede Farbe steht als Fläche, dazwischen läuft sie weich in die nächste (wie nass in nass).
+vec3 aqPal(float t){ float q = fract(t) * 6.;
+  vec3 c = mix(vec3(1., .74, .08), vec3(1., .42, .04), smoothstep(.28, .72, q)); c = mix(c, vec3(.88, .06, .16), smoothstep(1.28, 1.72, q));
+  c = mix(c, vec3(.92, .14, .56), smoothstep(2.28, 2.72, q)); c = mix(c, vec3(.03, .62, .7), smoothstep(3.28, 3.72, q));
+  c = mix(c, vec3(.44, .78, .16), smoothstep(4.28, 4.72, q)); return mix(c, vec3(1., .74, .08), smoothstep(5.28, 5.72, q)); }
 vec3 lobeCol(float lb){ return lb < .5 ? vec3(.36, .66, .93) : lb < 1.5 ? vec3(.62, .84, .42) : lb < 2.5 ? vec3(.96, .68, .28) : lb < 3.5 ? vec3(.32, .74, .78) : lb < 4.5 ? vec3(.93, .86, .7) : lb < 5.5 ? vec3(.5, .62, .95) : lb < 6.5 ? vec3(.9, .88, .82) : vec3(.55, .7, .8); }
 void main(){
   float kind = aN.x;
@@ -55,7 +61,7 @@ void main(){
   }
   if (kind > 8.5) { // Gehirn-Bühne (Fassung K): 9 Leuchten · 10 Signal-Bögen · 11 Lichthof – erst, wenn der Blick im Gehirn angekommen ist
     float cg = cos(uView.w), sg = sin(uView.w);
-    float ltQ = step(9.5, uHStil);
+    float ltQ = step(9.5, uHStil) * (1. - step(10.5, uHStil)), aqQ = step(10.5, uHStil);
     vec3 P0 = mix(aPos, uLampe.xyz, step(10.5, kind) * ltQ); // Laterne: der Lichthof sitzt am Licht
     vec3 q = vec3(cg*P0.x + sg*P0.z, P0.y - P0.z * uTilt, -sg*P0.x + cg*P0.z);
     vec2 sQ = uAnchor + vec2(q.x - uView.x, -(q.y - uView.y)) * uView.z;
@@ -69,7 +75,7 @@ void main(){
       float fc = clamp(-sg*aNrm.x + cg*aNrm.z + aNrm.y * uTilt, 0., 1.);
       sizeQ = uUnit * 2.6; vSoft = 1.; zN -= .02;
       cQ = mix(lobeCol(lb), vec3(1., .6, .13), stQ);
-      aQ = show * smoothstep(.05, .5, fc) * on * .05 * (1. - .55 * glQ) * (1. - .8 * tsQ) * (1. - ltQ); // Tiefsee geschärft: fast kein Schleier über der aktiven Stelle
+      aQ = show * smoothstep(.05, .5, fc) * on * .05 * (1. - .55 * glQ) * (1. - .8 * tsQ) * (1. - ltQ) * (1. - aqQ); // Tiefsee geschärft: fast kein Schleier über der aktiven Stelle
     } else if (kind < 10.5) {
       float t = aN.z, on = (1. - step(.5, abs(aN.y - uAreaI))) * uAreaK;
       float f = fract(t - uTime * .06 - aN.w), pl = pow(f, 5.) * uPulse;
@@ -93,6 +99,9 @@ void main(){
   float isBone = step(4.5, kind) * (1. - step(5.5, kind));
   float isMus = step(5.5, kind) * (1. - step(6.5, kind));
   float isShell = step(7.5, kind) * (1. - step(8.5, kind));                  // Fassung L: Hülle der oberflächlichen Muskeln
+  // Aquarell: Farbspritzer – wenige Punkte der Rinde sitzen ein Stück vor der Oberfläche (fest, kein Zufall je Bild), die meisten nah
+  float aqS = step(10.5, uHStil) * isBrain * step(.001, uArea.w) * step(aC.x, 6.5) * step(aRand.z, .0045);
+  p += aNrm * aqS * uBC.w * (.04 + .62 * aRand.x * aRand.x);
   float by = 215. - aPos.y;                  // Grundriss-Höhe (11 Scheitel … 419 Sohle)
   vec2 uv = vec2(p.x/200. + .5, by/430.);
   float on = step(-.5, aSt);
@@ -364,7 +373,7 @@ void main(){
       // waren dieselbe dichte, deckende Punktfläche. Hier ist das Gehirn durchscheinend wie Papier (keine Tiefe, Rückseite scheint durch),
       // wenige größere Punkte mit Lücken; es zeichnen nur Kanten (Fläche schräg zum Blick) und Furchenwände. Farbe gibt es nur als Licht:
       // EIN warmes Licht sitzt im Inneren (uLampe) und lässt die Windungen um sich von innen glühen – Kuppen heller als Furchen.
-      { float sL = step(9.5, uHStil), fa = abs(facing), eL = pow(1. - fa, 2.4) * hasN;
+      { float sL = step(9.5, uHStil) * (1. - step(10.5, uHStil)), fa = abs(facing), eL = pow(1. - fa, 2.4) * hasN;
         float wand = smoothstep(.1, .22, ao) * (1. - smoothstep(.45, .68, ao));
         float hin = mix(.2, 1., smoothstep(-.3, .25, facing));                                   // Rückseite leiser
         float g0 = (.03 + .5 * eL + .24 * wand * (.3 + .7 * eL)) * hin * (1. - .4 * inn);
@@ -374,10 +383,31 @@ void main(){
         vec3 cW = mix(vec3(1., .46, .06), vec3(1., .82, .5), smoothstep(.6, 1.2, lt));
         ch = mix(ch, mix(cK, cW, clamp(lt * 1.6 / (lt * 1.6 + g0 + .02), 0., 1.)), sL);
         gI = mix(gI, clamp(g0 * .85 + lt * .58, 0., 1.), sL); sG = mix(sG, 1., sL); sM *= 1. - sL;
-        szL = mix(1., .46 + .36 * eL + .42 * min(1., lt), sL); } }
+        szL = mix(1., .46 + .36 * eL + .42 * min(1., lt), sL); }
+      // 11 „Aquarell“ (Kai 27.11.2026, 02:50, mit Foto: „In meiner Praxis hängen schon diese Bilder, kannst du daraus was für unser Gehirn
+      // zaubern?“ – Anatomie als Tuschezeichnung mit Aquarell: Gelb, Orange, Karmin, Magenta, Türkis, Grün, weißes Papier, Farbspritzer).
+      // Das Gehirn ist deckend gemalt: große Farbflächen laufen ineinander (Feld am Gehirn, dreht sich mit), an den Kuppen im Licht bleibt
+      // das Papier weiß stehen, die Furchen sind mit Tusche gezogen. Aktiver Bereich: satt und nass,
+      // der Rest tritt etwas zurück. Dazu Farbspritzer um die Form (aqS).
+      { float sQ = step(10.5, uHStil);
+        vec3 q3 = (aPos - uBC.xyz) / max(1., uBC.w);
+        float n1 = sin(q3.x * 2.3 + 1.7 * sin(q3.y * 1.9 + .6) + .8), n2 = sin(q3.y * 2.6 - 1.4 * sin(q3.z * 2.1 - 1.1) + 1.7 * q3.z), n3 = sin((q3.x + q3.z) * 1.5 - q3.y * 3.1 + 2.4);
+        float tq = .06 + .27 * n1 + .2 * n2 + .1 * n3;
+        vec3 pg = aqPal(tq);
+        float kante = 1. - smoothstep(0., .2, abs(fract(fract(tq) * 6.) - .5));                  // Rand einer Farbfläche: das Pigment sammelt sich
+        float n4 = sin(q3.x * 4.1 - q3.z * 3.3 + 1.2 * sin(q3.y * 3.7));
+        float dens = clamp(.94 + .14 * n4 - .56 * smoothstep(.84, 1., Lk) * cav * (1. - isSt), .42, 1.);        // Kuppen im Licht: Papier bleibt stehen
+        dens = mix(dens, dens * .8, uAreaK * (1. - on) * (1. - isSt)); dens = mix(dens, min(1., dens * 1.2 + .14), on);
+        vec3 cQ = mix(vec3(1., .97, .92), pg * (1. - .2 * kante), dens) * mix(.56, 1., smoothstep(0., .5, Lk)) * mix(.8, 1., fog);
+        float ink = (1. - smoothstep(.15, .42, ao)) * (1. - klein * .7);
+        cQ = mix(cQ, vec3(.05, .02, .05), ink * .94);
+        cQ += vec3(1., .98, .94) * sp2 * .35;
+        cQ = mix(cQ, pg * 1.04, aqS);                                                            // Spritzer: reines Pigment
+        ch = mix(ch, cQ, sQ); gI = mix(gI, .82, sQ); sG = mix(sG, 1., sQ); sM *= 1. - sQ; vCore = mix(vCore, 1.6, hk * sQ); // Kern über den Punkt hinaus: flache, deckende Farbtupfer ohne dunklen Rand
+        szL = mix(szL, mix(1.26, .9 + 3.6 * aRand.y * aRand.y * aRand.y, aqS), sQ); } }
     { // Impulse (nur im Blick „Nervensystem“ – im Gehirn-Blick bleibt alles ruhig): Licht läuft das Rückenmark hinunter (warm) und leiser
       // wieder hinauf (kühl), im selben Takt wie auf den Nerven – dort tritt es an jeder Wurzel aus und kommt dort wieder an
-      float wC = (uMarkY - aPos.y) * 1.03, kC = uPulse * uNs * isSt * (1. - step(9.5, uHStil));
+      float wC = (uMarkY - aPos.y) * 1.03, kC = uPulse * uNs * isSt * (1. - step(9.5, uHStil) * (1. - step(10.5, uHStil)));
       float pO = fract(wC / 150. - uTime * .3), sO = pow(pO, 10.) * smoothstep(1., .975, pO) * kC;
       float pI = fract(-wC / 190. - uTime * .13 + .4), sI = pow(pI, 6.) * smoothstep(1., .96, pI) * kC * .45;
       ch = mix(ch, vec3(1., .92, .72), min(1., sO)); ch = mix(ch, vec3(.72, .9, 1.), min(1., sI * 1.4));
@@ -391,7 +421,7 @@ void main(){
   d = mix(d, (.34 + .08*im) * (1. + ar * .3) * mix(1., .78, step(.001, uArea.w)), isBrain);
   d = mix(d, uSpH * .92 * (1. + ar * .1) * szL, isBrain * kK * smoothstep(.3, 1., hv)); // im Gehirn-Blick: dichte Punkte (0,92 des Abstands), die Fläche schließt sich zum Körper
   float ph = fract(aN.z/170. - uTime*.16);
-  float nsk = uPulse * uNs * kK * (1. - smoothstep(0., .15, fe)) * (1. - step(9.5, uHStil)); // Laterne: keine Impulse – das Licht ist die eine Bewegung // im Flug zum Leitsatz keine Impulse mehr (sonst funkelt der Staub)
+  float nsk = uPulse * uNs * kK * (1. - smoothstep(0., .15, fe)) * (1. - step(9.5, uHStil) * (1. - step(10.5, uHStil))); // Laterne: keine Impulse – das Licht ist die eine Bewegung // im Flug zum Leitsatz keine Impulse mehr (sonst funkelt der Staub)
   float pulse = pow(ph, 9.) * uPulse * (1. - uNs * kK);
   // K, M im Blick „Nervensystem“ (Kai 25.11. 23:07: „Nerven ab Rückenmark dezent lebendig, pulsierend zum Beispiel“): Impulse laufen vom
   // Gehirn das Rückenmark hinunter und treten an jeder Wurzel in den Ast hinaus (warm, heller Kopf, weicher Schweif, die Perlen schwellen
@@ -414,10 +444,15 @@ void main(){
     cn = mix(cn, c8n, tsN * smoothstep(0., .5, uNs)); }
   // Laterne: die Nerven sind kühles Glas; das Licht, das am Rückenmark hinunterfährt, läuft an jeder Wurzel in den Ast hinaus
   // (vorn hell, dahinter klingt es auf einen warmen Rest ab) – gemessen am Weg vom Gehirn (aN.z gegen uLampeS)
-  float ltN = step(9.5, uHStil) * kK, gLN = 0.;
+  float ltN = step(9.5, uHStil) * (1. - step(10.5, uHStil)) * kK, gLN = 0.;
   { float hinter = uLampeS - aN.z; gLN = smoothstep(-5., 0., hinter) * mix(.22, 1., exp(-max(0., hinter) / 46.)) * uLampe.w;
     vec3 cLN = mix(vec3(.42, .68, .86), mix(vec3(1., .56, .12), vec3(1., .9, .64), smoothstep(.6, 1., gLN)), smoothstep(.02, .5, gLN));
     cn = mix(cn, cLN, ltN); }
+  // Aquarell: die Nerven tragen die Pigmente der Reihe nach – am Rückenmark Karmin und Orange, nach außen über Gelb und Grün zu Türkis; Impulse weiß
+  { float aqN = step(10.5, uHStil) * kK, farN = smoothstep(2., 46., length(vec2(aPos.x, (aPos.z + 9.) * .6)));
+    vec3 cAq = aqPal(.3 - aN.z / 400. * .5 - .34 * farN) * (.86 + .3 * smoothstep(.3, .58, aN.w));
+    cAq = mix(cAq, vec3(1.), min(1., sigO * 1.1 + sigI * 1.2)); cAq *= 1. - .2 * nsk + 1. * sigO + .7 * sigI;
+    cn = mix(cn, cAq, aqN); }
   col = mix(col, cn, isNerve);
   // mit feinem Gehirn: die Nerven erscheinen zusammen mit Gehirn und Rückenmark und bleiben im Gehirn-Blick stehen (laufen unter dem Stamm weiter)
   a = mix(a, rev * (.6 + .2*aN.w) * (1. + pulse*.8*(1. - .7*hv) + front2*.5 + (sigO + sigI)*.7) * uNerve * (1. + lens*.5) * mix(1. - .97 * uHirn, smoothstep(.05, .8, hv), kK) * (1. + .5 * uNs) * mix(1., .3 + .7 * gLN, ltN), isNerve);
@@ -444,7 +479,7 @@ void main(){
   { float on = step(.5, aTo.w), k0 = smoothstep(0., .18, fe), k1 = smoothstep(.72, 1., fe);
     col = mix(col, mix(cT0, cT1, step(1.5, aTo.w)), smoothstep(.45, 1., fe) * on);
     a = mix(a, mix(.22 + .33 * smoothstep(.1, .5, fe), on * .95, k1), k0); }
-  { float glasB = isBrain * kK * step(9.5, uHStil); // Laterne: durchscheinend – die Rückseite bleibt, das Auflösen trägt die Deckkraft (kein Punktmuster)
+  { float glasB = isBrain * kK * step(9.5, uHStil) * (1. - step(10.5, uHStil)); // Laterne: durchscheinend – die Rückseite bleibt, das Auflösen trägt die Deckkraft (kein Punktmuster)
     a *= mix(front, rev * uNerve * smoothstep(.05, .8, hv) * (1. - smoothstep(0., .45, uTxt)), glasB); }
   float want = d * uUnit;
   want = mix(want, mix(1.5, uDot, smoothstep(.75, 1., fe)) * uDpr, smoothstep(0., .2, fe));
