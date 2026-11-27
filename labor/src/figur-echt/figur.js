@@ -80,6 +80,21 @@ function rows({ pos, idx, ao }, sp, fn) {
 }
 
 // Nervenbahnen aus der Datei (3D, Grundriss) → wie NERVE_LIST in ../figur-plus/figur.js: ry0 (Spitzenhöhe am Anfang), rate, d0 (Weg vom Gehirn)
+// Fassung „Segmente“ (27.11.2026, Kai: „das Kapitel ‚Jedes Segment erzählt etwas anderes‘ mit in die Startfigur integriert“): die sechs
+// Abschnitte von Kapitel 03 (C1–C2, C5–C6, Th1–6, Th7–12, L4–L5, S1) und ihre Bahnen in den Daten – Wurzeln nach Höhe, dazu der Weg
+// in das Versorgungsgebiet (Speichennerv bis zum Daumen, Zwischenrippennerven, Ischias mit Wadenbeinnerv bis zur Großzehe bzw. bis
+// zum Fußaußenrand). Der Ischias gehört bis zum Knie zu beiden unteren Abschnitten, darunter nur noch zu S1.
+const SEG_BAHN = [
+  [/^Wurzel [01]$/],
+  [/^Wurzel [45]$/, /^Armgeflecht [45]$/, /^Speichennerv/],
+  [/^Wurzel ([6-9]|1[01])$/, /^Zwischenrippennerv [1-6]$/],
+  [/^Wurzel 1[2-7]$/, /^Zwischenrippennerv ([7-9]|1[0-2])$/],
+  [/^Wurzel 2[12]$/, /^Lendenwurzel L5$/, /^Endfaden$/, /^Ischias/, /^Wadenbeinnerv$/, /^Zehennerv big toe$/],
+  [/^Kreuzwurzel$/, /^Endfaden$/, /^Ischias/, /^Zehennerv little toe$/],
+];
+const segMaske = (name, y) => { let m = 0; if (!name) return 0;
+  SEG_BAHN.forEach((L, q) => { if (L.some((r) => r.test(name)) && !(q === 4 && /^Ischias/.test(name) && y < -90)) m |= 1 << q; });
+  return m; };
 function nerveList(list) {
   const out = list.map((n) => {
     const pts = n.pts, len = [0];
@@ -448,7 +463,7 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   }
   // A5 Nerven: Perlen entlang der echten Wege; dicke Bahnen als mehrere Stränge nebeneinander (in der Bildebene versetzt)
   const nerves = nerveList(hirn ? glatt(data.head.nerves) : data.head.nerves);
-  const NS = 0.62, GAP = 0.52, n0 = St.length;
+  const NS = 0.62, GAP = 0.52, n0 = St.length, segD = [1e9, 1e9, 1e9, 1e9, 1e9, 1e9], segE = [0, 0, 0, 0, 0, 0];
   for (const N of nerves) {
     if (VS && N === nerves[0]) continue; // Rückenmark steht als Körper (Schlauch) da
     // K, M (27.11.2026): EIN Strang je Bahn, die Perlen liegen dicht an dicht (Abstand = 0,92 ihres Durchmessers) und werden zur Spitze
@@ -459,7 +474,9 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
         const A = N.pts[j - 1], B = N.pts[j], f = (s - N.len[j - 1]) / Math.max(1e-9, N.len[j] - N.len[j - 1]), D = dA + (dB - dA) * s / Math.max(1e-9, N.total);
         const x = A[0] + (B[0] - A[0]) * f, y = A[1] + (B[1] - A[1]) * f, z = A[2] + (B[2] - A[2]) * f, [vx, vz] = versatz(y);
         const tx = B[0] - A[0], ty = B[1] - A[1], tz = B[2] - A[2], t3 = N.main ? 0 : Math.hypot(tx, ty, tz) || 1; // die Richtung der Bahn fährt im Normalen-Feld mit (der Shader dimmt Bahnen, die auf den Betrachter zulaufen)
-        put(x + vx, y, z + vz, t3 ? tx / t3 : 0, t3 ? ty / t3 : 0, t3 ? tz / t3 : 0, 3, N.main ? BODY_H / 2 - y : N.ry0 + s * N.rate, N.d0 + s, D);
+        const sm = segMaske(N.name, y); // Fassung „Segmente“: zu welchen der sechs Abschnitte gehört die Perle (Bitmaske in aC.y), dazu Anfang und Ende je Abschnitt (Weg vom Gehirn)
+        if (sm) for (let q = 0; q < 6; q++) if (sm >> q & 1) { segD[q] = Math.min(segD[q], N.d0 + s); segE[q] = Math.max(segE[q], N.d0 + s); }
+        put(x + vx, y, z + vz, t3 ? tx / t3 : 0, t3 ? ty / t3 : 0, t3 ? tz / t3 : 0, 3, N.main ? BODY_H / 2 - y : N.ry0 + s * N.rate, N.d0 + s, D, sm ? { st: -1, h: 0, cx: 0, cy: sm } : null);
         s += D * 0.92;
       }
       continue; }
@@ -502,5 +519,5 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
     for (let k = 0; k < count; k++) { const sp = k >= dup0 && k < b1, r = sp ? rd : rr; for (let j = 0; j < 4; j++) rnd[4 * k + j] = r();
       if (sp) rnd[4 * k + 2] *= 0.0044; else if (k >= b0 && k < dup0 && rnd[4 * k + 2] < 0.0045) rnd[4 * k + 2] += 0.0045; } }
   const split = data.head.split;
-  return { pos: new Float32Array(Pp), nrm: new Float32Array(Nn), st: new Float32Array(St), heat: new Float32Array(Ht), ctr: new Float32Array(Ct), rnd, nfo: new Float32Array(Nf), count, nBody, spB, lines: linesOf(hirn ? nerveList(data.head.nerves) : nerves, split), split, brain: BB, lobes, hirn: hirnInfo, nerv: [n0, n1], mark: nerves.slice(0, 2).flatMap((n) => n.pts.map((q) => { const v = versatz(q[1]); return [q[0] + v[0], q[1], q[2] + v[1]]; })) }; // nerv: Bereich der Nerven-Perlen (sie schreiben in K, M den Leitsatz) · mark: Mittellinie Rückenmark + Endfaden (Fahrt am Rückenmark)
+  return { pos: new Float32Array(Pp), nrm: new Float32Array(Nn), st: new Float32Array(St), heat: new Float32Array(Ht), ctr: new Float32Array(Ct), rnd, nfo: new Float32Array(Nf), count, nBody, spB, lines: linesOf(hirn ? nerveList(data.head.nerves) : nerves, split), split, brain: BB, lobes, hirn: hirnInfo, seg: segD.map((d, q) => [d > 1e8 ? 0 : d, Math.max(1, segE[q] - d)]), nerv: [n0, n1], mark: nerves.slice(0, 2).flatMap((n) => n.pts.map((q) => { const v = versatz(q[1]); return [q[0] + v[0], q[1], q[2] + v[1]]; })) }; // nerv: Bereich der Nerven-Perlen (sie schreiben in K, M den Leitsatz) · mark: Mittellinie Rückenmark + Endfaden (Fahrt am Rückenmark)
 }

@@ -7,6 +7,7 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 ## Offen (hier pflegen – nicht in jedem Abschnitt neu „wartet auf …“ schreiben)
 
 **Kai am Zug**
+- Entwurf „Segmente in der Startfigur“ ansehen (`live/?bunt=1&seg=1`, nach dem Gehirn weiter scrollen). Bei Gefallen entscheiden: Kapitel 03 unten streichen oder kürzen, Film „Bandscheibenvorfall“ an den Halt L4–L5, Hinweistext in voller Länge.
 - Textvorschlag „Ihr erster Besuch“ (Kap. 05, drei Fragen) bestätigen oder korrigieren – ist als Platzhalter markiert. Neue Leistungs-Etiketten (Körperregion statt Eigenschaft) ansehen.
 - Daten für die Platzhalter (`data-platzhalter`): Porträt (Hochformat 4:5), drei Fakten in Kap. 02 (Jahr „Physiotherapeut seit“, Details Manuelle Therapie, Details CMD); Impressum Behörde + Berufshaftpflicht. Der Wurzel-Bau bricht ab, solange Platzhalter da sind.
 - Sichtprüfungen: alle in der **Sichtprüf-Liste** im Arbeitsblatt (Link oben). Stand 24.11.: mehr als fünf offen → vor neuem Bauen erst darauf hinweisen (`CLAUDE.md` „Doku kurz halten“).
@@ -50,6 +51,12 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abschnitt vor dem 22.11. meinen, zeigen jetzt ins Archiv.
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
+
+## ▶ 27.11.2026, 21 Uhr – Entwurf „Segmente in der Startfigur“ (`?seg=1`), Kai: „das Kapitel, jedes Segment erzählt etwas anderes, mit in die Startfigur integriert“
+- **Lösung:** Die Fahrt am Rückenmark (Weg M) hält an den sechs Abschnitten von Kapitel 03 (C1–C2 … S1). Je Halt ein eigener Bildausschnitt von der Wurzel bis ins Versorgungsgebiet; die Farbe des Abschnitts läuft über die Zeit die Bahn entlang (Speichennerv bis zum Daumen, Zwischenrippennerven, Ischias mit Wadenbeinnerv bis zur Großzehe, Ischias bis zum Fußaußenrand) und bleibt stehen. Übrige Bahnen und das Gehirn treten im Halt zurück, der Körperumriss steht etwas deutlicher. Texte: Überschrift = Versorgungsgebiet, Text = „Typisch“ wörtlich aus Kapitel 03, dazu Kurzhinweis.
+- **Dateien:** `kapitel.js` (`SEGM`, `KEYS_SEG`, `SEG_TXT`, `SEG`, Blicke `G0…G5`/`g0…g5`), `figur.js` (`SEG_BAHN`, `segMaske`, `pts.seg`), `gl.js` (`uSeg`, `uSegK`, `uSegY`), `fein.css` (`.kf-sg-note`). M ohne Schalter unverändert. Strecke mit `?seg=1`: 8,59 statt 5,95 Bildschirmhöhen.
+- **Geprüft:** Bilder Handy und PC je Halt, Filmstreifen der Übergänge, Skriptfehler 0, `sizes.cjs`. **Nicht prüfbar:** Tempo und Flüssigkeit → Kai am Gerät.
+- **Offen (Liste oben):** Kapitel 03 steht im Entwurf weiter unten auf der Seite (Vergleich); bei Go klären: Kapitel 03 streichen oder kürzen, wohin mit dem Film „Bandscheibenvorfall“ (Knopf am Halt L4–L5?), Hinweistext in voller Länge, Anzeige der sechs Abschnitte am Rand.
 
 ## ▶ 27.11.2026, 19:45 Uhr – Kai am Tablet: Gehirn „noch sehr verpixelt … deutlich schärfer und genauer gezeichnet“, „die hellen Pixel machen das Ganze unrund“
 - **Ursache:** Tablet-Fenster (rund 656 px breit) zählt als Handy (`big` erst ab 920 px) → Punktabstand 0,29 auf einem viel größeren Bild (rund 3,8 px je Punkt). Dazu runde Punkte mit Lücken (Raster sichtbar) und weiße Lichter auf jeder Kuppe.

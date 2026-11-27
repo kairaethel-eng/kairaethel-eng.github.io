@@ -83,6 +83,20 @@ const KEYS_HIRN = [
   [3.34, 176, 'R1'], [3.76, 276, 'R2'],
   [4.18, SOLE, 'E'], [4.5, SOLE, 'E'],
 ];
+// Fassung „Segmente“ (?seg=1, 27.11.2026 – Kai: „das Kapitel ‚Jedes Segment erzählt etwas anderes‘ mit in die Startfigur integriert“):
+// die Fahrt am Rückenmark hält an den sechs Abschnitten von Kapitel 03. Blick 'G' + i = Ankunft, 'g' + i = Ende des Halts (ein Stück
+// weitergedreht und näher – kein Halt steht still). Die Lichtspitze steht je Halt auf der Höhe des Abschnitts (Grundriss).
+const SEG_BY = [55, 70, 94, 128, 176, 194], SEG_U0 = 3.3, SEG_DU = 0.56, SEG_HALT = 0.3;
+const KEYS_SEG = [...KEYS_HIRN.slice(0, 9), ...SEG_BY.flatMap((by, i) => [[SEG_U0 + i * SEG_DU, by, 'G' + i], [SEG_U0 + i * SEG_DU + SEG_HALT, by + 4, 'g' + i]]), [6.82, SOLE, 'E'], [7.14, SOLE, 'E']];
+const U_LEN_SEG = 7.59;
+// Texte: Abschnitt, Name, Überschrift (das Versorgungsgebiet aus Kapitel 03), „Typisch“ wörtlich aus Kapitel 03
+const SEG_TXT = [
+  ['C1–C2', 'Atlas und Axis', 'Hinterkopf und Nacken.', 'Vom Nacken aufsteigender Spannungskopfschmerz, Schwindelgefühl, eingeschränktes Kopfdrehen.'],
+  ['C5–C6', 'Halswirbelsäule', 'Armaußenseite bis in den Daumen.', 'Ausstrahlung über die Armaußenseite bis in den Daumen, Kribbeln, Schwächegefühl beim Beugen.'],
+  ['Th1–Th6', 'Brustwirbelsäule', 'Brustkorb und Zwischenrippen.', 'Blockaden mit atemabhängigem Stechen, Schmerz zwischen den Schulterblättern, „Rippenklemme“.'],
+  ['Th7–Th12', 'Untere Brustwirbelsäule', 'Rippenbogen und Bauchwand.', 'Gürtelförmig ausstrahlender Schmerz am Rippenbogen, Steifigkeit am Übergang zur Lendenwirbelsäule (Th12/L1).'],
+  ['L4–L5', 'Lendenwirbelsäule', 'Schienbein bis zur Großzehe.', 'Bandscheiben-Region: Ausstrahlung ins Bein, Kribbeln am Schienbein, Fußheber-Schwäche.'],
+  ['S1 · ISG', 'Kreuzbein &amp; Becken', 'Wade, Ferse, Fußaußenrand.', 'Ausstrahlung über die Beinrückseite bis zur Ferse, tiefsitzender einseitiger Kreuzschmerz.']];
 const U_LEN_HIRN = 4.95; // CSS --len setzt initKopfFuss selbst (U_LEN + 1)
 const SATZ_SEK = 3.9, SATZ_FLUG = 0.82, SATZ_AB = 0.26; // Leitsatz: Dauer des Ablaufs · Anteil, in dem die Punkte fliegen und schreiben (danach blendet die echte Schrift ein) · Beginn so viele Bildschirmhöhen vor der Ankunft im Schlussbild
 let ON_VOR = 0.3; // so früh vor der Ankunft gilt die Station als aktiv (ins Gehirn: 0,22 – die Fahrten sind kürzer)
@@ -120,7 +134,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // Fahrt ins Gehirn wie K; am Schluss fährt der Blick zurück und zeigt das ganze Nervensystem (Übergang zu Kapitel 02)
   const HIRN = START === 'k' || START === 'm';
   const YAW_E = 0.9; // Schlussbild von K, M: die ganze Figur von der Seite (halbes Profil)
-  if (HIRN) { KEYS = KEYS_HIRN; U_LEN = U_LEN_HIRN; ARR = STATIONS.map((_, i) => KEYS[1 + 2 * i][0]); LEAVE = STATIONS.map((_, i) => KEYS[2 + 2 * i][0]); U_END = KEYS[KEYS.length - 1][0]; ON_VOR = 0.22; root.style.setProperty('--len', (U_LEN + 1).toFixed(2)); }
+  const SEGM = HIRN && Q.get('seg') === '1'; // Entwurf: Kapitel 03 in der Startfigur (sechs Halte auf der Fahrt am Rückenmark)
+  if (HIRN) { KEYS = KEYS_HIRN; U_LEN = U_LEN_HIRN; ARR = STATIONS.map((_, i) => KEYS[1 + 2 * i][0]); LEAVE = STATIONS.map((_, i) => KEYS[2 + 2 * i][0]); U_END = KEYS[KEYS.length - 1][0]; ON_VOR = 0.22; if (SEGM) { KEYS = KEYS_SEG; U_LEN = U_LEN_SEG; U_END = KEYS[KEYS.length - 1][0]; } root.style.setProperty('--len', (U_LEN + 1).toFixed(2)); }
   const AREALE = [ // Name, Blickrichtung (Drehung um die Hochachse), Mitte im Gehirn (−1…1: rechts, oben, vorn), Radius (Anteil der Breite)
     ['Hören · Schläfenlappen', -1.15, [0.8, -0.32, 0.22], 0.34, 2, 1], ['Denken · Stirnlappen', -0.3, [0.3, 0.3, 0.8], 0.38, 0, 1], // dazu: Hirnlappen (Kennung in figur.js) und Seite
     ['Bewegung · Zentralregion', 0.75, [-0.4, 0.6, -0.05], 0.36, 1, 0], ['Gleichgewicht · Kleinhirn', 2.6, [-0.15, -0.72, -0.7], 0.34, 5, 0]];
@@ -133,14 +148,14 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // Stil des Gehirns (Kai 26.11.2026: „kräftiger, klarer, auffallender“): A hell auf dunkel ist Standard; ?hirn=alt|b|c zum Vergleich
   const HSTIL = HIRN ? ({ alt: 0, a: 1, b: 2, c: 3, 1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10, 8: 11, 9: 12, 10: 13, 11: 14 }[Q.get('hirn')] ?? (BUNT ? 13 : 1)) : 0, RAUM_H = [1, 0.38, 0.5, 0.38, 0.2, 0.08, 0.85, 0.5, 0.1, 0.06, 0.05, 0.12, 0.12, 0.12, 0.12][HSTIL];
   // Stil 10 „Laterne“ (?hirn=7, Kai 27.11.2026): EIN Licht im Körper. LAMPE = sein Ort (folgt dem Ziel über die Zeit, rund 1,2 s), s = sein Weg am Rückenmark
-  const LAMPE = { p: null, s: -99, cum: null }; const MAL = { r: [0, 0, 0, 0], hi: -1, von: -1, nach: -1, lr: 0, lp: null, f: new Float32Array(16) }; // Aquarell 13, 14: wie weit die Farbe je Halt gelaufen ist
+  const SEG = { r: [0, 0, 0, 0, 0, 0], a: [0, 0, 0, 0, 0, 0], f: new Float32Array(24), k: [0, 0, -1, 0], y: [0, 0], cur: -1, band: 0 }; const LAMPE = { p: null, s: -99, cum: null }; const MAL = { r: [0, 0, 0, 0], hi: -1, von: -1, nach: -1, lr: 0, lp: null, f: new Float32Array(16) }; // Aquarell 13, 14: wie weit die Farbe je Halt gelaufen ist
   let welT0 = -99, welCur = -1; const KERN = +Q.get('kern') || 1; // Lichtwelle (Stil 8, 9): läuft einmal, wenn ein Areal aktiv wird // RAUM_H: so viel Raumlicht bleibt im Gehirn-Blick
   let raumWar = 1;
   const raum = (k) => { k = Math.round(k * 50) / 50; if (k === raumWar) return; raumWar = k; if (k >= 1) document.documentElement.style.removeProperty('--fx-hirn'); else document.documentElement.style.setProperty('--fx-hirn', String(k)); };
   // C: weicher Lichtschein um das Gehirn – ein Ring in Gehirngröße über der Zeichenfläche (hellt nur auf), nur im Gehirn-Blick eingeschaltet
   const SCHEIN = { 3: '120,180,240', 4: '60,200,255', 5: '150,110,255', 8: '40,150,230' }[HSTIL], schein = SCHEIN ? document.createElement('div') : null; let scheinAn = false;
   if (schein) { schein.setAttribute('aria-hidden', 'true'); schein.style.cssText = 'position:absolute;left:0;top:0;z-index:0;display:none;pointer-events:none;border-radius:50%;mix-blend-mode:screen;background:radial-gradient(closest-side,rgba(120,180,240,0) 40%,rgba(120,180,240,.1) 55%,rgba(120,180,240,.17) 66%,rgba(120,180,240,.1) 78%,rgba(120,180,240,.03) 90%,rgba(120,180,240,0))'.replace(/120,180,240/g, SCHEIN); canvas.after(schein); }
-  if ((Q.has('hirn') || BUNT) && HIRN) { // Umschalter Gehirn-Stil: nur solange ?hirn= oder ?bunt=1 in der Adresse steht
+  if ((Q.has('hirn') || BUNT) && HIRN && !SEGM) { // Umschalter Gehirn-Stil: nur solange ?hirn= oder ?bunt=1 in der Adresse steht
     const nav = document.createElement('nav'); nav.setAttribute('aria-label', 'Gehirn vergleichen');
     nav.style.cssText = 'position:fixed;z-index:60;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + .75rem);transform:translateX(-50%);display:flex;gap:.25rem;padding:.25rem;border-radius:2rem;background:rgba(10,22,27,.92);border:1px solid rgba(255,255,255,.18);font:600 .8125rem/1 system-ui,sans-serif;max-width:calc(100vw - 1rem);overflow-x:auto;scrollbar-width:none';
     [['alt', 'Bisher', 0], ['a', 'A hell', 1], ['10', '10 Bedeutung', 13], ['11', '11 Farbe läuft', 14], ['9', '9 Pigment fein', 12], ['8', '8 Aquarell', 11], ['7', '7 Laterne', 10], ['1', '1 Neon', 4], ['5', '5 Tiefsee', 8], ['6', '6 Kintsugi', 9], ['2', '2 Gold + Violett', 5], ['3', '3 Warm', 6], ['4', '4 Echt', 7]].forEach(([k, t, i]) => { const l = document.createElement('a'); const q = new URLSearchParams(location.search); q.set('hirn', k); l.href = '?' + q.toString(); const on = HSTIL === i; l.textContent = t; l.style.cssText = `padding:.625rem .7rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
@@ -162,6 +177,10 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   const lineG = $('.kf-lines');
   const arts = $$('.kf-st'), dos = arts.map((a) => $('.kf-do', a)), spots = $$('.kf-spot'), progBtns = $$('.kf-prog button');
   const nextBtn = $('.kf-next'), progEl = $('.kf-prog');
+  // Fassung „Segmente“: sechs Textblöcke wie die vier der Areale (gleiche Klassen, gleiche Blenden), hinter dem vierten eingefügt
+  const sArts = SEGM ? SEG_TXT.map((T, i) => { const a = document.createElement('article'); a.className = 'kf-st kf-sg'; a.setAttribute('aria-labelledby', 'kf-g' + i);
+    a.innerHTML = `<p class="kicker"><i>${T[0]}</i> ${T[1]}</p><h2 id="kf-g${i}">${T[2]}</h2><p class="kf-txt">Typisch: ${T[3]}</p><p class="kf-sg-note">Vereinfachte Orientierung, ersetzt keine ärztliche Diagnose.</p>`; return a; }) : [];
+  if (sArts.length) arts[arts.length - 1].after(...sArts);
   let topMode = false; const TXT = { head: 0, txt: 0 }; // Handy im Stil „neu“: Unterkante der Überschriften / Oberkante der Texte
   const NS = 'http://www.w3.org/2000/svg';
   const mk = (tag, cls, parent) => { const e = document.createElementNS(NS, tag); if (cls) e.setAttribute('class', cls); parent.appendChild(e); return e; };
@@ -244,9 +263,16 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
         const seite = (by, yaw, s, vor) => { const y = BODY_H / 2 - by, q = markAt(y); return { fx: Math.cos(yaw) * q[0] + Math.sin(yaw) * (q[1] + vor), fy: y - q[1] * TILT, s, ax: V[3].ax, ay: desk ? H * 0.52 : H * 0.5, yaw }; };
         const sR = desk ? Math.min(H * 0.84 / 132, W * 0.38 / 64) : Math.min(H * 0.76 / 132, W * 0.94 / 66);
         V.R1 = seite(114, 1.5, sR, 9); V.R2 = seite(212, 1.36, sR * 0.6, 6);
+        if (SEGM) { // je Abschnitt ein Bildausschnitt von der Wurzel bis ins Versorgungsgebiet: Mitte (Grundriss-Höhe), Spanne, Drehung, Versatz zur Brust
+          const hA = desk ? H * 0.8 : (TXT.txt - TXT.head || H * 0.5) * 0.94, wA = desk ? W * 0.4 : W * 0.94, ay = desk ? H * 0.52 : stAy;
+          [[58, 56, 1.5, 4, 44], [150, 190, 1.3, 10, 74], [100, 80, 1.44, 12, 66], [126, 80, 1.28, 12, 66], [296, 268, 1.34, 6, 74], [296, 268, 1.74, 0, 74]].forEach(([mid, span, yw, vor, breit], i) => {
+            const s = Math.min(hA / span, wA / breit);
+            V['G' + i] = { ...seite(mid, yw, s, vor), ay }; V['g' + i] = { ...seite(mid + span * 0.025, yw + 0.08, s * 1.05, vor), ay }; });
+        }
       } else { V.R1 = V.E; V.R2 = V.E; }
+      if (SEGM && !V.G0) for (let i = 0; i < 6; i++) { V['G' + i] = V.E; V['g' + i] = V.E; }
     } else if (HIRN) { // ohne feine Daten (kein Grafikchip, Laden misslungen): die Halte der Strecke brauchen trotzdem einen Blick – sonst bricht die Fahrt ab
-      STATIONS.forEach((_, i) => { V['h' + i] = V[i]; }); V.R1 = V.E; V.R2 = V.E;
+      STATIONS.forEach((_, i) => { V['h' + i] = V[i]; }); V.R1 = V.E; V.R2 = V.E; if (SEGM) for (let i = 0; i < 6; i++) { V['G' + i] = V.E; V['g' + i] = V.E; }
     }
     dpr = Math.min(devicePixelRatio || 1, 2);
     if (gl) {
@@ -340,7 +366,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       if (u > b[0]) continue;
       const t = (u - a[0]) / (b[0] - a[0]), e = easeIO(t);
       const hold = a[2] === b[2], travel = typeof a[2] === 'number' && typeof b[2] === 'number' && !hold;
-      if (HIRN && V['h0']) { const drift = b[2] === 'h' + a[2], dreh = typeof b[2] === 'number' && String(a[2])[0] === 'h'; // Halt mit Bewegung · Drehung zum nächsten Areal
+      if (HIRN && V['h0']) { const drift = b[2] === 'h' + a[2] || String(b[2])[0] === 'g', dreh = typeof b[2] === 'number' && String(a[2])[0] === 'h'; // Halt mit Bewegung · Drehung zum nächsten Areal
         // Fahrt am Rückenmark: ohne Halt durch R1 und R2 (anfahren nach dem Kleinhirn, gleiten, ausrollen im Schlussbild)
         const r = b[2] === 'R1' ? t * t * (2 - t) : b[2] === 'R2' ? t : a[2] === 'R2' ? 1 - (1 - t) * (1 - t) * (1 + t) : -1;
         if (r >= 0) return { tip: lerp(a[1], b[1], r), view: mixView(V[a[2]], V[b[2]], r) };
@@ -615,6 +641,21 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       S.ok[i] = S.done[i] || S.auto[i] > 0.5;
     });
     S.cur = cur;
+    // Fassung „Segmente“: aktiver Abschnitt, Farbfront je Abschnitt (läuft über die Zeit von der Wurzel in das Versorgungsgebiet, in rund
+    // 2,4 s; beim Zurückscrollen zieht sie sich schnell zurück), die übrigen Bahnen treten im Halt zurück
+    let sgCur = -1;
+    if (SEGM) {
+      let hi = -1; for (let i = 0; i < 6; i++) { const a0 = SEG_U0 + i * SEG_DU; if (u > a0 - 0.06) hi = i; if (u > a0 - 0.16 && u < a0 + SEG_HALT + 0.1) sgCur = i; }
+      const zone = smooth(SEG_U0 - 0.3, SEG_U0 - 0.06, u) * (1 - smooth(SEG_U0 + 5 * SEG_DU + SEG_HALT + 0.05, SEG_U0 + 5 * SEG_DU + SEG_HALT + 0.36, u)), sg = pts && pts.seg;
+      for (let i = 0; i < 6 && sg; i++) { const L = sg[i][1] + 8, an = i <= hi;
+        SEG.r[i] = sl || paused ? (an ? L : 0) : clamp(SEG.r[i] + dt * (an ? Math.max(46, L / 2.4) : -L / 0.5), 0, L);
+        SEG.a[i] = sl || paused ? (i === sgCur ? 1 : 0) : SEG.a[i] + ((i === sgCur ? 1 : 0) - SEG.a[i]) * Math.min(1, dt * 4);
+        SEG.f[i * 4] = sg[i][0]; SEG.f[i * 4 + 1] = SEG.r[i]; SEG.f[i * 4 + 2] = SEG.a[i]; SEG.f[i * 4 + 3] = sg[i][1]; }
+      if (sgCur >= 0) SEG.cur = sgCur;
+      SEG.band = sl || paused ? (sgCur >= 0 ? 1 : 0) : SEG.band + ((sgCur >= 0 ? 1 : 0) - SEG.band) * Math.min(1, dt * 4);
+      SEG.k = [1, zone, Math.max(0, SEG.cur), SEG.band]; SEG.y = [[47, 60], [65, 75], [76, 108], [108, 143], [0, 0], [0, 0]][Math.max(0, SEG.cur)];
+      sArts.forEach((a, i) => a.classList.toggle('on', i === sgCur && (sl || u > SEG_U0 + i * SEG_DU - 0.08)));
+    }
     // Am Ende der Strecke blendet die eigene Bühne aus (handK); das Nervensystem bleibt bis dahin stehen
     // (im Baustein zieht sich die Lichtlinie vorher zurück – für die Übergabe an Puls; hier gibt es keine Übergabe)
     hk = smooth(U_LEN - 0.35, U_LEN - 0.05, u);
@@ -664,7 +705,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     { const [bx, by] = toBody(PT.x, PT.y, v); PTR[0] = bx - BODY_W / 2; PTR[1] = BODY_H / 2 - by; PTR[2] = Math.max(1, (desk ? 58 : 50) * (1 + 0.3 * kinoK) / v.s); PTR[3] = PT.k; }
     if (st && hk < 1 && (dirty || !paused || Math.abs(S.us - prevUs) > 1e-5 || mixWas !== mixK || kinoWas !== kinoK)) {
       if (relaxDirty) { st.upload(); if (stOld) stOld.upload(); }
-      const common = { bunt: BUNT, scharf: SCHARF, lasur: +Q.get('lasur') || 1, W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
+      const common = { seg: SEGM ? SEG.f : null, segK: SEGM ? SEG.k : null, segY: SEGM ? SEG.y : null, bunt: BUNT, scharf: SCHARF, lasur: +Q.get('lasur') || 1, W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
       if (cur !== welCur) { welCur = cur; if (cur >= 0) welT0 = S.time + 0.35; }
       let lampe = null;
       if (HSTIL === 10 && HB) {
@@ -783,7 +824,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       wire.setAttribute('opacity', fmt(sl ? (vis > 0.5 ? 1 : 0) : vis));
     } else wire.setAttribute('opacity', '0');
     // Verlauf hinter dem Text (Handy): nur während der Stationen – Start und Schluss zeigen die ganze Figur über dem Text
-    shade.classList.toggle('on', !sl && u > ARR[0] - ON_VOR && u < LEAVE[3] + 0.3);
+    shade.classList.toggle('on', !sl && ((u > ARR[0] - ON_VOR && u < LEAVE[3] + 0.3) || sgCur >= 0));
     // Start- und Schlusstext
     const heroA = sl ? (u < 0.15 ? 1 : 0) : 1 - smooth(0.03, 0.22, u); // fertig ausgeblendet, bevor der Text der ersten Station kommt (ab ARR − 0,3)
     heroEl.style.opacity = fmt(heroA); heroEl.style.visibility = heroA < 0.01 ? 'hidden' : '';
