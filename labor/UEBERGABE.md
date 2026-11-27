@@ -51,6 +51,11 @@ Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abs
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
 
+## ▶ 27.11.2026, 6 Uhr – Kai: „Warum sieht das Rückenmark deutlich schärfer gezeichnet aus als das Gehirn?“
+- **Ursache (an Kai erklärt):** 1 glatter Schlauch = gleichmäßige Punktreihen, am Gehirn kippt jede Windung das Raster · 2 weiße Lichter auf den Kuppen waschen die Farbe aus und lassen Punkte verschmelzen (am Rückenmark gibt es sie nicht) · 3 drei Tonstufen auf wenigen Pixeln lesen sich als Rauschen.
+- **Probe gebaut, noch nicht auf `main`:** `?scharf=1` (Uniform `uScharf`, wirkt auf die feinen Stile 9–11): keine weißen Lichter, zwei Tonstufen (reines Pigment · dunkle Furche ab `ao` 0,34–0,5), aktive Stelle heller statt weißer. Im Vergleich in Handy-Größe klar schärfer; Stand nur auf dem Arbeits-Branch.
+- **Wartet auf Kais Wahl (Karte im Chat):** Rezept vom Rückenmark (Empfehlung) · feineres Raster · beides · so lassen. Bei Wahl 1 oder 3: `uScharf` für die Stile 12–14 fest einschalten und veröffentlichen.
+
 ## ▶ 27.11.2026, 5:30 Uhr – Alle fünf Farb-Ideen als Entwürfe (`?hirn=10|11`, `?bunt=1`)
 - **Auftrag (Kai, 04:37):** „Baue alle Punkte, gerne auch kombinierte Varianten mit deinen Ideen.“ (Die fünf Ideen aus dem Abschnitt 4:30 Uhr.)
 - **Gehirn (Idee 1 + 2, feine Partikel wie `?hirn=9`):** `?hirn=10` „Bedeutung“ – das Gehirn kommt als weiße Zeichnung, jeder Halt malt seinen Hirnlappen in dessen Pigment (Hören Schläfe Türkis · Denken Stirn Gelb-Orange · Bewegung Zentral Karmin, Scheitel Magenta · Gleichgewicht Kleinhirn Grün, Hinterhaupt Orange, Stamm); die Farbe läuft von der Mitte des Areals aus (0,7 Gehirnradien je Sekunde, unregelmäßige Front, nasser Rand), bleibt stehen und zieht sich beim Zurückscrollen zurück – nach vier Halten ist das Gehirn bunt. `?hirn=11` „Farbe läuft“ – ganzes Gehirn, mit jedem Halt läuft eine neue Farbmischung vom aktiven Areal über alles.

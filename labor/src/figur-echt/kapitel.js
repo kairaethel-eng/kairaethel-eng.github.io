@@ -128,6 +128,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // h (Kai: „auch das Äußere dürfte anatomischer sein“): feines Raster schon in der Übersicht + kräftiges Licht von vorn links (Relief)
   const VAR = { quiet: START ? 1 : 0, light: 'hijklm'.includes(START) && START ? 0.9 : START ? 0.5 : 0, dense: 'hijklm'.includes(START) && START ? 1 : 0, glass: START === 'i' ? 0.62 : START === 'j' ? 0.82 : START === 'l' || START === 'm' ? 0.7 : 0.9, zoomIn: 'jklm'.includes(START) && START !== '', shell: START === 'l' || START === 'm' ? 1 : 0, ground: START && START !== 'b' ? 1 : 0, turn: START && START !== 'b' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0,
     inner: START === 'e' || START === 'f' || START === 'i' ? 1 : 0, half: START === 'f' ? 1 : 0, cycle: START === 'g', lens: INNEN ? 1 : 0, lift: INNEN ? 78 : 0 };
+  const SCHARF = Q.get('scharf') === '1' ? 1 : 0; // Probe: Gehirn nach dem Rezept des Rückenmarks (reine Farbe, keine weißen Lichter)
   const BUNT = Q.get('bunt') === '1' ? 1 : 0; // ?bunt=1 (Kai 27.11.2026): die Aquarell-Farben auf der ganzen Seite – hier: Muskelfigur in Pigmenten, Gehirn „Bedeutung“
   // Stil des Gehirns (Kai 26.11.2026: „kräftiger, klarer, auffallender“): A hell auf dunkel ist Standard; ?hirn=alt|b|c zum Vergleich
   const HSTIL = HIRN ? ({ alt: 0, a: 1, b: 2, c: 3, 1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10, 8: 11, 9: 12, 10: 13, 11: 14 }[Q.get('hirn')] ?? (BUNT ? 13 : 1)) : 0, RAUM_H = [1, 0.38, 0.5, 0.38, 0.2, 0.08, 0.85, 0.5, 0.1, 0.06, 0.05, 0.12, 0.12, 0.12, 0.12][HSTIL];
@@ -663,7 +664,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     { const [bx, by] = toBody(PT.x, PT.y, v); PTR[0] = bx - BODY_W / 2; PTR[1] = BODY_H / 2 - by; PTR[2] = Math.max(1, (desk ? 58 : 50) * (1 + 0.3 * kinoK) / v.s); PTR[3] = PT.k; }
     if (st && hk < 1 && (dirty || !paused || Math.abs(S.us - prevUs) > 1e-5 || mixWas !== mixK || kinoWas !== kinoK)) {
       if (relaxDirty) { st.upload(); if (stOld) stOld.upload(); }
-      const common = { bunt: BUNT, W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
+      const common = { bunt: BUNT, scharf: SCHARF, W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
       if (cur !== welCur) { welCur = cur; if (cur >= 0) welT0 = S.time + 0.35; }
       let lampe = null;
       if (HSTIL === 10 && HB) {

@@ -15,7 +15,7 @@ uniform float uTxt, uDot, uMarkY; uniform vec3 cT0, cT1; // uTxt: der Leitsatz e
 uniform vec2 uRes, uAnchor;
 uniform vec4 uView;   // Blickpunkt x, y (Grundriss, Körpermitte = 0, y oben), Maßstab px/Einheit, Drehung (Wiegen)
 uniform float uTime, uBreath, uCalm, uIntro, uUnit, uSp, uSpB, uDpr, uZoom, uTip, uPulse, uNerve, uTilt, uScroll, uKino, uEnd;
-uniform float uQuiet, uLight, uGround, uScanIn, uInner, uHalf, uLens, uDense, uGlass, uAreaK, uHirn, uShell, uLobe, uAreaI, uSpH, uNs, uHStil, uWelle, uKern, uLampeS, uBunt; uniform vec4 uArea, uBC, uLampe, uLauf; uniform vec4 uMal[4]; uniform vec3 uLaufP; // uLampe (Stil 10 „Laterne“): Ort des Lichts im Körper (xyz) und Stärke · uLampeS: sein Weg am Rückenmark (vom Gehirn aus) // uNs: Schlussbild „Nervensystem“ (Fassungen K, M): Körper wird Glas, Gehirn, Rückenmark und Nerven stehen im Licht // uBC: Mitte und Radius des Gehirns (Fassung K) · uAreaI: Station · uSpH: Punktabstand im Gehirn // Fassung K: Areal im Gehirn (Mitte, Radius) leuchtet // uGlass: wie durchsichtig die Haut über dem Innenleben wird (e–g 0,9 · i 0,62: das Relief bleibt als Hülle) // e–g (25.11. morgens, Kai: „innere Strukturen zu wenig sichtbar“): Innenleben dauerhaft (ganz / halbe Seite), Lupe auch ohne Filmlicht // Vergleich Startfigur (25.11.2026, ?start=b|c|d): Muskeln nur an der aktiven Stelle · Tiefe im Rumpf · Boden · Scan-Linie beim Auftritt
+uniform float uQuiet, uLight, uGround, uScanIn, uInner, uHalf, uLens, uDense, uGlass, uAreaK, uHirn, uShell, uLobe, uAreaI, uSpH, uNs, uHStil, uWelle, uKern, uLampeS, uBunt, uScharf; uniform vec4 uArea, uBC, uLampe, uLauf; uniform vec4 uMal[4]; uniform vec3 uLaufP; // uLampe (Stil 10 „Laterne“): Ort des Lichts im Körper (xyz) und Stärke · uLampeS: sein Weg am Rückenmark (vom Gehirn aus) // uNs: Schlussbild „Nervensystem“ (Fassungen K, M): Körper wird Glas, Gehirn, Rückenmark und Nerven stehen im Licht // uBC: Mitte und Radius des Gehirns (Fassung K) · uAreaI: Station · uSpH: Punktabstand im Gehirn // Fassung K: Areal im Gehirn (Mitte, Radius) leuchtet // uGlass: wie durchsichtig die Haut über dem Innenleben wird (e–g 0,9 · i 0,62: das Relief bleibt als Hülle) // e–g (25.11. morgens, Kai: „innere Strukturen zu wenig sichtbar“): Innenleben dauerhaft (ganz / halbe Seite), Lupe auch ohne Filmlicht // Vergleich Startfigur (25.11.2026, ?start=b|c|d): Muskeln nur an der aktiven Stelle · Tiefe im Rumpf · Boden · Scan-Linie beim Auftritt
 uniform vec4 uRel, uAct;
 uniform vec4 uPtr;
 uniform vec3 uStC[4];  // Stationen: Mitte x, y (Körpermitte = 0, y oben), Radius
@@ -434,10 +434,12 @@ void main(){
         // Partikelstil“): dieselben Pigmente, aber als feine, einzelne Punkte – die Zeichnung folgt genau den Windungen: Furche Tusche,
         // Flanke sattes dunkles Pigment, Kuppe helles Pigment, nur auf dem Scheitel der Kuppe im Licht Papierweiß.
         float sF = step(11.5, uHStil);
-        { float hl = .78 * smoothstep(.5, 1., Lk) * smoothstep(.62, .92, ao) * (1. - isSt);
-          vec3 cF = mix(pg * .52, mix(min(vec3(1.), pg * 1.3), vec3(1., .98, .94), hl), smoothstep(.14, .46, ao));
+        // uScharf (Kai 27.11., 05:52: „Warum sieht das Rückenmark deutlich schärfer gezeichnet aus als das Gehirn?“): das Rezept des Rückenmarks –
+        // reine Farbe je Punkt, keine weißen Lichter, nur zwei Tonstufen (Pigment und Tusche) mit schmalem Übergang
+        { float hl = .78 * smoothstep(.5, 1., Lk) * smoothstep(.62, .92, ao) * (1. - isSt) * (1. - uScharf);
+          vec3 cF = mix(pg * mix(.52, .2, uScharf), mix(min(vec3(1.), pg * mix(1.3, 1.16, uScharf)), vec3(1., .98, .94), hl), smoothstep(mix(.14, .34, uScharf), mix(.46, .5, uScharf), ao));
           cF *= mix(.84, 1., smoothstep(0., .45, Lk)) * mix(.85, 1., fog) * mix(1., .84, uAreaK * (1. - on) * (1. - isSt));
-          cF = mix(cF, mix(pg, vec3(1., .98, .94), .2 + .5 * hl) * 1.1, on * smoothstep(.3, .7, ao));
+          cF = mix(cF, mix(pg, vec3(1., .98, .94), (.2 + .5 * hl) * (1. - uScharf)) * mix(1.1, 1.3, uScharf), on * smoothstep(.3, .7, ao));
           cF = mix(cF, vec3(.05, .02, .05), (1. - smoothstep(.07, .2, ao)) * (1. - klein * .7) * .92);
           cQ = mix(cQ, cF + vec3(1., .98, .94) * sp2 * .3, sF); }
         cQ = mix(cQ, pg * 1.04, aqS * malK);                                                     // Spritzer: reines Pigment
@@ -619,7 +621,7 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
       gl.uniform1f(U.uTilt, u.tilt); gl.uniform1f(U.uScroll, u.scroll);
       gl.uniform1f(U.uKino, u.kino); gl.uniform1f(U.uEnd, u.end);
       gl.uniform1f(U.uQuiet, u.quiet || 0); gl.uniform1f(U.uLight, u.light || 0); gl.uniform1f(U.uGround, u.ground || 0); gl.uniform1f(U.uScanIn, u.scanIn || 0); gl.uniform1f(U.uInner, u.inner || 0); gl.uniform1f(U.uHalf, u.half || 0); gl.uniform1f(U.uLens, u.lens || 0); gl.uniform1f(U.uDense, u.dense || 0); gl.uniform1f(U.uGlass, u.glass || 0.9); gl.uniform1f(U.uAreaK, u.areaK || 0); gl.uniform1f(U.uHirn, u.hirn || 0); gl.uniform1f(U.uShell, u.shell || 0); gl.uniform1f(U.uNs, u.ns || 0); gl.uniform1f(U.uLobe, u.lobe == null ? -1 : u.lobe); gl.uniform1f(U.uAreaI, u.areaI == null ? -1 : u.areaI); gl.uniform1f(U.uSpH, (pts.hirn && pts.hirn.sp) || 0.42); { const B = pts.hirn ? [...pts.hirn.c, pts.hirn.r] : [0, 0, 0, 1]; gl.uniform4f(U.uBC, B[0], B[1], B[2], B[3]); if (U.uMal) gl.uniform4fv(U.uMal, u.mal || MAL0); if (U.uLauf) { const L = u.lauf || [-1, -1, 0, 0]; gl.uniform4f(U.uLauf, L[0], L[1], L[2], 0); const P = u.laufP || [0, 0, 0]; gl.uniform3f(U.uLaufP, P[0], P[1], P[2]); } } { const A = u.area || [0, 0, 0, 0]; gl.uniform4f(U.uArea, A[0], A[1], A[2], A[3]); }
-      gl.uniform3fv(U.uStC, u.stc); gl.uniform1f(U.uTxt, u.txt || 0); gl.uniform1f(U.uHStil, u.hstil || 0); gl.uniform1f(U.uKern, u.kern || 1); gl.uniform1f(U.uBunt, u.bunt || 0); { const L = u.lampe || [0, 0, 0, 0]; gl.uniform4f(U.uLampe, L[0], L[1], L[2], L[3]); gl.uniform1f(U.uLampeS, u.lampeS === undefined ? -99 : u.lampeS); } gl.uniform1f(U.uWelle, u.welle === undefined ? 99 : u.welle);
+      gl.uniform3fv(U.uStC, u.stc); gl.uniform1f(U.uTxt, u.txt || 0); gl.uniform1f(U.uHStil, u.hstil || 0); gl.uniform1f(U.uKern, u.kern || 1); gl.uniform1f(U.uBunt, u.bunt || 0); gl.uniform1f(U.uScharf, u.scharf || 0); { const L = u.lampe || [0, 0, 0, 0]; gl.uniform4f(U.uLampe, L[0], L[1], L[2], L[3]); gl.uniform1f(U.uLampeS, u.lampeS === undefined ? -99 : u.lampeS); } gl.uniform1f(U.uWelle, u.welle === undefined ? 99 : u.welle);
       gl.uniform4f(U.uPtr, u.ptr[0], u.ptr[1], u.ptr[2], u.ptr[3]);
       const Hn = u.solid && pts.hirn;
       if (!Hn) { gl.uniform1f(U.uSolid, 0); gl.drawArrays(gl.POINTS, 0, count); return; }
