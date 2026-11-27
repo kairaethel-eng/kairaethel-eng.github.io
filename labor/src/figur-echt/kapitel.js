@@ -128,20 +128,23 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // h (Kai: „auch das Äußere dürfte anatomischer sein“): feines Raster schon in der Übersicht + kräftiges Licht von vorn links (Relief)
   const VAR = { quiet: START ? 1 : 0, light: 'hijklm'.includes(START) && START ? 0.9 : START ? 0.5 : 0, dense: 'hijklm'.includes(START) && START ? 1 : 0, glass: START === 'i' ? 0.62 : START === 'j' ? 0.82 : START === 'l' || START === 'm' ? 0.7 : 0.9, zoomIn: 'jklm'.includes(START) && START !== '', shell: START === 'l' || START === 'm' ? 1 : 0, ground: START && START !== 'b' ? 1 : 0, turn: START && START !== 'b' ? 0.3 : 0, scanIn: START === 'd' ? 1 : 0,
     inner: START === 'e' || START === 'f' || START === 'i' ? 1 : 0, half: START === 'f' ? 1 : 0, cycle: START === 'g', lens: INNEN ? 1 : 0, lift: INNEN ? 78 : 0 };
+  const BUNT = Q.get('bunt') === '1' ? 1 : 0; // ?bunt=1 (Kai 27.11.2026): die Aquarell-Farben auf der ganzen Seite – hier: Muskelfigur in Pigmenten, Gehirn „Bedeutung“
   // Stil des Gehirns (Kai 26.11.2026: „kräftiger, klarer, auffallender“): A hell auf dunkel ist Standard; ?hirn=alt|b|c zum Vergleich
-  const HSTIL = HIRN ? ({ alt: 0, a: 1, b: 2, c: 3, 1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10, 8: 11, 9: 12 }[Q.get('hirn')] ?? 1) : 0, RAUM_H = [1, 0.38, 0.5, 0.38, 0.2, 0.08, 0.85, 0.5, 0.1, 0.06, 0.05, 0.12, 0.12][HSTIL];
+  const HSTIL = HIRN ? ({ alt: 0, a: 1, b: 2, c: 3, 1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10, 8: 11, 9: 12, 10: 13, 11: 14 }[Q.get('hirn')] ?? (BUNT ? 13 : 1)) : 0, RAUM_H = [1, 0.38, 0.5, 0.38, 0.2, 0.08, 0.85, 0.5, 0.1, 0.06, 0.05, 0.12, 0.12, 0.12, 0.12][HSTIL];
   // Stil 10 „Laterne“ (?hirn=7, Kai 27.11.2026): EIN Licht im Körper. LAMPE = sein Ort (folgt dem Ziel über die Zeit, rund 1,2 s), s = sein Weg am Rückenmark
-  const LAMPE = { p: null, s: -99, cum: null };
+  const LAMPE = { p: null, s: -99, cum: null }; const MAL = { r: [0, 0, 0, 0], hi: -1, von: -1, nach: -1, lr: 0, lp: null, f: new Float32Array(16) }; // Aquarell 13, 14: wie weit die Farbe je Halt gelaufen ist
   let welT0 = -99, welCur = -1; const KERN = +Q.get('kern') || 1; // Lichtwelle (Stil 8, 9): läuft einmal, wenn ein Areal aktiv wird // RAUM_H: so viel Raumlicht bleibt im Gehirn-Blick
   let raumWar = 1;
   const raum = (k) => { k = Math.round(k * 50) / 50; if (k === raumWar) return; raumWar = k; if (k >= 1) document.documentElement.style.removeProperty('--fx-hirn'); else document.documentElement.style.setProperty('--fx-hirn', String(k)); };
   // C: weicher Lichtschein um das Gehirn – ein Ring in Gehirngröße über der Zeichenfläche (hellt nur auf), nur im Gehirn-Blick eingeschaltet
   const SCHEIN = { 3: '120,180,240', 4: '60,200,255', 5: '150,110,255', 8: '40,150,230' }[HSTIL], schein = SCHEIN ? document.createElement('div') : null; let scheinAn = false;
   if (schein) { schein.setAttribute('aria-hidden', 'true'); schein.style.cssText = 'position:absolute;left:0;top:0;z-index:0;display:none;pointer-events:none;border-radius:50%;mix-blend-mode:screen;background:radial-gradient(closest-side,rgba(120,180,240,0) 40%,rgba(120,180,240,.1) 55%,rgba(120,180,240,.17) 66%,rgba(120,180,240,.1) 78%,rgba(120,180,240,.03) 90%,rgba(120,180,240,0))'.replace(/120,180,240/g, SCHEIN); canvas.after(schein); }
-  if (Q.has('hirn') && HIRN) { // Umschalter Gehirn-Stil: nur solange ?hirn= in der Adresse steht
+  if ((Q.has('hirn') || BUNT) && HIRN) { // Umschalter Gehirn-Stil: nur solange ?hirn= oder ?bunt=1 in der Adresse steht
     const nav = document.createElement('nav'); nav.setAttribute('aria-label', 'Gehirn vergleichen');
     nav.style.cssText = 'position:fixed;z-index:60;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + .75rem);transform:translateX(-50%);display:flex;gap:.25rem;padding:.25rem;border-radius:2rem;background:rgba(10,22,27,.92);border:1px solid rgba(255,255,255,.18);font:600 .8125rem/1 system-ui,sans-serif;max-width:calc(100vw - 1rem);overflow-x:auto;scrollbar-width:none';
-    [['alt', 'Bisher', 0], ['a', 'A hell', 1], ['9', '9 Pigment fein', 12], ['8', '8 Aquarell', 11], ['7', '7 Laterne', 10], ['1', '1 Neon', 4], ['5', '5 Tiefsee', 8], ['6', '6 Kintsugi', 9], ['2', '2 Gold + Violett', 5], ['3', '3 Warm', 6], ['4', '4 Echt', 7]].forEach(([k, t, i]) => { const l = document.createElement('a'); const q = new URLSearchParams(location.search); q.set('hirn', k); l.href = '?' + q.toString(); const on = HSTIL === i; l.textContent = t; l.style.cssText = `padding:.625rem .7rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
+    [['alt', 'Bisher', 0], ['a', 'A hell', 1], ['10', '10 Bedeutung', 13], ['11', '11 Farbe läuft', 14], ['9', '9 Pigment fein', 12], ['8', '8 Aquarell', 11], ['7', '7 Laterne', 10], ['1', '1 Neon', 4], ['5', '5 Tiefsee', 8], ['6', '6 Kintsugi', 9], ['2', '2 Gold + Violett', 5], ['3', '3 Warm', 6], ['4', '4 Echt', 7]].forEach(([k, t, i]) => { const l = document.createElement('a'); const q = new URLSearchParams(location.search); q.set('hirn', k); l.href = '?' + q.toString(); const on = HSTIL === i; l.textContent = t; l.style.cssText = `padding:.625rem .7rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${on ? '#1B1206' : '#E4E3D8'};background:${on ? '#E8A33D' : 'transparent'}`; if (on) l.setAttribute('aria-current', 'true'); nav.appendChild(l); });
+    { const l = document.createElement('a'), q = new URLSearchParams(location.search); if (BUNT) q.delete('bunt'); else q.set('bunt', '1'); if (!q.has('hirn')) q.set('hirn', '10'); l.href = '?' + q.toString(); l.textContent = BUNT ? 'Ganze Seite bunt: an' : 'Ganze Seite bunt: aus'; // ?bunt=1 dazuschalten (Figur, Kapitel 02, Wirbelsäule, Übergänge)
+      l.style.cssText = `padding:.625rem .7rem;border-radius:2rem;text-decoration:none;white-space:nowrap;color:${BUNT ? '#1B1206' : '#E4E3D8'};background:${BUNT ? '#8BC34A' : 'transparent'};box-shadow:inset 0 0 0 1px rgba(228,227,216,.35)`; nav.insertBefore(l, nav.firstChild); }
     document.body.appendChild(nav);
   }
   if (START) document.documentElement.dataset.start = START;
@@ -367,7 +370,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const t0 = performance.now();
     if (gl) try {
       if (d) { // echte Figur
-        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense, hirn: HIRN, shell: !!VAR.shell, hirnSp: HSTIL === 10 ? (+Q.get('korn') || (big ? 0.52 : 0.7)) : HSTIL === 12 && (+Q.get('korn') || !big) ? (+Q.get('korn') || 0.29) : big ? (innerWidth >= 1700 ? 0.22 : 0.25) : 0.33, areale: AREALE.map((a) => [a[4], a[5]]), ruhig: HIRN });
+        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense, hirn: HIRN, shell: !!VAR.shell, hirnSp: HSTIL === 10 ? (+Q.get('korn') || (big ? 0.52 : 0.7)) : HSTIL >= 12 && (+Q.get('korn') || !big) ? (+Q.get('korn') || 0.29) : big ? (innerWidth >= 1700 ? 0.22 : 0.25) : 0.33, areale: AREALE.map((a) => [a[4], a[5]]), ruhig: HIRN });
         if (HIRN && d.parts.some((q) => q.kind === 'brain2')) document.querySelectorAll('[data-quelle-hirn]').forEach((e) => { e.hidden = false; }); // Namensnennung der Gehirn-Quelle (CC BY-SA 3.0) – nur, wenn sie gezeigt wird
         if (HIRN && pts.brain && pts.brain[0][0] < 1e8) {
           const B = pts.brain, c = B.map((r) => (r[0] + r[1]) / 2), h = B.map((r) => (r[1] - r[0]) / 2);
@@ -660,7 +663,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     { const [bx, by] = toBody(PT.x, PT.y, v); PTR[0] = bx - BODY_W / 2; PTR[1] = BODY_H / 2 - by; PTR[2] = Math.max(1, (desk ? 58 : 50) * (1 + 0.3 * kinoK) / v.s); PTR[3] = PT.k; }
     if (st && hk < 1 && (dirty || !paused || Math.abs(S.us - prevUs) > 1e-5 || mixWas !== mixK || kinoWas !== kinoK)) {
       if (relaxDirty) { st.upload(); if (stOld) stOld.upload(); }
-      const common = { W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
+      const common = { bunt: BUNT, W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
       if (cur !== welCur) { welCur = cur; if (cur >= 0) welT0 = S.time + 0.35; }
       let lampe = null;
       if (HSTIL === 10 && HB) {
@@ -677,7 +680,20 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
         else { const k = 1 - Math.exp(-dt * (fahrt > 0.02 ? 7 : 3.2)); for (let c = 0; c < 3; c++) LAMPE.p[c] += (T[c] - LAMPE.p[c]) * k; LAMPE.s = sT < -50 ? -99 : LAMPE.s < -50 ? Math.min(sT, 0) : LAMPE.s + (sT - LAMPE.s) * k; }
         lampe = [...LAMPE.p, 1];
       }
-      if (mixK > 0) st.draw({ ...common, lampe, lampeS: LAMPE.s, welle: sl || paused ? 99 : S.time - welT0, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC, quiet: VAR.quiet, light: VAR.light, ground: VAR.ground, scanIn: VAR.scanIn, half: VAR.half, lens: VAR.lens, dense: VAR.dense, glass: VAR.glass, shell: VAR.shell,
+      let mal = null, lauf = null;
+      if (HSTIL >= 13 && HB && pts.hirn) {
+        // Die Farbe läuft über die Zeit: je Halt wächst der Radius der Front von der Mitte seines Areals (0,7 Gehirnradien je Sekunde),
+        // beim Zurückscrollen zieht sie sich schneller zurück. Was gemalt ist, bleibt – nach vier Halten ist das Gehirn bunt.
+        const R = pts.hirn.r, zoomK = v.s / V.A.s;
+        if (cur >= 0) MAL.hi = cur; else if (fahrt > 0.5) MAL.hi = 3; else if (zoomK < 1.3 && nsK < 0.01) { MAL.hi = -1; MAL.von = MAL.nach = -1; MAL.lr = 0; }
+        for (let i = 0; i < 4; i++) { const an = i <= MAL.hi; MAL.r[i] = sl || paused ? (an ? 3 * R : 0) : clamp(MAL.r[i] + (an ? 0.7 : -2.2) * dt * R, 0, 3 * R);
+          const P = HB.ar[i].p; MAL.f[i * 4] = P[0]; MAL.f[i * 4 + 1] = P[1]; MAL.f[i * 4 + 2] = P[2]; MAL.f[i * 4 + 3] = MAL.r[i]; }
+        if (cur >= 0 && cur !== MAL.nach) { MAL.von = MAL.nach; MAL.nach = cur; MAL.lr = 0; MAL.lp = HB.ar[cur].p; }
+        else if (MAL.nach < 0 && MAL.hi === 3) { MAL.nach = 3; MAL.lp = HB.ar[3].p; }
+        MAL.lr = sl || paused ? 3 * R : Math.min(3 * R, MAL.lr + 0.7 * dt * R);
+        mal = MAL.f; lauf = [MAL.von, MAL.nach, MAL.nach < 0 ? 0 : MAL.lr];
+      }
+      if (mixK > 0) st.draw({ ...common, lampe, lampeS: LAMPE.s, mal, lauf, laufP: MAL.lp, welle: sl || paused ? 99 : S.time - welT0, intro: S.intro, spB: pts.spB || SP, kino: easeIO(kinoK), end: S.calm, stc: STC, quiet: VAR.quiet, light: VAR.light, ground: VAR.ground, scanIn: VAR.scanIn, half: VAR.half, lens: VAR.lens, dense: VAR.dense, glass: VAR.glass, shell: VAR.shell,
         inner: VAR.cycle ? (sl ? 0.6 : (() => { const ph = (S.time % 11) / 11; return smooth(0.18, 0.4, ph) - smooth(0.68, 0.9, ph); })()) : VAR.zoomIn ? smooth(1.12, 1.6, v.s / V.A.s) * (1 - fahrt) : VAR.inner,
         ...(HIRN && HB && cur >= 0 ? { solid: 1, hstil: HSTIL, kern: KERN, ns: nsK, areaI: cur, lobe: HB.ar[cur].lobe, area: [...HB.ar[cur].p, HB.ar[cur].r * 0.62], areaK: S.act[cur] * smooth(1.6, 2.4, v.s / V.A.s), hirn: smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt), txt: SATZ.n ? Math.min(1, S.txt / SATZ_FLUG) : 0 } : HIRN && HB ? { solid: 1, hstil: HSTIL, kern: KERN, ns: nsK, area: [0, 0, 0, 1], areaK: 0, hirn: smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt), txt: SATZ.n ? Math.min(1, S.txt / SATZ_FLUG) : 0 } : {}) });
       if (stOld && mixK < 1) stOld.draw({ ...common, intro: 1 });

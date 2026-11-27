@@ -7,6 +7,7 @@ Neueste Entscheidung oben. Überholte ganze Abschnitte (Figur plus, Tür-Entwurf
 ## 27.11.2026, 3 Uhr – Vorbild aus der Praxis: Aquarell-Anatomie (Kai)
 - Kai schickt ein Foto der Bilder, die in der Praxis hängen (Anatomie als Tuschezeichnung mit Aquarell, kräftig bunt, Farbspritzer), und fragt, ob daraus etwas fürs Gehirn wird. **Merkregel:** Was in der Praxis hängt, ist Kais Geschmack und zugleich Wiedererkennung für Patienten – solche Vorbilder schlagen jede Stilidee von außen. Nur die Machart übernehmen (Farben, Tusche, Spritzer), nie ein Motiv der Drucke nachbauen.
 - Der Entwurf `?hirn=8` bricht bewusst die Farbregel der Punkte (Petrol → Knochenweiß, Bernstein = Handlung). Gilt nur hinter dem Schalter; wählt Kai den Stil, wird die Regel mit ihm neu gefasst.
+- **Merkregel Farbe (27.11., 5 Uhr, mein Vorschlag an Kai, noch nicht bestätigt):** Bunt braucht einen Grund – Farbe zeigt Bedeutung (welcher Hirnbereich, welcher Abschnitt) und kommt über die Zeit an; Ungemaltes bleibt weiße Zeichnung. Bernstein bleibt auch im bunten Entwurf die Farbe für Handlung und die aktive Stelle.
 
 ## 27.11.2026, 2:30 Uhr – Darstellung statt Farbe (Kai: „irgendwie ist es das auch nicht“)
 - **Merkregel:** Gefällt ein Bild nach zwei Farbrunden nicht, liegt es an der Darstellung, nicht an der Farbe. Dann die Bauart wechseln: luftig statt deckend, wenige große Zeichen mit Rangfolge, und **ein** Licht, das auf den Besucher antwortet (Ankommen, Scrollen, Antippen – am iPhone gibt es keinen Zeiger). Der aktive Bereich ändert das Material oder das Licht, nicht nur den Farbton.

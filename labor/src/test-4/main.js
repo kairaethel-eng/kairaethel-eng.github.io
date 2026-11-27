@@ -218,7 +218,16 @@ const relaxTex = new THREE.CanvasTexture(relaxCv);
 relaxTex.minFilter = relaxTex.magFilter = THREE.LinearFilter;
 
 const C = (h) => new THREE.Color(h);
+// ?bunt=1 (Kai 27.11.2026, 04:37: „Baue alle Punkte“ – Entwurf): die Aquarell-Pigmente seiner Praxisbilder auf der ganzen Seite –
+// Perlenbänder (Kap. 02), Wirbelsäule (Kap. 03), Staub der Übergänge als Farbspritzer; Kapitel 01 liest denselben Schalter (kapitel.js).
+const BUNT = new URLSearchParams(location.search).get('bunt') === '1' ? 1 : 0;
+const AQ_GLSL = /* glsl */`
+  vec3 aqPal(float t){ float q = fract(t) * 6.;
+    vec3 c = mix(vec3(1., .74, .08), vec3(1., .42, .04), smoothstep(.28, .72, q)); c = mix(c, vec3(.88, .06, .16), smoothstep(1.28, 1.72, q));
+    c = mix(c, vec3(.92, .14, .56), smoothstep(2.28, 2.72, q)); c = mix(c, vec3(.03, .62, .7), smoothstep(3.28, 3.72, q));
+    c = mix(c, vec3(.44, .78, .16), smoothstep(4.28, 4.72, q)); return mix(c, vec3(1., .74, .08), smoothstep(5.28, 5.72, q)); }`;
 const uniforms = {
+  uBunt: { value: BUNT },
   uTime: { value: 0 }, uMorph: { value: 0 }, uPix: { value: 1 }, uSize: { value: 1 }, uAlpha: { value: 1 },
   uRelax: { value: relaxTex }, uBodyWH: { value: new THREE.Vector2(BODY_W * BODY_SCALE, BODY_H * BODY_SCALE) },
   uXf: { value: [0, 1, 2, 3, 4].map(() => new THREE.Vector4(0, 0, 0, 1)) },
@@ -245,7 +254,7 @@ initFarbe({ uniforms });
 const vert = /* glsl */`
   attribute float aHeat; attribute vec3 pos2; attribute vec3 pos3; attribute float kind3; attribute vec3 pos4; attribute float kind4; attribute vec4 aRand;
   attribute vec3 aF0; attribute vec2 aW; attribute float aIdx;
-  uniform float uSpread, uFadeMid, uVeil, uDust, uKeep;
+  uniform float uSpread, uFadeMid, uVeil, uDust, uKeep, uBunt;
   uniform float uBreath, uCalm, uWave, uBodyRot;
   uniform float uTime, uMorph, uPix, uSize, uHouse, uIntro, uSpineRot, uCut, uRoofH, uRoofA, uLogo;
   uniform float uTilt, uProj, uPr, uDr4, uLp4, uAsp, uRibA; uniform vec2 uRib; uniform vec4 uPtr;
@@ -254,7 +263,7 @@ const vert = /* glsl */`
   varying vec3 vCol; varying float vA; varying float vSize;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
   float hash1(float n){ return fract(sin(n*12.9898)*43758.5453); }
-` + PTR_GLSL + /* glsl */`
+` + PTR_GLSL + AQ_GLSL + /* glsl */`
   // jede Form liefert Position (xyz), Farbe, Sichtbarkeit (al) und den Durchmesser des Punkts in Welt-Einheiten (dw)
   void shape(int i, out vec3 p, out vec3 col, out float dw, out float al){
     dw = .024; al = 1.;
@@ -285,13 +294,15 @@ const vert = /* glsl */`
       p = vec3(x, y, z);
       float m = mod(lane, 4.);
       col = m<1. ? cBlue : m<2. ? cLane : m<3. ? cBone : cAmber;
-      col = mix(col, cBone, .2 + .5*abs(sj)*2.*abs(sj)*2.); // Rand des Bands heller
+      col = mix(col, aqPal(lane * .1818 + x * .012) * 1.08, uBunt);  // bunt: jedes Band trägt ein Pigment, es wandert sanft entlang der Bahn
+      col = mix(col, cBone, (.2 + .5*abs(sj)*2.*abs(sj)*2.) * (1. - .55 * uBunt)); // Rand des Bands heller
       al = step(bead, uRib.y - .5) * (.15 + .42*abs(sj)*2.) * uRibA;
       dw = .022 * uXf[1].w;
     } else if(i==2){
       p = rotY(pos2, uSpineRot);
       float band = exp(-pow((pos2.y - (3.6 - mod(uTime*1.6, 9.)))*2.2, 2.));
       col = mix(cBone, cBlue, band*.8);
+      col = mix(col, aqPal(.333 - (3.4 - pos2.y) * .095) * (1. + .3 * band), uBunt); // bunt: Regenbogen entlang der Säule (oben Karmin, unten Türkis)
       al = step(aRand.x, .55); dw = .021 * uXf[2].w / .84;
     } else if(i==3){
       // Dachlinie: liegt genau auf dem SVG-Dach (uXf[3] aus roofPlace), vergeht, während das Dach gezeichnet wird (uRoofA)
@@ -349,13 +360,14 @@ const vert = /* glsl */`
     float dustK = uVeil * step(.01, uDust); // uDust = Anteil der Punkte, die als Staub sichtbar werden (Handy 1 → 45 %, PC weniger: dort gibt es mehr Punkte)
     a = max(a, dustK * step(aRand.z, .45 * uDust) * .6 * smoothstep(0., .22, t) * (1. - smoothstep(.8, 1., t)));
     dw = mix(dw, .03, dustK);
-    col = mix(col, mix(cPetrol * 1.5, cBone, aRand.x), dustK * (1. - smoothstep(.7, 1., t)));
+    col = mix(col, mix(mix(cPetrol * 1.5, cBone, aRand.x), aqPal(aRand.x + aRand.y), uBunt), dustK * (1. - smoothstep(.7, 1., t)));
     // 20.11. (Auftrag Kai: „die Zerstreuung der Pixel-Übergänge auf der ganzen Seite“): bei JEDEM Formwechsel sind die Punkte unterwegs
     // feiner Staub – kleine feste Größe, höchstens 60 % deckend – und werden erst beim Ankommen wieder zur Form
     float fine = sin(t * 3.14159) * (1. - dustK);
     fine = smoothstep(0., .55, fine);
-    dw = mix(dw, .034, fine);
+    dw = mix(dw, .034 * (1. + 1.9 * step(aRand.z, .05) * uBunt), fine); // bunt: jeder zwanzigste Punkt ist unterwegs ein größerer Farbtropfen
     a = mix(a, min(a, .6), fine);
+    col = mix(col, aqPal(aRand.x + aRand.y), fine * .9 * uBunt);          // bunt (Idee 5): der Staub der Übergänge fliegt als Farbspritzer
     // Hausordnung (seit 14.11.2026 nachts direkt nach Kapitel 02): die HOP-Kreise (Form 4) legen sich über die laufende Form
     // und lösen sich danach in die Wirbelsäule auf – uLogo 0..1, unabhängig von der Kapitelfolge in uMorph
     if(uLogo > .001){
@@ -479,6 +491,7 @@ let det = null, SC = 1, CY = 0, spineK = 0;
 const discQ = new URLSearchParams(location.search).get('disc'), DISC_MODE = discQ === 'alle' ? 1 : discQ === 'blau' ? 2 : 0;
 const N_GRAIN = isDesktop() ? 165000 : 46000, N_SLICE = isDesktop() ? 330000 : 85000;
 const sU = {
+  uBunt: uniforms.uBunt,
   uTime: uniforms.uTime, uRot: uniforms.uSpineRot, uCut: uniforms.uCut, uXf: { value: uniforms.uXf.value[2] },
   uZone: { value: -10 }, uZoneAmt: { value: 0 }, uOn: { value: 0 }, uStip: { value: 1 }, uPix: uniforms.uPix,
   uFade: { value: 1 }, uClip: { value: -2 }, // Handy (18.11.): Ausblenden als Ganzes + weiche Unterkante am Kapitelende
@@ -495,6 +508,7 @@ const GLSL_COMMON = /* glsl */`
   uniform float uTime, uRot, uCut, uZone, uZoneAmt, uOn, uStip, uPix, uPeri, uPeriStart, uScan, uScanAmt, uDiff, uFine, uDiscMode, uSharp, uEcht, uFade, uClip; uniform vec4 uXf;
   uniform vec3 cBone, cDisc, cDiscD, cDiscA, cAmber, cBlue, cSignal, cCore;
   vec3 rotY(vec3 p, float a){ float c=cos(a), s=sin(a); return vec3(c*p.x+s*p.z, p.y, -s*p.x+c*p.z); }
+  uniform float uBunt;` + AQ_GLSL + /* glsl */`
   const vec3 LDIR = vec3(.48, .72, .5);
   // Fokus (Film „Bandscheibenvorfall“): alles außerhalb des Segments L4–L5 löst sich auf. focOut = 1 außerhalb des Höhenbands,
   // focFar = Abstand vom Segment (0 nah … 1 fern): die Enden der Wirbelsäule gehen zuerst, die Welle läuft auf das Segment zu
@@ -588,6 +602,7 @@ const boneMat = new THREE.ShaderMaterial({
           }
         }
       }
+      if (uBunt > .5 && aKind < .5) col = mix(col, aqPal(.333 - (3.4 - position.y) * .095) * dot(col, vec3(.3, .5, .2)) * 1.9, .86); // bunt: die Wirbel tragen die Pigmente von oben nach unten, die Zeichnung (Licht, Umriss, Platten) bleibt
       if (uDiff > .5 && aKind > .5) col *= 1. + on * (uDiscMode < .5 ? .25 : .5); // Bandscheibe: im Abschnitt heller (Standard: rot-orange statt blau)
       else col = mix(col, cAmber * (.35 + .95 * lam), on * (aKind < .5 ? 1. : .4));
       float g = exp(-pow((p.y - uCut) * 9., 2.));
