@@ -92,8 +92,10 @@ const SEG_BAHN = [
   [/^Wurzel 2[12]$/, /^Lendenwurzel L5$/, /^Endfaden$/, /^Ischias/, /^Wadenbeinnerv$/, /^Zehennerv big toe$/],
   [/^Kreuzwurzel$/, /^Endfaden$/, /^Ischias/, /^Zehennerv little toe$/],
 ];
+let ARM_Y = 62; // Höhe, in der der Speichennerv den gemeinsamen Stamm im Oberarm verlässt (nach dem Glätten gemessen)
 const segMaske = (name, y) => { let m = 0; if (!name) return 0;
   SEG_BAHN.forEach((L, q) => { if (L.some((r) => r.test(name)) && !(q === 4 && /^Ischias/.test(name) && y < -90)) m |= 1 << q; });
+  if (/^(Mittelnerv|Ellennerv)$/.test(name) && y > ARM_Y) m |= 2; // nach dem Glätten trägt eine der Armbahnen den gemeinsamen Stamm im Oberarm – ohne ihn hätte der Weg zum Daumen dort eine Lücke
   return m; };
 function nerveList(list) {
   const out = list.map((n) => {
@@ -233,7 +235,7 @@ export function linesOf(nerves, split) {
 }
 
 // sp = Abstand der Haut-Punkte (Grundriss-Einheiten), dust = Zahl der großen unscharfen Punkte im Raum, data = decode(…)
-export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = false, shell = false, hirnSp = 0.42, areale = [], ruhig = false }) { // ruhig (Fassung M): keine Spannungs-Stellen am Körper (die vier Texte gehören zu Arealen im Gehirn) // hirnSp: Punktabstand im feinen Gehirn · areale: [Hirnlappen, Seite] je Station (Signal-Bögen) // hirn (Fassung K): Gehirn rundum und dichter, Maße in .brain
+export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = false, shell = false, hirnSp = 0.42, areale = [], ruhig = false, wirbel = false }) { // ruhig (Fassung M): keine Spannungs-Stellen am Körper (die vier Texte gehören zu Arealen im Gehirn) // hirnSp: Punktabstand im feinen Gehirn · areale: [Hirnlappen, Seite] je Station (Signal-Bögen) // hirn (Fassung K): Gehirn rundum und dichter, Maße in .brain
   const Pp = [], Nn = [], St = [], Ht = [], Ct = [], Nf = [];
   const put = (x, y, z, nx, ny, nz, kind, a, b, c, heat = null) => {
     Pp.push(x, y, z); Nn.push(nx, ny, nz); Nf.push(kind, a, b, c);
@@ -317,7 +319,9 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   const spB = clamp(sp * 0.95, 1.1, 2.4);
   for (const p of data.parts.filter((q) => q.kind === 'bone')) {
     const soft = p.id === 'knochen/schaedel' ? 2 : p.id === 'knochen/rippen' || p.id === 'knochen/hand' ? 1 : 0;
-    rows(p, spB, (x, y, z, nx, ny, nz, coarse) => { if (nz < -0.35) return; put(x, y, z, nx, ny, nz, 5, 0, coarse ? 1 : 0, soft); });
+    // Tafel (?seg=2): die Wirbelsäule steht rundum und feiner da (im Profil gesehen, auch die Dornfortsätze), markiert in ctr.y
+    const wb = wirbel && /knochen\/(hws|bws|lws)$/.test(p.id);
+    rows(p, wb ? spB * 0.45 : spB, (x, y, z, nx, ny, nz, coarse) => { if (nz < -0.35 && !wb) return; put(x, y, z, nx, ny, nz, 5, 0, coarse ? 1 : 0, soft, wb || (wirbel && p.id === 'knochen/becken' && Math.abs(x) < 9 && y > 8 && z < 0) ? { st: -1, h: 0, cx: 0, cy: 1 } : null); });
   }
   // A2 Gehirn: Großhirn mit echten Windungen, Kleinhirn, Hirnstamm – erscheint mit der Lichtspitze von oben nach unten
   // (Innenwände an der Mittelspalte entfallen – sie lägen von vorn gesehen als helle Naht über der Mitte)
@@ -463,6 +467,7 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   }
   // A5 Nerven: Perlen entlang der echten Wege; dicke Bahnen als mehrere Stränge nebeneinander (in der Bildebene versetzt)
   const nerves = nerveList(hirn ? glatt(data.head.nerves) : data.head.nerves);
+  { const sp = nerves.filter((n) => n.name === 'Speichennerv').map((n) => n.pts[0][1]); if (sp.length) ARM_Y = Math.min(...sp) - 1.5; }
   const NS = 0.62, GAP = 0.52, n0 = St.length, segD = [1e9, 1e9, 1e9, 1e9, 1e9, 1e9], segE = [0, 0, 0, 0, 0, 0];
   for (const N of nerves) {
     if (VS && N === nerves[0]) continue; // Rückenmark steht als Körper (Schlauch) da

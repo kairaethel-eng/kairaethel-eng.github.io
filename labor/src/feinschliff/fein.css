@@ -59,3 +59,43 @@ html:not(.js) .kf-st>*,html:not(.js) .kf-end>*{opacity:1;transform:none}
 
 /* Fassung „Segmente“ (?seg=1): Hinweis unter dem Text eines Abschnitts */
 .kf-sg-note{margin-top:.875rem;font:400 .8125rem/1.45 var(--sans);color:var(--mute);max-width:36ch}
+
+/* Fassung „Tafel“ (?seg=2, Konzept „Wo tut es weh?“): Knöpfe im Textblock, Leuchtpunkte an der Figur, Karte mit der Erklärung */
+.kf-tf-wahl{display:none;flex-wrap:wrap;gap:.5rem;margin-top:1.125rem;pointer-events:auto}
+.kf-tf-ohne .kf-tf-wahl{display:flex}
+.kf-tp span{transition:opacity .4s var(--ease)}
+.kf-tf-offen .kf-tp:not(.is-on) span{opacity:0}
+.kf-tf-wahl button{appearance:none;font:600 .8125rem/1 var(--sans);padding:.6875rem .8125rem;border-radius:3px;border:1px solid rgba(224,154,53,.45);color:var(--amber);background:rgba(224,154,53,.07);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.kf-tf-wahl button:hover,.kf-tf-wahl button:focus-visible{background:rgba(224,154,53,.16);border-color:var(--amber)}
+.kf-tf-wahl button:focus-visible,.kf-tp:focus-visible,.kf-tk-x:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+.kf-tp{position:absolute;left:0;top:0;z-index:4;width:2.5rem;height:2.5rem;margin:-1.25rem 0 0 -1.25rem;padding:0;border:0;background:none;color:var(--txt);cursor:pointer;opacity:0;visibility:hidden;transition:opacity .5s var(--ease),visibility 0s .5s;-webkit-tap-highlight-color:transparent}
+.kf-tp.on{opacity:1;visibility:visible;transition:opacity .6s var(--ease),visibility 0s}
+.kf-tp i{position:absolute;left:50%;top:50%;width:.625rem;height:.625rem;margin:-.3125rem;border-radius:50%;background:var(--amber);box-shadow:0 0 0 .25rem rgba(224,154,53,.18),0 0 1rem rgba(224,154,53,.5)}
+.kf-tp.is-pulse i{animation:lpGlow 2.8s ease-in-out infinite}
+.kf-tp.is-on i{background:#F4F1EA;box-shadow:0 0 0 .25rem rgba(244,241,234,.2),0 0 1rem rgba(244,241,234,.5)}
+.kf-tp span{position:absolute;left:calc(50% + .875rem);top:50%;transform:translateY(-50%);font:600 .6875rem/1 var(--sans);letter-spacing:.06em;white-space:nowrap;color:var(--txt);text-shadow:0 1px 2px rgba(10,22,27,.9),0 0 .75rem rgba(10,22,27,.9)}
+.kf-tp.li span{left:auto;right:calc(50% + .875rem)}
+html.paused .kf-tp.is-pulse i{animation:none}
+@media (prefers-reduced-motion:reduce){.kf-tp.is-pulse i{animation:none}}
+.kf-tk{position:absolute;z-index:5;left:46vw;top:50%;width:min(30rem,44vw);transform:translateY(calc(-50% + .75rem));padding:1.25rem 1.25rem 1.125rem;background:rgba(14,30,37,.94);border:1px solid var(--line);border-radius:.375rem;opacity:0;visibility:hidden;transition:opacity .45s var(--ease),transform .45s var(--ease),visibility 0s .45s}
+.kf-tk.on{opacity:1;visibility:visible;transform:translateY(-50%);transition:opacity .7s var(--ease) .2s,transform .7s var(--ease) .2s,visibility 0s}
+.kf-tk-x{position:absolute;right:.25rem;top:.25rem;width:2.75rem;height:2.75rem;padding:0;border:0;background:none;color:var(--dim);cursor:pointer}
+.kf-tk-x svg{width:1.125rem;height:1.125rem;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+.kf-tk-no{font:600 .75rem/1.4 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:0 2.5rem .875rem 0}
+.kf-tk-no i{font:italic 400 1.5rem/1 var(--serif);letter-spacing:0;text-transform:none;color:var(--amber);margin-right:.5rem}
+.kf-tk dl{margin:0 0 .875rem;display:grid;grid-template-columns:4.25rem 1fr;gap:.5rem .75rem}
+.kf-tk dt{font:600 .6875rem/2.1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:#A8BABF}
+.kf-tk dd{margin:0;font-size:.9375rem;line-height:1.5}
+.kf-tk .chips{margin-bottom:.875rem}
+.kf-tk .kf-sg-note{margin-top:0;max-width:none}
+@media (max-width:920px){
+  .kf-tk{left:var(--gut);right:var(--gut-r);width:auto;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 1rem);transform:translateY(.75rem);padding:1rem 1rem .875rem}
+  .kf-tk.on{transform:none}
+  .kf-tk-no{margin-bottom:.5rem}
+  .kf-tk dl{display:block;margin-bottom:.625rem}
+  .kf-tk dt{float:left;line-height:1.82;margin-right:.5rem}
+  .kf-tk dd{font-size:.875rem;line-height:1.45;margin-bottom:.375rem}
+  .kf-tk .chips{margin-bottom:.625rem}
+  .kf-tk .kf-sg-note{font-size:.75rem;line-height:1.4}
+  .kf-tf-wahl{margin-top:.875rem}
+}

@@ -263,14 +263,21 @@ void main(){
   // ---------- Knochen (A3, B1) ----------
   float boneShow = mix(stK * .8, scanned * mix(.62, .34, uEnd) + stK * .3, uKino);
   boneShow = max(max(boneShow, im * .8), lens * .95) * uNerve;
+  // Tafel (?seg=2): die Wirbelsäule steht sichtbar in der Figur (aC.y > 0 = Wirbel, in figur.js markiert); der Abschnitt, an dem die Farbe ankommt, leuchtet in ihr
+  float spT = isBone * step(.5, aC.y) * step(1.5, uSegK.x) * uSegK.y;
+  boneShow = max(boneShow, spT * .86);
   vec3 cb = mix(cBone * .5, cBone, .25 + .75*rim);
   cb = mix(cb, cBone * (.4 + .5*key) + cKey * pow(key, 3.) * .35 + cRim * back * .8, uKino);
   col = mix(col, cb, isBone);
+  float byB = 215. - aPos.y, bdB = smoothstep(uSegY.x - 1.5, uSegY.x + .5, byB) * (1. - smoothstep(uSegY.y - .5, uSegY.y + 1.5, byB)) * spT * uSegK.w;
+  col = mix(col, mix(vec3(1., .74, .34), aqPal(uSegK.z / 6. + .03), step(10.5, uHStil)) * (1.05 + .35 * rim), bdB);
   // Schädel tritt zurück, solange das Gehirn zu sehen ist (Station Kopf), Rippen und Hände etwas leiser
   float soft = aN.w > 1.5 ? 1. - .78 * brainK * (1. - smoothstep(60., 120., uTip)) * (1. - uEnd * .4) : mix(1., .62, aN.w);
-  a = mix(a, mix(.34 + .52*rim, .5 + .5*rim + .25*key, im) * boneShow * mix(soft, max(soft, .8), im * step(aN.w, 1.5)) * mix(coarse, 1., max(fineK, im)), isBone);
+  a = mix(a, mix(.34 + .52*rim, .5 + .5*rim + .25*key, im) * boneShow * mix(soft, max(soft, .8), im * step(aN.w, 1.5)) * mix(coarse, 1., max(max(fineK, im), spT)), isBone);
   a *= 1. - mix(.94, 1., kK) * uHirn * isBone;
-  d = mix(d, uSpB * .46 * mix(1., mix(1.5, 1., fineK), coarse), isBone);
+  a = mix(a, max(a, .96), bdB); // der Abschnitt, an dem die Farbe ankommt, leuchtet
+  d = mix(d, uSpB * .46 * mix(1., mix(1.5, 1., fineK), coarse) * mix(1., .78, spT) * (1. + .5 * bdB), isBone);
+  d = mix(d, max(d, 1.15 * uDpr / uUnit * (1. + .4 * bdB)), spT); // Tafel in der Übersicht: Wirbel-Punkte mindestens gut einen Bildpunkt groß
 
   // ---------- Muskeln (A4): zeigen sich mit ihrer Spannung (Bernstein) bzw. gelöst (Blau), sonst nur unter der Lupe ----------
   float musShowK = 1. - uHirn;
@@ -300,13 +307,14 @@ void main(){
   float sgP = 0., sgA = 0., sgW = 0.; vec3 sgC = vec3(0.);
   if (uSegK.x > .001 && isNerve > .5 && aC.y > .5) {
     for (int i = 0; i < 6; i++) { if (mod(floor(aC.y / exp2(float(i))), 2.) < .5) continue;
-      float loc = aN.z - uSeg[i].x, f = uSeg[i].y, r = (1. - smoothstep(f - 4., f, loc)) * step(.01, f), ak = uSeg[i].z;
-      float kopf = r * smoothstep(f - 18., f - 2., loc) * (1. - step(uSeg[i].w + 3., f));
+      float loc = aN.z - uSeg[i].x, f = uSeg[i].y, ak = uSeg[i].z, rw = step(1.5, uSegK.x), g = uSeg[i].w + 4. - f; // rw (Tafel, ?seg=2): die Farbe läuft vom Versorgungsgebiet hinauf zur Wurzel
+      float r = mix(1. - smoothstep(f - 4., f, loc), smoothstep(g, g + 4., loc), rw) * step(.01, f);
+      float kopf = r * mix(smoothstep(f - 18., f - 2., loc), 1. - smoothstep(g + 2., g + 18., loc), rw) * (1. - step(uSeg[i].w + 3., f));
       vec3 sc = mix(vec3(1., .74, .34), aqPal(float(i) / 6. + .03), step(10.5, uHStil));
       sgC += (sc * (1. + .2 * ak) + vec3(1., .97, .9) * kopf * .8) * r * (.35 + ak); sgW += r * (.35 + ak); sgP = max(sgP, r); sgA = max(sgA, r * ak); }
     if (sgW > 0.) sgC /= sgW; }
-  rev = max(rev, sgP * uSegK.x);
-  float front2 = rev * (1. - smoothstep(2., 18., uTip - aN.y)) * mix(1., uNs, kK) * (1. - sgP * uSegK.x); // mit feinem Gehirn steht die Spitze unter dem Stamm – kein Dauerlicht dort
+  rev = max(rev, sgP * min(1., uSegK.x));
+  float front2 = rev * (1. - smoothstep(2., 18., uTip - aN.y)) * mix(1., uNs, kK) * (1. - sgP * min(1., uSegK.x)); // mit feinem Gehirn steht die Spitze unter dem Stamm – kein Dauerlicht dort
   float wave = pow(.5 + .5*sin(uTime*.7 + aPos.x*.42 - aPos.y*.3 + sin(aPos.y*.9)*1.3), 8.) * uPulse;
   vec3 cbr = mix(cLine, cWarm, .35 + .5*rim);
   cbr = mix(cbr, vec3(1., .97, .9), clamp(front2*.55 + wave*.7, 0., 1.));
@@ -469,6 +477,7 @@ void main(){
       ch = mix(ch, vec3(1., .92, .72), min(1., sO)); ch = mix(ch, vec3(.72, .9, 1.), min(1., sI * 1.4));
       ch *= 1. - .18 * kC + .9 * sO + .6 * sI; }
     col = mix(col, ch, hk);
+    { float stm6 = step(5.5, aC.x) * (1. - step(6.5, aC.x)); col = mix(col, vec3(.8, .87, .9) * (.3 + .7 * dot(col, vec3(.3, .5, .2))), step(1.5, uSegK.x) * uSegK.y * stm6 * hk * .88); } // Tafel: Rückenmark ohne Farbe – Farbe trägt nur der gewählte Abschnitt
     { float by = 215. - aPos.y, bd = smoothstep(uSegY.x - 3., uSegY.x + 1., by) * (1. - smoothstep(uSegY.y - 1., uSegY.y + 3., by)) * step(5.5, aC.x) * (1. - step(6.5, aC.x)); // Segmente: der aktive Abschnitt leuchtet am Rückenmark als Band
       col = mix(col, mix(vec3(1., .74, .34), aqPal(uSegK.z / 6. + .03), step(10.5, uHStil)) * 1.2, bd * hk * uSegK.w * .9); }
     a = mix(a, min(1., a * (1. + ar * 2.2) + ar * .3), isBrain * (1. - hv));
@@ -511,11 +520,12 @@ void main(){
     vec3 cAq = aqPal(.3 - aN.z / 400. * .5 - .34 * farN) * (.86 + .3 * smoothstep(.3, .58, aN.w));
     cAq = mix(cAq, vec3(1.), min(1., sigO * 1.1 + sigI * 1.2)); cAq *= 1. - .2 * nsk + 1. * sigO + .7 * sigI;
     cn = mix(cn, cAq, aqN); }
-  cn = mix(cn, sgC, sgP * uSegK.x); cn *= mix(1., mix(.3, 1.2 + .7 * sgA, sgP), uSegK.y); // Segmente: gefärbte Bahn in reinem Pigment, die übrigen treten im Halt zurück
+  cn = mix(cn, vec3(.78, .86, .9) * dot(cn, vec3(.3, .5, .2)), step(1.5, uSegK.x) * uSegK.y * .85); // Tafel: alle Bahnen als feine, helle Linien ohne Farbe
+  cn = mix(cn, sgC, sgP * min(1., uSegK.x)); cn *= mix(1., mix(mix(.3, .5, step(1.5, uSegK.x)), 1.2 + .7 * sgA, sgP), uSegK.y); // Segmente: gefärbte Bahn in reinem Pigment, die übrigen treten im Halt zurück
   col = mix(col, cn, isNerve);
   // mit feinem Gehirn: die Nerven erscheinen zusammen mit Gehirn und Rückenmark und bleiben im Gehirn-Blick stehen (laufen unter dem Stamm weiter)
   a = mix(a, rev * (.6 + .2*aN.w) * (1. + pulse*.8*(1. - .7*hv) + front2*.5 + (sigO + sigI)*.7) * uNerve * (1. + lens*.5) * mix(1. - .97 * uHirn, smoothstep(.05, .8, hv), kK) * (1. + .5 * uNs) * mix(1., .3 + .7 * gLN, ltN), isNerve);
-  d = mix(d, mix(.34 + .1*aN.w, aN.w, kK) * (1. + pulse*.45*(1. - hv) + front2*.3 + sigO*.45 + sigI*.3) * mix(1., .8, uHirn * kK) * (1. + 1.5 * sgA * uSegK.x * (1. - smoothstep(.9, 2.6, uZoom) * .6)), isNerve); // im Gehirn-Blick feine Stränge · Segmente: die aktive Bahn kräftiger
+  d = mix(d, mix(.34 + .1*aN.w, aN.w, kK) * (1. + pulse*.45*(1. - hv) + front2*.3 + sigO*.45 + sigI*.3) * mix(1., .8, uHirn * kK) * (1. + 1.5 * sgA * min(1., uSegK.x) * (1. - smoothstep(.9, 2.6, uZoom) * .6)), isNerve); // im Gehirn-Blick feine Stränge · Segmente: die aktive Bahn kräftiger
   // K, M im Profil: eine Bahn, die genau auf den Betrachter zuläuft (Ischias-Wurzel quer durchs Becken), stünde als heller Balken da –
   // ihre Perlen liegen dann alle hintereinander. Je steiler die Bahn zur Bildebene steht, desto leiser.
   // K, M: Tiefe – was auf der abgewandten Körperseite liegt, tritt zurück (im Profil lägen sonst beide Seiten gleich hell übereinander)
