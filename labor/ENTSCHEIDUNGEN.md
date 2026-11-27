@@ -7,6 +7,7 @@ Neueste Entscheidung oben. Überholte ganze Abschnitte (Figur plus, Tür-Entwurf
 ## 27.11.2026, 2:30 Uhr – Darstellung statt Farbe (Kai: „irgendwie ist es das auch nicht“)
 - **Merkregel:** Gefällt ein Bild nach zwei Farbrunden nicht, liegt es an der Darstellung, nicht an der Farbe. Dann die Bauart wechseln: luftig statt deckend, wenige große Zeichen mit Rangfolge, und **ein** Licht, das auf den Besucher antwortet (Ankommen, Scrollen, Antippen – am iPhone gibt es keinen Zeiger). Der aktive Bereich ändert das Material oder das Licht, nicht nur den Farbton.
 - Kai kann sich Vorschläge in Worten schwer vorstellen: den empfohlenen Vorschlag gleich als Entwurf hinter einem Schalter bauen, die übrigen erst nach seinem Blick.
+- **Nach dem Nein zur Laterne (02:45):** Schluss mit Raten. Nach drei abgelehnten Runden zu einem Motiv wird nicht weitergebaut, bevor Kai ein Vorbild (Bild, Link, Film) geschickt oder die Richtung selbst benannt hat.
 
 ## 27.11.2026 – „Schärfer“ heißt Kontrast und Ruhe, nicht dünner (Kai zu Tiefsee)
 - Kai: Tiefsee gefällt, soll aber schärfer und klarer sein; die Nerven im selben Stil und natürlicher. **Merkregel Schärfe:** Am Handy ist ein Punkt 2 Bildpunkte groß – „scharf“ entsteht dort aus drei klar getrennten Tonstufen (dunkel, Farbe, Weiß), geschlossenen hellen Linien und EINEM ruhigen Farbverlauf. Dünnere Linien und Lücken zwischen den Punkten machen das Bild matter. Immer in Handy-Größe vergleichen, nicht in der Vergrößerung.
