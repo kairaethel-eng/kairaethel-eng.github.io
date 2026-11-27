@@ -15,6 +15,7 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 
 **Claude wartet auf Go**
 - Entwurf „Weltklasse-Prüfung“ (Branch `claude/project-thread-6psvm8`, PR) wartet auf Kais Durchsicht und Go zum Veröffentlichen von `labor/` – Abschnitt ▶ 24.11. unten. Mit dem Nerven-Fix neu ansehen: „Rückenmark schimmert am iPhone durch den Knochen“ (Frage vom 14.11.).
+- **Gehirn-Stil:** Entwurf „Laterne“ (`?hirn=7`, Abschnitt ▶ 27.11., 2:30 Uhr) wartet auf Kais Blick am Gerät; danach Stilwahl, voller Prüfstand als Abendlauf, Schichtbild und Faserhirn nur auf Wunsch.
 - Runde vom 25.11. nachts (Logo, Schild, Tür über das Dach, Etikett) wartet auf Kais Durchsicht. **Startfigur:** Weg M ist seit 26.11. Standard (Abschnitt ▶ 26.11.). Offen: Kais Blick am Gerät (Tempo, Flüssigkeit, Satz-Flug, Impulse, iPhone mit 220 000 Punkten), seine „kleinen Verbesserungen“, seine Entscheidung zur Fassung „Lichtimpuls schreibt den Satz“; Aufräumen der Fassungen A–L samt Umschalter nur mit eigenem Go; vor dem Livegang die Lizenz der Gehirn-Rinde klären (CC BY-SA 3.0) oder ersetzen.
 - Runde 2 der Weltklasse-Prüfung (Branch/PR, Abschnitt ▶ 24.11. nachts) wartet auf Kais Durchsicht: gedämpftes Licht hinter der Figur, hellere Kleintexte, neue Leistungs-Etiketten, Block „Ihr erster Besuch“.
 - Offen aus der Liste vom 24.11.: Bedien-Grammatik (Entscheidung Kai), Aufräumen/WebGL-Kontexte freigeben (ohne Grafikchip nicht prüfbar – mit Kais Messanzeige `?takt=1`), Standbilder neu rendern, Unterseiten und Ladegewicht nach dem Livegang.
@@ -49,6 +50,13 @@ Kais Aufgaben und Sichtprüfungen stehen im Arbeitsblatt: https://claude.ai/arti
 Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abschnitt vor dem 22.11. meinen, zeigen jetzt ins Archiv.
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
+
+## ▶ 27.11.2026, 2:30 Uhr – Gehirn als „Laterne“ (`?hirn=7`), Entwurf hinter Schalter
+- **Auftrag (Kai, 02:08 und 02:21):** Tiefsee „ist es auch nicht“; drei ganz neue Vorschläge, kleiner Umbau erlaubt, Opus und Sonnet als Zweitmeinung. Danach: „Ich kann mir noch nichts vorstellen. Fang mal an, dann sehen wir weiter.“
+- **Befund:** Alle bisherigen Runden waren dieselbe dichte, deckende Punktfläche in neuer Farbe. Kais Vorbild ist luftig, durchsichtig, wenige große Zeichen, und es antwortet. Vorgeschlagen: 1 Laterne (Empfehlung), 2 Schichtbild (rund 70 Schnittlinien wie Höhenkarte), 3 Faserhirn (Fäden). Reserve: Setzkasten, Feilspäne, Sternatlas.
+- **Gebaut (nur hinter `?hirn=7`, Standard bleibt A):** Gehirn durchscheinend (rund 60 % weniger Punkte, größere Körner, Windungen als Punktlinien an den Furchenwänden, Rückseite auf 20 %), innen **ein** Bernstein-Licht, das zum aktiven Bereich wandert; auf der Fahrt sitzt das Licht im Rückenmark und läuft mit, die Nerven hinter ihm leuchten in Bernstein nach, der Rest bleibt kühles Glas. Impulse sind in diesem Stil aus (eine Bewegung zur Zeit). `?korn=` stellt die Punktdichte um.
+- **Geprüft:** Bilder Handy und PC an Halt 1–4, Fahrt, Schlussbild; keine Skriptfehler (`?hirn=7`, `5`, `alt`, `?start=a|k`, ohne Grafikchip); `sizes` „alles ok“. **Nicht geprüft:** voller Prüfstand (Abendlauf erst nach Kais Stilwahl). **[O] Kai am Gerät:** Wandern des Lichts, Tempo, Flüssigkeit am iPhone.
+- **Nicht gebaut:** Licht schreibt den Leitsatz (wartet weiter auf Kais Go). **Rückweg:** Commit 9b0e16d.
 
 ## ▶ 27.11.2026, 2 Uhr – Tiefsee geschärft, Nervenbahnen natürlicher (Kai: „schärfer und klarer“, „die fortlaufenden Nerven auch in diesem Stil … deutlich natürlicher“)
 - **Gehirn, Stil 8 Tiefsee (`?hirn=5`):** Flickenmuster raus – die Farbe läuft jetzt in einem ruhigen Verlauf über das Bild (oben links Cyan, Mitte Grün, unten rechts Violett), das Gehirn dreht sich hindurch. Licht kommt aus den Furchen (Flanke = helle Linie, bis Weiß), Kuppen dunkel mit einem Hauch Volumen. Aktive Stelle: dunkle Glut, Linien in Gold. Schleier über der aktiven Stelle (Leuchtpunkte, Lichthof) fast aus. Erster Versuch „Linien dünner, Punkte mit Lücke“ wurde am Handy matter statt schärfer – verworfen (Lehre in `ENTSCHEIDUNGEN.md`).
