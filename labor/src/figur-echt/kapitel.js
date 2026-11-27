@@ -115,7 +115,13 @@ const TF_TXT = [
   ['Ferse', 'S1 · ISG', 'Kreuzbein &amp; Becken', 'S1-Wurzel für Wade, Fußaußenrand und Achillessehnenreflex. Das Iliosakralgelenk verbindet Becken und Wirbelsäule.', 'Ausstrahlung über die Beinrückseite bis zur Ferse, tiefsitzender einseitiger Kreuzschmerz.', ['Manuelle Therapie / ISG', 'Sport-Physiotherapie', 'Stoßwelle']]];
 // Ort der Stelle im Körper (x seitlich, y hoch, z nach vorn; die dem Betrachter zugewandte Seite) · Wirbel des Abschnitts (Grundriss-Höhe von … bis)
 const TF_ORT = [[0, 180, -17], [-76, -14, 19], [-11, 117, 17], [-23, 76, 12], [-24, -146, 7], [-15, -199, -9]];
-const TF_RAHMEN = [[52, 62, 1.5, 4, 50], [146, 196, 1.3, 10, 80], [100, 86, 1.44, 12, 70], [124, 86, 1.28, 12, 70], [288, 292, 1.34, 6, 80], [288, 292, 1.74, 0, 80]]; // Blick je Abschnitt: Stelle und Wirbel im Bild
+// Nahblick je Abschnitt (Kamerafahrt, 27.11. nachts): Mitte (Grundriss-Höhe), Spanne im Bild, Drehung, Versatz zur Brust – die Kamera fährt mit der
+// Farbe den Nerv hinauf und landet hier, die Wirbel des Abschnitts stehen groß im Bild
+const NAH = [[55, 42, 1.1, 4], [68, 42, 1.1, 4], [93, 64, 1.12, 5], [131, 64, 1.12, 5], [177, 60, 1.1, 6], [187, 56, 1.1, 6]];
+// Auftritt der Wirbelsäule (Kai 27.11.: „die toll gebaute Wirbelsäule … mehr in den Vordergrund“): bevor die Stellen erscheinen, baut sie sich groß von
+// oben nach unten auf und dreht ins Profil, dann leuchten die vier Abschnitte nacheinander (Name, Zusatz, Grundriss-Höhe von/bis). Zeiten in Sekunden.
+const AUF_ABS = [['Halswirbelsäule', '7 Wirbel', 45, 74], ['Brustwirbelsäule', '12 Wirbel', 74, 151], ['Lendenwirbelsäule', '5 Wirbel', 151, 186], ['Kreuzbein', '', 186, 204]];
+const AUF_BAU0 = 0.5, AUF_BAU1 = 3.1, AUF_ABS0 = 3.2, AUF_ABSD = 0.5, AUF_HALT = 5.5, AUF_ENDE = 6.5;
 const WIRBEL_BY = [[49, 57], [65, 73], [74, 112], [112, 151], [170, 186], [186, 195]];
 const U_LEN_HIRN = 4.95; // CSS --len setzt initKopfFuss selbst (U_LEN + 1)
 const SATZ_SEK = 3.9, SATZ_FLUG = 0.82, SATZ_AB = 0.26; // Leitsatz: Dauer des Ablaufs · Anteil, in dem die Punkte fliegen und schreiben (danach blendet die echte Schrift ein) · Beginn so viele Bildschirmhöhen vor der Ankunft im Schlussbild
@@ -169,7 +175,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // Stil des Gehirns (Kai 26.11.2026: „kräftiger, klarer, auffallender“): A hell auf dunkel ist Standard; ?hirn=alt|b|c zum Vergleich
   const HSTIL = HIRN ? ({ alt: 0, a: 1, b: 2, c: 3, 1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10, 8: 11, 9: 12, 10: 13, 11: 14 }[Q.get('hirn')] ?? (BUNT ? 13 : 1)) : 0, RAUM_H = [1, 0.38, 0.5, 0.38, 0.2, 0.08, 0.85, 0.5, 0.1, 0.06, 0.05, 0.12, 0.12, 0.12, 0.12][HSTIL];
   // Stil 10 „Laterne“ (?hirn=7, Kai 27.11.2026): EIN Licht im Körper. LAMPE = sein Ort (folgt dem Ziel über die Zeit, rund 1,2 s), s = sein Weg am Rückenmark
-  const TF = { sel: -1, auto: false, k: 0, vw: null, seen: [], t: 0, demo: false, in: false }; const SEG = { r: [0, 0, 0, 0, 0, 0], a: [0, 0, 0, 0, 0, 0], f: new Float32Array(24), k: [0, 0, -1, 0], y: [0, 0], cur: -1, band: 0 }; const LAMPE = { p: null, s: -99, cum: null }; const MAL = { r: [0, 0, 0, 0], hi: -1, von: -1, nach: -1, lr: 0, lp: null, f: new Float32Array(16) }; // Aquarell 13, 14: wie weit die Farbe je Halt gelaufen ist
+  const TF = { sel: -1, auto: false, k: 0, seen: [], t: 0, demo: false, in: false, at: 0, aufOk: false, ak: 0, lauf: false, auf: [999, 0, 0, 0], von: null, aus: null, letzt: null, nah: null, cam: null }; const SEG = { r: [0, 0, 0, 0, 0, 0], a: [0, 0, 0, 0, 0, 0], f: new Float32Array(24), k: [0, 0, -1, 0], y: [0, 0], cur: -1, band: 0 }; const LAMPE = { p: null, s: -99, cum: null }; const MAL = { r: [0, 0, 0, 0], hi: -1, von: -1, nach: -1, lr: 0, lp: null, f: new Float32Array(16) }; // Aquarell 13, 14: wie weit die Farbe je Halt gelaufen ist
   let welT0 = -99, welCur = -1; const KERN = +Q.get('kern') || 1; // Lichtwelle (Stil 8, 9): läuft einmal, wenn ein Areal aktiv wird // RAUM_H: so viel Raumlicht bleibt im Gehirn-Blick
   let raumWar = 1;
   const raum = (k) => { k = Math.round(k * 50) / 50; if (k === raumWar) return; raumWar = k; if (k >= 1) document.documentElement.style.removeProperty('--fx-hirn'); else document.documentElement.style.setProperty('--fx-hirn', String(k)); };
@@ -203,8 +209,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     a.innerHTML = `<p class="kicker"><i>${T[0]}</i> ${T[1]}</p><h2 id="kf-g${i}">${T[2]}</h2><p class="kf-txt">Typisch: ${T[3]}</p><p class="kf-sg-note">Vereinfachte Orientierung, ersetzt keine ärztliche Diagnose.</p>`; return a; }) : [];
   if (sArts.length) arts[arts.length - 1].after(...sArts);
   // Fassung „Tafel“: ein Textblock (Überschrift, Hinweis, sechs Knöpfe), sechs Leuchtpunkte an der Figur, eine Karte für die Erklärung
-  let tArt = null, tKarte = null, tSpots = [];
-  const tfZu = () => { TF.sel = -1; TF.auto = false; if (tKarte) tKarte.classList.remove('on'); tSpots.forEach((b) => b.setAttribute('aria-pressed', 'false')); dirty = true; };
+  let tArt = null, tKarte = null, tSpots = [], tAbs = [];
+  const tfZu = () => { if (TF.sel >= 0 && !TF.auto && TF.letzt && TF.k > 0.001) { TF.aus = TF.letzt; TF.k = 1; } TF.sel = -1; TF.auto = false; if (tKarte) tKarte.classList.remove('on'); tSpots.forEach((b) => b.setAttribute('aria-pressed', 'false')); dirty = true; };
   const tfWahl = (i, auto = false) => {
     if (!auto && TF.sel === i && !TF.auto) { tfZu(); return; }
     TF.sel = i; TF.auto = auto; TF.demo = true; dirty = true;
@@ -214,9 +220,11 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const T = TF_TXT[i];
     tKarte.innerHTML = `<button type="button" class="kf-tk-x" aria-label="Erklärung schließen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><p class="kf-tk-no"><i>${T[1]}</i> ${T[2]}</p><dl><dt>Typisch</dt><dd>${T[4]}</dd><dt>Nerven</dt><dd>${T[3]}</dd></dl><ul class="chips">${T[5].map((c) => `<li>${c}</li>`).join('')}</ul><p class="kf-sg-note">Vereinfachte Orientierung, ersetzt keine ärztliche Diagnose. Bitte lassen Sie Beschwerden immer zuerst ärztlich abklären – bei Taubheit oder Lähmungszeichen umgehend.</p>`;
     $('.kf-tk-x', tKarte).addEventListener('click', () => { const b = tSpots[i]; tfZu(); if (b) b.focus({ preventScroll: true }); });
-    tKarte.classList.add('on');
-    // Blick auf den Abschnitt: am Handy zwischen Kopfleiste und Karte, am PC wie die übrigen Halte
-    if (V.segBlick) { const top = desk ? 0 : 92, bot = desk ? H : tKarte.offsetTop || H * 0.55; TF.vw = desk ? V.segBlick(i, H * 0.8, H * 0.52) : V.segBlick(i, (bot - top) * 0.88, (top + bot) / 2); } else TF.vw = null;
+    // Kamerafahrt: von dort, wo der Blick gerade steht, mit der Farbe den Nerv hinauf; Ziel ist der Nahblick auf die Wirbel des Abschnitts
+    // (am Handy zwischen Kopfleiste und Karte, am PC wie die übrigen Halte). Die Karte kommt, wenn die Kamera landet.
+    TF.von = TF.k > 0.01 && TF.letzt ? { ...TF.letzt } : null; TF.k = 0; TF.cam = null; TF.p = 0; SEG.r[i] = 0; // die Farbe startet neu am Ort (auch wenn das Beispiel diesen Abschnitt schon gefärbt hat)
+    { const top = desk ? 0 : 92, bot = desk ? H : tKarte.offsetTop || H * 0.55; TF.nah = V.nahBlick ? V.nahBlick(i, desk ? H * 0.78 : (bot - top) * 0.9, desk ? H * 0.52 : (top + bot) / 2) : null; }
+    tKarte.classList.toggle('on', !TF.nah);
   };
   if (TAFEL) {
     tArt = document.createElement('article'); tArt.className = 'kf-st kf-tf'; tArt.setAttribute('aria-labelledby', 'kf-tf-h');
@@ -227,6 +235,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     tSpots = TF_TXT.map((T, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'kf-tp' + (i === 0 || i === 5 ? ' li' : ''); b.setAttribute('aria-label', `${T[0]}: Weg des Nervs zeigen`); b.setAttribute('aria-pressed', 'false'); b.tabIndex = -1;
       b.innerHTML = `<i></i><span>${T[0]}</span>`; b.addEventListener('click', () => tfWahl(i)); stage.append(b); return b; });
     addEventListener('keydown', (e) => { if (e.key === 'Escape' && TF.sel >= 0 && !TF.auto) tfZu(); });
+    tAbs = AUF_ABS.map((A) => { const e = document.createElement('span'); e.className = 'kf-ta'; e.setAttribute('aria-hidden', 'true'); e.innerHTML = `<b>${A[0]}</b>${A[1] ? `<em>${A[1]}</em>` : ''}`; stage.append(e); return e; });
   }
   let topMode = false; const TXT = { head: 0, txt: 0 }; // Handy im Stil „neu“: Unterkante der Überschriften / Oberkante der Texte
   const NS = 'http://www.w3.org/2000/svg';
@@ -316,11 +325,15 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
             const s = Math.min(hA / span, wA / breit);
             V['G' + i] = { ...seite(mid, yw, s, vor), ay }; V['g' + i] = { ...seite(mid + span * 0.025, yw + 0.08, s * 1.05, vor), ay }; });
         }
-        if (TAFEL && tArt) { // ganze Figur im Profil zwischen Überschrift und Text des Tafel-Blocks; Blick je Abschnitt nach Bedarf (segBlick)
+        if (TAFEL && tArt) { // ganze Figur im Profil zwischen Überschrift und Text des Tafel-Blocks; Nahblick je Abschnitt (nahBlick) und Auftritt (aufBlick)
           const h2 = $('h2', tArt), tx = $('.kf-txt', tArt), top = desk ? 0 : tArt.offsetTop + h2.offsetTop + h2.offsetHeight + 8, bot = desk ? H : tArt.offsetTop + tx.offsetTop - 10;
           const sT = Math.min((desk ? H * 0.86 : Math.max(120, bot - top)) / 414, (desk ? W * 0.4 : W * 0.9) / 112), ay = desk ? H * 0.52 : (top + bot) / 2, wA = desk ? W * 0.4 : W * 0.94;
           V.T = { fx: Math.sin(1.32) * 2, fy: -1, s: sT, ax: V[3].ax, ay, yaw: 1.32 }; V.t = { ...V.T, fx: Math.sin(1.42) * 2, s: sT * 1.03, yaw: 1.42 };
-          V.segBlick = (i, hA, ay2) => { const [mid, span, yw, vor, breit] = TF_RAHMEN[i]; return { ...seite(mid, yw, Math.min(hA / span, wA / breit), vor), ay: ay2 }; };
+          V.mark = markAt;
+          V.nahBlick = (i, hA, ay2) => { const [mid, span, yw, vor] = NAH[i], y = BODY_H / 2 - mid, q = markAt(y); return { ...seite(mid, yw, Math.min(hA / span, wA / (span * 0.86), 2.3 / ((pts.hirn && pts.hirn.wSp) || 0.4)), vor), ay: ay2, P: [q[0], y, q[1] + vor] }; }; // nie näher, als das Raster trägt (Punkt höchstens rund 3,4 Bildpunkte: sonst zeigt der Rand Stufen)
+          // Auftritt: die ganze Wirbelsäule groß (am Handy von der Überschrift bis zum unteren Rand – der Hinweistext kommt erst danach)
+          const aTop = desk ? H * 0.07 : top, aBot = desk ? H * 0.93 : H - 30, sA = Math.min((aBot - aTop) / 172, wA / 64);
+          V.aufBlick = (yaw) => ({ ...seite(124, yaw, sA, 8), ay: (aTop + aBot) / 2 });
         }
       } else { V.R1 = V.E; V.R2 = V.E; }
       if (TAFEL && !V.T) { V.T = V.E; V.t = V.E; }
@@ -451,7 +464,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const t0 = performance.now();
     if (gl) try {
       if (d) { // echte Figur
-        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense, hirn: HIRN, shell: !!VAR.shell, wirbel: TAFEL, hirnSp: HSTIL === 10 ? (+Q.get('korn') || (big ? 0.52 : 0.7)) : HSTIL >= 12 && (+Q.get('korn') || !big) ? (+Q.get('korn') || Math.min(0.29, Math.max(0.2, 132 / innerWidth))) : big ? (innerWidth >= 1700 ? 0.22 : 0.25) : 0.33, areale: AREALE.map((a) => [a[4], a[5]]), ruhig: HIRN });
+        pts = echtPoints({ sp: SP, dust: big ? 26 : 14, data: d, detail: !!VAR.dense, hirn: HIRN, shell: !!VAR.shell, wirbel: TAFEL, wirbelSp: innerWidth >= 600 ? 0.34 : 0.4, hirnSp: HSTIL === 10 ? (+Q.get('korn') || (big ? 0.52 : 0.7)) : HSTIL >= 12 && (+Q.get('korn') || !big) ? (+Q.get('korn') || Math.min(0.29, Math.max(0.2, 132 / innerWidth))) : big ? (innerWidth >= 1700 ? 0.22 : 0.25) : 0.33, areale: AREALE.map((a) => [a[4], a[5]]), ruhig: HIRN });
         if (HIRN && d.parts.some((q) => q.kind === 'brain2')) document.querySelectorAll('[data-quelle-hirn]').forEach((e) => { e.hidden = false; }); // Namensnennung der Gehirn-Quelle (CC BY-SA 3.0) – nur, wenn sie gezeigt wird
         if (HIRN && pts.brain && pts.brain[0][0] < 1e8) {
           const B = pts.brain, c = B.map((r) => (r[0] + r[1]) / 2), h = B.map((r) => (r[1] - r[0]) / 2);
@@ -682,10 +695,35 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     rippleTick(now);
     const P = plan(u); S.tip = P.tip; S.view = P.view;
     let v = P.view;
-    if (TAFEL) { // Tafel: nach dem Antippen fährt der Blick über die Zeit an den Abschnitt (und beim Schließen zurück)
-      const ziel = TF.sel >= 0 && !TF.auto && TF.vw ? 1 : 0;
-      TF.k = sl || paused ? ziel : ziel > TF.k ? Math.min(1, TF.k + dt / 1.1) : Math.max(0, TF.k - dt / 0.8);
-      if (TF.k > 0.001 && TF.vw) { v = mixView(P.view, TF.vw, easeIO(TF.k)); S.view = v; }
+    let tfDrin = false, tfLauf = false;
+    if (TAFEL) {
+      const sg = pts && pts.seg, kann = !!(HB && gl && V.aufBlick) && !sl && !paused;
+      tfDrin = u > TF_U0 - 0.12 && u < TF_U1 + 0.14;
+      // Auftritt: läuft über die Zeit, sobald man von oben ankommt (einmal je Ankunft; von unten kommend und ohne Bewegung steht gleich die Tafel)
+      if (u < TF_U0 - 0.45) { TF.aufOk = false; TF.at = 0; } else if (u > TF_U1 || (tfDrin && !kann)) TF.aufOk = true;
+      tfLauf = kann && !TF.aufOk;
+      if (tfLauf && tfDrin) { TF.at += dt; if (TF.at >= AUF_ENDE) { TF.aufOk = true; tfLauf = false; } } else if (!tfDrin) TF.at = 0;
+      TF.ak = tfLauf && tfDrin ? smooth(0, 0.9, TF.at) * (1 - smooth(AUF_HALT, AUF_ENDE, TF.at)) : Math.max(0, TF.ak - dt / 0.5);
+      if (TF.ak > 0.001 && V.aufBlick) v = mixView(v, V.aufBlick(lerp(0.42, 1.32, easeIO(clamp((TF.at - 0.3) / 3)))), TF.ak);
+      TF.lauf = tfLauf; TF.auf[0] = tfLauf ? lerp(36, 212, clamp((TF.at - AUF_BAU0) / (AUF_BAU1 - AUF_BAU0))) : 999; TF.auf[1] = tfLauf ? 1 : 0; TF.auf[2] = TF.ak;
+      // Kamerafahrt: nach dem Antippen fährt der Blick mit der Farbfront den Nerv hinauf (Ort der Front aus pts.segWeg, weich nachgeführt), wird
+      // dabei näher und landet im Nahblick an den Wirbeln; beim Schließen gleitet er von dort zurück zur Tafel
+      if (TF.sel >= 0 && !TF.auto && TF.nah) {
+        const i = TF.sel, L = sg ? sg[i][1] + 8 : 1, p = sg ? clamp(SEG.r[i] / L) : 1, N = TF.nah, Wg = pts && pts.segWeg ? pts.segWeg[i] : null;
+        let C = N.P;
+        if (Wg && Wg.length > 1 && sg) { const dF = sg[i][0] + sg[i][1] + 4 - SEG.r[i];
+          let k = 1; while (k < Wg.length - 1 && Wg[k][0] < dF) k++;
+          const A = Wg[k - 1], B = Wg[k], f = clamp((dF - A[0]) / Math.max(1e-6, B[0] - A[0])), Z = [1, 2, 3].map((j) => A[j] + (B[j] - A[j]) * f);
+          TF.cam = TF.cam && !sl && !paused ? TF.cam.map((c, j) => c + (Z[j] - c) * (1 - Math.exp(-dt * 5))) : Z;
+          const e2 = smooth(0.62, 1, p); C = TF.cam.map((c, j) => lerp(c, N.P[j], e2)); }
+        const yw = lerp(1.32, N.yaw, smooth(0.4, 1, p)), ya = yw + (S.rock || 0), sP = Math.exp(lerp(Math.log(V.T.s * 2.6), Math.log(N.s), easeIO(p)));
+        const ziel = { fx: Math.cos(ya) * C[0] + Math.sin(ya) * C[2], fy: C[1] - C[2] * TILT, s: sP, ax: N.ax, ay: lerp(desk ? N.ay : H * 0.5, N.ay, smooth(0.5, 1, p)), yaw: yw };
+        TF.k = sl || paused ? 1 : Math.min(1, TF.k + dt / 0.9);
+        v = mixView(TF.von || v, ziel, easeIO(TF.k)); TF.letzt = v; TF.p = p;
+        if (p > 0.6 && !tKarte.classList.contains('on')) tKarte.classList.add('on');
+      } else if (TF.k > 0.001 && TF.aus) { TF.k = sl || paused ? 0 : Math.max(0, TF.k - dt); v = mixView(v, TF.aus, easeIO(TF.k)); TF.letzt = v; } else TF.k = 0;
+      TF.auf[3] = V.T ? 1 : 0; // auf der Tafel steht die Wirbelsäule immer deckend und plastisch da (leuchtend war sie in der Übersicht nur ein weißer Schatten) // deckend: im Auftritt immer, sonst sobald der Blick deutlich näher ist als die Tafel
+      S.view = v;
     }
     // Stationen: aktiv, von der Linie gelöst, Zustand
     let cur = -1;
@@ -716,23 +754,28 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       sArts.forEach((a, i) => a.classList.toggle('on', i === sgCur && (sl || u > SEG_U0 + i * SEG_DU - 0.08)));
     }
     if (TAFEL) {
-      const drin = u > TF_U0 - 0.12 && u < TF_U1 + 0.14, sg = pts && pts.seg;
+      const drin = tfDrin, sg = pts && pts.seg;
       if (!drin) { if (TF.sel >= 0) tfZu(); TF.t = 0; TF.demo = false; }
-      else if (!TF.demo && TF.sel < 0 && u > TF_U0 - 0.03 && sg && !sl) { TF.t += dt; if (TF.t > 1.5) tfWahl(1, true); } // niemand tippt: ein Beispiel läuft von selbst (Daumen → C5–C6)
+      else if (!TF.demo && TF.sel < 0 && TF.aufOk && u > TF_U0 - 0.03 && sg && !sl) { TF.t += dt; if (TF.t > 1.5) tfWahl(1, true); } // niemand tippt: ein Beispiel läuft von selbst (Daumen → C5–C6)
       TF.in = drin;
-      const zone = smooth(TF_U0 - 0.32, TF_U0 - 0.04, u) * (1 - smooth(TF_U1 + 0.04, TF_U1 + 0.3, u));
+      const zone = Math.max(TF.ak, smooth(TF_U0 - 0.32, TF_U0 - 0.04, u) * (1 - smooth(TF_U1 + 0.04, TF_U1 + 0.3, u)));
       let band = 0;
       for (let i = 0; i < 6 && sg; i++) { const L = sg[i][1] + 8, an = i === TF.sel;
-        SEG.r[i] = sl || paused ? (an ? L : 0) : clamp(SEG.r[i] + dt * (an ? Math.max(60, L / 2.2) : -L / 0.35), 0, L);
+        SEG.r[i] = sl || paused ? (an ? L : 0) : clamp(SEG.r[i] + dt * (an ? (TF.auto ? Math.max(60, L / 2.2) : L / clamp(L / 60, 1.8, 3.2)) : -L / 0.35), 0, L); // angetippt: Fahrt von 1,8 bis 3,2 s je nach Länge der Bahn
         SEG.a[i] = sl || paused ? (an ? 1 : 0) : SEG.a[i] + ((an ? 1 : 0) - SEG.a[i]) * Math.min(1, dt * 4);
         if (an) band = smooth(0.78, 1, SEG.r[i] / L);
         SEG.f[i * 4] = sg[i][0]; SEG.f[i * 4 + 1] = SEG.r[i]; SEG.f[i * 4 + 2] = SEG.a[i]; SEG.f[i * 4 + 3] = sg[i][1]; }
       if (TF.sel >= 0) SEG.cur = TF.sel;
       SEG.band = TF.sel >= 0 ? band : Math.max(0, SEG.band - dt * 3);
       SEG.k = [2, zone, Math.max(0, SEG.cur), SEG.band]; SEG.y = WIRBEL_BY[Math.max(0, SEG.cur)];
+      if (tfLauf && TF.sel < 0) { // Auftritt: die vier Abschnitte leuchten nacheinander einmal auf (warmes Weiß, uSegK.z = -1)
+        const f = (TF.at - AUF_ABS0) / AUF_ABSD, j = Math.floor(f), q = f - j;
+        SEG.band = j >= 0 && j < 4 ? smooth(0, 0.25, q) * (1 - smooth(0.7, 1, q)) : 0; if (j >= 0 && j < 4) SEG.y = AUF_ABS[j].slice(2);
+        SEG.k = [2, zone, -1, SEG.band]; }
+      tArt.classList.toggle('kf-tf-auf', tfLauf);
       tArt.classList.toggle('on', drin && (sl || u > TF_U0 - 0.08) && !(TF.sel >= 0 && !TF.auto));
       { const ohne = !(HB && gl); if (tArt.classList.contains('kf-tf-ohne') !== ohne) { tArt.classList.toggle('kf-tf-ohne', ohne); H = 0; } } root.classList.toggle('kf-tf-offen', TF.sel >= 0 && !TF.auto); // ohne Grafikchip gibt es keine Leuchtpunkte: dann wählen die Knöpfe im Textblock
-      sgCur = drin ? 9 : -1; // Verlauf hinter dem Text auch hier
+      sgCur = drin && !tfLauf ? 9 : -1; // Verlauf hinter dem Text auch hier (nicht im Auftritt: der Hinweistext kommt erst danach)
     }
     // Am Ende der Strecke blendet die eigene Bühne aus (handK); das Nervensystem bleibt bis dahin stehen
     // (im Baustein zieht sich die Lichtlinie vorher zurück – für die Übergabe an Puls; hier gibt es keine Übergabe)
@@ -753,16 +796,21 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     // Gehirn-Blick (A–C): das Raumlicht tritt zurück, damit das Gehirn hell auf dunklem Grund steht; auf der Fahrt hinunter kommt es wieder
     if (HSTIL) raum(HB && gl ? 1 - (1 - RAUM_H) * smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt) * (1 - hk) : 1);
     // Wiegen + Atem (wie Puls), gleiche Werte für Partikel und SVG
-    const sway = (sl ? 0 : Math.sin(S.time * 0.25) * (HIRN ? 0.07 + 0.11 * smooth(1.6, 3, v.s / V.A.s) : 0.12)) + (HIRN && HB ? (v.yaw || 0) : VAR.turn * (1 - smooth(0.02, 0.5, u))); S.sway = sway; // ?start=c|d: am Start leicht gedreht, dreht sich mit dem ersten Scrollen nach vorn
+    const rock = sl ? 0 : Math.sin(S.time * 0.25) * (HIRN ? 0.07 + 0.11 * smooth(1.6, 3, v.s / V.A.s) : 0.12); S.rock = rock;
+    const sway = rock + (HIRN && HB ? (v.yaw || 0) : VAR.turn * (1 - smooth(0.02, 0.5, u))); S.sway = sway; // ?start=c|d: am Start leicht gedreht, dreht sich mit dem ersten Scrollen nach vorn
     const br = Math.sin(S.breath) * (1 + S.calm * 1.3), kx = 1 + br * 0.007, ky = 1 + br * 0.004, cx = kx * Math.cos(sway);
     const M = [v.s * cx, v.s * ky, v.ax - (BODY_W / 2 * cx + v.fx) * v.s, v.ay - (BODY_H / 2 * ky - v.fy) * v.s]; // Grundriss → Bildschirm
     if (TAFEL && tSpots.length) { // Leuchtpunkte: Ort im Körper → Bildschirm (wie die Zeichenfläche: Drehung um die Hochachse, leichte Aufsicht)
-      const zeig = TF.in && !!(HB && gl) && u > TF_U0 - 0.06, cs = Math.cos(sway), sn = Math.sin(sway), kTop = tKarte.classList.contains('on') && !desk ? tKarte.offsetTop : 1e9;
+      const zeig = TF.in && TF.aufOk && !!(HB && gl) && u > TF_U0 - 0.06, nahAn = TF.sel >= 0 && !TF.auto && TF.k > 0.15, cs = Math.cos(sway), sn = Math.sin(sway), kTop = tKarte.classList.contains('on') && !desk ? tKarte.offsetTop : 1e9;
       let puls = TF.sel >= 0 && !TF.auto ? -1 : TF_TXT.findIndex((_, i) => !TF.seen[i] && !(TF.auto && i === TF.sel));
       tSpots.forEach((b, i) => { const O = TF_ORT[i], x = v.ax + (cs * O[0] + sn * O[2] - v.fx) * v.s, y = v.ay - (O[1] - O[2] * TILT - v.fy) * v.s;
-        const an = zeig && x > 16 && x < W - 16 && y > 70 && y < Math.min(H - 16, kTop - 18);
+        const an = zeig && !(nahAn && (i !== TF.sel || TF.p > 0.55)) && x > 16 && x < W - 16 && y > 70 && y < Math.min(H - 16, kTop - 18);
         if (an) b.style.transform = `translate(${fmt(x)}px,${fmt(y)}px)`;
         b.classList.toggle('on', an); b.classList.toggle('is-pulse', an && i === puls); b.classList.toggle('is-on', an && i === TF.sel); b.tabIndex = an ? 0 : -1; });
+      // Auftritt: Name des Abschnitts rechts neben den Wirbelkörpern, bleibt stehen, bis die Figur dazukommt
+      tAbs.forEach((e, j) => { const an = TF.lauf && tfDrin && TF.at > AUF_ABS0 + j * AUF_ABSD + 0.1 && TF.at < AUF_HALT && !!V.mark;
+        if (an) { const A = AUF_ABS[j], Y = BODY_H / 2 - (A[2] + A[3]) / 2, q = V.mark(Y), Z = q[1] + 16; e.style.transform = `translate(${fmt(Math.min(W - 14 - e.offsetWidth, v.ax + (cs * q[0] + sn * Z - v.fx) * v.s + 14))}px,${fmt(v.ay - (Y - Z * TILT - v.fy) * v.s)}px)`; }
+        e.classList.toggle('on', an); });
     }
     if (schein) { // Lage wie die Ringe der Areale: Mitte des Gehirns, Größe aus seiner Ausdehnung
       const k = HB && gl ? smooth(2.2, 3, v.s / V.A.s) * (1 - fahrt) : 0;
@@ -791,7 +839,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     { const [bx, by] = toBody(PT.x, PT.y, v); PTR[0] = bx - BODY_W / 2; PTR[1] = BODY_H / 2 - by; PTR[2] = Math.max(1, (desk ? 58 : 50) * (1 + 0.3 * kinoK) / v.s); PTR[3] = PT.k; }
     if (st && hk < 1 && (dirty || !paused || Math.abs(S.us - prevUs) > 1e-5 || mixWas !== mixK || kinoWas !== kinoK)) {
       if (relaxDirty) { st.upload(); if (stOld) stOld.upload(); }
-      const common = { seg: SEGM || TAFEL ? SEG.f : null, segK: SEGM || TAFEL ? SEG.k : null, segY: SEGM || TAFEL ? SEG.y : null, bunt: BUNT, scharf: SCHARF, lasur: +Q.get('lasur') || 1, W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
+      const common = { seg: SEGM || TAFEL ? SEG.f : null, segK: SEGM || TAFEL ? SEG.k : null, segY: SEGM || TAFEL ? SEG.y : null, auf: TAFEL ? TF.auf : null, bunt: BUNT, scharf: SCHARF, lasur: +Q.get('lasur') || 1, W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
       if (cur !== welCur) { welCur = cur; if (cur >= 0) welT0 = S.time + 0.35; }
       let lampe = null;
       if (HSTIL === 10 && HB) {
@@ -929,6 +977,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     pointer: () => PT, // Zeiger (Bildpunkte der Bühne, Stärke k) – Puls führt damit seine eigenen Bühnen
     state: () => ({ stil: mode, mix: +mixK.toFixed(2), kino: +kinoK.toFixed(2), echt, buildMs, sp: +SP.toFixed(2), ptr: +PT.k.toFixed(2), u: +S.u.toFixed(3), us: +S.us.toFixed(3), tip: +S.tip.toFixed(1), cur: S.cur, idle: +S.idle.toFixed(1), act: S.act.map((x) => +x.toFixed(2)), auto: S.auto.map((x) => +x.toFixed(2)), sol: S.sol.map((x) => +x.toFixed(2)), rest: S.rest.map((x) => +x.toFixed(2)), done: S.done.slice(), gl: !!st, n: pts.count, still: still(), handK: +hk.toFixed(2), txt: +S.txt.toFixed(2), satz: SATZ.n, view: S.view && { s: +S.view.s.toFixed(2), ax: Math.round(S.view.ax), ay: Math.round(S.view.ay) } }),
     go: (u) => scrollTo(trackTop() + u * H, false),
+    tafel: () => TF, // Prüfhilfe: Zustand der Tafel (Auftritt, Kamerafahrt)
     ring: (i) => ringPx[i].map((x) => Math.round(x)),
     plan: () => ({ hirn: HIRN, arr: ARR.slice(), leave: LEAVE.slice(), end: U_END }), // für den Prüfstand: Halte je Fassung
     relax: () => relaxCv.toDataURL(), // Zeichenfläche „Entspannung“ als Bild (Prüfen)

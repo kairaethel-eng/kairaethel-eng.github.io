@@ -235,7 +235,7 @@ export function linesOf(nerves, split) {
 }
 
 // sp = Abstand der Haut-Punkte (Grundriss-Einheiten), dust = Zahl der großen unscharfen Punkte im Raum, data = decode(…)
-export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = false, shell = false, hirnSp = 0.42, areale = [], ruhig = false, wirbel = false }) { // ruhig (Fassung M): keine Spannungs-Stellen am Körper (die vier Texte gehören zu Arealen im Gehirn) // hirnSp: Punktabstand im feinen Gehirn · areale: [Hirnlappen, Seite] je Station (Signal-Bögen) // hirn (Fassung K): Gehirn rundum und dichter, Maße in .brain
+export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = false, shell = false, hirnSp = 0.42, areale = [], ruhig = false, wirbel = false, wirbelSp = 0.4 }) { // ruhig (Fassung M): keine Spannungs-Stellen am Körper (die vier Texte gehören zu Arealen im Gehirn) // hirnSp: Punktabstand im feinen Gehirn · areale: [Hirnlappen, Seite] je Station (Signal-Bögen) // hirn (Fassung K): Gehirn rundum und dichter, Maße in .brain
   const Pp = [], Nn = [], St = [], Ht = [], Ct = [], Nf = [];
   const put = (x, y, z, nx, ny, nz, kind, a, b, c, heat = null) => {
     Pp.push(x, y, z); Nn.push(nx, ny, nz); Nf.push(kind, a, b, c);
@@ -317,12 +317,19 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   const nBody = St.length;
   // A3 Knochen: etwas weiter als die Haut, Rückseiten weg (wie die Haut)
   const spB = clamp(sp * 0.95, 1.1, 2.4);
-  for (const p of data.parts.filter((q) => q.kind === 'bone')) {
-    const soft = p.id === 'knochen/schaedel' ? 2 : p.id === 'knochen/rippen' || p.id === 'knochen/hand' ? 1 : 0;
-    // Tafel (?seg=2): die Wirbelsäule steht rundum und feiner da (im Profil gesehen, auch die Dornfortsätze), markiert in ctr.y
-    const wb = wirbel && /knochen\/(hws|bws|lws)$/.test(p.id);
-    rows(p, wb ? spB * 0.45 : spB, (x, y, z, nx, ny, nz, coarse) => { if (nz < -0.35 && !wb) return; put(x, y, z, nx, ny, nz, 5, 0, coarse ? 1 : 0, soft, wb || (wirbel && p.id === 'knochen/becken' && Math.abs(x) < 9 && y > 8 && z < 0) ? { st: -1, h: 0, cx: 0, cy: 1 } : null); });
+  // Tafel (?seg=2): die Wirbelsäule steht rundum und fein gerastert da (WIRBEL_SP; im Profil gesehen, auch die Dornfortsätze), markiert in ctr.y.
+  // Ihre Punkte liegen als Letzte der Knochen direkt vor dem Gehirn (ab w0) – so kann die Bühne sie im Nahblick wie das Gehirn deckend mit Tiefe zeichnen.
+  const bones = data.parts.filter((q) => q.kind === 'bone'), istWb = (p) => wirbel && /knochen\/(hws|bws|lws)$/.test(p.id), imKb = (x, y, z) => Math.abs(x) < 9 && y > 8 && z < 0, spW = Math.min(spB * 0.45, wirbelSp); // wirbelSp: Punktabstand der Wirbelsäule auf der Tafel (Handy 0,4, breitere Fenster feiner)
+  // die Tafel zeigt die Wirbelsäule nur von vorn rechts bis ins Profil (Drehung 0,3 … 1,7): Punkte, die in keinem dieser Blicke zum Betrachter zeigen, entfallen
+  const WB_YAW = [0.3, 0.65, 1, 1.35, 1.7].map((t) => [Math.sin(t), Math.cos(t)]), wbWeg = (nx, ny, nz) => WB_YAW.every(([sn, cs]) => cs * nz - sn * nx + ny * 0.12 < -0.2);
+  let w0 = -1;
+  for (const p of [...bones.filter((q) => !istWb(q)), ...bones.filter(istWb)]) {
+    const soft = p.id === 'knochen/schaedel' ? 2 : p.id === 'knochen/rippen' || p.id === 'knochen/hand' ? 1 : 0, wb = istWb(p), kb = wirbel && p.id === 'knochen/becken';
+    if (wb && w0 < 0) w0 = St.length;
+    rows(p, wb ? spW : spB, (x, y, z, nx, ny, nz, coarse) => { if ((nz < -0.35 && !wb) || (kb && imKb(x, y, z)) || (wb && wbWeg(nx, ny, nz))) return; put(x, y, z, nx, ny, nz, 5, 0, coarse ? 1 : 0, soft, wb ? { st: -1, h: 0, cx: 0, cy: 1 } : null); });
   }
+  if (wirbel) { const p = part('knochen/becken'); if (w0 < 0) w0 = St.length; // Kreuzbein: eigener feiner Durchgang über das Becken
+    if (p) rows(p, spW, (x, y, z, nx, ny, nz) => { if (imKb(x, y, z) && !wbWeg(nx, ny, nz)) put(x, y, z, nx, ny, nz, 5, 0, 0, 0, { st: -1, h: 0, cx: 0, cy: 1 }); }); }
   // A2 Gehirn: Großhirn mit echten Windungen, Kleinhirn, Hirnstamm – erscheint mit der Lichtspitze von oben nach unten
   // (Innenwände an der Mittelspalte entfallen – sie lägen von vorn gesehen als helle Naht über der Mitte)
   const spBr = hirn ? hirnSp : clamp(sp * 0.42, 0.62, 0.95);
@@ -448,7 +455,7 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
     });
     // Art 11 Lichthof: ein großer weicher Punkt hinter dem Gehirn (scheint zwischen den Punkten durch)
     put(C[0], C[1], C[2], 0, 0, 0, 11, R, 0, 0);
-    hirnInfo = { b0, b1, c: C, r: R, sp: spBr };
+    hirnInfo = { b0, b1, w0, wSp: spW, c: C, r: R, sp: spBr };
   }
   // A4 Muskeln der Stationen: Spannung sitzt im Muskel (Nacken: Trapezius absteigend + Levator scapulae; Hüfte: Gluteus medius, Piriformis, Psoas)
   const spM = clamp(sp * 0.8, 0.9, 2);
@@ -469,6 +476,7 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   const nerves = nerveList(hirn ? glatt(data.head.nerves) : data.head.nerves);
   { const sp = nerves.filter((n) => n.name === 'Speichennerv').map((n) => n.pts[0][1]); if (sp.length) ARM_Y = Math.min(...sp) - 1.5; }
   const NS = 0.62, GAP = 0.52, n0 = St.length, segD = [1e9, 1e9, 1e9, 1e9, 1e9, 1e9], segE = [0, 0, 0, 0, 0, 0];
+  const segW = segD.map(() => new Map()); // Weg je Abschnitt: mittlerer Ort der Bahn (nahe Seite) je 3 Einheiten Weg vom Gehirn – daran fährt die Kamera mit der Farbe
   for (const N of nerves) {
     if (VS && N === nerves[0]) continue; // Rückenmark steht als Körper (Schlauch) da
     // K, M (27.11.2026): EIN Strang je Bahn, die Perlen liegen dicht an dicht (Abstand = 0,92 ihres Durchmessers) und werden zur Spitze
@@ -480,7 +488,8 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
         const x = A[0] + (B[0] - A[0]) * f, y = A[1] + (B[1] - A[1]) * f, z = A[2] + (B[2] - A[2]) * f, [vx, vz] = versatz(y);
         const tx = B[0] - A[0], ty = B[1] - A[1], tz = B[2] - A[2], t3 = N.main ? 0 : Math.hypot(tx, ty, tz) || 1; // die Richtung der Bahn fährt im Normalen-Feld mit (der Shader dimmt Bahnen, die auf den Betrachter zulaufen)
         const sm = segMaske(N.name, y); // Fassung „Segmente“: zu welchen der sechs Abschnitte gehört die Perle (Bitmaske in aC.y), dazu Anfang und Ende je Abschnitt (Weg vom Gehirn)
-        if (sm) for (let q = 0; q < 6; q++) if (sm >> q & 1) { segD[q] = Math.min(segD[q], N.d0 + s); segE[q] = Math.max(segE[q], N.d0 + s); }
+        if (sm) for (let q = 0; q < 6; q++) if (sm >> q & 1) { segD[q] = Math.min(segD[q], N.d0 + s); segE[q] = Math.max(segE[q], N.d0 + s);
+          if (x + vx < 0.5) { const kb = Math.floor((N.d0 + s) / 3); let B = segW[q].get(kb); if (!B) segW[q].set(kb, B = [0, 0, 0, 0]); B[0] += x + vx; B[1] += y; B[2] += z + vz; B[3]++; } }
         put(x + vx, y, z + vz, t3 ? tx / t3 : 0, t3 ? ty / t3 : 0, t3 ? tz / t3 : 0, 3, N.main ? BODY_H / 2 - y : N.ry0 + s * N.rate, N.d0 + s, D, sm ? { st: -1, h: 0, cx: 0, cy: sm } : null);
         s += D * 0.92;
       }
@@ -524,5 +533,5 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
     for (let k = 0; k < count; k++) { const sp = k >= dup0 && k < b1, r = sp ? rd : rr; for (let j = 0; j < 4; j++) rnd[4 * k + j] = r();
       if (sp) rnd[4 * k + 2] *= 0.0044; else if (k >= b0 && k < dup0 && rnd[4 * k + 2] < 0.0045) rnd[4 * k + 2] += 0.0045; } }
   const split = data.head.split;
-  return { pos: new Float32Array(Pp), nrm: new Float32Array(Nn), st: new Float32Array(St), heat: new Float32Array(Ht), ctr: new Float32Array(Ct), rnd, nfo: new Float32Array(Nf), count, nBody, spB, lines: linesOf(hirn ? nerveList(data.head.nerves) : nerves, split), split, brain: BB, lobes, hirn: hirnInfo, seg: segD.map((d, q) => [d > 1e8 ? 0 : d, Math.max(1, segE[q] - d)]), nerv: [n0, n1], mark: nerves.slice(0, 2).flatMap((n) => n.pts.map((q) => { const v = versatz(q[1]); return [q[0] + v[0], q[1], q[2] + v[1]]; })) }; // nerv: Bereich der Nerven-Perlen (sie schreiben in K, M den Leitsatz) · mark: Mittellinie Rückenmark + Endfaden (Fahrt am Rückenmark)
+  return { pos: new Float32Array(Pp), nrm: new Float32Array(Nn), st: new Float32Array(St), heat: new Float32Array(Ht), ctr: new Float32Array(Ct), rnd, nfo: new Float32Array(Nf), count, nBody, spB, lines: linesOf(hirn ? nerveList(data.head.nerves) : nerves, split), split, brain: BB, lobes, hirn: hirnInfo, seg: segD.map((d, q) => [d > 1e8 ? 0 : d, Math.max(1, segE[q] - d)]), segWeg: segW.map((M) => [...M.entries()].sort((a, b) => a[0] - b[0]).map(([k, B]) => [k * 3 + 1.5, B[0] / B[3], B[1] / B[3], B[2] / B[3]])), nerv: [n0, n1], mark: nerves.slice(0, 2).flatMap((n) => n.pts.map((q) => { const v = versatz(q[1]); return [q[0] + v[0], q[1], q[2] + v[1]]; })) }; // nerv: Bereich der Nerven-Perlen (sie schreiben in K, M den Leitsatz) · mark: Mittellinie Rückenmark + Endfaden (Fahrt am Rückenmark)
 }
