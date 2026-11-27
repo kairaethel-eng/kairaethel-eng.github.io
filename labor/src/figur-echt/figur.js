@@ -312,7 +312,7 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
   // 3 Scheitel · 4 Hinterhaupt · 5 Kleinhirn · 6 Stamm); dazu je Punkt die Tiefe unter der Hüllfläche (nfo.z: Furchen dunkel, Windungen hell)
   const fine = hirn && data.parts.some((q) => q.kind === 'brain2');
   const LOBE = { stirn: 0, zentral: 1, schlaefe: 2, scheitel: 3, hinterhaupt: 4, kleinhirn: 5, stamm: 6, innen: 7 }, lobes = []; // 7 = Innenfläche (Gürtelwindung, Insel, Schnittfläche)
-  const b0 = St.length; let b1 = b0, hirnInfo = null;
+  const b0 = St.length; let b1 = b0, dup0 = b0, hirnInfo = null;
   // Versatz der Nervenbahnen zum feinen Hirnstamm (nur Fassungen mit feinem Gehirn; VS wird beim Rückenmark gesetzt): Rückenmark und
   // Wurzeln sitzen damit genau unter dem Stamm und laufen weiter unten in die unveränderten Bahnen
   let VS = null;
@@ -397,6 +397,11 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
         }
       }
     }
+    // Farbspritzer (Stile ab 11) als eigene Punkte: Kopien einzelner Flächenpunkte. Vorher wurden Flächenpunkte selbst nach außen
+    // geschoben und ließen Löcher in der geschlossenen Zeichnung (27.11.2026, Kai: „deutlich schärfer und genauer gezeichnet“).
+    dup0 = St.length;
+    { const rs = rng(4711); for (let k = b0; k < dup0; k++) { if (Ct[2 * k] > 6.5 || rs() >= 0.0045) continue;
+      Pp.push(Pp[3 * k], Pp[3 * k + 1], Pp[3 * k + 2]); Nn.push(Nn[3 * k], Nn[3 * k + 1], Nn[3 * k + 2]); Nf.push(Nf[4 * k], Nf[4 * k + 1], Nf[4 * k + 2], Nf[4 * k + 3]); St.push(St[k]); Ht.push(Ht[k]); Ct.push(Ct[2 * k], Ct[2 * k + 1]); } }
     b1 = St.length;
     // --- Gehirn-Bühne (Fassung K, 25.11.2026: „Gehirn der Extraklasse“): Leuchten, Signal-Bögen, Lichthof – alles geordnet, kein Zufall in der Lage
     const C = BB.map((r) => (r[0] + r[1]) / 2), R = Math.max(...BB.map((r) => (r[1] - r[0]) / 2));
@@ -493,7 +498,9 @@ export function echtPoints({ sp = 1.6, dust = 26, data, detail = false, hirn = f
     }
   }
   const count = St.length, rnd = new Float32Array(count * 4), rr = rng(77);
-  for (let k = 0; k < rnd.length; k++) rnd[k] = rr();
+  { const rd = rng(4712); // Spritzer-Kopien (dup0…b1) würfeln für sich – alle anderen Punkte behalten ihre Zufallswerte
+    for (let k = 0; k < count; k++) { const sp = k >= dup0 && k < b1, r = sp ? rd : rr; for (let j = 0; j < 4; j++) rnd[4 * k + j] = r();
+      if (sp) rnd[4 * k + 2] *= 0.0044; else if (k >= b0 && k < dup0 && rnd[4 * k + 2] < 0.0045) rnd[4 * k + 2] += 0.0045; } }
   const split = data.head.split;
   return { pos: new Float32Array(Pp), nrm: new Float32Array(Nn), st: new Float32Array(St), heat: new Float32Array(Ht), ctr: new Float32Array(Ct), rnd, nfo: new Float32Array(Nf), count, nBody, spB, lines: linesOf(hirn ? nerveList(data.head.nerves) : nerves, split), split, brain: BB, lobes, hirn: hirnInfo, nerv: [n0, n1], mark: nerves.slice(0, 2).flatMap((n) => n.pts.map((q) => { const v = versatz(q[1]); return [q[0] + v[0], q[1], q[2] + v[1]]; })) }; // nerv: Bereich der Nerven-Perlen (sie schreiben in K, M den Leitsatz) · mark: Mittellinie Rückenmark + Endfaden (Fahrt am Rückenmark)
 }

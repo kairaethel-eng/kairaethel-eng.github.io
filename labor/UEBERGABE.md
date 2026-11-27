@@ -51,6 +51,11 @@ Verweise der Form „`UEBERGABE.md` ▶ …“ in anderen Dateien, die einen Abs
 
 Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabezeile lesen · in CSS-Kommentaren nie den Kommentar-Schluss schreiben · kein Kommentar ans Zeilenende mit Code im Bundle · eine fehlende Hauptgrafik zählt im Prüfstand als FEHLER.
 
+## ▶ 27.11.2026, 19:45 Uhr – Kai am Tablet: Gehirn „noch sehr verpixelt … deutlich schärfer und genauer gezeichnet“, „die hellen Pixel machen das Ganze unrund“
+- **Ursache:** Tablet-Fenster (rund 656 px breit) zählt als Handy (`big` erst ab 920 px) → Punktabstand 0,29 auf einem viel größeren Bild (rund 3,8 px je Punkt). Dazu runde Punkte mit Lücken (Raster sichtbar) und weiße Lichter auf jeder Kuppe.
+- **Geändert (feine Stile `?hirn=9|10|11`, also auch `?bunt=1`):** Punktabstand nach Fensterbreite (`132 / innerWidth`, 0,2 … 0,29; Tablet 0,2 ≈ 434 000 Punkte wie am PC) · „scharf“ ist jetzt Standard (`?scharf=0` = Stand bis 19 Uhr): keine weißen Lichter, kein Glanz, Punkte überlappen (1,4 statt 1,0) → geschlossene Fläche, weiche Tonstufen von Furche zu Kuppe, Kleinhirn mit eigener Stufung, aktiver Lappen nur 12 % heller · Farbspritzer sind eigene Punkte (Kopien, `figur.js` `dup0`), vorher rissen sie Löcher in die Fläche.
+- **Geprüft:** Bilder Tablet (656×1000, 2×), Handy, PC je Halt; Skriptfehler 0 (alle Stil-Kombinationen), `sizes.cjs` alles ok. **Nicht prüfbar:** ob das Tablet mit 434 000 Punkten flüssig bleibt → Kai, `?takt=1`. Rückweg: `?scharf=0&korn=0.29` zum Vergleich, sonst Commit davor.
+
 ## ▶ 27.11.2026, 6:15 Uhr – Kai: Farben „gefallen mir im Moment sehr gut, auch für die ganze Website“, Figur dezenter
 - **Kai (06:01):** Die Farben gefallen sehr gut, auch für die ganze Website. „Die Figur wäre mir aber im Moment zu knallig, wäre schön, ein wenig dezenter.“
 - **Geändert (nur `?bunt=1`):** Muskelfigur trägt die Pigmente nur noch als Lasur auf der hellen Zeichnung (30–60 % statt 100 %, in ruhigen Flächen etwas mehr). `?lasur=` stellt die Stärke (1 = Entwurf, 2 ≈ wie zuerst). Geprüft: Bilder Handy/PC, keine Skriptfehler, `sizes` „alles ok“. Mit veröffentlicht: `?scharf=1` (Probe aus dem Abschnitt 6 Uhr, ohne Schalter wirkungslos).
@@ -59,7 +64,7 @@ Merkpunkte, die aus dem Archiv weiter gelten: nach jedem Bau die letzte Ausgabez
 ## ▶ 27.11.2026, 6 Uhr – Kai: „Warum sieht das Rückenmark deutlich schärfer gezeichnet aus als das Gehirn?“
 - **Ursache (an Kai erklärt):** 1 glatter Schlauch = gleichmäßige Punktreihen, am Gehirn kippt jede Windung das Raster · 2 weiße Lichter auf den Kuppen waschen die Farbe aus und lassen Punkte verschmelzen (am Rückenmark gibt es sie nicht) · 3 drei Tonstufen auf wenigen Pixeln lesen sich als Rauschen.
 - **Probe gebaut, noch nicht auf `main`:** `?scharf=1` (Uniform `uScharf`, wirkt auf die feinen Stile 9–11): keine weißen Lichter, zwei Tonstufen (reines Pigment · dunkle Furche ab `ao` 0,34–0,5), aktive Stelle heller statt weißer. Im Vergleich in Handy-Größe klar schärfer; Stand nur auf dem Arbeits-Branch.
-- **Wartet auf Kais Wahl (Karte im Chat):** Rezept vom Rückenmark (Empfehlung) · feineres Raster · beides · so lassen. Bei Wahl 1 oder 3: `uScharf` für die Stile 12–14 fest einschalten und veröffentlichen.
+- **Entschieden 27.11., 19:23 (Kai am Tablet):** beides zusammen – Rezept vom Rückenmark plus feineres Raster, siehe Abschnitt 19:45 Uhr.
 
 ## ▶ 27.11.2026, 5:30 Uhr – Alle fünf Farb-Ideen als Entwürfe (`?hirn=10|11`, `?bunt=1`)
 - **Auftrag (Kai, 04:37):** „Baue alle Punkte, gerne auch kombinierte Varianten mit deinen Ideen.“ (Die fünf Ideen aus dem Abschnitt 4:30 Uhr.)

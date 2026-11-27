@@ -440,14 +440,15 @@ void main(){
         // uScharf (Kai 27.11., 05:52: „Warum sieht das Rückenmark deutlich schärfer gezeichnet aus als das Gehirn?“): das Rezept des Rückenmarks –
         // reine Farbe je Punkt, keine weißen Lichter, nur zwei Tonstufen (Pigment und Tusche) mit schmalem Übergang
         { float hl = .78 * smoothstep(.5, 1., Lk) * smoothstep(.62, .92, ao) * (1. - isSt) * (1. - uScharf);
-          vec3 cF = mix(pg * mix(.52, .2, uScharf), mix(min(vec3(1.), pg * mix(1.3, 1.16, uScharf)), vec3(1., .98, .94), hl), smoothstep(mix(.14, .34, uScharf), mix(.46, .5, uScharf), ao));
-          cF *= mix(.84, 1., smoothstep(0., .45, Lk)) * mix(.85, 1., fog) * mix(1., .84, uAreaK * (1. - on) * (1. - isSt));
-          cF = mix(cF, mix(pg, vec3(1., .98, .94), (.2 + .5 * hl) * (1. - uScharf)) * mix(1.1, 1.3, uScharf), on * smoothstep(.3, .7, ao));
+          float kh = step(4.5, aC.x) * step(aC.x, 5.5) * uScharf; // Kleinhirn: flache Blätter – die Tonstufen enger an die Kuppe, sonst bleibt es eine Fläche
+          vec3 cF = mix(pg * mix(.52, .3, uScharf), mix(min(vec3(1.), pg * mix(1.3, 1.12, uScharf)), vec3(1., .98, .94), hl), smoothstep(mix(mix(.14, .26, uScharf), .5, kh), mix(mix(.46, .7, uScharf), .93, kh), ao));
+          cF *= mix(mix(.84, .74, uScharf), 1., smoothstep(0., mix(.45, .8, uScharf), Lk)) * mix(.85, 1., fog) * mix(1., .84, uAreaK * (1. - on) * (1. - isSt));
+          cF = mix(cF, mix(pg, vec3(1., .98, .94), (.2 + .5 * hl) * (1. - uScharf)) * 1.1, on * smoothstep(.3, .7, ao) * (1. - uScharf)); cF *= 1. + .12 * on * uScharf; // scharf: der aktive Lappen wird nur heller, die Zeichnung bleibt
           cF = mix(cF, vec3(.05, .02, .05), (1. - smoothstep(.07, .2, ao)) * (1. - klein * .7) * .92);
-          cQ = mix(cQ, cF + vec3(1., .98, .94) * sp2 * .3, sF); }
+          cQ = mix(cQ, cF + vec3(1., .98, .94) * sp2 * .3 * (1. - uScharf), sF); }
         cQ = mix(cQ, pg * 1.04, aqS * malK);                                                     // Spritzer: reines Pigment
         ch = mix(ch, cQ, sQ); gI = mix(gI, .82, sQ); sG = mix(sG, 1., sQ); sM *= 1. - sQ; vCore = mix(vCore, mix(1.6, 1.22, sF), hk * sQ); // Aquarell: Kern über den Punkt hinaus – flache, deckende Farbtupfer ohne dunklen Rand; fein: einzelne Punkte
-        szL = mix(szL, mix(mix(1.26, 1., sF), mix(.9 + 3.6 * aRand.y * aRand.y * aRand.y, .8 + 2.2 * aRand.y * aRand.y * aRand.y, sF), aqS), sQ); } }
+        szL = mix(szL, mix(mix(1.26, mix(1., 1.4, uScharf), sF), mix(.9 + 3.6 * aRand.y * aRand.y * aRand.y, .8 + 2.2 * aRand.y * aRand.y * aRand.y, sF), aqS), sQ); } }
     { // Impulse (nur im Blick „Nervensystem“ – im Gehirn-Blick bleibt alles ruhig): Licht läuft das Rückenmark hinunter (warm) und leiser
       // wieder hinauf (kühl), im selben Takt wie auf den Nerven – dort tritt es an jeder Wurzel aus und kommt dort wieder an
       float wC = (uMarkY - aPos.y) * 1.03, kC = uPulse * uNs * isSt * (1. - step(9.5, uHStil) * (1. - step(10.5, uHStil)));
