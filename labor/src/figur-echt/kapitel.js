@@ -165,7 +165,12 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   // Entwurf „Fusion“ (?seg=3, Kai 28.11.2026: „03 zieht hinter das Gehirn“): der Gastgeber hängt Kapitel 03 (fus.mitte) zwischen zwei Strecken
   // in dieses Kapitel. Fahrplan und Länge bleiben die von Weg M; die Fahrt hält am Blick 'R1' (Profil am Rückenmark), solange Kapitel 03
   // darüber läuft, und geht danach weiter (Lende → ganze Figur → Leitsatz). Die Bühne blendet aus, solange Kapitel 03 sie verdeckt (hkF).
-  const FUS = HIRN && Q.get('seg') === '3' && !!(fus && fus.mitte), FUS_UA = KEYS_HIRN[9][0], FUS_REST = 0.6; // FUS_REST: Kapitel 03 steht noch so hoch im Bild (Anteil), wenn die Fahrt weitergeht
+  const FUS = HIRN && /^[34]$/.test(Q.get('seg') || '') && !!(fus && fus.mitte), FUS_UA = KEYS_HIRN[9][0], FUS_REST = 0.6; // FUS_REST: Kapitel 03 steht noch so hoch im Bild (Anteil), wenn die Fahrt weitergeht
+  // Entwurf „in der Figur“ (?seg=4): die Bühne blendet nicht aus, sondern bleibt als Hülle um die Wirbelsäule von Kapitel 03 stehen. fus.lage()
+  // liefert deren Lage im Fenster (Drehachse x/y in px, Pixel je Einheit, Drehung, Abschnitt). FUS_K = Einheiten der Figur je Einheit der
+  // Wirbelsäule, FUS_BY/FUS_Z/FUS_X = Ort ihrer Mitte in der Figur (Grundriss-Höhe, Tiefe, Seite) – mit ?fk= ?fy= ?fz= ?fx= zum Nachmessen.
+  const FUS4 = FUS && typeof fus.lage === 'function', FUS_K = +Q.get('fk') || 19.4, FUS_BY = +Q.get('fy') || 124.5, FUS_Z = Q.has('fz') ? +Q.get('fz') : -8, FUS_X = +Q.get('fx') || 0;
+  const FSG = { seen: [], hz: 0, hh: 0, L: null };
   if (HIRN) { KEYS = KEYS_HIRN; U_LEN = U_LEN_HIRN; ARR = STATIONS.map((_, i) => KEYS[1 + 2 * i][0]); LEAVE = STATIONS.map((_, i) => KEYS[2 + 2 * i][0]); U_END = KEYS[KEYS.length - 1][0]; ON_VOR = 0.22; if (SEGM) { KEYS = KEYS_SEG; U_LEN = U_LEN_SEG; U_END = KEYS[KEYS.length - 1][0]; } if (TAFEL) { KEYS = KEYS_TAFEL; U_LEN = U_LEN_TAFEL; U_END = KEYS[KEYS.length - 1][0]; } root.style.setProperty('--len', (U_LEN + 1).toFixed(2)); if (FUS) { root.style.setProperty('--bahn-a', FUS_UA.toFixed(2)); root.style.setProperty('--bahn-b', (U_LEN - FUS_UA + 1 - FUS_REST).toFixed(2)); } }
   const AREALE = [ // Name, Blickrichtung (Drehung um die Hochachse), Mitte im Gehirn (−1…1: rechts, oben, vorn), Radius (Anteil der Breite)
     ['Hören · Schläfenlappen', -1.15, [0.8, -0.32, 0.22], 0.34, 2, 1], ['Denken · Stirnlappen', -0.3, [0.3, 0.3, 0.8], 0.38, 0, 1], // dazu: Hirnlappen (Kennung in figur.js) und Seite
@@ -322,7 +327,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
         const markAt = (y) => { let k = 1; while (k < mk.length - 1 && mk[k][1] > y) k++; const A = mk[k - 1], B = mk[k], f = clamp((A[1] - y) / Math.max(1e-9, A[1] - B[1])); return [A[0] + (B[0] - A[0]) * f, A[2] + (B[2] - A[2]) * f]; };
         const seite = (by, yaw, s, vor) => { const y = BODY_H / 2 - by, q = markAt(y); return { fx: Math.cos(yaw) * q[0] + Math.sin(yaw) * (q[1] + vor), fy: y - q[1] * TILT, s, ax: V[3].ax, ay: desk ? H * 0.52 : H * 0.5, yaw }; };
         const sR = desk ? Math.min(H * 0.84 / 132, W * 0.38 / 64) : Math.min(H * 0.76 / 132, W * 0.94 / 66);
-        V.R1 = seite(114, 1.5, sR, 9); V.R2 = seite(212, 1.36, sR * 0.6, 6);
+        V.R1 = seite(114, FUS4 ? -1.5 : 1.5, sR, 9); V.R2 = seite(212, FUS4 ? -1.36 : 1.36, sR * 0.6, 6); // „in der Figur“: Blick von der anderen Seite – so steht die Figur schon wie die Wirbelsäule von Kapitel 03 (Brust nach links)
         if (SEGM) { // je Abschnitt ein Bildausschnitt von der Wurzel bis ins Versorgungsgebiet: Mitte (Grundriss-Höhe), Spanne, Drehung, Versatz zur Brust
           const hA = desk ? H * 0.8 : (TXT.txt - TXT.head || H * 0.5) * 0.94, wA = desk ? W * 0.4 : W * 0.94, ay = desk ? H * 0.52 : stAy;
           SEG_RAHMEN.forEach(([mid, span, yw, vor, breit], i) => {
@@ -455,7 +460,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   const rctx = relaxCv.getContext('2d', { willReadFrequently: true });
   rctx.fillStyle = '#000'; rctx.fillRect(0, 0, RW, RH);
   let relaxDirty = true, measureDirty = false;
-  let gl = (HIRN ? glContextTiefe : glContext)(canvas), st = null, pts = null;
+  let gl = HIRN ? glContextTiefe(canvas, FUS4) : glContext(canvas), st = null, pts = null;
   // Punktabstand: in der Übersicht liegen die Haut-Punkte rund 2,8 (Handy 2,5) Bildpunkte auseinander (wie heute)
   const big = innerWidth > 920, figH0 = SOLE - CROWN;
   const sA0 = big ? Math.min((innerHeight * 0.93 - 84) / figH0, innerWidth * 0.34 / BODY_W) : Math.min((innerHeight * 0.6 - 88) / figH0, innerWidth * 0.86 / BODY_W);
@@ -694,12 +699,15 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       S.u = rM.top >= H ? clamp(-r.top / H, 0, FUS_UA) : rM.bottom > b0 ? FUS_UA : clamp(FUS_UA + (b0 - rM.bottom) / H, FUS_UA, U_LEN);
       hkF = smooth(H * 0.96, H * 0.45, rM.top) * (1 - smooth(H * 0.95, H * 0.6, rM.bottom));
       // weiche Kante an Kapitel 03: die Bühne ist nur über seiner Oberkante bzw. unter seiner Unterkante sichtbar – sein Text steht nie auf der Figur
-      { const w = H * 0.12, mk = rM.top > 0 && rM.top < H ? `linear-gradient(to bottom,#000 ${Math.round(Math.max(0, rM.top - w))}px,transparent ${Math.round(rM.top)}px)` : rM.bottom > -w * 2.5 && rM.bottom < H ? `linear-gradient(to bottom,transparent ${Math.round(Math.max(0, rM.bottom))}px,#000 ${Math.round(Math.max(0, rM.bottom) + w * 2.5)}px)` : '';
+      { const w = H * 0.12, kIn = smooth(H * 0.96, H * 0.45, rM.top), kOut = smooth(H * 0.95, H * 0.6, rM.bottom); // „in der Figur“: dort bleibt die Figur stehen – solange sie noch nicht (oder nicht mehr) Hülle ist, steht sie unter Kapitel 03 nur zu 35 %
+        const tr = (k) => (FUS4 ? `rgba(0,0,0,${fmt(lerp(0.35, 1, k))})` : 'transparent');
+        const mk = rM.top > 0 && rM.top < H ? (FUS4 && kIn > 0.995 ? '' : `linear-gradient(to bottom,#000 ${Math.round(Math.max(0, rM.top - w))}px,${tr(kIn)} ${Math.round(rM.top)}px)`) : rM.bottom > -w * 2.5 && rM.bottom < H ? (FUS4 && kOut < 0.005 ? '' : `linear-gradient(to bottom,${tr(1 - kOut)} ${Math.round(rM.bottom - w)}px,#000 ${Math.round(rM.bottom + w * 1.5)}px)`) : '';
         if (mk !== fusMaske) { fusMaske = mk; stage.style.webkitMaskImage = mk; stage.style.maskImage = mk; } }
       fusTeil = rM.bottom < b0 ? 2 : rM.top < H ? 1 : 0; fusNah = rM.top < H * 1.5;
-      const aus = hkF > 0.985;
+      const aus = !FUS4 && hkF > 0.985;
       if (aus !== fusAus) { fusAus = aus; stage.style.visibility = aus ? 'hidden' : ''; dirty = true; }
-      stage.style.opacity = hkF > 0 ? fmt(1 - hkF) : '';
+      if (!FUS4) stage.style.opacity = hkF > 0 ? fmt(1 - hkF) : '';
+      else { const h = hkF > 0.5; if (h !== FSG.kl) { FSG.kl = h; root.classList.toggle('kf-huelle', h); } }
       if (aus) { S.us = S.u; hand.classList.remove('on'); raum(1); if (scheinAn) { schein.style.display = 'none'; scheinAn = false; } return; } // ganz verdeckt: die Bühne ruht
     }
     const prevUs = S.us;
@@ -796,6 +804,25 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       { const ohne = !(HB && gl); if (tArt.classList.contains('kf-tf-ohne') !== ohne) { tArt.classList.toggle('kf-tf-ohne', ohne); H = 0; } } root.classList.toggle('kf-tf-offen', TF.sel >= 0 && !TF.auto); // ohne Grafikchip gibt es keine Leuchtpunkte: dann wählen die Knöpfe im Textblock
       sgCur = drin && !tfLauf ? 9 : -1; // Verlauf hinter dem Text auch hier (nicht im Auftritt: der Hinweistext kommt erst danach)
     }
+    // „in der Figur“ (?seg=4): solange Kapitel 03 im Bild ist, folgt der Blick der Wirbelsäule von Kapitel 03 – die Figur liegt als Hülle deckungsgleich
+    // darum (Maßstab, Ort und Drehung aus fus.lage()); der gewählte Abschnitt färbt seine Bahn (wie ?seg=1: von der Wurzel ins Versorgungsgebiet)
+    if (FUS4) {
+      const L = hkF > 0 ? fus.lage() : null, ok = !!(L && L.s > 0);
+      FSG.hz = sl ? (ok ? hkF : 0) : FSG.hz + ((ok ? hkF : 0) - FSG.hz) * Math.min(1, dt * 6);
+      FSG.hh = sl ? hkF : FSG.hh + (hkF - FSG.hh) * Math.min(1, dt * 6); // Ruhe unter dem Text von Kapitel 03 – auch solange seine Wirbelsäule noch gerechnet wird
+      if (ok) { FSG.L = { x: L.x, y: L.y, s: L.s, rot: L.rot }; FSG.hun = [clamp(L.zk), Math.pow(clamp((L.s0 || L.s) / L.s, 0.05, 1), 0.82)]; }
+      if (FSG.hz > 0.001 && FSG.L) { const Z = FSG.L, yw = Z.rot + Math.PI * 2 * Math.round(((v.yaw || 0) - Z.rot) / (Math.PI * 2)), cs = Math.cos(yw), sn = Math.sin(yw), ay0 = BODY_H / 2 - FUS_BY;
+        const w = { fx: cs * FUS_X + sn * FUS_Z, fy: ay0 - FUS_Z * TILT, s: Z.s / FUS_K, ax: Z.x, ay: Z.y, yaw: yw }, t = easeIO(FSG.hz);
+        v = { fx: lerp(v.fx, w.fx, t), fy: lerp(v.fy, w.fy, t), s: Math.exp(lerp(Math.log(v.s), Math.log(w.s), t)), ax: lerp(v.ax, w.ax, t), ay: lerp(v.ay, w.ay, t), yaw: lerp(v.yaw || 0, w.yaw, t) }; S.view = v; }
+      const sg = pts && pts.seg, cur = ok && fusTeil === 1 && L.seg >= 0 ? L.seg : -1;
+      if (fusTeil === 0 && hkF <= 0) FSG.seen.length = 0; // wieder über Kapitel 03: die Farben ziehen sich zurück
+      if (cur >= 0) { FSG.seen[cur] = true; SEG.cur = cur; }
+      for (let i = 0; i < 6 && sg; i++) { const Lg = sg[i][1] + 8, an = !!FSG.seen[i];
+        SEG.r[i] = sl || paused ? (an ? Lg : 0) : clamp(SEG.r[i] + dt * (an ? Math.max(46, Lg / 2.4) : -Lg / 0.5), 0, Lg);
+        SEG.a[i] = sl || paused ? (i === cur ? 1 : 0) : SEG.a[i] + ((i === cur ? 1 : 0) - SEG.a[i]) * Math.min(1, dt * 4);
+        SEG.f[i * 4] = sg[i][0]; SEG.f[i * 4 + 1] = SEG.r[i]; SEG.f[i * 4 + 2] = SEG.a[i]; SEG.f[i * 4 + 3] = sg[i][1]; }
+      SEG.k = [1, FSG.hh, Math.max(0, SEG.cur), 0]; SEG.y = [0, 0];
+    }
     // Am Ende der Strecke blendet die eigene Bühne aus (handK); das Nervensystem bleibt bis dahin stehen
     // (im Baustein zieht sich die Lichtlinie vorher zurück – für die Übergabe an Puls; hier gibt es keine Übergabe)
     hk = smooth(U_LEN - 0.35, U_LEN - 0.05, u);
@@ -815,7 +842,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     // Gehirn-Blick (A–C): das Raumlicht tritt zurück, damit das Gehirn hell auf dunklem Grund steht; auf der Fahrt hinunter kommt es wieder
     if (HSTIL) raum(HB && gl ? 1 - (1 - RAUM_H) * smooth(1.6, 3, v.s / V.A.s) * (1 - fahrt) * (1 - hk) : 1);
     // Wiegen + Atem (wie Puls), gleiche Werte für Partikel und SVG
-    const rock = sl ? 0 : Math.sin(S.time * 0.25) * (HIRN ? 0.07 + 0.11 * smooth(1.6, 3, v.s / V.A.s) : 0.12); S.rock = rock;
+    const rock = sl ? 0 : Math.sin(S.time * 0.25) * (HIRN ? 0.07 + 0.11 * smooth(1.6, 3, v.s / V.A.s) : 0.12) * (1 - FSG.hz); S.rock = rock; // Hülle: die Wirbelsäule von Kapitel 03 wiegt selbst, die Figur folgt ihr
     const sway = rock + (HIRN && HB ? (v.yaw || 0) : VAR.turn * (1 - smooth(0.02, 0.5, u))); S.sway = sway; // ?start=c|d: am Start leicht gedreht, dreht sich mit dem ersten Scrollen nach vorn
     const br = Math.sin(S.breath) * (1 + S.calm * 1.3), kx = 1 + br * 0.007, ky = 1 + br * 0.004, cx = kx * Math.cos(sway);
     const M = [v.s * cx, v.s * ky, v.ax - (BODY_W / 2 * cx + v.fx) * v.s, v.ay - (BODY_H / 2 * ky - v.fy) * v.s]; // Grundriss → Bildschirm
@@ -858,7 +885,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     { const [bx, by] = toBody(PT.x, PT.y, v); PTR[0] = bx - BODY_W / 2; PTR[1] = BODY_H / 2 - by; PTR[2] = Math.max(1, (desk ? 58 : 50) * (1 + 0.3 * kinoK) / v.s); PTR[3] = PT.k; }
     if (st && hk < 1 && (dirty || !paused || Math.abs(S.us - prevUs) > 1e-5 || mixWas !== mixK || kinoWas !== kinoK)) {
       if (relaxDirty) { st.upload(); if (stOld) stOld.upload(); }
-      const common = { seg: SEGM || TAFEL ? SEG.f : null, segK: SEGM || TAFEL ? SEG.k : null, segY: SEGM || TAFEL ? SEG.y : null, auf: TAFEL ? TF.auf : null, bunt: BUNT, scharf: SCHARF, lasur: +Q.get('lasur') || 1, W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
+      const common = { klar: FUS4 ? easeIO(FSG.hz) : null, huelle: FUS4 ? FSG.hh : 0, hun: FUS4 ? FSG.hun : null, seg: SEGM || TAFEL || FUS4 ? SEG.f : null, segK: SEGM || TAFEL || FUS4 ? SEG.k : null, segY: SEGM || TAFEL || FUS4 ? SEG.y : null, auf: TAFEL ? TF.auf : null, bunt: BUNT, scharf: SCHARF, lasur: +Q.get('lasur') || 1, W, H, ax: v.ax, ay: v.ay, fx: v.fx, fy: v.fy, s: v.s, sway, time: S.time, breath: S.breath, calm: S.calm, alpha: 1, dpr, sp: SP, zoom: v.s / V.A.s, rel: relV, act: actV, tip: S.tip, pulse: sl ? 0 : 1, nerve: lineK, tilt: TILT, scroll: S.us, ring: 0, ptr: PTR };
       if (cur !== welCur) { welCur = cur; if (cur >= 0) welT0 = S.time + 0.35; }
       let lampe = null;
       if (HSTIL === 10 && HB) {

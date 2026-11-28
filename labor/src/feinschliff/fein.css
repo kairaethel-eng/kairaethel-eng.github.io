@@ -115,3 +115,5 @@ html.paused .kf-tp.is-pulse i{animation:none}
 .kf-fus>#achse{position:relative;z-index:2}
 html.fus .kf-acts a[href="#achse"]{display:none}
 @media print{.kf-bahn{display:none}}
+/* Entwurf ?seg=4 „in der Figur“: solange Kapitel 03 über der Figur liegt, treten ihre eigenen Bedienteile zurück */
+.kf-huelle .kf-prog,.kf-huelle .kf-next,.kf-huelle .kf-hand{opacity:0;pointer-events:none;transition:opacity .4s}

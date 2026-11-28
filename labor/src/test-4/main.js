@@ -159,13 +159,19 @@ if (glCtx) try { renderer = new THREE.WebGLRenderer({ canvas, context: glCtx, an
 // Nur mit Grafikchip und Bewegung; sonst bleibt die Seite in der Reihenfolge von Weg M.
 const FUS = (() => {
   const q = new URLSearchParams(location.search);
-  if (q.get('seg') !== '3' || q.get('start') || q.get('figur') === 'heute' || !renderer || reduced) return false;
+  if (!/^[34]$/.test(q.get('seg') || '') || q.get('start') || q.get('figur') === 'heute' || !renderer || reduced) return false;
   const st = $('#start'), ax = $('#achse'); if (!st || !ax) return false;
   const mk = (c) => { const d = document.createElement('div'); d.className = c; d.setAttribute('aria-hidden', 'true'); return d; };
   st.classList.add('kf-fus'); st.append(mk('kf-bahn kf-bahn-a'), ax, mk('kf-bahn kf-bahn-b'));
   document.documentElement.classList.add('fus');
   return true;
 })();
+// Entwurf ?seg=4 „in der Figur“ (Kai 28.11.2026, 2:49: „eine interaktive Wirbelsäule, die aber mit der Startfigur fusioniert … alle Animationen
+// vereint in der Figur“; Go per Karte „Ja, genau so bauen“): wie die Fusion, aber die Figur bleibt als zarte Hülle stehen und liegt
+// deckungsgleich um die Wirbelsäule von Kapitel 03 (FUSL = deren Lage im Fenster, je Bild aus dem Scanner); der gewählte Abschnitt färbt
+// seinen Nerv in der Figur (kapitel.js).
+const FUS4 = FUS && new URLSearchParams(location.search).get('seg') === '4';
+const FUSL = { x: 0, y: 0, s: 0, s0: 0, rot: 0, seg: -1, zk: 0, da: false }; if (FUS4) window.__fusl = FUSL; // Prüfhilfe
 // Ohne WebGL (oder wenn eine Bühne scheitert): Standbilder statt Partikel, Hinweise weg (A2, CSS html.no-gl)
 const noGl = () => { document.documentElement.classList.remove('seg-rows', 'seg-scan', 'seg-pc'); document.documentElement.classList.add('no-gl'); };
 // Handy-Wirbelsäule (nur hochkant mit WebGL; Handy quer oder ohne WebGL → Karte mit Volltext):
@@ -2459,6 +2465,8 @@ function tick() {
   swK = swVisible();
   fxTick(dt);
   updateAxis(dt);
+  if (FUS4) { const X = uniforms.uXf.value[2], ppw = GLH / 8.197; // Lage der Wirbelsäule von Kapitel 03 im Fenster: Mitte (Drehachse), Pixel je Einheit, Drehung, Abschnitt, Nähe
+    FUSL.x = VW / 2 + X.x * ppw; FUSL.y = GLH / 2 - X.y * ppw; FUSL.s = X.w * ppw; FUSL.da = spineGroup.visible; FUSL.rot = spineRot; FUSL.s0 = OV.w * ppw; FUSL.seg = SCAN.seg; FUSL.zk = ZM.k; }
   roofPlace();
   uniforms.uRoofA.value = 1 - lh.roofK();
   { // Kamera: Wirbelsäule > Übersicht
@@ -2550,7 +2558,7 @@ function tick() {
 // eigene Bühne (Baustein), läuft vor tick im selben Bildtakt; Sprünge (Striche rechts, Pille „Weiter“) gleiten über Lenis
 // Stufe 1 der echten Figur; die Daten lädt der Baustein nur mit WebGL (Funktion statt Promise); bis sie da sind, bleibt die Bühne leer
 const figurHeute = new URLSearchParams(location.search).get('figur') === 'heute';
-kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced, handover: true, stufe: 'echt', start: 'm', fus: FUS ? { mitte: $('#achse') } : null, data: figurHeute ? null : () => loadEcht('m'),
+kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced, handover: true, stufe: 'echt', start: 'm', fus: FUS ? { mitte: $('#achse'), lage: FUS4 ? () => FUSL : null } : null, data: figurHeute ? null : () => loadEcht('m'),
   scrollTo: (y, sm) => (lenis ? lenis.scrollTo(y, sm ? { duration: 1.6 } : { immediate: true }) : window.scrollTo({ top: y, behavior: sm ? 'smooth' : 'auto' })) });
 window.__kf = kf; // Prüfhilfe: __kf.state(), __kf.go(u)
 // Form 0 der Hauptwolke = dieselben Punkte wie die Figur in Kapitel 01 (Übergabe deckungsgleich, gleicher Punktabstand) –

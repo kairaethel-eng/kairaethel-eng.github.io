@@ -16,7 +16,7 @@ uniform vec2 uRes, uAnchor;
 uniform vec4 uView;   // Blickpunkt x, y (Grundriss, Körpermitte = 0, y oben), Maßstab px/Einheit, Drehung (Wiegen)
 uniform float uTime, uBreath, uCalm, uIntro, uUnit, uSp, uSpB, uDpr, uZoom, uTip, uPulse, uNerve, uTilt, uScroll, uKino, uEnd;
 uniform float uQuiet, uLight, uGround, uScanIn, uInner, uHalf, uLens, uDense, uGlass, uAreaK, uHirn, uShell, uLobe, uAreaI, uSpH, uNs, uHStil, uWelle, uKern, uLampeS, uBunt, uScharf, uLasur; uniform vec4 uArea, uBC, uLampe, uLauf; uniform vec4 uMal[4]; uniform vec3 uLaufP; uniform vec4 uSeg[6]; uniform vec4 uSegK; uniform vec4 uAuf; uniform mediump float uSolid; uniform float uWSp; uniform vec2 uSegY; // uLampe (Stil 10 „Laterne“): Ort des Lichts im Körper (xyz) und Stärke · uLampeS: sein Weg am Rückenmark (vom Gehirn aus) // uNs: Schlussbild „Nervensystem“ (Fassungen K, M): Körper wird Glas, Gehirn, Rückenmark und Nerven stehen im Licht // uBC: Mitte und Radius des Gehirns (Fassung K) · uAreaI: Station · uSpH: Punktabstand im Gehirn // Fassung K: Areal im Gehirn (Mitte, Radius) leuchtet // uGlass: wie durchsichtig die Haut über dem Innenleben wird (e–g 0,9 · i 0,62: das Relief bleibt als Hülle) // e–g (25.11. morgens, Kai: „innere Strukturen zu wenig sichtbar“): Innenleben dauerhaft (ganz / halbe Seite), Lupe auch ohne Filmlicht // Vergleich Startfigur (25.11.2026, ?start=b|c|d): Muskeln nur an der aktiven Stelle · Tiefe im Rumpf · Boden · Scan-Linie beim Auftritt
-uniform vec4 uRel, uAct;
+uniform vec4 uRel, uAct; uniform float uHuelle; uniform vec2 uHuN;
 uniform vec4 uPtr;
 uniform vec3 uStC[4];  // Stationen: Mitte x, y (Körpermitte = 0, y oben), Radius
 uniform sampler2D uRelax;
@@ -549,6 +549,8 @@ void main(){
   a *= mix(1., (.018 + .085 * edge) * (1. + 1.5 * uSegK.y) * (1. - .45 * smoothstep(0., .6, uTxt)), uNs * (isSkin + isShell));
   a *= mix(1., .1, uAuf.z * (1. - isSp)) * mix(1., .22, uAuf.w * (isSkin + isShell)); // Auftritt: alles außer der Wirbelsäule tritt zurück · Nahblick: der Umriss des Körpers wird leiser
   a *= mix(1., .13, uSegK.y * isBrain * (1. - step(5.5, aC.x) * (1. - step(6.5, aC.x)))); // Segmente: das Gehirn tritt im Halt zurück (Stamm und Rückenmark bleiben), der Umriss des Körpers steht etwas deutlicher // die Nerven haben den Körper verlassen: der Umriss bleibt nur noch als Hauch stehen (Kai 25.11.: „deutlich transparenter“)
+  a *= mix(1., mix(.46, .1, uHuN.x), uHuelle * (isSkin + isShell)); // … der Umriss steht zart, in der Nahansicht nur noch als Hauch
+  a *= 1. - uHuelle * isBrain * mix(.45, 1., uHuN.x); // Hülle (?seg=4): Gehirn und Rückenmark treten zurück (das Mark läuft in der Übersicht durch die Wirbelsäule von Kapitel 03) und weichen ihr in der Nahansicht ganz
   // Zeiger: Stufe 1 wie heute (größer, warmweiß); in Stufe 2 übernimmt die Lupe – dort nur die inneren Schichten heller
   float pv = pk * (1. - hide) * mix(1., rev, isBrain + isNerve) * mix(1., isBone + isNerve + isBrain + isMus, uKino);
   col = mix(col, vec3(1., .95, .86), pv * .7);
@@ -566,7 +568,7 @@ void main(){
     a *= mix(front, rev * uNerve * smoothstep(.05, .8, hv) * (1. - smoothstep(0., .45, uTxt)), glasB); }
   a *= 1. - nahK * (1. - uSolid);
   if (uSolid > .5 && isSp > .5) { col = cNah; a = 1.; vCore = 1.6; } // Kern über den Punkt hinaus: flache, deckende Punkte, kein Körnen
-  float want = d * uUnit;
+  float want = d * uUnit * mix(1., uHuN.y, uHuelle); // Hülle: die Punkte wachsen mit der Nahansicht der Wirbelsäule nur gedämpft mit (feine Bahnen statt Balken)
   want = mix(want, mix(1.5, uDot, smoothstep(.75, 1., fe)) * uDpr, smoothstep(0., .2, fe));
   float size = max(1.6 * uDpr, want), thin = want / size;
   gl_PointSize = size; vSize = size;
@@ -574,6 +576,7 @@ void main(){
   vA = clamp(a, 0., 1.) * mix(thin * thin, 1., max(isBrain * kK, isSp * uSolid)) * li; // deckendes Gehirn: auch klein (Schlussbild) in voller Helligkeit – die Tiefe ordnet die Punkte
   // Fassung K: das Gehirn wird deckend gezeichnet (Tiefe), vOp = wie viel davon schon da ist (Auflösen über ein festes Punktmuster)
   vOp = mix(1., front * rev * uNerve * smoothstep(.05, .8, hv) * li * (1. - smoothstep(0., .45, uTxt)), isBrain * kK); // … und lösen sich wieder auf, wenn der Leitsatz entsteht
+  vOp *= 1. - uHuelle * isBrain * mix(.45, 1., uHuN.x);
   vOp = mix(vOp, uAuf.w * uSegK.y * aufS * uNerve * (1. - smoothstep(0., .45, uTxt)) * step(-.12, facing), isSp); // abgewandte Punkte entfallen (sie stächen sonst dunkel durch die Fläche)
 }`;
 const FRAG = `#version 300 es
@@ -598,7 +601,7 @@ void main(){
   o = vec4(vCol * a, a);
 }`;
 
-const MAL0 = new Float32Array(16), SEG0 = new Float32Array(24), SEGK0 = [0, 0, -1, 0], AUF0 = [0, 0, 0, 0];
+const MAL0 = new Float32Array(16), SEG0 = new Float32Array(24), SEGK0 = [0, 0, -1, 0], AUF0 = [0, 0, 0, 0], HUN0 = [0, 1];
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
 
 export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
@@ -656,6 +659,7 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
     setTargets(to, dot, c0, c1) { if (!toBuf) return; gl.bindBuffer(gl.ARRAY_BUFFER, toBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, to); gl.uniform1f(U.uDot, dot); if (c0) gl.uniform3fv(U.cT0, c0); if (c1) gl.uniform3fv(U.cT1, c1); },
     draw(u) {
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+      if (u.klar != null) { const k = 1 - u.klar; gl.clearColor(10 / 255 * k, 22 / 255 * k, 27 / 255 * k, k); } // Hülle: der Grund wird durchsichtig, darunter steht die Wirbelsäule von Kapitel 03
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.uniform2f(U.uRes, u.W, u.H); gl.uniform2f(U.uAnchor, u.ax, u.ay);
       gl.uniform4f(U.uView, u.fx, u.fy, u.s, u.sway);
@@ -667,7 +671,7 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
       gl.uniform1f(U.uTilt, u.tilt); gl.uniform1f(U.uScroll, u.scroll);
       gl.uniform1f(U.uKino, u.kino); gl.uniform1f(U.uEnd, u.end);
       gl.uniform1f(U.uQuiet, u.quiet || 0); gl.uniform1f(U.uLight, u.light || 0); gl.uniform1f(U.uGround, u.ground || 0); gl.uniform1f(U.uScanIn, u.scanIn || 0); gl.uniform1f(U.uInner, u.inner || 0); gl.uniform1f(U.uHalf, u.half || 0); gl.uniform1f(U.uLens, u.lens || 0); gl.uniform1f(U.uDense, u.dense || 0); gl.uniform1f(U.uGlass, u.glass || 0.9); gl.uniform1f(U.uAreaK, u.areaK || 0); gl.uniform1f(U.uHirn, u.hirn || 0); gl.uniform1f(U.uShell, u.shell || 0); gl.uniform1f(U.uNs, u.ns || 0); gl.uniform1f(U.uLobe, u.lobe == null ? -1 : u.lobe); gl.uniform1f(U.uAreaI, u.areaI == null ? -1 : u.areaI); gl.uniform1f(U.uSpH, (pts.hirn && pts.hirn.sp) || 0.42); { const B = pts.hirn ? [...pts.hirn.c, pts.hirn.r] : [0, 0, 0, 1]; gl.uniform4f(U.uBC, B[0], B[1], B[2], B[3]); if (U.uMal) gl.uniform4fv(U.uMal, u.mal || MAL0); if (U.uLauf) { const L = u.lauf || [-1, -1, 0, 0]; gl.uniform4f(U.uLauf, L[0], L[1], L[2], 0); const P = u.laufP || [0, 0, 0]; gl.uniform3f(U.uLaufP, P[0], P[1], P[2]); } } { const A = u.area || [0, 0, 0, 0]; gl.uniform4f(U.uArea, A[0], A[1], A[2], A[3]); }
-      gl.uniform3fv(U.uStC, u.stc); gl.uniform1f(U.uTxt, u.txt || 0); gl.uniform1f(U.uHStil, u.hstil || 0); gl.uniform1f(U.uKern, u.kern || 1); gl.uniform1f(U.uBunt, u.bunt || 0); gl.uniform1f(U.uScharf, u.scharf || 0); gl.uniform1f(U.uLasur, u.lasur || 1); gl.uniform4fv(U.uSeg, u.seg || SEG0); { const K = u.segK || SEGK0, Y = u.segY || SEGK0, A = u.auf || AUF0; gl.uniform4f(U.uSegK, K[0], K[1], K[2], K[3]); gl.uniform2f(U.uSegY, Y[0], Y[1]); gl.uniform1f(U.uWSp, (pts.hirn && pts.hirn.wSp) || 0.4); gl.uniform4f(U.uAuf, A[0], A[1], A[2], u.hstil === 10 || !(u.solid && pts.hirn && pts.hirn.w0 >= 0) ? 0 : A[3]); } { const L = u.lampe || [0, 0, 0, 0]; gl.uniform4f(U.uLampe, L[0], L[1], L[2], L[3]); gl.uniform1f(U.uLampeS, u.lampeS === undefined ? -99 : u.lampeS); } gl.uniform1f(U.uWelle, u.welle === undefined ? 99 : u.welle);
+      gl.uniform3fv(U.uStC, u.stc); gl.uniform1f(U.uTxt, u.txt || 0); gl.uniform1f(U.uHStil, u.hstil || 0); gl.uniform1f(U.uKern, u.kern || 1); gl.uniform1f(U.uBunt, u.bunt || 0); gl.uniform1f(U.uScharf, u.scharf || 0); gl.uniform1f(U.uLasur, u.lasur || 1); gl.uniform1f(U.uHuelle, u.huelle || 0); { const N = u.hun || HUN0; gl.uniform2f(U.uHuN, N[0], N[1]); } gl.uniform4fv(U.uSeg, u.seg || SEG0); { const K = u.segK || SEGK0, Y = u.segY || SEGK0, A = u.auf || AUF0; gl.uniform4f(U.uSegK, K[0], K[1], K[2], K[3]); gl.uniform2f(U.uSegY, Y[0], Y[1]); gl.uniform1f(U.uWSp, (pts.hirn && pts.hirn.wSp) || 0.4); gl.uniform4f(U.uAuf, A[0], A[1], A[2], u.hstil === 10 || !(u.solid && pts.hirn && pts.hirn.w0 >= 0) ? 0 : A[3]); } { const L = u.lampe || [0, 0, 0, 0]; gl.uniform4f(U.uLampe, L[0], L[1], L[2], L[3]); gl.uniform1f(U.uLampeS, u.lampeS === undefined ? -99 : u.lampeS); } gl.uniform1f(U.uWelle, u.welle === undefined ? 99 : u.welle);
       gl.uniform4f(U.uPtr, u.ptr[0], u.ptr[1], u.ptr[2], u.ptr[3]);
       const Hn = u.solid && pts.hirn;
       if (!Hn) { gl.uniform1f(U.uSolid, 0); gl.drawArrays(gl.POINTS, 0, count); return; }
@@ -676,7 +680,7 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
       gl.uniform1f(U.uSolid, 0); gl.drawArrays(gl.POINTS, 0, Hn.b0);
       const glas = u.hstil === 10; // Laterne: das Gehirn leuchtend und durchscheinend, ohne Tiefe
       if (!glas) { gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.depthMask(true); gl.disable(gl.BLEND); gl.uniform1f(U.uSolid, 1); }
-      { const w0 = !glas && Hn.w0 >= 0 && u.auf && u.auf[3] > 0.004 ? Hn.w0 : Hn.b0; gl.drawArrays(gl.POINTS, w0, Hn.b1 - w0); } // Nahblick der Tafel: auch die Wirbelsäule deckend
+      if (!((u.huelle || 0) > 0.999 && u.hun && u.hun[0] > 0.995)) { const w0 = !glas && Hn.w0 >= 0 && u.auf && u.auf[3] > 0.004 ? Hn.w0 : Hn.b0; gl.drawArrays(gl.POINTS, w0, Hn.b1 - w0); } // Hülle (?seg=4): Gehirn und Rückenmark sind unsichtbar – gar nicht erst rechnen // Nahblick der Tafel: auch die Wirbelsäule deckend
       if (!glas) { gl.enable(gl.BLEND); gl.depthMask(false); gl.uniform1f(U.uSolid, 0); }
       if (vaoN) { // Nerven-Perlen mit ihrem Ziel (eigener Satz von Attributen), davor und danach der Rest
         if (NV[0] > Hn.b1) gl.drawArrays(gl.POINTS, Hn.b1, NV[0] - Hn.b1);
@@ -689,10 +693,10 @@ export function createStage(gl, pts, relaxCanvas, deep = '#44788E') {
 }
 
 // Zeichenfläche mit Tiefenpuffer (nur Fassung K – das Gehirn wird deckend gezeichnet); sonst wie ../feinschliff/gl.js glContext
-export function glContextTiefe(canvas) {
+export function glContextTiefe(canvas, alpha = false) { // alpha (?seg=4): die Fläche kann ihren dunklen Grund durchsichtig schalten (draw: u.klar)
   const glQ = new URLSearchParams(location.search).get('gl');
   let gl = null;
-  try { gl = canvas.getContext('webgl2', { alpha: false, antialias: false, depth: true, stencil: false, premultipliedAlpha: true, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: !glQ }); } catch (e) { /* ohne WebGL 2 */ }
+  try { gl = canvas.getContext('webgl2', { alpha, antialias: false, depth: true, stencil: false, premultipliedAlpha: true, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: !glQ }); } catch (e) { /* ohne WebGL 2 */ }
   if (gl && !glQ) try {
     const e = gl.getExtension('WEBGL_debug_renderer_info');
     if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(String(gl.getParameter(e ? e.UNMASKED_RENDERER_WEBGL : gl.RENDERER)))) { gl.getExtension('WEBGL_lose_context')?.loseContext(); gl = null; }
