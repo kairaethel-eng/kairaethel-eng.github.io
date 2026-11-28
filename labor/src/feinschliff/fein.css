@@ -105,3 +105,13 @@ html.paused .kf-tp.is-pulse i{animation:none}
   .kf-tk .kf-sg-note{font-size:.75rem;line-height:1.4}
   .kf-tf-wahl{margin-top:.875rem}
 }
+
+/* Entwurf ?seg=3 „Fusion“ (28.11.2026): Kapitel 03 hängt zwischen zwei Strecken in Kapitel 01 (main.js FUS, kapitel.js). Die Bühne klebt über die
+   ganze Länge, Kapitel 03 läuft darüber; die Strecken sind leere Höhe (Länge setzt kapitel.js). */
+.kf.kf-fus{height:auto}
+.kf-bahn{pointer-events:none}
+.kf-bahn-a{height:calc(var(--bahn-a,3.34) * 100svh)}
+.kf-bahn-b{height:calc(var(--bahn-b,2.01) * 100svh)}
+.kf-fus>#achse{position:relative;z-index:2}
+html.fus .kf-acts a[href="#achse"]{display:none}
+@media print{.kf-bahn{display:none}}

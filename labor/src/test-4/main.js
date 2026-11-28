@@ -152,6 +152,20 @@ if (glCtx && !glQ) try {
 } catch (e) { /* Name nicht lesbar: WebGL bleibt an */ }
 let glDirty = true; // nach dem letzten sichtbaren Bild einmal leer zeichnen, danach ruht die Bühne (T1)
 if (glCtx) try { renderer = new THREE.WebGLRenderer({ canvas, context: glCtx, antialias: false, alpha: false, powerPreference: 'high-performance' }); } catch (e) { /* ohne WebGL bleibt die Seite lesbar */ }
+// Entwurf ?seg=3 „Fusion“ (Kai 27.11.2026, 23:11: „das Kapitel 3 fast genauso wie es ist eine Fusion mit der Startseite und der Figur“,
+// Wahl 28.11.: „03 zieht hinter das Gehirn“): Kapitel 03 wird unverändert in die Strecke von Kapitel 01 gehängt – Figur → Gehirn → Blick
+// ins Profil ans Rückenmark (Strecke A), dann Kapitel 03, danach das ganze Nervensystem und der Leitsatz (Strecke B). Die Bühne der
+// Startfigur blendet aus, solange Kapitel 03 darüber liegt (kf.fus), die Punktwolke steht dann schon als Wirbelsäule bereit (tick).
+// Nur mit Grafikchip und Bewegung; sonst bleibt die Seite in der Reihenfolge von Weg M.
+const FUS = (() => {
+  const q = new URLSearchParams(location.search);
+  if (q.get('seg') !== '3' || q.get('start') || q.get('figur') === 'heute' || !renderer || reduced) return false;
+  const st = $('#start'), ax = $('#achse'); if (!st || !ax) return false;
+  const mk = (c) => { const d = document.createElement('div'); d.className = c; d.setAttribute('aria-hidden', 'true'); return d; };
+  st.classList.add('kf-fus'); st.append(mk('kf-bahn kf-bahn-a'), ax, mk('kf-bahn kf-bahn-b'));
+  document.documentElement.classList.add('fus');
+  return true;
+})();
 // Ohne WebGL (oder wenn eine Bühne scheitert): Standbilder statt Partikel, Hinweise weg (A2, CSS html.no-gl)
 const noGl = () => { document.documentElement.classList.remove('seg-rows', 'seg-scan', 'seg-pc'); document.documentElement.classList.add('no-gl'); };
 // Handy-Wirbelsäule (nur hochkant mit WebGL; Handy quer oder ohne WebGL → Karte mit Volltext):
@@ -1292,6 +1306,7 @@ const axisNote = $('#achse .note'), dachSec = $('#dach'), dTitleEl = $('#d-title
 // den Kapitelwechsel. Der kleine Kicker im Kapitel entfällt dafür (CSS html.auftakt). Ohne JavaScript gibt es keinen Auftakt,
 // die Kicker bleiben. Kapitelanfang für Formwechsel, Kopfleiste und Kapitel-Links ist die Oberkante des Auftakts (auTop).
 const AU_INFO = { bewegung: ['02', 'Bewegung', 'Über HOP'], achse: ['03', 'Achse', 'Wirbelsäule'], dach: ['04', 'Dach', 'Praxis &amp; Leistungen'], tuer: ['05', 'Tür', 'Kontakt &amp; Termin'] };
+if (FUS) delete AU_INFO.achse; // Fusion: Kapitel 03 gehört zu Kapitel 01 – kein eigener Auftakt
 const auftakt = {};
 {
   const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.3 });
@@ -1928,6 +1943,7 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape' && topNav.classList.
 addEventListener('resize', () => { if (VW > 1000) setMenu(false); });
 let chapShown = -1;
 let morphNow = 0, morphInit = false, tickDt = 0;
+let fusWar = false;
 let chapTop = null, logoGeo = null;
 const chapDirty = () => { chapTop = null; logoGeo = null; };
 addEventListener('resize', chapDirty); addEventListener('load', chapDirty);
@@ -1943,11 +1959,11 @@ function targetMorph() {
   if (!chapTop) chapTop = chapters.map((c) => (c === axis ? c.getBoundingClientRect().top : auTop(c)) + scrollY);
   const sy = scrollY;
   // Hausordnung (seit 14.11. nachts nach Kapitel 02): Ende des Textes von Kapitel 02 + Kicker der Hausordnung (absolut, gemerkt)
-  logoGeo = logoGeo || { list: statement.parentNode.lastElementChild.getBoundingClientRect().bottom + sy, kick: rules.querySelector('.kicker').getBoundingClientRect().top + sy, kickB: rules.querySelector('.kicker').getBoundingClientRect().bottom + sy, laws: $('#laws').getBoundingClientRect().top + sy, rules: rules.getBoundingClientRect().top + sy, axis: auTop(axis) + sy };
+  logoGeo = logoGeo || { list: statement.parentNode.lastElementChild.getBoundingClientRect().bottom + sy, kick: rules.querySelector('.kicker').getBoundingClientRect().top + sy, kickB: rules.querySelector('.kicker').getBoundingClientRect().bottom + sy, laws: $('#laws').getBoundingClientRect().top + sy, rules: rules.getBoundingClientRect().top + sy, axis: auTop(FUS ? dachSec : axis) + sy }; // Fusion: nach der Hausordnung folgt Kapitel 04
   for (let i = 0; i < chapters.length; i++) {
     const r = { top: chapTop[i] - sy };
     const s = +chapters[i].dataset.stage;
-    const prev = i ? +chapters[i - 1].dataset.stage : 0;
+    const prev = i && !(FUS && chapters[i - 1] === axis) ? +chapters[i - 1].dataset.stage : 0; // Fusion: Kapitel 02 folgt auf die Startfigur (Kapitel 03 liegt mitten in ihr)
     // Übergang, während das Kapitel von unten hereinkommt
     let t = smooth(vh * 0.95, vh * 0.05, r.top); // Formwechsel über eine längere Strecke
     // Handy: die Figur löst sich schon beim ersten Scrollen an Ort und Stelle in Bewegungslinien auf
@@ -1961,6 +1977,8 @@ function targetMorph() {
     // Handy: Bewegungslinien → Wirbelsäule früher fertig, damit der Scan schon mit der Überschrift entsteht;
     // seit 14.11. nachts etwas später begonnen, damit die Wirbelsäule nicht über dem letzten Paragraphen der Hausordnung entsteht
     if (!isDesktop() && prev === 1 && s === 2) t = smooth(vh * 1.1, vh * 0.25, r.top); // 16.11.: 0,85 statt 0,48 (Beginn liegt unter den HOP-Kreisen)
+    // Fusion (?seg=3): auf die Hausordnung folgt Kapitel 04 – der Formwechsel beginnt erst, wenn ihr Text den Lesebereich verlassen hat (Staub nie über Text)
+    if (FUS && prev === 1 && s === 3) t = smooth(vh * 0.6, 0, r.top);
     morphGate[i](t, 0);
     if (morphGate[i].want()) m = s; // Auslöser: das Kapitel ist da → Ziel ist seine Form; der Weg dorthin läuft über die Zeit (tick)
   }
@@ -2418,7 +2436,11 @@ function tick() {
   // Form 0: Lage, Atem, Ruhe und Wiegen vom Kapitel „Von Kopf bis Fuß“ (gleiche Werte → Übergabe ohne Sprung)
   bodyFit();
   uniforms.uCalm.value = kf.calm(); uniforms.uBreath.value = kf.breath(); uniforms.uBodyRot.value = kf.sway();
-  const tm = targetMorph();
+  let tm = targetMorph();
+  // Fusion (?seg=3): solange Kapitel 03 über der Startfigur liegt (oder gleich kommt), ist die Wolke die Wirbelsäule; davor und danach
+  // gehört sie wieder der Startfigur (Form 0 = Leitsatz). Der Wechsel geschieht, während sie unsichtbar ist (handK nahe 0).
+  let fusZone = false;
+  if (FUS) { const f = kf.fus(); if (f) { fusZone = f.zu > 0.001 || (f.teil < 2 && f.nah); if (fusZone) tm = 2; else if (f.teil === 2 && tm === 2) tm = 0; if (kf.handK() < 0.05 || fusZone !== fusWar) morphNow = tm; fusWar = fusZone; } } // auch beim Sprung über die Grenze (Kapitel-Link, kräftiger Wisch): kein Formwechsel im Bild
   if (!isDesktop()) logoPlace();
   // Formwechsel über die Zeit (FORM_SEK je Form; liegen mehrere Formen dazwischen – Sprung über Kapitel – entsprechend schneller)
   tickDt = dt;
@@ -2452,6 +2474,7 @@ function tick() {
     if (morphNow > 0.3 && morphNow < 1.6) dim = Math.max(dim, 0.55 * (1 - logoNow)); // Bewegungslinien leise hinter Text, die HOP-Kreise zur Hausordnung in voller Helligkeit
   }
   if (isDesktop() && morphNow > 0.12 && morphNow < 0.9) dim = Math.max(dim, 0.4 * Math.sin(Math.PI * (morphNow - 0.12) / 0.78));
+  if (FUS && !fusZone && morphNow > 1.02 && morphNow < 2.02) dim = Math.max(dim, smooth(1.12, 1.6, morphNow)); // Fusion: Linien → Haus führt über die Form der Wirbelsäule – die bleibt hier unsichtbar (ab 2,02 übernimmt der Staub)
   dim = Math.max(dim, manuK, swK, listK); // Manuthera-Bühne, Stoßwelle und Leistungen: Partikel-Hintergrund blendet ganz aus
   if (licht && lichtK > 0) dim = Math.max(dim, lichtK); // K1: Partikel weichen dem Sonnenstaub
   if (FX.on && !FX.hand) dim = 1; // Film ohne Übergabe (aus „Alle Leistungen“, ohne Scanner): Partikel weichen dem Film
@@ -2495,11 +2518,12 @@ function tick() {
   top.classList.toggle('scrolled', scrollY > 30);
   // Leiste (14.11. nachts): Einträge = Kapitel in Seitenreihenfolge (01, 02, §, 03, 04, 05); aktiv ist das Kapitel, das die Bildmitte erreicht hat
   let navIdx = 0;
-  for (let i = 1; i < chapTop.length; i++) if (chapTop[i] - scrollY < VH * 0.5) navIdx = i;
+  for (let i = 1; i < chapTop.length; i++) if (chapTop[i] - scrollY < VH * 0.5 && !(FUS && chapters[i] === axis)) navIdx = i;
   if (navIdx !== chapShown) {
     chapShown = navIdx;
-    navLinks.forEach((a, k) => a.classList.toggle('on', k === navIdx));
-    chapNow.innerHTML = navLinks[navIdx].innerHTML;
+    const nk = FUS ? navLinks.findIndex((a) => a.getAttribute('href') === '#' + chapters[navIdx].id) : navIdx; // Fusion: Kapitel stehen in anderer Reihenfolge als die Leiste
+    navLinks.forEach((a, k) => a.classList.toggle('on', k === nk));
+    chapNow.innerHTML = navLinks[nk].innerHTML;
   }
 
   camera.position.copy(cam.pos); camera.lookAt(cam.target);
@@ -2526,7 +2550,7 @@ function tick() {
 // eigene Bühne (Baustein), läuft vor tick im selben Bildtakt; Sprünge (Striche rechts, Pille „Weiter“) gleiten über Lenis
 // Stufe 1 der echten Figur; die Daten lädt der Baustein nur mit WebGL (Funktion statt Promise); bis sie da sind, bleibt die Bühne leer
 const figurHeute = new URLSearchParams(location.search).get('figur') === 'heute';
-kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced, handover: true, stufe: 'echt', start: 'm', data: figurHeute ? null : () => loadEcht('m'),
+kf = initKopfFuss({ root: $('#start'), isPaused: () => paused, reduced, handover: true, stufe: 'echt', start: 'm', fus: FUS ? { mitte: $('#achse') } : null, data: figurHeute ? null : () => loadEcht('m'),
   scrollTo: (y, sm) => (lenis ? lenis.scrollTo(y, sm ? { duration: 1.6 } : { immediate: true }) : window.scrollTo({ top: y, behavior: sm ? 'smooth' : 'auto' })) });
 window.__kf = kf; // Prüfhilfe: __kf.state(), __kf.go(u)
 // Form 0 der Hauptwolke = dieselben Punkte wie die Figur in Kapitel 01 (Übergabe deckungsgleich, gleicher Punktabstand) –

@@ -134,7 +134,7 @@ let U_END = KEYS[KEYS.length - 1][0];
 // old = { points, stage } (nur die Studienseite: Figur plus für den Umschalter „bisher“; Puls gibt nichts mit → kein Umschalter),
 // handover = true (Puls): am Schluss ziehen sich Gehirn und Nerven zurück, die Figur steht wieder als ruhiges Raster da und
 // wird an Form 0 der Hauptbühne übergeben (cloud() liefert dafür dieselben Punkte).
-export function initKopfFuss({ root, isPaused = () => false, reduced = false, data = null, stufe = null, handover = false, start = '', scrollTo = (y, smoothly) => window.scrollTo({ top: y, behavior: smoothly ? 'smooth' : 'auto' }) }) {
+export function initKopfFuss({ root, isPaused = () => false, reduced = false, data = null, stufe = null, handover = false, start = '', fus = null, scrollTo = (y, smoothly) => window.scrollTo({ top: y, behavior: smoothly ? 'smooth' : 'auto' }) }) {
   const $ = (s, r = root) => r.querySelector(s);
   const $$ = (s, r = root) => [...r.querySelectorAll(s)];
   const finePointer = matchMedia('(pointer: fine)').matches;
@@ -162,7 +162,11 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
   const YAW_E = 0.9; // Schlussbild von K, M: die ganze Figur von der Seite (halbes Profil)
   const SEGM = HIRN && Q.get('seg') === '1'; // Entwurf: Kapitel 03 in der Startfigur (sechs Halte auf der Fahrt am Rückenmark)
   const TAFEL = HIRN && Q.get('seg') === '2'; // Entwurf Konzept 2: Tafel „Wo tut es weh?“
-  if (HIRN) { KEYS = KEYS_HIRN; U_LEN = U_LEN_HIRN; ARR = STATIONS.map((_, i) => KEYS[1 + 2 * i][0]); LEAVE = STATIONS.map((_, i) => KEYS[2 + 2 * i][0]); U_END = KEYS[KEYS.length - 1][0]; ON_VOR = 0.22; if (SEGM) { KEYS = KEYS_SEG; U_LEN = U_LEN_SEG; U_END = KEYS[KEYS.length - 1][0]; } if (TAFEL) { KEYS = KEYS_TAFEL; U_LEN = U_LEN_TAFEL; U_END = KEYS[KEYS.length - 1][0]; } root.style.setProperty('--len', (U_LEN + 1).toFixed(2)); }
+  // Entwurf „Fusion“ (?seg=3, Kai 28.11.2026: „03 zieht hinter das Gehirn“): der Gastgeber hängt Kapitel 03 (fus.mitte) zwischen zwei Strecken
+  // in dieses Kapitel. Fahrplan und Länge bleiben die von Weg M; die Fahrt hält am Blick 'R1' (Profil am Rückenmark), solange Kapitel 03
+  // darüber läuft, und geht danach weiter (Lende → ganze Figur → Leitsatz). Die Bühne blendet aus, solange Kapitel 03 sie verdeckt (hkF).
+  const FUS = HIRN && Q.get('seg') === '3' && !!(fus && fus.mitte), FUS_UA = KEYS_HIRN[9][0], FUS_REST = 0.6; // FUS_REST: Kapitel 03 steht noch so hoch im Bild (Anteil), wenn die Fahrt weitergeht
+  if (HIRN) { KEYS = KEYS_HIRN; U_LEN = U_LEN_HIRN; ARR = STATIONS.map((_, i) => KEYS[1 + 2 * i][0]); LEAVE = STATIONS.map((_, i) => KEYS[2 + 2 * i][0]); U_END = KEYS[KEYS.length - 1][0]; ON_VOR = 0.22; if (SEGM) { KEYS = KEYS_SEG; U_LEN = U_LEN_SEG; U_END = KEYS[KEYS.length - 1][0]; } if (TAFEL) { KEYS = KEYS_TAFEL; U_LEN = U_LEN_TAFEL; U_END = KEYS[KEYS.length - 1][0]; } root.style.setProperty('--len', (U_LEN + 1).toFixed(2)); if (FUS) { root.style.setProperty('--bahn-a', FUS_UA.toFixed(2)); root.style.setProperty('--bahn-b', (U_LEN - FUS_UA + 1 - FUS_REST).toFixed(2)); } }
   const AREALE = [ // Name, Blickrichtung (Drehung um die Hochachse), Mitte im Gehirn (−1…1: rechts, oben, vorn), Radius (Anteil der Breite)
     ['Hören · Schläfenlappen', -1.15, [0.8, -0.32, 0.22], 0.34, 2, 1], ['Denken · Stirnlappen', -0.3, [0.3, 0.3, 0.8], 0.38, 0, 1], // dazu: Hirnlappen (Kennung in figur.js) und Seite
     ['Bewegung · Zentralregion', 0.75, [-0.4, 0.6, -0.05], 0.36, 1, 0], ['Gleichgewicht · Kleinhirn', 2.6, [-0.15, -0.72, -0.7], 0.34, 5, 0]];
@@ -634,7 +638,8 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
 
   // Fortschritt: Strich anklicken → zur Station; Pille „Weiter“ → zur nächsten Station bzw. zum Schluss
   const trackTop = () => root.getBoundingClientRect().top + scrollY;
-  const goU = (u) => scrollTo(trackTop() + u * H, !still());
+  const yVonU = (u) => (!FUS || u <= FUS_UA ? u * H : (u + 1 - FUS_REST) * H + fus.mitte.offsetHeight); // Fusion: hinter Kapitel 03 liegt die Strecke um dessen Höhe tiefer
+  const goU = (u) => (FUS && u > FUS_UA && S.u <= FUS_UA ? scrollTo(fus.mitte.getBoundingClientRect().top + scrollY, !still()) : scrollTo(trackTop() + yVonU(u), !still())); // Fusion: „Weiter“ nach dem Gehirn führt zu Kapitel 03, nicht darüber hinweg
   progBtns.forEach((b, i) => b.addEventListener('click', () => goU((ARR[i] + LEAVE[i]) / 2)));
   nextBtn?.addEventListener('click', () => {
     const i = STATIONS.findIndex((_, k) => S.us < LEAVE[k] - 0.02);
@@ -666,7 +671,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     if (d && typeof d.then === 'function') d.then(finish, (e) => { console.error(e); finish(null); }); else finish(d); }
 
   // ---------- Bild für Bild (vom Gastgeber aufgerufen) ----------
-  let lastT = performance.now(), lastTipKey = '', lastOn = '', hk = 0, stageTop = 0, lastLineO = '';
+  let lastT = performance.now(), lastTipKey = '', lastOn = '', hk = 0, stageTop = 0, lastLineO = '', hkF = 0, fusTeil = 0, fusNah = false, fusAus = false, fusMaske = '';
   function update(now) {
     const dt = Math.min(0.1, Math.max(0, (now - lastT) / 1000)); lastT = now;
     const r = root.getBoundingClientRect();
@@ -676,6 +681,7 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
       // liegt die Bühne über dem Fenster, ist sie fertig übergeben (18.11.: seit dem Kapitel-Auftakt grenzt Kapitel 02 nicht mehr
       // direkt an – nach einem Sprung blieb hk sonst bei 0 stehen und die Punktwolke der Seite unsichtbar)
       if (r.bottom < -50) { hk = 1; S.u = S.us = U_LEN; S.txt = S.txtWant = 1; S.weg = 1; }
+      if (FUS) { hkF = 0; fusNah = false; fusTeil = r.bottom < -50 ? 2 : 0; }
       return;
     }
     if (!H || stage.clientHeight !== H || stage.clientWidth !== W) layout();
@@ -683,6 +689,19 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     const sl = still(), paused = isPaused();
     if (sl !== lastStill) { lastStill = sl; root.classList.toggle('kf-still', sl); dirty = true; lastOn = ''; }
     S.u = clamp(-r.top / H, 0, U_LEN);
+    if (FUS) { // zwei Strecken: bis Kapitel 03 hereinkommt · Halt, solange es darüber läuft · weiter, sobald sein Ende die Bildmitte verlässt
+      const rM = fus.mitte.getBoundingClientRect(), b0 = H * FUS_REST;
+      S.u = rM.top >= H ? clamp(-r.top / H, 0, FUS_UA) : rM.bottom > b0 ? FUS_UA : clamp(FUS_UA + (b0 - rM.bottom) / H, FUS_UA, U_LEN);
+      hkF = smooth(H * 0.96, H * 0.45, rM.top) * (1 - smooth(H * 0.95, H * 0.6, rM.bottom));
+      // weiche Kante an Kapitel 03: die Bühne ist nur über seiner Oberkante bzw. unter seiner Unterkante sichtbar – sein Text steht nie auf der Figur
+      { const w = H * 0.12, mk = rM.top > 0 && rM.top < H ? `linear-gradient(to bottom,#000 ${Math.round(Math.max(0, rM.top - w))}px,transparent ${Math.round(rM.top)}px)` : rM.bottom > -w * 2.5 && rM.bottom < H ? `linear-gradient(to bottom,transparent ${Math.round(Math.max(0, rM.bottom))}px,#000 ${Math.round(Math.max(0, rM.bottom) + w * 2.5)}px)` : '';
+        if (mk !== fusMaske) { fusMaske = mk; stage.style.webkitMaskImage = mk; stage.style.maskImage = mk; } }
+      fusTeil = rM.bottom < b0 ? 2 : rM.top < H ? 1 : 0; fusNah = rM.top < H * 1.5;
+      const aus = hkF > 0.985;
+      if (aus !== fusAus) { fusAus = aus; stage.style.visibility = aus ? 'hidden' : ''; dirty = true; }
+      stage.style.opacity = hkF > 0 ? fmt(1 - hkF) : '';
+      if (aus) { S.us = S.u; hand.classList.remove('on'); raum(1); if (scheinAn) { schein.style.display = 'none'; scheinAn = false; } return; } // ganz verdeckt: die Bühne ruht
+    }
     const prevUs = S.us;
     S.us = sl ? S.u : S.us + (S.u - S.us) * (1 - Math.exp(-dt * 4.2));
     if (Math.abs(S.us - S.u) < 1e-4) S.us = S.u;
@@ -976,14 +995,14 @@ export function initKopfFuss({ root, isPaused = () => false, reduced = false, da
     cloud: () => (st ? { pts, sp: SP, tilt: TILT } : null), // für Form 0 der Hauptbühne (Puls): dieselben Punkte, derselbe Abstand
     pointer: () => PT, // Zeiger (Bildpunkte der Bühne, Stärke k) – Puls führt damit seine eigenen Bühnen
     state: () => ({ stil: mode, mix: +mixK.toFixed(2), kino: +kinoK.toFixed(2), echt, buildMs, sp: +SP.toFixed(2), ptr: +PT.k.toFixed(2), u: +S.u.toFixed(3), us: +S.us.toFixed(3), tip: +S.tip.toFixed(1), cur: S.cur, idle: +S.idle.toFixed(1), act: S.act.map((x) => +x.toFixed(2)), auto: S.auto.map((x) => +x.toFixed(2)), sol: S.sol.map((x) => +x.toFixed(2)), rest: S.rest.map((x) => +x.toFixed(2)), done: S.done.slice(), gl: !!st, n: pts.count, still: still(), handK: +hk.toFixed(2), txt: +S.txt.toFixed(2), satz: SATZ.n, view: S.view && { s: +S.view.s.toFixed(2), ax: Math.round(S.view.ax), ay: Math.round(S.view.ay) } }),
-    go: (u) => scrollTo(trackTop() + u * H, false),
+    go: (u) => scrollTo(trackTop() + yVonU(u), false),
     tafel: () => TF, // Prüfhilfe: Zustand der Tafel (Auftritt, Kamerafahrt)
     ring: (i) => ringPx[i].map((x) => Math.round(x)),
     plan: () => ({ hirn: HIRN, arr: ARR.slice(), leave: LEAVE.slice(), end: U_END }), // für den Prüfstand: Halte je Fassung
     relax: () => relaxCv.toDataURL(), // Zeichenfläche „Entspannung“ als Bild (Prüfen)
     // Übergabe an Puls
     fitE: () => (V.E ? { ...V.E, ay: V.E.ay + stageTop, W, H } : null), // Schlussbild; wandert mit, wenn die Bühne am Ende wegscrollt
-    handK: () => hk,
+    handK: () => Math.max(hk, hkF), fus: () => (FUS ? { teil: fusTeil, zu: hkF, nah: fusNah } : null), // Fusion: teil 0 vor, 1 in, 2 nach Kapitel 03 · zu = so weit ist die Bühne ausgeblendet · nah = Kapitel 03 kommt gleich
     // K, M: Form 0 der Hauptbühne ist der Leitsatz – er steht still (kein Wiegen, kein Atem), sonst läge er nicht auf der echten Schrift
     sway: () => (SATZ.n ? 0 : S.sway), breath: () => (SATZ.n ? 0 : S.breath), calm: () => S.calm,
     satz: () => (SATZ.n ? SATZ : null), onSatz: (f) => { satzFns.push(f); if (SATZ.n) f(); }, // Punkte des Leitsatzes (Bildpunkte der Bühne, Art) + Blick E, neu nach jedem Vermessen
